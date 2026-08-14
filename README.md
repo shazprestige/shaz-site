@@ -111,3 +111,20 @@ V29
 - Hedef zaten görünüyorsa sağ ekran hiç kaymaz.
 - Hedef üst sabit paneldeyse dikey kaydırma yapılmaz.
 - Uzun kategori isimleri ellipsis ile sınırlandırılır; üst üste binme yapmaz.
+
+
+V30 — GÜVENLİ YÖNETİM PANELİ
+- /admin artık giriş ister.
+- Yönetici şifresi GitHub koduna yazılmaz; Render Environment Variables içinde tutulur.
+- Siparişleri görme, Excel indirme, sipariş durumu değiştirme, ürün/site ayarlarını kaydetme ve görsel yükleme sunucu tarafında yetkilendirme ister.
+- /admin.html üzerinden giriş atlatma engellendi.
+- Oturum çerezi HttpOnly + SameSite=Strict, HTTPS'te Secure.
+- Giriş denemelerine IP bazlı brute-force sınırı eklendi.
+- Görsel yüklemede dosya tipi kontrolü eklendi.
+
+Render'da zorunlu gizli değişkenler:
+ADMIN_USER
+ADMIN_PASSWORD
+SESSION_SECRET
+
+SESSION_SECRET için uzun ve rastgele bir değer kullanın.

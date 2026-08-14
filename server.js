@@ -4,6 +4,7 @@ const multer = require('multer');
 const XLSX = require('xlsx');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const root = __dirname;
@@ -13,7 +14,69 @@ fs.mkdirSync(uploadDir,{recursive:true});
 app.use(express.json({limit:'5mb'}));
 app.use(express.urlencoded({extended:true}));
 app.use('/uploads', express.static(uploadDir));
+
 app.use(express.static(path.join(root,'public')));
+
+// ---------- Yönetici güvenliği ----------
+const ADMIN_USER = process.env.ADMIN_USER || '';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+const SESSION_SECRET = process.env.SESSION_SECRET || '';
+const SESSION_COOKIE = 'shaz_admin_session';
+const SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+
+if(!ADMIN_USER || !ADMIN_PASSWORD || !SESSION_SECRET){
+  console.warn('UYARI: ADMIN_USER, ADMIN_PASSWORD veya SESSION_SECRET eksik. /admin güvenlik için kapalı kalacak.');
+}
+
+const parseCookies=req=>{
+  const out={};
+  String(req.headers.cookie||'').split(';').forEach(part=>{
+    const i=part.indexOf('=');
+    if(i>0) out[part.slice(0,i).trim()]=decodeURIComponent(part.slice(i+1).trim());
+  });
+  return out;
+};
+const safeEqual=(a,b)=>{
+  const aa=Buffer.from(String(a)); const bb=Buffer.from(String(b));
+  return aa.length===bb.length && crypto.timingSafeEqual(aa,bb);
+};
+const signSession=issuedAt=>{
+  const payload=String(issuedAt);
+  const sig=crypto.createHmac('sha256',SESSION_SECRET).update(payload).digest('hex');
+  return `${payload}.${sig}`;
+};
+const validSession=req=>{
+  if(!SESSION_SECRET)return false;
+  const token=parseCookies(req)[SESSION_COOKIE];
+  if(!token)return false;
+  const [issued,sig]=token.split('.');
+  if(!issued||!sig)return false;
+  const ts=Number(issued);
+  if(!Number.isFinite(ts) || Date.now()-ts>SESSION_MAX_AGE_MS || ts>Date.now()+60000)return false;
+  const expected=crypto.createHmac('sha256',SESSION_SECRET).update(issued).digest('hex');
+  return safeEqual(sig,expected);
+};
+const requireAdmin=(req,res,next)=>{
+  if(validSession(req))return next();
+  if(req.path.startsWith('/api/'))return res.status(401).json({ok:false,message:'Yönetici girişi gerekli.'});
+  return res.redirect('/admin/login');
+};
+
+// Basit brute-force sınırlaması: IP başına 15 dakikada en fazla 8 başarısız giriş.
+const loginAttempts=new Map();
+const LOGIN_WINDOW=15*60*1000, LOGIN_MAX=8;
+const loginKey=req=>String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0].trim();
+const isLoginBlocked=key=>{
+  const now=Date.now(), x=loginAttempts.get(key);
+  if(!x)return false;
+  if(now-x.start>LOGIN_WINDOW){loginAttempts.delete(key);return false}
+  return x.count>=LOGIN_MAX;
+};
+const registerLoginFailure=key=>{
+  const now=Date.now(), x=loginAttempts.get(key);
+  if(!x||now-x.start>LOGIN_WINDOW)loginAttempts.set(key,{count:1,start:now});
+  else{x.count++;loginAttempts.set(key,x)}
+};
 
 const readJson=(name,fallback)=>{try{return JSON.parse(fs.readFileSync(path.join(dataDir,name),'utf8'))}catch(e){return fallback}};
 const writeJson=(name,data)=>fs.writeFileSync(path.join(dataDir,name),JSON.stringify(data,null,2),'utf8');
@@ -22,21 +85,28 @@ const storage = multer.diskStorage({
  destination:(req,file,cb)=>cb(null,uploadDir),
  filename:(req,file,cb)=>cb(null,Date.now()+'-'+Math.random().toString(36).slice(2,8)+path.extname(file.originalname).toLowerCase())
 });
-const upload=multer({storage,limits:{fileSize:20*1024*1024,files:250}});
+const upload=multer({
+ storage,
+ limits:{fileSize:20*1024*1024,files:250},
+ fileFilter:(req,file,cb)=>{
+   const ok=['image/jpeg','image/png','image/webp','image/gif'].includes(file.mimetype);
+   cb(ok?null:new Error('Sadece görsel dosyaları yüklenebilir.'),ok);
+ }
+});
 
 app.get('/api/settings',(req,res)=>res.json(readJson('settings.json',{})));
-app.post('/api/settings',(req,res)=>{writeJson('settings.json',req.body);res.json({ok:true})});
+app.post('/api/settings',requireAdmin,(req,res)=>{writeJson('settings.json',req.body);res.json({ok:true})});
 app.get('/api/catalog',(req,res)=>res.json(readJson('catalog.json',{categories:[],products:[],builder:{}})));
-app.post('/api/catalog',(req,res)=>{writeJson('catalog.json',req.body);res.json({ok:true})});
-app.get('/api/orders',(req,res)=>res.json(readJson('orders.json',[])));
-app.patch('/api/orders/status',(req,res)=>{
+app.post('/api/catalog',requireAdmin,(req,res)=>{writeJson('catalog.json',req.body);res.json({ok:true})});
+app.get('/api/orders',requireAdmin,(req,res)=>res.json(readJson('orders.json',[])));
+app.patch('/api/orders/status',requireAdmin,(req,res)=>{
  const ids=Array.isArray(req.body.ids)?req.body.ids:[]; const status=req.body.status;
  if(!['new','prepared','shipped'].includes(status))return res.status(400).json({ok:false});
  const orders=readJson('orders.json',[]); const now=new Date().toISOString();
  orders.forEach(o=>{if(ids.includes(o.id)){o.status=status;o.statusUpdatedAt=now;}});
  writeJson('orders.json',orders);res.json({ok:true,orders});
 });
-app.get('/api/orders/export.xlsx',(req,res)=>{
+app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
  const orders=readJson('orders.json',[]);
  const exportNow=new Date();
  const exportAt=exportNow.toISOString();
@@ -158,8 +228,47 @@ app.post('/api/orders',(req,res)=>{
  const order={id:'SHZ'+(maxNo+1),createdAt,createdAtTR,status:'new',statusUpdatedAt:createdAt,...req.body};
  orders.unshift(order); writeJson('orders.json',orders); res.json({ok:true,order});
 });
-app.post('/api/upload', upload.array('files',250),(req,res)=>{
+app.post('/api/upload',requireAdmin, upload.array('files',250),(req,res)=>{
  res.json({ok:true,files:(req.files||[]).map(f=>({name:f.originalname,url:'/uploads/'+f.filename}))});
 });
-app.get('/admin',(req,res)=>res.sendFile(path.join(root,'public','admin.html')));
+
+app.get('/admin/login',(req,res)=>{
+ if(validSession(req))return res.redirect('/admin');
+ res.sendFile(path.join(root,'public','admin-login.html'));
+});
+app.post('/api/admin/login',(req,res)=>{
+ if(!ADMIN_USER || !ADMIN_PASSWORD || !SESSION_SECRET){
+   return res.status(503).json({ok:false,message:'Yönetici girişi henüz sunucuda yapılandırılmadı.'});
+ }
+ const key=loginKey(req);
+ if(isLoginBlocked(key))return res.status(429).json({ok:false,message:'Çok fazla başarısız deneme. 15 dakika sonra tekrar deneyin.'});
+ const username=String(req.body.username||'');
+ const password=String(req.body.password||'');
+ if(!safeEqual(username,ADMIN_USER) || !safeEqual(password,ADMIN_PASSWORD)){
+   registerLoginFailure(key);
+   return res.status(401).json({ok:false,message:'Kullanıcı adı veya şifre hatalı.'});
+ }
+ loginAttempts.delete(key);
+ const secure=process.env.NODE_ENV==='production' || String(req.headers['x-forwarded-proto']||'').includes('https');
+ const token=signSession(Date.now());
+ res.setHeader('Set-Cookie',`${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${SESSION_MAX_AGE_MS/1000}${secure?'; Secure':''}`);
+ res.json({ok:true});
+});
+app.post('/api/admin/logout',(req,res)=>{
+ const secure=process.env.NODE_ENV==='production' || String(req.headers['x-forwarded-proto']||'').includes('https');
+ res.setHeader('Set-Cookie',`${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secure?'; Secure':''}`);
+ res.json({ok:true});
+});
+app.get('/api/admin/me',(req,res)=>res.json({authenticated:validSession(req)}));
+
+app.get('/admin',requireAdmin,(req,res)=>res.sendFile(path.join(root,'admin.html')));
+
+// Hassas admin HTML dosyasına doğrudan erişim yok.
+app.get('/admin.html',(req,res)=>res.redirect('/admin'));
+
+app.use((err,req,res,next)=>{
+ console.error(err);
+ res.status(400).json({ok:false,message:err.message||'İstek işlenemedi.'});
+});
+
 app.listen(PORT,()=>console.log(`SHAZ çalışıyor: http://localhost:${PORT}`));

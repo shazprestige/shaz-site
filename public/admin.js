@@ -17,6 +17,10 @@ document.addEventListener('focusin',e=>{
   if(target)previewTo(target,true);
 });
 
+async function logoutAdmin(){
+  await fetch('/api/admin/logout',{method:'POST'});
+  location.href='/admin/login';
+}
 async function load(){
   settings=await fetch('/api/settings').then(r=>r.json());
   catalog=await fetch('/api/catalog').then(r=>r.json());
