@@ -1,0 +1,9 @@
+SHAZ V37
+
+- V36'daki kategori kapak geçişi yeniden yapıldı.
+- Kategori fotoğrafının soluna beyaz/gri gradient bindiren katman kaldırıldı.
+- Yüklenen kategori fotoğrafının kendi renklerinden üretilen blur katmanı kullanılıyor.
+- Asıl fotoğraf sağ tarafta net kalıyor; sola doğru aynı fotoğrafın renkleri büyütülüp bulanıklaştırılarak başlığın altına doğru eriyor.
+- Siyah ağırlıklı fotoğraf siyah/gri tonlarından açılarak geçiyor; fotoğrafın rengi korunuyor.
+- Fotoğrafın eski bitiş çizgisindeki sert kesim maskeyle yumuşatıldı.
+- V36'daki beyaz site zemini, logo hizalama ve favorilere geri dönüş düzeltmeleri korunuyor.

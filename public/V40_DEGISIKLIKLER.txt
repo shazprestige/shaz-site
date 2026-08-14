@@ -1,0 +1,9 @@
+SHAZ V40
+- Ürün detayında Kapat düğmesi sağ üstte yukarı taşındı; ürün adını daha az sıkıştırıyor.
+- Ürün detayındaki ana fotoğrafa dokununca gerçek boyutlu karanlık görüntüleyici açılıyor.
+- Açıklama, set içeriği/özellikler ve kişiselleştirme alanları tek bilgi kutusunda, ayrı başlıklarla gösteriliyor.
+- Ürün ve detay fotoğrafları 4:3 oranına göre düzenlendi.
+- Liste kartlarında fotoğraf ile fiyat/bilgi alanı görsel olarak ayrıldı ve fotoğraf yüksekliği daha nazik hale getirildi.
+- WhatsApp / Instagram kutuları sayfanın sonuna yaklaşıldıkça yumuşak biçimde sağdan alt ortaya kayıyor.
+- Sayfanın altında iletişim kutularının ürün butonlarını kapatmaması için boşluk bırakıldı.
+- Bu güncelleme paketi data/ ve uploads/ klasörlerini İÇERMEZ; GitHub'daki kalıcı katalog ve görsellerin üstüne yazılmaz.

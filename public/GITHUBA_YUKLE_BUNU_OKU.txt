@@ -1,0 +1,9 @@
+SHAZ V40 GÜNCELLEME PAKETİ
+
+Bu pakette data/ ve uploads/ klasörleri BİLEREK yoktur.
+Sebep: GitHub'da panelden oluşan mevcut ürünler, ayarlar ve fotoğraflar korunacak.
+
+GitHub'a bu klasörün içindeki dosyaları önceki sürümlerde yaptığın gibi yükleyebilirsin.
+GitHub'daki mevcut data/ ve uploads/ klasörlerini SİLME.
+
+Yeni kod deploy olduğunda site mevcut data/ ve uploads/ içeriğini kullanmaya devam eder.
