@@ -203,9 +203,11 @@ async function sheetsRequest(payload){
   }
   const body=JSON.stringify({...payload,secret:GOOGLE_SHEETS_SECRET});
   let lastErr;
-  for(let attempt=1;attempt<=2;attempt++){
+  for(let attempt=1;attempt<=3;attempt++){
     const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),10000);
+    // Apps Script bazen LockService + Sheet yazımı sırasında 10 saniyeyi aşabiliyor.
+    // 30 saniye bekliyoruz; aynı requestId tekrar gönderildiğinde Apps Script ikinci sipariş oluşturmaz.
+    const timer=setTimeout(()=>controller.abort(),30000);
     try{
       const r=await fetch(GOOGLE_SHEETS_WEBHOOK_URL,{
         method:'POST',
@@ -223,7 +225,7 @@ async function sheetsRequest(payload){
     }catch(e){
       clearTimeout(timer);
       lastErr=e;
-      if(attempt<2)await delay(900);
+      if(attempt<3)await delay(900*attempt);
     }
   }
   throw lastErr||new Error('Google E-Tablo kaydı başarısız.');

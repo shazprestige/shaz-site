@@ -1,0 +1,6 @@
+V59
+- Sipariş kaydı Google Apps Script 10 saniyeyi aştığında oluşan sahte hata düzeltildi.
+- Google E-Tablo isteği 30 sn zaman aşımı + 3 kontrollü deneme kullanır.
+- Aynı requestId korunduğu için yeniden deneme çift sipariş oluşturmaz.
+- Hata halinde adres ve sepet korunur; native uyarı yerine ekranda Tekrar Dene gösterilir.
+- Başarısız denemeden sonra buton kilitli kalmaz.

@@ -677,9 +677,15 @@ async function finalizeOrder(personalApproved,button){
     success(r.order.id);
   }catch(err){
     console.error('Sipariş oluşturma hatası:',err);
-    if(status)status.textContent='Sipariş kaydedilemedi. Bilgileriniz silinmedi; tekrar deneyebilirsiniz.';
-    alert(err?.message||'Sipariş oluşturulamadı. Lütfen tekrar deneyin.');
-    if(btn){btn.disabled=false;btn.textContent=oldText}
+    // Adres/sepet kesinlikle sıfırlanmaz. Aynı requestId korunur; tekrar denendiğinde
+    // sunucu/Google E-Tablo daha önce kaydetmişse ikinci sipariş üretmeden mevcut siparişi döndürür.
+    orderSubmitting=false;
+    if(btn){btn.disabled=false;btn.textContent='Tekrar Dene ↻'}
+    if(status){
+      status.innerHTML='<b>Sipariş henüz kaydedilemedi.</b><br>Bilgileriniz duruyor. Bağlantıyı kontrol edip <b>Tekrar Dene</b> butonuna basın.';
+      status.classList.add('submitError');
+    }
+    return;
   }finally{
     orderSubmitting=false;
   }

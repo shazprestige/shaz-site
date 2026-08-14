@@ -1665,3 +1665,5 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
 /* Sipariş gönderilirken butonun durumu net olsun. */
 .checkoutPrimary[disabled]{opacity:.62!important;cursor:wait!important;pointer-events:none!important}
 .checkoutSubmitStatus{display:block;margin-top:9px;text-align:center;font-size:11px;color:#667085;min-height:16px}
+
+.checkoutSubmitStatus.submitError{display:block;margin-top:12px;padding:12px 14px;border:1px solid #e5c9c9;border-radius:14px;background:#fff7f7;color:#8b1f1f;line-height:1.45;text-align:left}
