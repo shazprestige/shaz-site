@@ -213,12 +213,18 @@ function nextLocalOrderId(orders){
 }
 
 let sheetSyncRunning=false;
+let lastSheetSyncInfo={at:'',ok:null,error:'',synced:0,pending:0};
 async function syncPendingOrdersToSheets(){
-  if(sheetSyncRunning || !GOOGLE_SHEETS_WEBHOOK_URL || !GOOGLE_SHEETS_SECRET)return;
+  if(sheetSyncRunning)return {ok:false,busy:true};
+  if(!GOOGLE_SHEETS_WEBHOOK_URL || !GOOGLE_SHEETS_SECRET){
+    const missing=[!GOOGLE_SHEETS_WEBHOOK_URL?'GOOGLE_SHEETS_WEBHOOK_URL':'',!GOOGLE_SHEETS_SECRET?'GOOGLE_SHEETS_SECRET':''].filter(Boolean).join(', ');
+    lastSheetSyncInfo={at:new Date().toISOString(),ok:false,error:'Render Environment eksik: '+missing,synced:0,pending:readJson('orders.json',[]).filter(o=>o.sheetSyncStatus!=='synced').length};
+    return lastSheetSyncInfo;
+  }
   sheetSyncRunning=true;
   try{
     const orders=readJson('orders.json',[]);
-    let changed=false;
+    let changed=false, syncedNow=0, lastError='';
     for(const order of orders.filter(o=>o.sheetSyncStatus!=='synced').slice().reverse()){
       try{
         const sheet=await sheetsRequest({action:'create',requestId:order.requestId,order});
@@ -226,11 +232,13 @@ async function syncPendingOrdersToSheets(){
         order.sheetSyncedAt=new Date().toISOString();
         order.sheetId=sheet.id||order.id;
         order.sheetSyncError='';
+        syncedNow++;
         changed=true;
       }catch(e){
         order.sheetSyncStatus='pending';
         order.sheetSyncError=String(e?.message||e).slice(0,500);
         order.sheetLastTriedAt=new Date().toISOString();
+        lastError=order.sheetSyncError;
         changed=true;
       }
     }
@@ -238,6 +246,9 @@ async function syncPendingOrdersToSheets(){
       writeJson('orders.json',orders);
       persistOrdersToGithub().catch(e=>console.error('Sipariş GitHub kalıcı kayıt:',e));
     }
+    const pending=orders.filter(o=>o.sheetSyncStatus!=='synced').length;
+    lastSheetSyncInfo={at:new Date().toISOString(),ok:pending===0,error:lastError,synced:syncedNow,pending};
+    return lastSheetSyncInfo;
   }finally{sheetSyncRunning=false;}
 }
 
@@ -506,12 +517,35 @@ app.post('/api/orders',async(req,res)=>{
 });
 
 // Yönetim panelinden gerektiğinde Google E-Tablo senkronizasyonunu elle tetikleyebilmek için.
+app.get('/api/orders/sync-status',requireAdmin,(req,res)=>{
+  const orders=readJson('orders.json',[]);
+  const pendingOrders=orders.filter(o=>o.sheetSyncStatus!=='synced');
+  const lastError=pendingOrders.find(o=>o.sheetSyncError)?.sheetSyncError||lastSheetSyncInfo.error||'';
+  res.json({
+    ok:true,
+    configured:!!(GOOGLE_SHEETS_WEBHOOK_URL&&GOOGLE_SHEETS_SECRET),
+    hasWebhook:!!GOOGLE_SHEETS_WEBHOOK_URL,
+    hasSecret:!!GOOGLE_SHEETS_SECRET,
+    pending:pendingOrders.length,
+    lastError,
+    lastSync:lastSheetSyncInfo.at||'',
+    webhookHost:(()=>{try{return new URL(GOOGLE_SHEETS_WEBHOOK_URL).host}catch{return ''}})()
+  });
+});
 app.post('/api/orders/sync',requireAdmin,async(req,res)=>{
   try{
-    await syncPendingOrdersToSheets();
+    const info=await syncPendingOrdersToSheets();
     const orders=readJson('orders.json',[]);
     const pending=orders.filter(o=>o.sheetSyncStatus!=='synced').length;
-    res.json({ok:true,pending});
+    res.json({ok:true,pending,info});
+  }catch(e){res.status(500).json({ok:false,message:String(e?.message||e)})}
+});
+app.post('/api/orders/sheets-test',requireAdmin,async(req,res)=>{
+  try{
+    if(!GOOGLE_SHEETS_WEBHOOK_URL)throw new Error('Render Environment içinde GOOGLE_SHEETS_WEBHOOK_URL eksik.');
+    if(!GOOGLE_SHEETS_SECRET)throw new Error('Render Environment içinde GOOGLE_SHEETS_SECRET eksik.');
+    const d=await sheetsRequest({action:'ping'});
+    res.json({ok:true,version:d.version||'',sheet:d.sheet||''});
   }catch(e){res.status(500).json({ok:false,message:String(e?.message||e)})}
 });
 

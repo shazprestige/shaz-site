@@ -1667,3 +1667,28 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
 .checkoutSubmitStatus{display:block;margin-top:9px;text-align:center;font-size:11px;color:#667085;min-height:16px}
 
 .checkoutSubmitStatus.submitError{display:block;margin-top:12px;padding:12px 14px;border:1px solid #e5c9c9;border-radius:14px;background:#fff7f7;color:#8b1f1f;line-height:1.45;text-align:left}
+
+
+/* ===== V61 — sipariş başarı ekranı ortalama + görünür iletişim butonları ===== */
+.successCentered{max-width:560px;margin:0 auto;text-align:center;padding:28px 10px 70px}
+.successCentered .check{font-size:34px;line-height:1;margin-bottom:18px}
+.successCentered h2{margin:0 0 14px;font-size:clamp(30px,6vw,42px);line-height:1.08}
+.successCentered>p{margin:10px auto;max-width:520px;line-height:1.5}
+.successCentered .successTagline{font-size:clamp(20px,4.8vw,30px);line-height:1.35;margin:18px auto 12px;color:#111}
+.successCentered .successOrderNo{font-size:18px;margin-bottom:20px}
+.successCentered .actions{width:min(100%,420px);max-width:420px;margin:18px auto 0;display:grid;gap:10px}
+.contactBtn{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;width:100%!important;padding:12px 14px!important;border-radius:14px!important;color:#fff!important;text-decoration:none!important;text-align:left!important;font-weight:700!important;box-shadow:0 5px 16px rgba(0,0,0,.10)!important}
+.contactBtn.wa{background:#20b35b!important}
+.contactBtn.ig{background:linear-gradient(110deg,#ff7a00 0%,#ff3e5f 48%,#8a3ffc 100%)!important}
+.contactBtn .brandIcon{flex:0 0 28px!important;width:28px!important;height:28px!important;margin:0!important;color:#fff!important}
+.contactBtn .brandIcon svg{width:28px!important;height:28px!important}
+.contactBtn b{display:block;font-size:14px;line-height:1.2;color:#fff!important}
+.contactBtn small{display:block;margin-top:3px;font-size:12px;line-height:1.25;color:#fff!important;opacity:.96}
+@media(max-width:600px){.successCentered{padding:18px 6px 50px}.successCentered .actions{width:100%}.contactBtn{padding:12px!important}.contactBtn b{font-size:13px}.contactBtn small{font-size:11px}}
+
+/* V61 — E-Tablo tanı ekranı */
+.sheetSyncStatus{margin:10px 0 12px;padding:11px 13px;border-radius:10px;font-size:12px;line-height:1.45;border:1px solid #dfe3e8;background:#f7f8fa;color:#333}
+.sheetSyncStatus.ok{border-color:#b7dfc3;background:#f0fbf3;color:#185b2c}
+.sheetSyncStatus.warn{border-color:#f0cf9c;background:#fff8ec;color:#765019}
+.sheetSynced{margin-top:3px;color:#198754;font-size:11px;font-weight:700}
+.sheetPending{margin-top:3px;color:#b36b00;font-size:11px;font-weight:700;max-width:540px;overflow-wrap:anywhere}

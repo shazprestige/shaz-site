@@ -1,0 +1,8 @@
+V61
+- Sipariş başarı ekranı ortalandı.
+- WhatsApp ve Instagram butonları başarı ekranında görünür marka renkleriyle düzeltildi.
+- Başarı ekranındaki slogan: 𝓟𝓻𝓮𝓼𝓽𝓲𝓳𝓲𝓷 𝓖𝓮𝓻ç𝓮𝓴 𝓢𝓪𝓱𝓲𝓹𝓵𝓮𝓻𝓲𝓷𝓮.
+- Yönetim paneli tarih filtresi UTC yerine Europe/Istanbul tarihini kullanır.
+- Google E-Tablo için bağlantı test butonu, manuel senkronizasyon ve gerçek hata mesajı eklendi.
+- Sipariş kartında Google E-Tablo'ya düştü / bekliyor durumu görünür.
+- Apps Script'e ping testi eklendi. google-apps-script.gs güncellenip Web App yeni sürüm olarak dağıtılmalıdır.

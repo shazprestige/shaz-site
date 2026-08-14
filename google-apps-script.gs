@@ -27,6 +27,7 @@ function doPost(e) {
       return json_({ok:false, message:'Yetkisiz istek.'});
     }
 
+    if (data.action === 'ping') return json_({ok:true, version:'V61', sheet:SHEET_NAME});
     if (data.action === 'create') return createOrder_(data);
     if (data.action === 'status') return updateStatus_(data);
 

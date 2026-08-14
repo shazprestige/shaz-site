@@ -74,3 +74,11 @@ V32 GÖRÜNÜM DÜZELTMELERİ
 - Her müşteri bloğunun ardından gri ayırıcı satır gelir.
 - Google E-Tablo'da HAZIR MI / KARGOYA VERİLDİ Mİ alanları gerçek tıklanabilir checkbox'tır.
 - İndirilen .xlsx dosyada checkbox sembolleri görünür; üçüncü taraf Excel görüntüleyicilerinde gerçek form checkbox garantisi yoktur.
+
+
+V61 KONTROL
+- Yönetim paneli > Siparişler > “E-Tablo Bağlantısını Test Et” butonuna bas.
+- “Geçersiz işlem.” görürsen Apps Script eski sürümdür: google-apps-script.gs dosyasını yapıştır, Deploy > Manage deployments > Edit > New version > Deploy yap.
+- “Yetkisiz istek.” görürsen Apps Script > Script Properties içindeki SHAZ_WEBHOOK_SECRET ile Render GOOGLE_SHEETS_SECRET aynı değildir.
+- “GOOGLE_SHEETS_WEBHOOK_URL eksik” görürsen Render Environment URL değişkenini ekle.
+- Test başarılıysa bekleyen siparişlerde “E-Tablo'ya Şimdi Gönder” butonuna bas; otomatik senkron da 60 saniyede bir çalışır.

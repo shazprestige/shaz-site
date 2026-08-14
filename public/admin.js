@@ -521,8 +521,10 @@ async function renderOrders(){
     <div class=field><label><b>Durum</b></label><select id=orderStatusFilter class=formControl onchange=paintOrders()><option value=all>Tümü</option><option value=new>Yeni</option><option value=prepared>Hazırlandı</option><option value=shipped>Kargoya Verildi</option><option value=notexported>Excel’e Aktarılmadı</option><option value=exported>Excel’e Aktarıldı</option></select></div>
     <button class=smallBtn onclick="selectVisibleOrders(true)">Görünenlerin Hepsini Seç</button><button class=smallBtn onclick="selectVisibleOrders(false)">Seçimi Kaldır</button>
     <button class=smallBtn onclick="exportOrdersExcel()">⬇ Siparişleri Excel'e Aktar</button>
-  </div><div class=bulkStatus><b>Seçilen siparişleri:</b><button class=statusNew onclick="bulkOrderStatus('new')">Yeni</button><button class=statusPrepared onclick="bulkOrderStatus('prepared')">✓ Hazırlandı</button><button class=statusShipped onclick="bulkOrderStatus('shipped')">📦 Kargoya Verildi</button></div></div><div id=ordersList></div>`;
-  shell('Siparişler','Tarihe göre bakabilir, siparişleri tek tek veya toplu seçebilir, Hazırlandı/Kargoya Verildi durumunu verebilir ve hepsini Excel’e aktarabilirsin.',html);paintOrders();
+    <button class=smallBtn onclick="syncOrdersToSheet(event)">↻ E-Tablo'ya Şimdi Gönder</button>
+    <button class=smallBtn onclick="testSheetConnection(event)">🔌 E-Tablo Bağlantısını Test Et</button>
+  </div><div id=sheetSyncStatus class=sheetSyncStatus>Google E-Tablo durumu kontrol ediliyor…</div><div class=bulkStatus><b>Seçilen siparişleri:</b><button class=statusNew onclick="bulkOrderStatus('new')">Yeni</button><button class=statusPrepared onclick="bulkOrderStatus('prepared')">✓ Hazırlandı</button><button class=statusShipped onclick="bulkOrderStatus('shipped')">📦 Kargoya Verildi</button></div></div><div id=ordersList></div>`;
+  shell('Siparişler','Tarihe göre bakabilir, siparişleri tek tek veya toplu seçebilir, Hazırlandı/Kargoya Verildi durumunu verebilir ve hepsini Excel’e aktarabilirsin.',html);paintOrders();loadSheetSyncStatus();
 }
 async function exportOrdersExcel(){
   const btn=event?.currentTarget;
@@ -547,17 +549,52 @@ async function exportOrdersExcel(){
     if(btn){btn.disabled=false;btn.textContent="⬇ Siparişleri Excel'e Aktar";}
   }
 }
+function orderLocalDate(o){
+  const tr=String(o?.createdAtTR||'').trim();
+  const m=tr.match(/^(\d{2})[.\/-](\d{2})[.\/-](\d{4})/);
+  if(m)return `${m[3]}-${m[2]}-${m[1]}`;
+  try{
+    const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(o?.createdAt||''));
+    const val=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+    if(val.year&&val.month&&val.day)return `${val.year}-${val.month}-${val.day}`;
+  }catch(e){}
+  return String(o?.createdAt||'').slice(0,10);
+}
 function filteredOrders(){
   const d=$('#orderDate')?.value||'';
   const st=$('#orderStatusFilter')?.value||'all';
   return orderCache.filter(o=>{
-    const dateOk=!d||String(o.createdAt||'').slice(0,10)===d;
+    const dateOk=!d||orderLocalDate(o)===d;
     let statusOk=true;
     if(st==='notexported')statusOk=!o.excelExportedAt;
     else if(st==='exported')statusOk=!!o.excelExportedAt;
     else if(st!=='all')statusOk=(o.status||'new')===st;
     return dateOk&&statusOk;
   });
+}
+async function loadSheetSyncStatus(){
+  const box=$('#sheetSyncStatus'); if(!box)return;
+  try{
+    const r=await fetch('/api/orders/sync-status'); const d=await r.json();
+    if(!r.ok)throw new Error(d.message||'Durum alınamadı');
+    const cfg=d.configured?'✅ Render bağlantı bilgileri mevcut':'❌ Render bağlantı bilgileri eksik';
+    const pend=d.pending?` · ${d.pending} sipariş E-Tablo bekliyor`:' · Bekleyen sipariş yok';
+    const err=d.lastError?`<br><b>Son hata:</b> ${esc(d.lastError)}`:'';
+    box.className='sheetSyncStatus '+(d.pending||!d.configured?'warn':'ok');
+    box.innerHTML=`<b>Google E-Tablo:</b> ${cfg}${pend}${err}`;
+  }catch(e){box.className='sheetSyncStatus warn';box.textContent='Google E-Tablo durumu okunamadı: '+e.message}
+}
+async function syncOrdersToSheet(ev){
+  const b=ev?.currentTarget; if(b){b.disabled=true;b.textContent='Gönderiliyor…'}
+  try{const r=await fetch('/api/orders/sync',{method:'POST'});const d=await r.json();if(!r.ok)throw new Error(d.message||'Senkronizasyon başarısız');await loadSheetSyncStatus();orderCache=await fetch('/api/orders').then(x=>x.json());paintOrders()}
+  catch(e){alert('E-Tablo senkronizasyon hatası: '+e.message)}
+  finally{if(b){b.disabled=false;b.textContent="↻ E-Tablo'ya Şimdi Gönder"}}
+}
+async function testSheetConnection(ev){
+  const b=ev?.currentTarget;if(b){b.disabled=true;b.textContent='Test ediliyor…'}
+  try{const r=await fetch('/api/orders/sheets-test',{method:'POST'});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.message||'Bağlantı başarısız');alert('Google E-Tablo bağlantısı çalışıyor. '+(d.version?('Apps Script '+d.version):''));}
+  catch(e){alert('Google E-Tablo bağlantı hatası: '+e.message+'\n\nRender URL/SECRET veya Apps Script dağıtımı kontrol edilmeli.')}
+  finally{if(b){b.disabled=false;b.textContent='🔌 E-Tablo Bağlantısını Test Et'};loadSheetSyncStatus()}
 }
 function paintOrders(){const list=$('#ordersList');if(!list)return;const os=filteredOrders();list.innerHTML=os.length?os.map(orderCard).join(''):'<div class=panel>Bu filtrede sipariş yok.</div>'}
 function selectVisibleOrders(on){document.querySelectorAll('.orderSelect').forEach(x=>x.checked=on)}
@@ -568,7 +605,7 @@ function orderCard(o){
   const c=o.customer||{}; const st=o.status||'new';
   const addr=c.deliveryMode==='branch'?`Aras Kargo Şube Teslim · ${c.branchName||''} · ${c.district||''} · ${c.province||''}`:[c.neighborhood,c.fullAddress||c.avenue,c.street,c.buildingNo?`Bina ${c.buildingNo}`:'',c.floor?`Kat ${c.floor}`:'',c.doorNo?`Daire ${c.doorNo}`:'',c.district,c.province].filter(Boolean).join(' · ');
   return `<div class="orderAdminCard status-${st}">
-    <div class=orderAdminTop><div class=orderIdentity><input class=orderSelect type=checkbox value="${esc(o.id)}"><div><b class=orderId>${esc(o.id)}</b><div class=orderTime>🗓 ${esc(o.createdAtTR||formatTR(o.createdAt))}</div>${o.excelExportedAt?`<div class=excelExported>📊 Excel’e Aktarıldı · ${esc(o.excelExportedAtTR||formatTR(o.excelExportedAt))}</div>`:`<div class=excelNotExported>● Excel’e Aktarılmadı</div>`}</div></div><div><span class="statusBadge ${st}">${statusText(st)}</span><div class=orderTotal>₺${Number(o.total||0).toLocaleString('tr-TR')}</div></div></div>
+    <div class=orderAdminTop><div class=orderIdentity><input class=orderSelect type=checkbox value="${esc(o.id)}"><div><b class=orderId>${esc(o.id)}</b><div class=orderTime>🗓 ${esc(o.createdAtTR||formatTR(o.createdAt))}</div>${o.sheetSyncStatus==='synced'?`<div class=sheetSynced>✅ Google E-Tablo'ya düştü</div>`:`<div class=sheetPending>⏳ Google E-Tablo bekliyor${o.sheetSyncError?` · ${esc(o.sheetSyncError)}`:''}</div>`}${o.excelExportedAt?`<div class=excelExported>📊 Excel’e Aktarıldı · ${esc(o.excelExportedAtTR||formatTR(o.excelExportedAt))}</div>`:`<div class=excelNotExported>● İndirilen Excel’e aktarılmadı</div>`}</div></div><div><span class="statusBadge ${st}">${statusText(st)}</span><div class=orderTotal>₺${Number(o.total||0).toLocaleString('tr-TR')}</div></div></div>
     <div class=orderColumns><div><h4>Müşteri</h4><b>${esc(c.fullName||'Adres bilgisi eski siparişte yok')}</b><br>${esc(c.phone||'')} ${c.extraPhone?`<br>2. Tel: ${esc(c.extraPhone)}`:''}<br><span class=muted>${esc(addr)}</span>${c.placeType==='business'?`<br><b>İş yeri:</b> ${esc(c.businessName||'')}`:''}${c.note?`<br><b>Not:</b> ${esc(c.note)}`:''}</div><div><h4>Sipariş İçeriği</h4>${(o.items||[]).map(orderItemDetails).join('')}</div></div>
     <div class=orderActions><button onclick="oneOrderStatus('${esc(o.id)}','new')">Yeni</button><button onclick="oneOrderStatus('${esc(o.id)}','prepared')">✓ Hazırlandı</button><button onclick="oneOrderStatus('${esc(o.id)}','shipped')">📦 Kargoya Verildi</button></div>
     <div class=orderMeta>Ödeme: <b>${o.payment==='cod'?'Kapıda ödeme':'Online ödeme'}</b> · Kişiye özel onay: <b>${o.personalApproval?.approved?'ALINDI':'YOK'}</b> · Kargo bilgilendirmesi: <b>${o.shippingNoticeAccepted?'GÖRÜLDÜ':'YOK'}</b></div>
