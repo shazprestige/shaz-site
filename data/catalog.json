@@ -342,7 +342,7 @@
     },
     {
       "id": "urun-1786751615679",
-      "name": "GÖZLÜK",
+      "name": "Yeni Ürün",
       "description": "",
       "features": [],
       "category": "gozlukler",
@@ -354,8 +354,8 @@
       "image": "",
       "images": [],
       "hidden": false,
-      "setEligible": true,
-      "isSet": false,
+      "setEligible": false,
+      "isSet": true,
       "setItems": [],
       "writePositions": []
     }
