@@ -39,6 +39,20 @@
       "hidden": false,
       "cover": "",
       "size": "small"
+    },
+    {
+      "id": "kategori-1786740581832",
+      "name": "Çakmaklar",
+      "order": 6,
+      "hidden": false,
+      "cover": ""
+    },
+    {
+      "id": "kategori-1786740619033",
+      "name": "Kemer",
+      "order": 7,
+      "hidden": false,
+      "cover": ""
     }
   ],
   "products": [
@@ -116,6 +130,78 @@
         "/uploads/1786724306426-vrpxf0.jpeg",
         "/uploads/1786724306713-eorq5p.jpeg"
       ]
+    },
+    {
+      "id": "urun-1786740541681-u8uqq",
+      "name": "gözlüklü erkek aksesuar seti Kopya",
+      "category": "setler",
+      "price": 1399,
+      "oldPrice": 1199,
+      "stock": 3,
+      "hidden": false,
+      "badge": "",
+      "image": "",
+      "setEligible": false,
+      "isSet": true,
+      "setItems": [
+        {
+          "id": "setitem-1786740541681-0-5ln",
+          "name": "Saat",
+          "type": "Saat",
+          "removeDiscount": 250,
+          "writePositions": [
+            "Arka kapak",
+            "Kordon"
+          ]
+        },
+        {
+          "id": "setitem-1786740541681-1-myr",
+          "name": "Çakmak",
+          "type": "Çakmak",
+          "removeDiscount": 120,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ]
+        },
+        {
+          "id": "setitem-1786740541681-2-xfe",
+          "name": "Cüzdan",
+          "type": "Cüzdan",
+          "removeDiscount": 180,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ]
+        },
+        {
+          "id": "setitem-1786740541681-3-b02",
+          "name": "Kemer",
+          "type": "Kemer",
+          "removeDiscount": 140,
+          "writePositions": [
+            "Tokaya",
+            "Kemer ucuna"
+          ]
+        },
+        {
+          "id": "setitem-1786740541681-4-bqs",
+          "name": "Bileklik",
+          "type": "Bileklik",
+          "removeDiscount": 90,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ]
+        }
+      ],
+      "description": "su geçirmez\nçelik\nsafir çizilmez cam",
+      "features": [],
+      "writePositions": [
+        "arka kapak",
+        "kordon"
+      ],
+      "images": []
     },
     {
       "id": "p2",
