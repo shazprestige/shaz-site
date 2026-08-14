@@ -289,6 +289,27 @@
       ],
       "description": "",
       "features": []
+    },
+    {
+      "id": "urun-1786741075329",
+      "name": "Yeni Ürün",
+      "description": "",
+      "features": [],
+      "category": "cuzdanlar",
+      "price": 0,
+      "oldPrice": 0,
+      "stock": 0,
+      "badge": "",
+      "badgeColor": "orange",
+      "image": "/uploads/1786741094421-2xuskg.jpg",
+      "images": [
+        "/uploads/1786741094421-2xuskg.jpg"
+      ],
+      "hidden": false,
+      "setEligible": true,
+      "isSet": false,
+      "setItems": [],
+      "writePositions": []
     }
   ],
   "builder": {
