@@ -1584,3 +1584,47 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
 .duplicateBtn{border:1px solid #b9c2cc;background:#fff;color:#111;border-radius:8px;padding:10px 8px;font-weight:750;cursor:pointer}
 .duplicateBtn:hover{background:#f3f5f7}
 @media(max-width:900px){.catalogControlPanel{position:relative;top:auto}.catalogToolbar{grid-template-columns:1fr}.categoryAdminBlock{scroll-margin-top:20px}}
+
+
+/* ===== V56 — PC ürün detayı: beyaz yan boşluk yok; mobil kurallara dokunulmaz ===== */
+@media(min-width:701px){
+  .drawer{width:min(680px,50vw)!important;padding:18px 0 0!important;}
+  .productDetailShell{padding-left:20px!important;padding-right:20px!important;}
+  .productDetailGallery{margin-left:-20px!important;margin-right:-20px!important;}
+  .productDetailGallery .productDetailMedia{
+    width:100%!important;height:auto!important;max-height:none!important;min-height:0!important;
+    display:block!important;background:transparent!important;border-radius:0!important;border-left:0!important;border-right:0!important;
+    overflow:hidden!important;
+  }
+  .productDetailGallery .productDetailMedia img{
+    display:block!important;width:100%!important;height:auto!important;max-width:none!important;max-height:none!important;
+    object-fit:fill!important;background:transparent!important;border-radius:0!important;
+  }
+  .productDetailThumbs{padding:8px 20px 0!important;}
+  .productDetailBottomBar{width:min(680px,50vw)!important;}
+}
+
+/* V56 — yönetim paneli: tek kategori, kompakt ürün listesi, aç-kapa düzenleyici */
+.categoryAdminBlock.open{overflow:visible!important}
+.categorySettingsDetails{margin:12px 0;border:1px solid #e4e7eb;border-radius:10px;background:#fafbfc}
+.categorySettingsDetails summary{cursor:pointer;padding:11px 13px;font-weight:800;list-style:none}
+.categorySettingsDetails summary::-webkit-details-marker{display:none}
+.categorySettingsDetails summary:after{content:'＋';float:right;font-size:17px;font-weight:400}.categorySettingsDetails[open] summary:after{content:'−'}
+.addProductPrimary{background:#111!important;color:#fff!important;border-color:#111!important;font-weight:800!important}
+.adminProductCompactList{display:grid;gap:9px;margin-top:12px}
+.adminProductCompact{border:1px solid #e0e4e9;border-radius:11px;background:#fff;overflow:hidden}
+.adminProductCompactHead{display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:8px;align-items:center;padding:8px}
+.adminProductCompactMain{border:0;background:transparent;display:flex;align-items:center;gap:11px;text-align:left;min-width:0;padding:0;cursor:pointer}
+.compactThumb{width:58px;height:48px;flex:0 0 58px;border-radius:7px;background:#f0f2f4;overflow:hidden;display:grid;place-items:center;font-size:8px;color:#8a9099}
+.compactThumb img{width:100%;height:100%;object-fit:cover}
+.compactMeta{min-width:0;flex:1}.compactMeta b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}.compactMeta small{display:block;color:#69717c;font-size:10px;margin-top:3px}
+.compactEdit{font-size:10px;font-weight:800;color:#555;white-space:nowrap}
+.adminProductCompact.editing{border-color:#b9c1ca;box-shadow:0 5px 16px #0000000d}.compactEditor{border-top:1px solid #e6e9ed;padding:10px;background:#fafbfc}
+.compactEditor .adminProductCard{margin:0!important;border:0!important;box-shadow:none!important;background:transparent!important}
+.compactEditor .adminProductImage{max-height:190px}.compactEditor .adminProductImage img{object-fit:contain}
+.compactEditor .productAdminActions{grid-template-columns:1fr!important}
+@media(max-width:900px){.adminProductCompactHead{grid-template-columns:minmax(0,1fr) 92px}.compactThumb{width:48px;flex-basis:48px}}
+
+/* V57 — kategori başlıkları bütün sekmelerde aynı referans noktasında */
+#products .sectionHead{margin-top:0!important;margin-bottom:22px!important}
+#products .sectionHead h2{margin-top:0!important}

@@ -1,0 +1,6 @@
+V56
+- PC ürün detayında ürün fotoğrafının yan beyaz boşlukları kaldırıldı; görsel drawer genişliğine birleşir. Mobil ürün detay kuralları değiştirilmedi.
+- Yönetim panelinde Kategoriler & Ürünler bölümü tek-kategori çalışma düzenine geçirildi. Üst kategori menüsünden seçim yapınca yalnız o kategori görünür.
+- Ürünler artık kompakt satırlar halinde listelenir; Düzenle ile yalnız seçilen ürün formu açılır. Yeni Ürün Ekle sürekli görünür.
+- Çoğalt kopyasında tüm ürün bilgileri korunur ancak fotoğraflar boş gelir; yeni fotoğraf yükleme alanı açılır.
+- Mobil WhatsApp/Instagram kutuları aşağı kaydırdıkça sağdan yatay biçimde ortaya, yukarı çıktıkça ortadan sağa kayar. Masaüstü düzeni korunur.

@@ -1,5 +1,6 @@
 
 let settings={},catalog={};
+let adminOpenCategory=null,adminProductSearch="",adminOpenProduct=null;
 let currentPreviewTarget=null;
 let previewFocusToken=0;
 function preserveAdminViewport(fn){
@@ -205,33 +206,41 @@ async function uploadCampaignBulk(){
 
 function renderCatalog(){
   const cats=catalog.categories.filter(c=>c.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0));
-  if(!adminOpenCategory&&cats.length)adminOpenCategory=cats[0].id;
+  if(!adminOpenCategory||!cats.some(c=>c.id===adminOpenCategory))adminOpenCategory=cats[0]?.id||null;
   const nav=cats.map(c=>{
     const count=catalog.products.filter(p=>p.category===c.id).length;
     return `<button class="categoryJumpBtn ${adminOpenCategory===c.id?'active':''}" onclick="jumpAdminCategory('${attr(c.id)}')">${esc(c.name)} <span>${count}</span></button>`;
   }).join('');
+  const active=cats.find(c=>c.id===adminOpenCategory);
   let html=`<div class="panel catalogControlPanel">
-    <div class=campaignAdminHead><div><h2>Kategoriler & Ürünler</h2><div class=help>Yüzlerce ürün olsa bile aşağı kaydırmak zorunda değilsin. Kategoriye tek tıkla geç; ürün adından da ara.</div></div><button class=btn style="max-width:200px" onclick=addCategory()>＋ Kategori Ekle</button></div>
+    <div class=campaignAdminHead><div><h2>Kategoriler & Ürünler</h2><div class=help>Kategori seç; yalnızca o kategorinin ürünleri açılır. 100 ürün olsa bile diğer kategoriye geçmek için aşağı kaydırman gerekmez.</div></div><button class=btn style="max-width:200px" onclick=addCategory()>＋ Kategori Ekle</button></div>
     <div class=catalogToolbar>
       <div class=categoryQuickNav>${nav}</div>
-      <div class=adminProductSearch><input class=formControl value="${attr(adminProductSearch)}" placeholder="Ürün ara..." oninput="filterAdminProducts(this.value)"></div>
+      <div class=adminProductSearch><input class=formControl value="${attr(adminProductSearch)}" placeholder="Bu kategoride ürün ara..." oninput="filterAdminProducts(this.value)"></div>
     </div>
   </div>`;
-  html+=cats.map(c=>categoryBlock(c)).join('');
-  shell('Kategoriler & Ürünler','Kategoriler üstte sabit bir hızlı menüde. Bir kategoriye dokununca yalnız o bölüm açılır; gereksiz uzun kaydırma ortadan kalkar.',html);
+  html+=active?categoryBlock(active):'<div class=panel>Henüz kategori yok.</div>';
+  shell('Kategoriler & Ürünler','Ürün yönetimi artık kategori bazlıdır. Üstten kategori değiştir; ürünleri kompakt listeden açıp düzenle.',html);
 }
 function jumpAdminCategory(id){
   adminOpenCategory=id;
+  adminProductSearch='';
+  adminOpenProduct=null;
   renderCatalog();
-  requestAnimationFrame(()=>document.getElementById('admin-cat-'+id)?.scrollIntoView({behavior:'smooth',block:'start'}));
+  requestAnimationFrame(()=>document.querySelector('.catalogControlPanel')?.scrollIntoView({behavior:'smooth',block:'start'}));
 }
 function toggleAdminCategory(id){
-  adminOpenCategory=adminOpenCategory===id?null:id;
+  adminOpenCategory=id;
   renderCatalog();
 }
 function filterAdminProducts(value){
   adminProductSearch=(value||'').trim();
   renderCatalog();
+}
+function toggleAdminProduct(id){
+  adminOpenProduct=adminOpenProduct===id?null:id;
+  renderCatalog();
+  if(adminOpenProduct)requestAnimationFrame(()=>document.getElementById('admin-product-'+id)?.scrollIntoView({behavior:'smooth',block:'nearest'}));
 }
 function categoryBlock(c){
   const ci=catalog.categories.findIndex(x=>x.id===c.id);
@@ -239,27 +248,40 @@ function categoryBlock(c){
   const q=adminProductSearch.toLocaleLowerCase('tr-TR');
   const ps=q?allPs.filter(p=>`${p.name||''} ${p.description||''} ${(p.features||[]).join(' ')}`.toLocaleLowerCase('tr-TR').includes(q)):allPs;
   const catTarget=`[data-category-id="${c.id}"]`;
-  const isOpen=adminOpenCategory===c.id || (!!q&&ps.length>0);
-  return `<section class="categoryAdminBlock ${isOpen?'open':'collapsed'}" id="admin-cat-${attr(c.id)}">
+  return `<section class="categoryAdminBlock open" id="admin-cat-${attr(c.id)}">
     <div class=categoryAdminHeader>
-      <button type=button class=categoryHeaderMain onclick="toggleAdminCategory('${attr(c.id)}')">
-        <span><h2>${esc(c.name)}</h2><span class=help>${q?`${ps.length} eşleşme / `:''}${allPs.length} ürün</span></span>
-        <span class=categoryChevron>${isOpen?'−':'+'}</span>
-      </button>
-      <button class=smallBtn onclick="addProduct('${attr(c.id)}')">＋ Bu Kategoriye Ürün Ekle</button>
+      <div class=categoryHeaderMain style="cursor:default"><span><h2>${esc(c.name)}</h2><span class=help>${q?`${ps.length} eşleşme / `:''}${allPs.length} ürün</span></span></div>
+      <button class="smallBtn addProductPrimary" onclick="addProduct('${attr(c.id)}')">＋ Yeni Ürün Ekle</button>
     </div>
-    ${isOpen?`<div class=categoryAdminBody>
-      <div class="grid2 compactCategorySettings">
-        ${input('Kategori adı',`catalog.categories[${ci}].name`,c.name,'Aynı ad hem üst menüde hem Kategoriler ekranında görünür.',catTarget)}
-        ${input('Sıra',`catalog.categories[${ci}].order`,c.order||0,'Aynı sıra hem üst menüde hem Kategoriler ekranında kullanılır.',catTarget,'number')}
-        <div class=field><label><b>Kategori kapak fotoğrafı</b></label><input id="catFile${ci}" type=file accept="image/*"><button class=smallBtn onclick="uploadCategoryCover(${ci})">Fotoğrafı Yükle</button><div class=help>Bu görsel Kategoriler ekranındaki kutuda görünür. Üstteki kategori sekmesiyle aynı kategori kaydına bağlıdır.</div>${c.cover?`<img src="${attr(c.cover)}" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px">`:''}</div>
-        <div class=field><label><b>Kategoriyi gizle</b></label><label><input data-preview-target="${attr(catTarget)}" type=checkbox ${c.hidden?'checked':''} onchange="catalog.categories[${ci}].hidden=this.checked;changed(this.dataset.previewTarget)"> Gizli</label></div>
-      </div>
-      <div class=adminProductGrid>${ps.map(p=>productCard(p)).join('')||(q?'<div class=emptyAdmin>Bu kategoride aramana uyan ürün yok.</div>':'<div class=emptyAdmin>Bu kategoride henüz ürün yok.</div>')}</div>
-    </div>`:''}
+    <div class=categoryAdminBody>
+      <details class=categorySettingsDetails><summary>Kategori ayarları</summary>
+        <div class="grid2 compactCategorySettings">
+          ${input('Kategori adı',`catalog.categories[${ci}].name`,c.name,'Aynı ad hem üst menüde hem Kategoriler ekranında görünür.',catTarget)}
+          ${input('Sıra',`catalog.categories[${ci}].order`,c.order||0,'Aynı sıra hem üst menüde hem Kategoriler ekranında kullanılır.',catTarget,'number')}
+          <div class=field><label><b>Kategori kapak fotoğrafı</b></label><input id="catFile${ci}" type=file accept="image/*"><button class=smallBtn onclick="uploadCategoryCover(${ci})">Fotoğrafı Yükle</button><div class=help>Bu görsel Kategoriler ekranındaki kutuda görünür.</div>${c.cover?`<img src="${attr(c.cover)}" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px">`:''}</div>
+          <div class=field><label><b>Kategoriyi gizle</b></label><label><input data-preview-target="${attr(catTarget)}" type=checkbox ${c.hidden?'checked':''} onchange="catalog.categories[${ci}].hidden=this.checked;changed(this.dataset.previewTarget)"> Gizli</label></div>
+        </div>
+      </details>
+      <div class=adminProductCompactList>${ps.map(p=>productCompactRow(p)).join('')||(q?'<div class=emptyAdmin>Bu kategoride aramana uyan ürün yok.</div>':'<div class=emptyAdmin>Bu kategoride henüz ürün yok. Yukarıdaki “Yeni Ürün Ekle” ile başlayabilirsin.</div>')}</div>
+    </div>
   </section>`;
 }
-
+function productCompactRow(p){
+  const i=catalog.products.findIndex(x=>x.id===p.id);
+  const img=p.image||productImages(p)[0]||'';
+  const open=adminOpenProduct===p.id;
+  return `<div class="adminProductCompact ${open?'editing':''}">
+    <div class=adminProductCompactHead>
+      <button class=adminProductCompactMain onclick="toggleAdminProduct('${attr(p.id)}')">
+        <span class=compactThumb>${img?`<img src="${attr(img)}">`:'Fotoğraf yok'}</span>
+        <span class=compactMeta><b>${esc(p.name||'Yeni Ürün')}</b><small>₺${Number(p.price||0).toLocaleString('tr-TR')} · Stok ${Number(p.stock||0)}${p.isSet?' · Hazır set':''}</small></span>
+        <span class=compactEdit>${open?'Düzenlemeyi kapat':'Düzenle'}</span>
+      </button>
+      <button class=duplicateBtn onclick="duplicateProduct(${i})">⧉ Çoğalt</button>
+    </div>
+    ${open?`<div class=compactEditor>${productCard(p,true)}</div>`:''}
+  </div>`;
+}
 async function uploadCategoryCover(ci){
   const f=$('#catFile'+ci)?.files?.[0]; if(!f)return alert('Kategori fotoğrafı seç.');
   const fd=new FormData(); fd.append('files',f);
@@ -284,7 +306,7 @@ function productGalleryAdmin(p,i){
     </div>
   </div>`).join('')}</div>`;
 }
-function productCard(p){
+function productCard(p,embedded=false){
   const i=catalog.products.findIndex(x=>x.id===p.id);
   const root=`[data-product-id="${p.id}"]`;
   const t=field=>`${root} [data-preview-field="${field}"]`;
@@ -360,7 +382,7 @@ Paslanmaz çelik kasa"
     </div>
 
     <div class=productAdminActions>
-      <button class=duplicateBtn onclick="duplicateProduct(${i})">⧉ Aynısını Çoğalt</button>
+      ${embedded?'':`<button class=duplicateBtn onclick="duplicateProduct(${i})">⧉ Aynısını Çoğalt</button>`}
       <button class=dangerBtn onclick="deleteProduct(${i})">Ürünü Sil</button>
     </div>
   </article>`;
@@ -373,9 +395,9 @@ function addCategory(){
 function addProduct(categoryId){
   const id='urun-'+Date.now();
   catalog.products.push({id,name:'Yeni Ürün',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:'',images:[],hidden:false,setEligible:categoryId!=='setler',isSet:false,setItems:[],writePositions:[]});
-  adminOpenCategory=categoryId;adminProductSearch='';
+  adminOpenCategory=categoryId;adminProductSearch='';adminOpenProduct=id;
   changed('#products');renderCatalog();
-  setTimeout(()=>document.getElementById('admin-product-'+id)?.scrollIntoView({behavior:'smooth',block:'center'}),80);
+  setTimeout(()=>document.getElementById('admin-product-'+id)?.scrollIntoView({behavior:'smooth',block:'nearest'}),80);
 }
 function duplicateProduct(i){
   const source=catalog.products[i];
@@ -390,6 +412,7 @@ function duplicateProduct(i){
   catalog.products.splice(i+1,0,copy);
   adminOpenCategory=copy.category;
   adminProductSearch='';
+  adminOpenProduct=copy.id;
   changed('#products');
   renderCatalog();
   setTimeout(()=>document.getElementById('admin-product-'+copy.id)?.scrollIntoView({behavior:'smooth',block:'center'}),80);

@@ -199,10 +199,17 @@ function setCategory(id,name,opts={}){
   // Üst kategori sekmesinden seçim yapıldığında ürün alanına gerçekten götür.
   if(opts.scroll!==false){
     requestAnimationFrame(()=>{
-      const target=document.getElementById('products');
+      // Her kategoride başlığı aynı noktaya getir. Eski hesap yalnızca varsayımsal
+      // 105px kullanıyordu; bu yüzden kampanya/hero alanının lacivert kısmı
+      // kategoriye göre farklı miktarda ekranda kalabiliyordu.
+      const target=document.querySelector('#products .sectionHead');
       if(!target)return;
-      const header=document.querySelector('.siteHeader');
-      const offset=(header?.getBoundingClientRect().height||105)+8;
+      const announce=document.getElementById('announceWrap');
+      const header=document.getElementById('stickyHeader');
+      const announceH=announce?.getBoundingClientRect().height||0;
+      const headerH=header?.getBoundingClientRect().height||0;
+      const visualGap=28;
+      const offset=announceH+headerH+visualGap;
       const y=Math.max(0,target.getBoundingClientRect().top+window.scrollY-offset);
       window.scrollTo({top:y,left:0,behavior:'smooth'});
     });
@@ -344,14 +351,21 @@ function bindFloatingContacts(){
   let raf=0;
   const update=()=>{
     raf=0;
+    if(window.innerWidth>700){
+      floating.style.transform='translate3d(0,0,0)';
+      return;
+    }
     const doc=document.documentElement;
-    const distance=Math.max(0,doc.scrollHeight-(window.scrollY+window.innerHeight));
-    const range=520;
-    const progress=Math.max(0,Math.min(1,(range-distance)/range));
+    const maxScroll=Math.max(1,doc.scrollHeight-window.innerHeight);
+    const ratio=Math.max(0,Math.min(1,(window.scrollY||0)/maxScroll));
+    // İlk bölümde sağda kalır; aşağı indikçe yatay olarak merkeze kayar.
+    const progress=Math.max(0,Math.min(1,(ratio-.22)/.55));
     const width=floating.getBoundingClientRect().width||176;
-    const targetShift=(-window.innerWidth/2)+10+(width/2);
-    floating.style.transform=`translate3d(${targetShift*progress}px,0,0)`;
-    floating.style.setProperty('--bottom-progress',String(progress));
+    const currentRight=10;
+    const centeredLeft=(window.innerWidth-width)/2;
+    const currentLeft=window.innerWidth-currentRight-width;
+    const shift=centeredLeft-currentLeft;
+    floating.style.transform=`translate3d(${shift*progress}px,0,0)`;
   };
   const schedule=()=>{if(!raf)raf=requestAnimationFrame(update)};
   window.addEventListener('scroll',schedule,{passive:true});

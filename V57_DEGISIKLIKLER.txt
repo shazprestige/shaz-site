@@ -1,0 +1,5 @@
+V57
+- “KOLEKSİYON” üst yazısı kaldırıldı.
+- Tüm Ürünler / Setler / Saatler / Gözlükler / Cüzdanlar başlıklarının scroll konumu tek referansa bağlandı.
+- Üst kayan şerit + sabit header yüksekliği gerçek ölçülerek hesaplanıyor; önceki lacivert kampanya kalıntısı giderildi.
+- Mobil ve masaüstünde kategori seçildiğinde başlık aynı dikey noktada açılır.
