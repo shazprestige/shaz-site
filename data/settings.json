@@ -54,5 +54,7 @@
       "overlayOpacity": 28
     }
   ],
-  "cargoTrackingUrl": "https://ebranch.araskargo.com.tr/"
+  "cargoTrackingUrl": "https://ebranch.araskargo.com.tr/",
+  "campaignMarqueeText": "YENİ ÜRÜNLERİMİZİ KEŞFEDİN •",
+  "campaignMarqueePosition": "full"
 }
