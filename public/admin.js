@@ -87,6 +87,10 @@ function renderSite(){
   let campaigns=(settings.campaignCards||[]).map((c,i)=>`
     <div class=campaignAdmin>
       <div class=campaignAdminHead><b>Kampanya ${i+1}: ${esc(c.name||'')}</b><button class=dangerBtn onclick="removeCampaign(${i})">Sil</button></div>
+      <div class="campaignQuickSettings">
+        <label><input data-preview-target="#campaignCards" type=checkbox ${c.enabled!==false?'checked':''} onchange="settings.campaignCards[${i}].enabled=this.checked;changed(this.dataset.previewTarget)"> Sitede göster</label>
+        <label>Sıra <input class=formControl data-preview-target="#campaignCards" type=number value="${Number(c.order||i+1)}" oninput="settings.campaignCards[${i}].order=Number(this.value);changed(this.dataset.previewTarget)"></label>
+      </div>
       <div class=grid2>
         ${input('Kampanya adı',`settings.campaignCards[${i}].name`,c.name||'','Panelde tanıman için.','#campaignCards')}
         ${input('Kayan yazı',`settings.campaignCards[${i}].marqueeText`,c.marqueeText||'','Fotoğrafın üzerinde sola akar.','#campaignCards')}
@@ -147,13 +151,22 @@ function categoryBlock(c){
       <button class=smallBtn onclick="addProduct('${attr(c.id)}')">＋ Bu Kategoriye Ürün Ekle</button>
     </div>
     <div class="grid2 compactCategorySettings">
-      ${input('Kategori adı',`catalog.categories[${ci}].name`,c.name,'Üst kategori sekmesinde görünür.',catTarget)}
-      ${input('Sıra',`catalog.categories[${ci}].order`,c.order||0,'Küçük sayı daha solda görünür.',catTarget,'number')}
+      ${input('Kategori adı',`catalog.categories[${ci}].name`,c.name,'Aynı ad hem üst menüde hem Kategoriler ekranında görünür.',catTarget)}
+      ${input('Sıra',`catalog.categories[${ci}].order`,c.order||0,'Aynı sıra hem üst menüde hem Kategoriler ekranında kullanılır.',catTarget,'number')}
+      <div class=field><label><b>Kategori kapak fotoğrafı</b></label><input id="catFile${ci}" type=file accept="image/*"><button class=smallBtn onclick="uploadCategoryCover(${ci})">Fotoğrafı Yükle</button><div class=help>Bu görsel Kategoriler ekranındaki kutuda görünür. Üstteki kategori sekmesiyle aynı kategori kaydına bağlıdır.</div>${c.cover?`<img src="${attr(c.cover)}" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px">`:''}</div>
       <div class=field><label><b>Kategoriyi gizle</b></label><label><input data-preview-target="${attr(catTarget)}" type=checkbox ${c.hidden?'checked':''} onchange="catalog.categories[${ci}].hidden=this.checked;changed(this.dataset.previewTarget)"> Gizli</label></div>
     </div>
     <div class=adminProductGrid>${ps.map(p=>productCard(p)).join('')||'<div class=emptyAdmin>Bu kategoride henüz ürün yok.</div>'}</div>
   </section>`;
 }
+
+async function uploadCategoryCover(ci){
+  const f=$('#catFile'+ci)?.files?.[0]; if(!f)return alert('Kategori fotoğrafı seç.');
+  const fd=new FormData(); fd.append('files',f);
+  const r=await fetch('/api/upload',{method:'POST',body:fd}).then(r=>r.json());
+  if(r.files?.[0]){catalog.categories[ci].cover=r.files[0].url;changed('#categoryHub');renderCatalog();}
+}
+
 function previewCategory(id,name){previewTo(`[data-category-id="${id}"]`,true);}
 function productCard(p){
   const i=catalog.products.findIndex(x=>x.id===p.id);
@@ -171,6 +184,20 @@ function productCard(p){
       <textarea class=formControl data-preview-target="${attr(t('description'))}" rows=3 placeholder="Müşterinin ürün kartında okuyacağı kısa açıklama"
         oninput="catalog.products[${i}].description=this.value;changed(this.dataset.previewTarget)">${esc(p.description||'')}</textarea>
       <div class=help>Örn: Paslanmaz çelik kasa, günlük kullanıma uygun, şık ve sade tasarım.</div>
+    </div>
+
+    <div class=field><label><b>Özellikler / tikli maddeler</b></label>
+      <textarea class=formControl data-preview-target="${attr(root)}" rows=3 placeholder="Her satıra bir özellik yaz
+UV400 koruma
+Paslanmaz çelik kasa"
+        oninput="catalog.products[${i}].features=this.value.split('\n').map(x=>x.trim()).filter(Boolean);changed(this.dataset.previewTarget)">${esc((p.features||[]).join('\n'))}</textarea>
+      <div class=help>Ürünü İncele ekranında ✓ işaretli maddeler halinde görünür. Hazır sette set içeriği de ayrıca otomatik görünür.</div>
+    </div>
+
+    <div class=field><label><b>Yazı / kişiselleştirme konumları</b></label>
+      <input class=formControl data-preview-target=".drawer" value="${attr((p.writePositions||[]).join(', '))}" placeholder="Örn: Arka kapak, Kordon"
+        oninput="catalog.products[${i}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);changed(this.dataset.previewTarget)">
+      <div class=help>Örn. saatte “Arka kapak, Kordon”. Ön yüz / arka yüz zorunlu değil; burayı istediğin gibi değiştir.</div>
     </div>
 
     <div class=twoMini>
@@ -201,6 +228,8 @@ function productCard(p){
     <div class=productToggles>
       <label><input data-preview-target="${attr(root)}" type=checkbox ${p.hidden?'checked':''}
         onchange="catalog.products[${i}].hidden=this.checked;changed(this.dataset.previewTarget)"> Gizle</label>
+      <label><input data-preview-target="${attr(root)}" type=checkbox ${p.isSet?'checked':''}
+        onchange="catalog.products[${i}].isSet=this.checked;if(this.checked){catalog.products[${i}].setEligible=false;catalog.products[${i}].setItems=catalog.products[${i}].setItems||[]}changed(this.dataset.previewTarget);renderCatalog()"> Hazır set</label>
       <label><input data-preview-target="${attr(root)}" type=checkbox ${p.setEligible?'checked':''} ${p.isSet?'disabled':''}
         onchange="catalog.products[${i}].setEligible=this.checked;changed(this.dataset.previewTarget)"> Kendi sette kullanılabilir</label>
     </div>
@@ -210,11 +239,11 @@ function productCard(p){
 }
 function addCategory(){
   const id='kategori-'+Date.now();
-  catalog.categories.push({id,name:'Yeni Kategori',order:catalog.categories.length+1,hidden:false});
+  catalog.categories.push({id,name:'Yeni Kategori',order:catalog.categories.length+1,hidden:false,cover:''});
   changed('#products');renderCatalog();
 }
 function addProduct(categoryId){
-  catalog.products.push({id:'urun-'+Date.now(),name:'Yeni Ürün',description:'',category:categoryId,price:0,oldPrice:0,stock:0,badge:'',image:'',hidden:false,setEligible:categoryId!=='setler',isSet:false,setItems:[],writePositions:[]});
+  catalog.products.push({id:'urun-'+Date.now(),name:'Yeni Ürün',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',image:'',hidden:false,setEligible:categoryId!=='setler',isSet:false,setItems:[],writePositions:[]});
   changed('#products');renderCatalog();
 }
 function deleteProduct(i){if(confirm('Ürün silinsin mi?')){catalog.products.splice(i,1);changed('#products');renderCatalog()}}
@@ -233,28 +262,59 @@ async function uploadProductImage(i){
 }
 
 function renderCustom(){
-  const pricing=catalog.personalizationPricing||{first:75,second:50,thirdPlus:25};
-  let sets=catalog.products.filter(p=>p.isSet).map(p=>{
-    const pi=catalog.products.findIndex(x=>x.id===p.id);
-    return `<div class=panel><h2>${esc(p.name)}</h2>${(p.setItems||[]).map((it,ii)=>`
-      <div class=setAdminRow>
-        ${input('Set içi ürün',`catalog.products[${pi}].setItems[${ii}].name`,it.name,'Müşterinin gördüğü isim.','.drawer')}
-        ${input('Çıkarılırsa düşecek TL',`catalog.products[${pi}].setItems[${ii}].removeDiscount`,it.removeDiscount,'Tik kaldırılırsa toplamdan düşer.','.drawer','number')}
-        <div class=field><label><b>Yazı konumları</b></label><input class=formControl value="${attr((it.writePositions||[]).join(', '))}" oninput="catalog.products[${pi}].setItems[${ii}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);changed('.drawer')"></div>
-      </div>`).join('')}</div>`;
-  }).join('');
+  catalog.personalizationPricing=catalog.personalizationPricing||{first:75,second:50,thirdPlus:25};
+  catalog.builder=catalog.builder||{allowedCategories:[],categoryOrder:[],pricingRules:[]};
+  const pricing=catalog.personalizationPricing;
+  const sets=catalog.products.filter(p=>p.isSet).map(p=>renderSetAdminPanel(p)).join('');
   const allowed=catalog.categories.filter(c=>c.id!=='tum'&&c.id!=='setler').map(c=>{
     const checked=(catalog.builder.allowedCategories||[]).includes(c.id);
     return `<label class=setItemToggle><span><b>${esc(c.name)}</b><small class=muted>Set oluşturma ekranında kategori adımı</small></span><input type=checkbox ${checked?'checked':''} onchange="toggleBuilderCategory('${attr(c.id)}',this.checked)"></label>`;
   }).join('');
-  shell('Setler & Kişiselleştirme','Hazır set içeriği, yazı ücretleri ve Kendi Setini Oluştur kategorileri tek yerde.',
+  shell('Setler & Kişiselleştirme','Her hazır setin içeriğini ayrı ayrı kurabilirsin. Sete eklediğin ürünler müşteriye tikli görünür ve müşteri isterse tek tek çıkarabilir.',
   `<div class="panel grid2"><h2 style="grid-column:1/-1">Yazı Ücretleri</h2>
     ${input('İlk ürün yazısı','catalog.personalizationPricing.first',pricing.first,'İlk seçilen yazılı ürün.','.drawer','number')}
     ${input('İkinci ürün yazısı','catalog.personalizationPricing.second',pricing.second,'İkinci seçilen yazılı ürün.','.drawer','number')}
     ${input('3. ve sonrası','catalog.personalizationPricing.thirdPlus',pricing.thirdPlus,'Üçüncü ve sonraki her ürün.','.drawer','number')}
   </div>
-  <div class=panel><h2>Kendi Setini Oluştur — Kategoriler</h2><div class=help>Müşteri 1 ürün de seçebilir, 2 ürün de; işaretlediğin bütün kategorileri de kullanabilir.</div><div class=setItemList>${allowed}</div></div>
-  ${sets}`);
+  <div class=panel><h2>Kendi Setini Oluştur — Kategoriler</h2><div class=help>Müşteri 1 ürün de seçebilir, 2 ürün de; işaretlediğin bütün kategorileri kullanabilir.</div><div class=setItemList>${allowed}</div></div>
+  <div class=panel><h2>Hazır Setler</h2><div class=help>Bir ürünü “Hazır set” olarak işaretlediğinde burada görünür. Her setin içeriği birbirinden bağımsızdır.</div></div>
+  ${sets||'<div class=panel><b>Henüz hazır set yok.</b><div class=help>Kategoriler & Ürünler bölümünden bir üründe “Hazır set” seçeneğini aç.</div></div>'}`);
+}
+function renderSetAdminPanel(p){
+  const pi=catalog.products.findIndex(x=>x.id===p.id);
+  const candidates=catalog.products.filter(x=>!x.isSet && x.id!==p.id);
+  const options=candidates.map(x=>`<option value="${attr(x.id)}">${esc(x.name)} — ${esc((catalog.categories.find(c=>c.id===x.category)||{}).name||'')}</option>`).join('');
+  const rows=(p.setItems||[]).map((it,ii)=>{
+    const linked=it.productId?catalog.products.find(x=>x.id===it.productId):null;
+    return `<div class=setAdminRow>
+      <div class=field><label><b>Set içi ürün</b></label><input class=formControl value="${attr(it.name||linked?.name||'')}" oninput="catalog.products[${pi}].setItems[${ii}].name=this.value;changed('.drawer')"><div class=help>${linked?'Katalogdaki ürün: '+esc(linked.name):'Elle tanımlı set ürünü'}</div></div>
+      ${input('Çıkarılırsa düşecek TL',`catalog.products[${pi}].setItems[${ii}].removeDiscount`,Number(it.removeDiscount||0),'Müşteri bu ürünün tikini kaldırırsa toplamdan düşer.','.drawer','number')}
+      <div class=field><label><b>Yazı konumları</b></label><input class=formControl value="${attr((it.writePositions||linked?.writePositions||[]).join(', '))}" placeholder="Arka kapak, Kordon" oninput="catalog.products[${pi}].setItems[${ii}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);changed('.drawer')"><div class=help>Bu set içindeki bu ürüne özel konumlar.</div></div>
+      <button class=dangerBtn onclick="removeSetItem(${pi},${ii})">Bu Ürünü Setten Çıkar</button>
+    </div>`;
+  }).join('');
+  return `<div class=panel data-set-admin="${attr(p.id)}"><div class=campaignAdminHead><div><h2>${esc(p.name)}</h2><div class=help>${(p.setItems||[]).length} ürün · Her setin içeriği ayrı tutulur.</div></div></div>
+    <div class=setAddBar><select id="setAdd-${attr(p.id)}" class=formControl><option value="">Katalogdan ürün seç...</option>${options}</select><button class=smallBtn onclick="addExistingProductToSet('${attr(p.id)}')">＋ Seçili Ürünü Ekle</button><button class=smallBtn onclick="addBlankSetItem('${attr(p.id)}')">＋ Elle İçerik Ekle</button></div>
+    <div class=help>Setin içinde olan her ürün müşteri ekranında tikli görünür. Müşteri tik kaldırırsa “çıkarılırsa düşecek TL” kadar indirim uygulanır.</div>
+    ${rows||'<div class=emptyAdmin>Bu setin içeriği boş. Yukarıdan ürün ekle.</div>'}
+  </div>`;
+}
+function addExistingProductToSet(setId){
+  const set=catalog.products.find(x=>x.id===setId),sel=$('#setAdd-'+CSS.escape(setId));
+  if(!set||!sel?.value)return alert('Önce bir ürün seç.');
+  const p=catalog.products.find(x=>x.id===sel.value); if(!p)return;
+  set.setItems=set.setItems||[];
+  set.setItems.push({id:'setitem-'+Date.now(),productId:p.id,name:p.name,type:(catalog.categories.find(c=>c.id===p.category)||{}).name||p.category,removeDiscount:Number(p.price||0),writePositions:[...(p.writePositions||[])]});
+  changed('.drawer');renderCustom();
+}
+function addBlankSetItem(setId){
+  const set=catalog.products.find(x=>x.id===setId); if(!set)return;
+  set.setItems=set.setItems||[];set.setItems.push({id:'setitem-'+Date.now(),name:'Yeni set ürünü',type:'',removeDiscount:0,writePositions:[]});
+  changed('.drawer');renderCustom();
+}
+function removeSetItem(pi,ii){
+  if(!confirm('Bu ürün set içeriğinden çıkarılsın mı?'))return;
+  catalog.products[pi].setItems.splice(ii,1);changed('.drawer');renderCustom();
 }
 function toggleBuilderCategory(id,checked){
   catalog.builder.allowedCategories=catalog.builder.allowedCategories||[];

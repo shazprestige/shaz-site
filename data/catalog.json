@@ -105,7 +105,9 @@
             "Arka yüz"
           ]
         }
-      ]
+      ],
+      "description": "",
+      "features": []
     },
     {
       "id": "p2",
@@ -150,7 +152,9 @@
             "Arka yüz"
           ]
         }
-      ]
+      ],
+      "description": "",
+      "features": []
     },
     {
       "id": "p3",
@@ -165,7 +169,12 @@
       "setEligible": true,
       "isSet": false,
       "setItems": [],
-      "writePositions": []
+      "writePositions": [
+        "Arka kapak",
+        "Kordon"
+      ],
+      "description": "",
+      "features": []
     },
     {
       "id": "p4",
@@ -180,7 +189,12 @@
       "setEligible": true,
       "isSet": false,
       "setItems": [],
-      "writePositions": []
+      "writePositions": [
+        "Arka kapak",
+        "Kordon"
+      ],
+      "description": "",
+      "features": []
     }
   ],
   "builder": {

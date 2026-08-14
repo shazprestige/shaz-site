@@ -11,6 +11,7 @@
 
 <header id="stickyHeader">
   <div class="headrow">
+    <button class="menuBtn" id="categoryMenuBtn" aria-label="Kategoriler"><span></span><span></span><span></span></button>
     <img class="logo" id="brandLogo" alt="SHAZ">
     <div class="headActions">
       <a class="headerAction cargoAction" id="cargoLink" href="https://ebranch.araskargo.com.tr/" target="_blank" rel="noopener">
@@ -30,6 +31,12 @@
   <div class="tabs" id="catalogNav"></div>
 </header>
 
+<div id="campaignCards" class="campaignCards"></div>
+
+<div class="categoryHub hidden" id="categoryHub">
+  <div class="categoryHubTop"><button class="categoryBack" id="categoryHubClose">←</button><div><b>Kategoriler</b><small>Tüm kategoriler</small></div></div>
+  <div class="categoryHubGrid" id="categoryHubGrid"></div>
+</div>
 
 <section class="hero">
   <h1 id="heroTitle"></h1>
@@ -46,7 +53,7 @@
 
 <section class="section" id="products">
   <div class="sectionHead"><span class="gold">KOLEKSİYON</span><h2 id="catalogTitle">Tüm Ürünler</h2></div>
-  <div class="tools sortTools"><label class="sortLabel" for="sortProducts">Sırala</label><select class="tool sortSelect" id="sortProducts" aria-label="Ürünleri sırala"><option value="featured">Önerilen sıralama</option><option value="priceAsc">Fiyat: Düşükten yükseğe</option><option value="priceDesc">Fiyat: Yüksekten düşüğe</option></select></div>
+  <div class="tools sortTools"><label class="sortLabel" for="sortProducts">Sırala</label><select class="tool sortSelect" id="sortProducts" aria-label="Ürünleri sırala"><option value="priceAsc">Fiyat: Düşükten yükseğe</option><option value="priceDesc">Fiyat: Yüksekten düşüğe</option></select></div>
   <input id="search" class="search" placeholder="Ürün ara" style="display:none">
   <div class="grid products" id="productsList"></div>
 </section>

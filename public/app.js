@@ -1,7 +1,7 @@
 
 let settings={},catalog={},cart=[],favorites=new Set(JSON.parse(localStorage.getItem('shazFavs')||'[]'));
 let activeCategory='tum';
-let productSort='featured';
+let productSort='priceAsc';
 let checkoutState={payment:'cod',customer:null};
 const $=s=>document.querySelector(s);
 const money=n=>'₺'+Number(n||0).toLocaleString('tr-TR');
@@ -9,7 +9,7 @@ const money=n=>'₺'+Number(n||0).toLocaleString('tr-TR');
 async function init(){
   settings=await fetch('/api/settings').then(r=>r.json());
   catalog=await fetch('/api/catalog').then(r=>r.json());
-  apply(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart();
+  apply(); renderCampaignCards(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart();
 }
 function bindCore(){
   if($('#overlay')) $('#overlay').onclick=closeDrawer;
@@ -19,9 +19,11 @@ function bindCore(){
   if($('#builderSpotlightBtn')) $('#builderSpotlightBtn').onclick=openBuilder;
   if($('#builderSpotlight')) $('#builderSpotlight').onclick=e=>{if(e.target.id!=='builderSpotlightBtn')openBuilder()};
   if($('#sortProducts')) $('#sortProducts').onchange=e=>{productSort=e.target.value;renderProducts($('#search')?.value||'')};
+  if($('#categoryMenuBtn')) $('#categoryMenuBtn').onclick=openCategoryHub;
+  if($('#categoryHubClose')) $('#categoryHubClose').onclick=closeCategoryHub;
 }
 function apply(){
-  document.documentElement.style.setProperty('--paper','#f6f7f8');
+  document.documentElement.style.setProperty('--paper',settings.theme?.surface||'#f6f7f8');
   document.documentElement.style.setProperty('--gold',settings.theme?.accent||'#c39a59');
   if($('#announceWrap')) $('#announceWrap').style.display=settings.header?.showTopStrip===false?'none':'block';
   if($('#campaign')) $('#campaign').textContent=settings.campaignText||'';
@@ -63,6 +65,29 @@ function renderCategories(){
     btn.addEventListener('click',()=>setCategory(btn.dataset.categoryId,btn.dataset.categoryName));
   });
 }
+
+function openCategoryHub(){
+  renderCategoryHub();
+  $('#categoryHub')?.classList.remove('hidden');
+  document.body.classList.add('categoryHubOpen');
+}
+function closeCategoryHub(){
+  $('#categoryHub')?.classList.add('hidden');
+  document.body.classList.remove('categoryHubOpen');
+}
+function renderCategoryHub(){
+  const wrap=$('#categoryHubGrid'); if(!wrap)return;
+  const cats=catalog.categories.filter(c=>!c.hidden&&c.id!=='tum').sort((a,b)=>(a.order??0)-(b.order??0));
+  wrap.innerHTML=cats.map(c=>`<button class="categoryTile" onclick="chooseCategoryFromHub('${escapeAttr(c.id)}','${escapeAttr(c.name)}')">
+    <div class="categoryTileText"><b>${escapeHtml(c.name)}</b><span>Ürünleri gör →</span></div>
+    <div class="categoryTileMedia">${c.cover?`<img src="${escapeAttr(c.cover)}" alt="${escapeAttr(c.name)}">`:`<span class="categoryPlaceholder">${escapeHtml((c.name||'?').slice(0,1))}</span>`}</div>
+  </button>`).join('');
+}
+function chooseCategoryFromHub(id,name){
+  setCategory(id,name); closeCategoryHub();
+  setTimeout(()=>document.getElementById('products')?.scrollIntoView({behavior:'smooth',block:'start'}),40);
+}
+
 function setCategory(id,name){
   activeCategory=id;
   if($('#catalogTitle')) $('#catalogTitle').textContent=name;
@@ -77,12 +102,12 @@ function renderProducts(filter=''){
   $('#productsList').innerHTML=list.length?list.map(p=>{
     const name=p.name||'SHAZ Ürün';
     const desc=p.description?`<p class="productDescription" data-preview-field="description">${escapeHtml(p.description)}</p>`:'';
-    return `<div class="card" data-product-id="${escapeAttr(p.id)}"><div class="photo" data-preview-field="photo">${p.image?`<img src="${p.image}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge" data-preview-field="badge">${escapeHtml(p.badge)}</span>`:''}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}<button class="btn" data-preview-field="button" onclick="startProduct('${p.id}')">Ürünü Seç</button></div></div>`;
+    return `<div class="card" data-product-id="${escapeAttr(p.id)}"><div class="photo" data-preview-field="photo">${p.image?`<img src="${p.image}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge" data-preview-field="badge">${escapeHtml(p.badge)}</span>`:''}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}<button class="btn inspectBtn" data-preview-field="button" onclick="openProductDetail('${p.id}')">Ürünü İncele</button></div></div>`;
   }).join(''):`<div class="panel"><b>Bu kategoride henüz ürün yok.</b></div>`;
 }
 function updateFavoriteBadge(){if($('#favBadge'))$('#favBadge').textContent=favorites.size}
 function toggleFav(id,e){e?.stopPropagation();favorites.has(id)?favorites.delete(id):favorites.add(id);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));updateFavoriteBadge();renderProducts($('#search')?.value||'')}
-function showFavorites(){const ps=catalog.products.filter(p=>favorites.has(p.id));openDrawer(`<div class=wizardHead><h2>Favorilerim</h2><button class="pill" onclick=closeDrawer()>Kapat</button></div>${ps.length?ps.map(p=>`<div class=wizardCard><b>${escapeHtml(p.name)}</b><br>${money(p.price)}<br><br><button class=btn onclick="startProduct('${p.id}')">Ürünü Seç</button></div>`).join(''):'Henüz favoriniz yok.'}`)}
+function showFavorites(){const ps=catalog.products.filter(p=>favorites.has(p.id));openDrawer(`<div class=wizardHead><h2>Favorilerim</h2><button class="pill" onclick=closeDrawer()>Kapat</button></div>${ps.length?ps.map(p=>`<div class=wizardCard><b>${escapeHtml(p.name)}</b><br>${money(p.price)}<br><br><button class=btn onclick="openProductDetail('${p.id}')">Ürünü İncele</button></div>`).join(''):'Henüz favoriniz yok.'}`)}
 function openDrawer(html){$('#overlay').classList.remove('hidden');$('#drawer').classList.remove('hidden');$('#drawer').innerHTML=html}
 function closeDrawer(){$('#overlay').classList.add('hidden');$('#drawer').classList.add('hidden')}
 function toast(msg){const t=$('#toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
@@ -98,7 +123,7 @@ window.addEventListener('message',e=>{
   if(e.data.type==='shaz-preview'){
     if(e.data.settings) settings=structuredClone(e.data.settings);
     if(e.data.catalog) catalog=structuredClone(e.data.catalog);
-    apply();renderCategories();renderProducts($('#search')?.value||'');
+    apply();renderCampaignCards();renderCategories();renderProducts($('#search')?.value||'');
     updateFavoriteBadge();updateCart();
     return;
   }
@@ -160,6 +185,27 @@ window.addEventListener('message',e=>{
   }
 });
 
+function productFeatureList(p){
+  const manual=Array.isArray(p.features)?p.features.filter(Boolean):[];
+  const setFeatures=(p.isSet&&Array.isArray(p.setItems))?p.setItems.map(x=>x.name).filter(Boolean):[];
+  return [...new Set([...manual,...setFeatures])];
+}
+function openProductDetail(id){
+  const p=catalog.products.find(x=>x.id===id); if(!p)return;
+  const features=productFeatureList(p);
+  const positions=Array.isArray(p.writePositions)?p.writePositions.filter(Boolean):[];
+  openDrawer(`<div class="productDetailShell">
+    <div class=wizardHead><div><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+    <div class=productDetailMedia>${p.image?`<img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.name||'Ürün')}">`:'<div class=productDetailPlaceholder>⌚</div>'}</div>
+    <div class=productDetailPrice>${money(p.price)} ${p.oldPrice?`<span class=old>${money(p.oldPrice)}</span>`:''}</div>
+    ${p.description?`<div class=productDetailSection><h3>Açıklama</h3><p>${escapeHtml(p.description)}</p></div>`:''}
+    ${features.length?`<div class=productDetailSection><h3>${p.isSet?'Setin içindekiler':'Özellikler'}</h3><div class=detailFeatureList>${features.map(x=>`<div>✓ ${escapeHtml(x)}</div>`).join('')}</div></div>`:''}
+    ${positions.length&&!p.isSet?`<div class=productDetailSection><h3>Kişiselleştirme alanları</h3><p>${positions.map(escapeHtml).join(' · ')}</p></div>`:''}
+    ${settings.productStockVisible?`<div class=productDetailStock>Stok: ${Number(p.stock||0)}</div>`:''}
+    <button class="btn detailAddBtn" onclick="startProduct('${escapeAttr(p.id)}')">Sepete Ekle</button>
+  </div>`);
+}
+
 function startProduct(id){
   const p=catalog.products.find(x=>x.id===id); if(!p)return;
   if(p.isSet&&Array.isArray(p.setItems)&&p.setItems.length) return startSetWizard(p);
@@ -175,7 +221,7 @@ function startSingleWizard(p){
 function addSingleNoText(id){const p=catalog.products.find(x=>x.id===id);cart.push({product:p,qty:1,personalized:false});updateCart();closeDrawer();toast('✓ Ürün sepete eklendi')}
 function singleWriteStep(id){
   const p=catalog.products.find(x=>x.id===id);
-  const positions=(p.writePositions&&p.writePositions.length)?p.writePositions:["Ön yüz","Arka yüz"];
+  const positions=defaultPositionsForProduct(p);
   openDrawer(`<div class=wizardHead><div><div class=wizardProgress>2 / 2</div><h2>${p.name}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
   <div class=priceInfo><b>Yazı ücretlendirmesi:</b><br>İlk ürün +${money(catalog.personalizationPricing?.first||75)} · İkinci ürün +${money(catalog.personalizationPricing?.second||50)} · 3. ve sonrası +${money(catalog.personalizationPricing?.thirdPlus||25)}</div>
   <div class=writeItem><h3>${p.name}</h3><div class=positionChoices>${positions.map((x,i)=>`<label class=positionChoice><input type=radio name=singlePos value="${x}" ${i===0?'checked':''}> ${x}</label>`).join('')}</div><input class=writeInput id=singleText placeholder="Yazdırmak istediğiniz yazıyı girin"></div>

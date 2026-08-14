@@ -1,0 +1,27 @@
+SHAZ v34
+
+- Kampanya kartları artık müşteri sitesinde gerçekten görünür.
+- Yönetimde kampanyayı göster/gizle ve sıra ayarı eklendi.
+- Ürün kartındaki ana buton “Ürünü İncele” oldu.
+- Ürün detay ekranı eklendi; açıklama, tikli özellikler, set içeriği, fiyat ve stok burada görünür.
+- Ürün detayından “Sepete Ekle” ile mevcut sipariş/kişiselleştirme akışına geçilir.
+- Her ürüne yönetimden serbest “Yazı / kişiselleştirme konumları” girilebilir.
+- Saatlerde varsayılan konum Arka kapak + Kordon olarak düzeltildi.
+- Her ürüne yönetimden satır satır “Özellikler / tikli maddeler” eklenebilir.
+- Bir ürün “Hazır set” olarak işaretlenebilir.
+- Her hazır setin içeriği ayrı ayrı yönetilebilir.
+- Sete katalogdaki mevcut ürün eklenebilir veya elle içerik eklenebilir.
+- Set içindeki her ürün için “çıkarılırsa düşecek tutar” ve yazı konumları ayrı düzenlenebilir.
+- Müşteri hazır sette ürünleri tek tek çıkarabilir; mevcut fiyat düşme mantığı korunur.
+- Yazı ekranındaki Sepete Ekle butonunun çerçeve üzerine binmesi düzeltildi.
+- Mobil fontlar küçültüldü ve arayüz daha kompakt hale getirildi.
+- Aşırı yuvarlak köşeler azaltıldı.
+- Site arka plan rengi artık yönetimdeki “Site arka planı” ayarını gerçekten kullanır.
+- Sıralama yalnızca düşükten yükseğe / yüksekten düşüğe bırakıldı.
+
+V35 additions
+- Üst başlığa hamburger kategori butonu eklendi.
+- Kategoriler tam ekran görsel kartlar halinde ayrıca açılıyor.
+- Üst kategori şeridi ve kategori ekranı aynı catalog.categories verisini kullanıyor; ad, sıra ve gizleme iki yerde de aynı anda geçerli.
+- Yönetim panelinde her kategoriye PC'den kapak görseli yükleme eklendi.
+- Kategori kartına dokununca ilgili ürün kategorisi açılıyor.
