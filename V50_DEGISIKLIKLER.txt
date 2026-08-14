@@ -1,0 +1,6 @@
+V50
+- En üst siyah şerit sabit kalır, iç yazı sürekli kayar.
+- WhatsApp alt metni: Buraya tıkla ve iletişime geç.
+- Instagram kutusu tek parça turuncudan mora yumuşak geçişli arka plan.
+- WhatsApp wa.me sohbetine, Instagram ig.me/m doğrudan mesaj ekranına yönlenir.
+- Masaüstü ürün detay görseli ekran yüksekliğine sığacak şekilde contain olarak düzenlendi; mobil görünüm korunur.

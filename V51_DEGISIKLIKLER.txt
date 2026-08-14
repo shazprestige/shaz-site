@@ -1,0 +1,6 @@
+SHAZ V51
+
+- Slider kayan yazı konumuna Tam Ortada seçeneği eklendi.
+- Slider kayan yazısı artık sağ kenarın dışından doğal biçimde ekrana girer.
+- Yazının yeni kopyası kenarda yarım/ani belirmez; sürekli akış korunur.
+- Diğer V50 özellikleri değiştirilmedi.

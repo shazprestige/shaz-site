@@ -1372,3 +1372,110 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
 .igIcon{color:#fff}
 .contact.black .igIcon{background:radial-gradient(circle at 30% 110%,#ffd600 0 18%,#ff7a00 35%,#ff0169 58%,#d300c5 76%,#7638fa 100%);border-radius:6px;padding:2px;box-sizing:border-box}
 .contactBtn .brandIcon{margin-right:6px}
+
+
+/* ===== V50 — kayan üst şerit, Instagram gradyanı, masaüstü detay fotoğrafı ===== */
+/* Şerit ekranda sabit kalır; sadece içindeki metin sürekli akar. */
+.announce{
+  position:sticky!important;
+  top:0!important;
+  z-index:50!important;
+  overflow:hidden!important;
+}
+.announce .track{
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  width:max-content!important;
+  min-width:max-content!important;
+  height:25px!important;
+  align-items:center!important;
+  padding:0!important;
+  gap:0!important;
+  transform:translate3d(0,0,0);
+  animation:shazTopTickerV50 11s linear infinite!important;
+  will-change:transform!important;
+}
+.announce .marqueeCopy{
+  display:block!important;
+  flex:0 0 auto!important;
+  padding-right:42px!important;
+  line-height:25px!important;
+  white-space:nowrap!important;
+}
+@keyframes shazTopTickerV50{
+  from{transform:translate3d(0,0,0)}
+  to{transform:translate3d(-50%,0,0)}
+}
+
+/* WhatsApp mevcut yeşil görünümünü korur. Instagram tek parça turuncu -> mor geçişlidir. */
+.contact.ig{
+  background:linear-gradient(105deg,#f97316 0%,#f43f5e 43%,#a855f7 72%,#7c3aed 100%)!important;
+}
+.contact.ig .igIcon,
+.contact.black .igIcon{
+  background:none!important;
+  border-radius:0!important;
+  padding:0!important;
+  color:#fff!important;
+}
+
+/* PC ürün detayında görsel ekran yüksekliğine sığar; mobil görünüm V49 gibi kalır. */
+@media(min-width:701px){
+  .drawer{width:min(620px,46vw)!important;padding:18px 20px!important;}
+  .productDetailGallery .productDetailMedia{
+    width:100%!important;
+    height:min(66vh,620px)!important;
+    max-height:calc(100vh - 210px)!important;
+    min-height:320px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    background:#fff!important;
+  }
+  .productDetailGallery .productDetailMedia img{
+    width:100%!important;
+    height:100%!important;
+    max-width:100%!important;
+    max-height:100%!important;
+    object-fit:contain!important;
+    object-position:center!important;
+  }
+  .productDetailThumbs{margin-top:8px!important;}
+  .productDetailBottomBar{width:min(620px,46vw)!important;}
+}
+
+
+/* ===== V51 — slider kayan yazı konumu + sağdan doğal giriş ===== */
+/* Yönetim panelinde üçüncü konum: reklam görselinin tam ortası. */
+.campaignGlobalMarquee--middle{
+  left:0!important;
+  right:0!important;
+  top:50%!important;
+  width:100%!important;
+  transform:translateY(-50%)!important;
+  border-radius:0!important;
+}
+
+/* Metin artık ekranın sağ kenarının DIŞINDAN girer.
+   İki eş kopya sayesinde döngü yenilenirken yazı kenarda aniden belirmez. */
+.campaignGlobalMarquee .campaignMarqueeTrack{
+  position:relative!important;
+  left:100%!important;
+  display:flex!important;
+  width:max-content!important;
+  min-width:max-content!important;
+  padding:0!important;
+  gap:0!important;
+  animation:shazCampaignTickerV51 13s linear infinite!important;
+  will-change:transform!important;
+}
+.campaignGlobalMarquee .campaignMarqueeCopy{
+  display:block!important;
+  flex:0 0 auto!important;
+  padding-right:72px!important;
+  white-space:nowrap!important;
+}
+@keyframes shazCampaignTickerV51{
+  from{transform:translate3d(0,0,0)}
+  to{transform:translate3d(-50%,0,0)}
+}

@@ -37,7 +37,7 @@ function apply(){
   if($('#heroTitle')) $('#heroTitle').textContent=settings.heroTitle||'Tarzına uygun saatini seç.';
   if($('#heroSubtitle')) $('#heroSubtitle').textContent=settings.heroSubtitle||'Saatini seç, setini kişiselleştir ve siparişini birkaç adımda tamamla.';
   if($('#wa')) $('#wa').href='https://wa.me/'+settings.whatsapp;
-  if($('#ig')) $('#ig').href='https://instagram.com/'+settings.instagram;
+  if($('#ig')) $('#ig').href='https://ig.me/m/'+String(settings.instagram||'').replace(/^@/,'');
   if($('#cargoLink')) $('#cargoLink').href=settings.cargoTrackingUrl||'https://ebranch.araskargo.com.tr/';
 }
 function renderLoopingMarquee(el,text){
@@ -55,7 +55,7 @@ function renderCampaignCards(){
   if(!cards.length){wrap.innerHTML='';return}
   if(campaignSliderIndex>=cards.length)campaignSliderIndex=0;
   const marquee=String(settings.campaignMarqueeText||'').trim();
-  const marqueePos=settings.campaignMarqueePosition==='center'?'center':'full';
+  const marqueePos=['center','middle'].includes(settings.campaignMarqueePosition)?settings.campaignMarqueePosition:'full';
   wrap.innerHTML=`<section class="campaignSlider" id="campaignSlider" aria-label="Kampanyalar">
     <div class="campaignSlides">${cards.map((c,i)=>{
       const op=Math.min(.75,Math.max(0,Number(c.overlayOpacity??28)/100));
@@ -602,7 +602,7 @@ async function finalizeOrder(personalApproved){
   cart=[];checkoutState={payment:'cod',customer:null};updateCart();success(r.order.id);
 }
 function success(id){
-  openDrawer(`<div class=success><div class=check>✅</div><h2>${settings.successTitle}</h2><p>${settings.successMessage}</p><p><b>${settings.successTagline}</b></p><p>Sipariş No: ${id}</p><div class=actions><a class="contactBtn wa" href="https://wa.me/${settings.whatsapp}"><span class="contactIcon brandIcon waIcon" aria-hidden="true"><svg viewBox="0 0 24 24" role="img"><path fill="currentColor" d="M12 2a9.5 9.5 0 0 0-8.21 14.27L2.5 21.5l5.38-1.25A9.5 9.5 0 1 0 12 2Zm0 17.2a7.7 7.7 0 0 1-3.92-1.07l-.28-.17-3.19.74.77-3.1-.18-.29A7.7 7.7 0 1 1 12 19.2Zm4.23-5.76c-.23-.12-1.37-.68-1.58-.76-.21-.08-.36-.12-.52.12-.15.23-.6.76-.74.92-.14.15-.27.17-.5.06-.23-.12-.98-.36-1.86-1.15-.69-.61-1.15-1.36-1.29-1.59-.13-.23-.01-.35.1-.46.1-.1.23-.27.35-.4.12-.14.15-.23.23-.39.08-.15.04-.29-.02-.4-.06-.12-.52-1.25-.71-1.71-.19-.45-.38-.39-.52-.4h-.44c-.15 0-.4.06-.61.29-.21.23-.8.78-.8 1.9 0 1.11.82 2.19.93 2.34.12.15 1.6 2.44 3.88 3.42.54.23.96.37 1.29.48.54.17 1.04.15 1.43.09.44-.07 1.37-.56 1.56-1.1.19-.54.19-1 .13-1.1-.06-.1-.21-.15-.44-.27Z"/></svg></span><span><b>Aklınıza takılan bir şey mi var?</b><small>WhatsApp'tan yazın</small></span></a><a class="contactBtn ig" href="https://instagram.com/${settings.instagram}"><span class="contactIcon brandIcon igIcon" aria-hidden="true"><svg viewBox="0 0 24 24" role="img"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5.2" ry="5.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.4" cy="6.9" r="1.2" fill="currentColor"/></svg></span><span><b>Aklınıza takılan bir şey mi var?</b><small>Buraya tıkla ve iletişime geç</small></span></a></div></div>`);
+  openDrawer(`<div class=success><div class=check>✅</div><h2>${settings.successTitle}</h2><p>${settings.successMessage}</p><p><b>${settings.successTagline}</b></p><p>Sipariş No: ${id}</p><div class=actions><a class="contactBtn wa" href="https://wa.me/${settings.whatsapp}"><span class="contactIcon brandIcon waIcon" aria-hidden="true"><svg viewBox="0 0 24 24" role="img"><path fill="currentColor" d="M12 2a9.5 9.5 0 0 0-8.21 14.27L2.5 21.5l5.38-1.25A9.5 9.5 0 1 0 12 2Zm0 17.2a7.7 7.7 0 0 1-3.92-1.07l-.28-.17-3.19.74.77-3.1-.18-.29A7.7 7.7 0 1 1 12 19.2Zm4.23-5.76c-.23-.12-1.37-.68-1.58-.76-.21-.08-.36-.12-.52.12-.15.23-.6.76-.74.92-.14.15-.27.17-.5.06-.23-.12-.98-.36-1.86-1.15-.69-.61-1.15-1.36-1.29-1.59-.13-.23-.01-.35.1-.46.1-.1.23-.27.35-.4.12-.14.15-.23.23-.39.08-.15.04-.29-.02-.4-.06-.12-.52-1.25-.71-1.71-.19-.45-.38-.39-.52-.4h-.44c-.15 0-.4.06-.61.29-.21.23-.8.78-.8 1.9 0 1.11.82 2.19.93 2.34.12.15 1.6 2.44 3.88 3.42.54.23.96.37 1.29.48.54.17 1.04.15 1.43.09.44-.07 1.37-.56 1.56-1.1.19-.54.19-1 .13-1.1-.06-.1-.21-.15-.44-.27Z"/></svg></span><span><b>Aklınıza takılan bir şey mi var?</b><small>Buraya tıkla ve iletişime geç</small></span></a><a class="contactBtn ig" href="https://ig.me/m/${String(settings.instagram||'').replace(/^@/,'')}"><span class="contactIcon brandIcon igIcon" aria-hidden="true"><svg viewBox="0 0 24 24" role="img"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5.2" ry="5.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.4" cy="6.9" r="1.2" fill="currentColor"/></svg></span><span><b>Aklınıza takılan bir şey mi var?</b><small>Buraya tıkla ve iletişime geç</small></span></a></div></div>`);
 }
 
 
