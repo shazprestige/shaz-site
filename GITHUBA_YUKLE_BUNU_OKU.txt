@@ -1,12 +1,7 @@
-SHAZ V43 — GITHUB'A YÜKLEME
+V44 GITHUB YÜKLEME
 
-1) Bu klasörün içine gir.
-2) İçindeki TÜM dosya ve klasörleri seç.
-3) GitHub'da shazprestige/shaz-site deposunun ANA DİZİNİNE yükle.
-4) Bu ana klasörün kendisini GitHub'a sürükleme; sadece içindekileri yükle.
-5) data / uploads klasörleri bu pakette özellikle yoktur. GitHub'daki mevcut data ve uploads klasörlerini SİLME. Böylece ürünler, kategori ayarları ve geçmiş fotoğraflar korunur.
-
-V43 değişiklikleri:
-- Ürün detay fotoğrafı artık gerçek oranında TAM görünür.
-- Detay içindeki tekrar fiyat kaldırıldı; fiyat sadece alttaki sabit Sepete Ekle barında.
-- Yönetim panelinde ürün etiketi yazısı ve renk seçimi: Turuncu / Mor / Kırmızı.
+1) ZIP'i çıkar.
+2) SHAZ-PC-v44-OTOMATIK-SLIDER-KOLAY-YONLENDIRME klasörünün İÇİNE gir.
+3) İçeride gördüğün dosya ve klasörlerin tamamını shaz-site GitHub deposunun ANA DİZİNİNE yükle.
+4) Klasörün kendisini public klasörünün içine atma.
+5) GitHub'daki mevcut data ve uploads klasörlerini silme. Bu pakette özellikle data/uploads yok; kalıcı ürün ve fotoğrafların yerinde kalır.

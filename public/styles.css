@@ -1105,3 +1105,53 @@ header{background:rgba(255,255,255,.97)!important}
   .productDetailGallery .productDetailMedia{margin-top:6px!important}
   .badge{font-size:8px!important;padding:5px 8px!important;left:7px!important;top:7px!important}
 }
+
+/* ===== V44 — tek alanda otomatik slider + sade kampanya yönetimi ===== */
+.campaignCards{position:relative;overflow:hidden;background:#fff!important}
+.campaignSlider{position:relative;width:100%;height:330px;overflow:hidden;background:#101216;color:#fff;touch-action:pan-y}
+.campaignSlides{position:absolute;inset:0}
+.campaignSlide{position:absolute;inset:0;opacity:0;transform:translateX(2.5%);transition:opacity .48s ease,transform .48s ease;pointer-events:none;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+.campaignSlide.isActive{opacity:1;transform:translateX(0);pointer-events:auto;z-index:2}
+.campaignSlideImage{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:0}
+.campaignSlideShade{position:absolute;inset:0;background:rgba(0,0,0,var(--campaign-overlay,.28));z-index:1}
+.campaignSlider .campaignContent{position:relative;z-index:3;text-align:center;padding:52px 54px 38px;width:100%}
+.campaignSlider .campaignContent h2{font-size:clamp(22px,4vw,36px);line-height:1.08;margin:0 0 9px}
+.campaignSlider .campaignContent p{font-size:13px;line-height:1.45;margin:0 auto 18px;max-width:520px}
+.campaignSlider .campaignBtn{cursor:pointer;border:1px solid rgba(255,255,255,.95);border-radius:8px;color:#fff;background:rgba(0,0,0,.2);min-width:180px;padding:12px 18px;font-weight:750}
+.campaignArrow{position:absolute;z-index:5;top:50%;transform:translateY(-50%);width:42px;height:42px;border:1px solid #ffffff80;border-radius:50%;background:#0005;color:#fff;font-size:30px;line-height:1;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(4px)}
+.campaignPrev{left:14px}.campaignNext{right:14px}
+.campaignDots{position:absolute;z-index:5;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:7px}
+.campaignDot{width:8px;height:8px;border:0;border-radius:999px;background:#ffffff80;padding:0;transition:.2s;cursor:pointer}
+.campaignDot.isActive{width:24px;background:#fff}
+.campaignSlider .campaignMarquee{z-index:4}
+
+/* Yönetimde teknik alanlar yerine kısa, düzenli slider kartları */
+.campaignSliderAdminIntro{display:grid;gap:12px}
+.campaignBulkUpload{display:grid;grid-template-columns:minmax(220px,1fr) minmax(220px,360px);gap:10px;align-items:center}
+.campaignBulkUpload input{width:100%;padding:10px;border:1px solid #d8dde3;border-radius:7px;background:#fff}
+.campaignSlideAdmin{padding:14px!important;border-radius:10px!important;background:#fff!important}
+.campaignAdminActions{display:flex;gap:6px;align-items:center}
+.campaignAdminActions button:disabled{opacity:.35;cursor:not-allowed}
+.campaignAdminPreview{display:block;width:100%;max-height:190px;object-fit:cover;border-radius:8px;border:1px solid #e1e5ea;margin:8px 0 12px}
+.campaignSimpleRow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;padding:9px 0;border-bottom:1px solid #eef0f2}
+.campaignShowToggle{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:750;white-space:nowrap}
+.campaignFileRow{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0}
+.campaignFileRow input{max-width:230px;font-size:11px}
+.campaignOptional{border-top:1px solid #eef0f2;padding-top:9px;margin-top:2px}
+.campaignOptional summary{font-size:11px;font-weight:750;color:#667085;cursor:pointer}
+.campaignOptional .field{margin-top:10px}
+
+@media(max-width:680px){
+  .campaignSlider{height:240px}
+  .campaignSlider .campaignContent{padding:38px 16px 28px}
+  .campaignSlider .campaignContent h2{font-size:22px}
+  .campaignSlider .campaignContent p{font-size:11px;margin-bottom:15px}
+  .campaignSlider .campaignBtn{min-width:150px;padding:10px 14px;font-size:11px}
+  .campaignArrow{display:none}
+  .campaignDots{bottom:9px}
+}
+@media(max-width:780px){
+  .campaignBulkUpload{grid-template-columns:1fr}
+  .campaignSimpleRow{align-items:flex-start;flex-direction:column}
+  .campaignFileRow{width:100%;justify-content:flex-start;flex-wrap:wrap}
+}

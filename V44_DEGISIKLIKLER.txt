@@ -1,0 +1,13 @@
+SHAZ V44
+
+- Ana kampanya alanı artık tek slider.
+- Slaytlar 3 saniyede bir otomatik değişir.
+- Mobilde sağa/sola parmakla kaydırma çalışır.
+- Masaüstünde sağ/sol okları ve altta nokta göstergeleri vardır.
+- Yönetim panelinden bir seferde birden fazla fotoğraf seçilip slayt olarak eklenebilir.
+- Her slayt için sadece gerekli alanlar öne çıkarıldı: başlık, kısa açıklama, buton yazısı ve hedef kategori.
+- Buton hedefi artık serbest link değildir. Sadece site içindeki mevcut kategoriler seçilir.
+- Müşteri slayt butonuna basınca seçilen kategori aktif olur ve ürünler alanına kaydırılır.
+- Slayt sırası yönetim panelindeki yukarı/aşağı düğmeleriyle kolayca değiştirilebilir.
+- Teknik/karmaşık kampanya ayarları sadeleştirildi.
+- Mevcut kalıcı data ve uploads yapısına dokunulmadı.

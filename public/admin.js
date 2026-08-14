@@ -25,6 +25,12 @@ async function load(){
   settings=await fetch('/api/settings').then(r=>r.json());
   catalog=await fetch('/api/catalog').then(r=>r.json());
   settings.campaignCards=settings.campaignCards||[];
+  settings.campaignCards.forEach((c,i)=>{
+    if(c.enabled===undefined)c.enabled=true;
+    if(!c.id)c.id='kampanya-'+Date.now()+'-'+i;
+    if(!c.targetCategory)c.targetCategory='tum';
+    if(!c.buttonText)c.buttonText='ÜRÜNLERİ GÖR';
+  });
   settings.theme=settings.theme||{};
   show('site');
   setTimeout(()=>{sendPreview();previewTo('header')},600);
@@ -83,39 +89,55 @@ function show(tab){
   if(tab==='custom')return renderCustom();
   if(tab==='orders')return renderOrders();
 }
+function campaignCategoryOptions(selected='tum'){
+  const seen=new Set();
+  const cats=[{id:'tum',name:'Tüm Ürünler'},...(catalog.categories||[]).filter(c=>!c.hidden&&c.id!=='tum')];
+  return cats.filter(c=>c?.id&&!seen.has(c.id)&&seen.add(c.id)).map(c=>`<option value="${attr(c.id)}" ${String(selected||'tum')===String(c.id)?'selected':''}>${esc(c.name||c.id)}</option>`).join('');
+}
 function renderSite(){
-  let campaigns=(settings.campaignCards||[]).map((c,i)=>`
-    <div class=campaignAdmin>
-      <div class=campaignAdminHead><b>Kampanya ${i+1}: ${esc(c.name||'')}</b><button class=dangerBtn onclick="removeCampaign(${i})">Sil</button></div>
-      <div class="campaignQuickSettings">
-        <label><input data-preview-target="#campaignCards" type=checkbox ${c.enabled!==false?'checked':''} onchange="settings.campaignCards[${i}].enabled=this.checked;changed(this.dataset.previewTarget)"> Sitede göster</label>
-        <label>Sıra <input class=formControl data-preview-target="#campaignCards" type=number value="${Number(c.order||i+1)}" oninput="settings.campaignCards[${i}].order=Number(this.value);changed(this.dataset.previewTarget)"></label>
+  const cards=(settings.campaignCards||[]).sort((a,b)=>(a.order||0)-(b.order||0));
+  const campaigns=cards.map((c,i)=>`
+    <div class="campaignAdmin campaignSlideAdmin">
+      <div class=campaignAdminHead>
+        <div><b>Slayt ${i+1}</b><div class=help>${c.imageUrl?'Fotoğraf hazır':'Henüz fotoğraf yok'}</div></div>
+        <div class=campaignAdminActions>
+          <button class=smallBtn ${i===0?'disabled':''} onclick="moveCampaign(${i},-1)">↑</button>
+          <button class=smallBtn ${i===cards.length-1?'disabled':''} onclick="moveCampaign(${i},1)">↓</button>
+          <button class=dangerBtn onclick="removeCampaign(${i})">Sil</button>
+        </div>
+      </div>
+      ${c.imageUrl?`<img class=campaignAdminPreview src="${attr(c.imageUrl)}" alt="Slayt ${i+1}">`:''}
+      <div class=campaignSimpleRow>
+        <label class=campaignShowToggle><input data-preview-target="#campaignCards" type=checkbox ${c.enabled!==false?'checked':''} onchange="settings.campaignCards[${i}].enabled=this.checked;changed(this.dataset.previewTarget)"> Sitede göster</label>
+        <div class=campaignFileRow><input id="campFile${i}" type=file accept="image/*"><button class=smallBtn onclick="uploadCampaign(${i})">Fotoğrafı Değiştir</button></div>
       </div>
       <div class=grid2>
-        ${input('Kampanya adı',`settings.campaignCards[${i}].name`,c.name||'','Panelde tanıman için.','#campaignCards')}
-        ${input('Kayan yazı',`settings.campaignCards[${i}].marqueeText`,c.marqueeText||'','Fotoğrafın üzerinde sola akar.','#campaignCards')}
-        ${input('Başlık',`settings.campaignCards[${i}].title`,c.title||'','Kampanya fotoğrafının üzerindeki ana başlık.','#campaignCards')}
-        ${input('Açıklama',`settings.campaignCards[${i}].subtitle`,c.subtitle||'','Başlığın altındaki açıklama.','#campaignCards')}
-        ${input('Buton yazısı',`settings.campaignCards[${i}].buttonText`,c.buttonText||'','Kampanya butonunda görünür.','#campaignCards')}
-        ${input('Buton bağlantısı',`settings.campaignCards[${i}].buttonLink`,c.buttonLink||'#products','Butona basılınca gidilecek yer.','#campaignCards')}
+        ${input('Başlık',`settings.campaignCards[${i}].title`,c.title||'','Fotoğrafın üzerindeki büyük yazı.','#campaignCards')}
+        ${input('Kısa açıklama',`settings.campaignCards[${i}].subtitle`,c.subtitle||'','Başlığın altındaki kısa yazı.','#campaignCards')}
+        ${input('Buton yazısı',`settings.campaignCards[${i}].buttonText`,c.buttonText||'ÜRÜNLERİ GÖR','Örn: Ürünleri Gör, Keşfet, Setlere Bak.','#campaignCards')}
+        <div class=field><label><b>Buton nereye gitsin?</b></label><select class=formControl data-preview-target="#campaignCards" onchange="settings.campaignCards[${i}].targetCategory=this.value;changed(this.dataset.previewTarget)">${campaignCategoryOptions(c.targetCategory||'tum')}</select><div class=help>Sadece sitendeki kategorilerden seç. Müşteri butona basınca o kategori açılır.</div></div>
       </div>
-      <div class=field><label><b>Kampanya fotoğrafı</b></label><input id="campFile${i}" data-preview-target="#campaignCards" type=file accept="image/*"><button class=smallBtn onclick="uploadCampaign(${i})">Fotoğrafı Yükle</button><div class=help>Fotoğraf uploads klasörüne kaydolur ve kampanyaya bağlanır.</div></div>
+      <details class=campaignOptional><summary>İsteğe bağlı üst kayan yazı</summary>${input('Üst kayan yazı',`settings.campaignCards[${i}].marqueeText`,c.marqueeText||'','Boş bırakırsan görünmez.','#campaignCards')}</details>
     </div>`).join('');
-  shell('Site Ayarları','Teknik ölçü ayarlarını kaldırdım. Burada gerçekten kullanacağın yazılar, bağlantılar, renkler ve kampanyalar tek ekranda.',
+  shell('Site Ayarları','Sık kullandığın ayarlar burada. Slider bölümü özellikle sade tutuldu.',
   `<div class=panel><h2>Üst Alan</h2>
     ${input('En üstte akan yazı','settings.campaignText',settings.campaignText||'','Siyah ince şeritte akan metin.','.announce')}
-    ${input('Ana başlık','settings.heroTitle',settings.heroTitle||'','Logo ve kampanya alanının altındaki ana başlık.','.hero h1')}
+    ${input('Ana başlık','settings.heroTitle',settings.heroTitle||'','Slider alanının altındaki ana başlık.','.hero h1')}
     ${input('Slogan','settings.heroSubtitle',settings.heroSubtitle||'','Ana başlığın altındaki slogan.','.hero p')}
     ${input('WhatsApp numarası','settings.whatsapp',settings.whatsapp||'','Yeşil iletişim butonu.','.contactBtn.wa')}
     ${input('Instagram kullanıcı adı','settings.instagram',settings.instagram||'','Siyah iletişim butonu.','.contactBtn.ig')}
     ${input('Kargom Nerede bağlantısı','settings.cargoTrackingUrl',settings.cargoTrackingUrl||'https://ebranch.araskargo.com.tr/','Üstteki paket ikonunun açacağı resmi Aras Kargo sayfası.','.cargoAction')}
   </div>
   <div class="panel grid2"><h2 style="grid-column:1/-1">Renkler</h2>
-    ${input('Site arka planı','settings.theme.surface',settings.theme.surface||'#f6f7f8','Tüm sitenin ana zemin rengi.','body','color')}
+    ${input('Site arka planı','settings.theme.surface',settings.theme.surface||'#ffffff','Tüm sitenin ana zemin rengi.','body','color')}
     ${input('Altın vurgu','settings.theme.accent',settings.theme.accent||'#c39a59','Başlık ve küçük vurgu alanları.','.hero','color')}
   </div>
-  <div class=panel><div class=campaignAdminHead><h2>Kampanyalar</h2><button class=smallBtn onclick=addCampaign()>＋ Kampanya Ekle</button></div><div class=help>Fotoğraf + kayan yazı + başlık + buton alanları.</div></div>
-  ${campaigns}
+  <div class="panel campaignSliderAdminIntro">
+    <div><h2>Ana Fotoğraf Sliderı</h2><div class=help>Fotoğraflar otomatik olarak <b>3 saniyede bir</b> değişir. Telefonda parmakla sağa/sola kaydırılabilir.</div></div>
+    <div class=campaignBulkUpload><input id=campaignBulkFiles type=file accept="image/*" multiple><button class=btn onclick=uploadCampaignBulk()>Seçtiğim Fotoğrafları Slayt Olarak Ekle</button></div>
+    <div class=help>3 veya 5 fotoğrafı aynı anda seçebilirsin. Her slaytın buton yazısını ve gideceği kategoriyi aşağıdan ayrı ayrı seçersin.</div>
+  </div>
+  ${campaigns||'<div class=panel><b>Henüz slider fotoğrafı yok.</b><div class=help>Yukarıdan fotoğraf seçip ekle.</div></div>'}
   <div class=panel><h2>Sipariş Sonu Yazıları</h2>
     ${textarea('Kişiye özel ürün onay metni','settings.personalizedNotice',settings.personalizedNotice||'','Yazılı kapıda ödeme siparişinde çıkar.','.drawer')}
     ${textarea('Kargo bilgilendirme metni','settings.shippingNotice',settings.shippingNotice||'','Sipariş oluşturulmadan hemen önce çıkar.','.drawer')}
@@ -123,16 +145,44 @@ function renderSite(){
     ${input('Sipariş teşekkür yazısı','settings.successMessage',settings.successMessage||'','Son ekrandaki mesaj.','.drawer')}
   </div>`);
 }
-function addCampaign(){
-  settings.campaignCards.push({id:'kampanya-'+Date.now(),name:'Yeni Kampanya',enabled:true,order:settings.campaignCards.length+1,imageUrl:'',marqueeText:'YENİ ÜRÜNLERİMİZİ KEŞFEDİN •',title:'Yeni ürünlerimizi keşfedin.',subtitle:'Yeni koleksiyona göz atın.',buttonText:'ÜRÜNLERİ GÖR',buttonLink:'#products',height:330,overlayOpacity:28});
+function addCampaign(imageUrl=''){
+  settings.campaignCards=settings.campaignCards||[];
+  settings.campaignCards.push({id:'kampanya-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),enabled:true,order:settings.campaignCards.length+1,imageUrl,title:'Yeni ürünlerimizi keşfedin.',subtitle:'Yeni koleksiyona göz atın.',buttonText:'ÜRÜNLERİ GÖR',targetCategory:'tum',marqueeText:'',overlayOpacity:28});
   changed('#campaignCards');renderSite();
 }
-function removeCampaign(i){if(confirm('Kampanya silinsin mi?')){settings.campaignCards.splice(i,1);changed('#campaignCards');renderSite()}}
+function moveCampaign(i,dir){
+  const list=settings.campaignCards||[]; const j=i+dir;
+  if(j<0||j>=list.length)return;
+  [list[i],list[j]]=[list[j],list[i]];
+  list.forEach((c,n)=>c.order=n+1);
+  changed('#campaignCards');renderSite();
+}
+function removeCampaign(i){if(confirm('Bu slayt silinsin mi?')){settings.campaignCards.splice(i,1);settings.campaignCards.forEach((c,n)=>c.order=n+1);changed('#campaignCards');renderSite()}}
+async function saveCampaignStateQuick(){
+  const r=await fetch('/api/admin/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({settings,catalog})}).then(r=>r.json());
+  if(!r.ok)throw new Error(r.message||'Kaydedilemedi');
+  return r;
+}
 async function uploadCampaign(i){
   const f=$('#campFile'+i)?.files?.[0];if(!f)return alert('Fotoğraf seç.');
   const fd=new FormData();fd.append('files',f);
   const r=await fetch('/api/upload',{method:'POST',body:fd}).then(r=>r.json());
-  if(r.files?.[0]){settings.campaignCards[i].imageUrl=r.files[0].url;await fetch('/api/admin/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({settings,catalog})});changed('#campaignCards');renderSite()}
+  if(!r.ok||!r.files?.[0])return alert(r.message||'Fotoğraf yüklenemedi.');
+  settings.campaignCards[i].imageUrl=r.files[0].url;
+  await saveCampaignStateQuick();
+  changed('#campaignCards');renderSite();
+}
+async function uploadCampaignBulk(){
+  const input=$('#campaignBulkFiles');
+  const selected=[...(input?.files||[])];
+  if(!selected.length)return alert('Önce fotoğraf seç.');
+  const fd=new FormData();selected.forEach(f=>fd.append('files',f));
+  const r=await fetch('/api/upload',{method:'POST',body:fd}).then(r=>r.json());
+  if(!r.ok||!r.files?.length)return alert(r.message||'Fotoğraflar yüklenemedi.');
+  settings.campaignCards=settings.campaignCards||[];
+  r.files.forEach((f,j)=>settings.campaignCards.push({id:'kampanya-'+Date.now()+'-'+j+'-'+Math.random().toString(36).slice(2,6),enabled:true,order:settings.campaignCards.length+1,imageUrl:f.url,title:'',subtitle:'',buttonText:'ÜRÜNLERİ GÖR',targetCategory:'tum',marqueeText:'',overlayOpacity:28}));
+  await saveCampaignStateQuick();
+  changed('#campaignCards');renderSite();
 }
 
 function renderCatalog(){

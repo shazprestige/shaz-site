@@ -2,6 +2,7 @@
 let settings={},catalog={},cart=[],favorites=new Set(JSON.parse(localStorage.getItem('shazFavs')||'[]'));
 let activeCategory='tum';
 let productSort='priceAsc';
+let campaignSliderTimer=0,campaignSliderIndex=0,campaignTouchStartX=null;
 let checkoutState={payment:'cod',customer:null};
 const $=s=>document.querySelector(s);
 const money=n=>'₺'+Number(n||0).toLocaleString('tr-TR');
@@ -39,21 +40,62 @@ function apply(){
 }
 function renderCampaignCards(){
   const wrap=$('#campaignCards'); if(!wrap)return;
-  const cards=(settings.campaignCards||[]).filter(x=>x.enabled!==false).sort((a,b)=>(a.order||0)-(b.order||0));
-  wrap.innerHTML=cards.map(c=>{
-    const bg=c.imageUrl?`background-image:url('${c.imageUrl}')`:'background-image:linear-gradient(120deg,#2c3037,#0f1115)';
-    const h=Math.max(180,Number(c.height||330));
-    const op=Math.min(.75,Math.max(0,Number(c.overlayOpacity??28)/100));
-    return `<section class="campaignCard" style="${bg};height:${h}px;--campaign-overlay:${op}">
-      <div class="campaignMarquee"><div class="campaignMarqueeTrack">${escapeHtml(c.marqueeText||'')}</div></div>
-      <div class="campaignContent">
-        <h2>${escapeHtml(c.title||'')}</h2>
-        <p>${escapeHtml(c.subtitle||'')}</p>
-        ${c.buttonText?`<a class="campaignBtn" href="${escapeAttr(c.buttonLink||'#products')}">${escapeHtml(c.buttonText)}</a>`:''}
-      </div>
-    </section>`;
-  }).join('');
+  clearInterval(campaignSliderTimer); campaignSliderTimer=0;
+  const cards=(settings.campaignCards||[]).filter(x=>x.enabled!==false&&x.imageUrl).sort((a,b)=>(a.order||0)-(b.order||0));
+  if(!cards.length){wrap.innerHTML='';return}
+  if(campaignSliderIndex>=cards.length)campaignSliderIndex=0;
+  wrap.innerHTML=`<section class="campaignSlider" id="campaignSlider" aria-label="Kampanyalar">
+    <div class="campaignSlides">${cards.map((c,i)=>{
+      const op=Math.min(.75,Math.max(0,Number(c.overlayOpacity??28)/100));
+      return `<article class="campaignSlide ${i===campaignSliderIndex?'isActive':''}" data-slide-index="${i}" style="--campaign-overlay:${op}">
+        <img class="campaignSlideImage" src="${escapeAttr(c.imageUrl)}" alt="${escapeAttr(c.title||'SHAZ kampanya')}">
+        <div class="campaignSlideShade"></div>
+        ${c.marqueeText?`<div class="campaignMarquee"><div class="campaignMarqueeTrack">${escapeHtml(c.marqueeText)}</div></div>`:''}
+        <div class="campaignContent">
+          ${c.title?`<h2>${escapeHtml(c.title)}</h2>`:''}
+          ${c.subtitle?`<p>${escapeHtml(c.subtitle)}</p>`:''}
+          ${c.buttonText?`<button class="campaignBtn" type="button" data-campaign-target="${escapeAttr(c.targetCategory||'tum')}">${escapeHtml(c.buttonText)}</button>`:''}
+        </div>
+      </article>`}).join('')}</div>
+    ${cards.length>1?`<button class="campaignArrow campaignPrev" type="button" aria-label="Önceki fotoğraf">‹</button><button class="campaignArrow campaignNext" type="button" aria-label="Sonraki fotoğraf">›</button><div class="campaignDots">${cards.map((_,i)=>`<button type="button" class="campaignDot ${i===campaignSliderIndex?'isActive':''}" data-slide-dot="${i}" aria-label="${i+1}. fotoğraf"></button>`).join('')}</div>`:''}
+  </section>`;
+  wrap.querySelectorAll('[data-campaign-target]').forEach(btn=>btn.addEventListener('click',()=>goToCampaignTarget(btn.dataset.campaignTarget)));
+  wrap.querySelector('.campaignPrev')?.addEventListener('click',()=>showCampaignSlide(campaignSliderIndex-1,cards.length,true));
+  wrap.querySelector('.campaignNext')?.addEventListener('click',()=>showCampaignSlide(campaignSliderIndex+1,cards.length,true));
+  wrap.querySelectorAll('[data-slide-dot]').forEach(dot=>dot.addEventListener('click',()=>showCampaignSlide(Number(dot.dataset.slideDot),cards.length,true)));
+  const slider=wrap.querySelector('#campaignSlider');
+  if(slider){
+    slider.addEventListener('touchstart',e=>{campaignTouchStartX=e.touches?.[0]?.clientX??null},{passive:true});
+    slider.addEventListener('touchend',e=>{
+      if(campaignTouchStartX===null)return;
+      const x=e.changedTouches?.[0]?.clientX??campaignTouchStartX;
+      const dx=x-campaignTouchStartX;campaignTouchStartX=null;
+      if(Math.abs(dx)>45)showCampaignSlide(campaignSliderIndex+(dx<0?1:-1),cards.length,true);
+    },{passive:true});
+    slider.addEventListener('mouseenter',()=>clearInterval(campaignSliderTimer));
+    slider.addEventListener('mouseleave',()=>startCampaignAutoplay(cards.length));
+  }
+  startCampaignAutoplay(cards.length);
 }
+function showCampaignSlide(next,total,userAction=false){
+  if(!total)return;
+  campaignSliderIndex=(next+total)%total;
+  document.querySelectorAll('#campaignSlider .campaignSlide').forEach((el,i)=>el.classList.toggle('isActive',i===campaignSliderIndex));
+  document.querySelectorAll('#campaignSlider .campaignDot').forEach((el,i)=>el.classList.toggle('isActive',i===campaignSliderIndex));
+  if(userAction)startCampaignAutoplay(total);
+}
+function startCampaignAutoplay(total){
+  clearInterval(campaignSliderTimer);campaignSliderTimer=0;
+  if(total<=1)return;
+  campaignSliderTimer=setInterval(()=>showCampaignSlide(campaignSliderIndex+1,total,false),3000);
+}
+function goToCampaignTarget(categoryId){
+  const id=categoryId||'tum';
+  const cat=id==='tum'?{id:'tum',name:'Tüm Ürünler'}:(catalog.categories||[]).find(c=>c.id===id&&!c.hidden);
+  const target=cat||{id:'tum',name:'Tüm Ürünler'};
+  setCategory(target.id,target.name,{scroll:true});
+}
+
 function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function escapeAttr(s){return String(s??'').replace(/"/g,'&quot;')}
 function productImages(p){
