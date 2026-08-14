@@ -43,6 +43,30 @@
       "height": 330,
       "overlayOpacity": 28,
       "targetCategory": "tum"
+    },
+    {
+      "id": "kampanya-1786731903149-0-l43c",
+      "enabled": true,
+      "order": 2,
+      "imageUrl": "/uploads/1786731900303-d0biin.jpeg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "ÜRÜNLERİ GÖR",
+      "targetCategory": "tum",
+      "marqueeText": "",
+      "overlayOpacity": 28
+    },
+    {
+      "id": "kampanya-1786731903149-1-yaau",
+      "enabled": true,
+      "order": 3,
+      "imageUrl": "/uploads/1786731900575-bzcc48.jpeg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "ÜRÜNLERİ GÖR",
+      "targetCategory": "tum",
+      "marqueeText": "",
+      "overlayOpacity": 28
     }
   ],
   "cargoTrackingUrl": "https://ebranch.araskargo.com.tr/"
