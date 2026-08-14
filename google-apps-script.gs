@@ -83,7 +83,7 @@ function createOrder_(data) {
     }
 
     const order = data.order || {};
-    const id = nextOrderId_(sh);
+    const id = String((data.order||{}).id || '') || nextOrderId_(sh);
     const customerNo = Number(id.replace(/^SHZ/i,'')) || 1;
     const c = order.customer || {};
     const details = orderDetails_(order);

@@ -196,6 +196,51 @@ async function persistStateToGithub(){
   return githubCommitFiles(files,'SHAZ panel: katalog ve site ayarları güncellendi');
 }
 
+async function persistOrdersToGithub(){
+  if(!githubEnabled())return {ok:false,skipped:true};
+  const ordersPath=path.join(dataDir,'orders.json');
+  const content=fs.existsSync(ordersPath)?fs.readFileSync(ordersPath,'utf8'):'[]';
+  return githubCommitFiles([{path:'data/orders.json',content,encoding:'utf-8'}],'SHAZ sipariş: kalıcı sipariş kaydı güncellendi');
+}
+
+function nextLocalOrderId(orders){
+  let max=0;
+  for(const o of (orders||[])){
+    const n=Number(String(o?.id||'').replace(/^SHZ/i,''));
+    if(Number.isFinite(n))max=Math.max(max,n);
+  }
+  return 'SHZ'+(max+1);
+}
+
+let sheetSyncRunning=false;
+async function syncPendingOrdersToSheets(){
+  if(sheetSyncRunning || !GOOGLE_SHEETS_WEBHOOK_URL || !GOOGLE_SHEETS_SECRET)return;
+  sheetSyncRunning=true;
+  try{
+    const orders=readJson('orders.json',[]);
+    let changed=false;
+    for(const order of orders.filter(o=>o.sheetSyncStatus!=='synced').slice().reverse()){
+      try{
+        const sheet=await sheetsRequest({action:'create',requestId:order.requestId,order});
+        order.sheetSyncStatus='synced';
+        order.sheetSyncedAt=new Date().toISOString();
+        order.sheetId=sheet.id||order.id;
+        order.sheetSyncError='';
+        changed=true;
+      }catch(e){
+        order.sheetSyncStatus='pending';
+        order.sheetSyncError=String(e?.message||e).slice(0,500);
+        order.sheetLastTriedAt=new Date().toISOString();
+        changed=true;
+      }
+    }
+    if(changed){
+      writeJson('orders.json',orders);
+      persistOrdersToGithub().catch(e=>console.error('Sipariş GitHub kalıcı kayıt:',e));
+    }
+  }finally{sheetSyncRunning=false;}
+}
+
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function sheetsRequest(payload){
   if(!GOOGLE_SHEETS_WEBHOOK_URL || !GOOGLE_SHEETS_SECRET){
@@ -417,40 +462,59 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
  res.type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet').send(buf);
 });
 app.post('/api/orders',async(req,res)=>{
- const orders=readJson('orders.json',[]);
- const clientRequestId=String(req.body?.requestId||'').trim();
- const requestId=clientRequestId||crypto.randomUUID();
-
- // Aynı telefonda butona art arda basılırsa veya ağ cevabı gecikirse aynı sipariş ikinci kez oluşmasın.
- const existing=orders.find(o=>String(o.requestId||'')===requestId);
- if(existing)return res.json({ok:true,order:existing,duplicate:true});
-
- const now=new Date();
- const createdAt=now.toISOString();
- const createdAtTR=new Intl.DateTimeFormat('tr-TR',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now);
- const body={...(req.body||{})};
- delete body.requestId;
- const draft={createdAt,createdAtTR,status:'new',statusUpdatedAt:createdAt,requestId,...body};
-
- if(!Array.isArray(draft.items)||!draft.items.length||!draft.customer?.fullName||!draft.customer?.phone){
-   return res.status(400).json({ok:false,message:'Sipariş bilgileri eksik. Lütfen sepet ve teslimat bilgilerini kontrol edin.'});
- }
-
- // Google E-Tablo ana kayıt noktasıdır. Oraya yazılmadan müşteriye "sipariş oluştu" demiyoruz.
  try{
-   const sheet=await sheetsRequest({action:'create',requestId,order:draft});
-   const order={...draft,id:sheet.id};
+   const orders=readJson('orders.json',[]);
+   const clientRequestId=String(req.body?.requestId||'').trim();
+   const requestId=clientRequestId||crypto.randomUUID();
+
+   // Aynı sipariş tekrar gelirse yeni kayıt açma.
+   const existing=orders.find(o=>String(o.requestId||'')===requestId);
+   if(existing){
+     if(existing.sheetSyncStatus!=='synced')setTimeout(()=>syncPendingOrdersToSheets(),0);
+     return res.json({ok:true,order:existing,duplicate:true});
+   }
+
+   const now=new Date();
+   const createdAt=now.toISOString();
+   const createdAtTR=new Intl.DateTimeFormat('tr-TR',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now);
+   const body={...(req.body||{})};
+   delete body.requestId;
+
+   if(!Array.isArray(body.items)||!body.items.length||!body.customer?.fullName||!body.customer?.phone){
+     return res.status(400).json({ok:false,message:'Sipariş bilgileri eksik. Lütfen sepet ve teslimat bilgilerini kontrol edin.'});
+   }
+
+   // Siparişin ana kaydı önce sunucu/panele yapılır. Google E-Tablo geçici olarak cevap vermese bile
+   // müşteri siparişi kaybolmaz ve tekrar adres girmek zorunda kalmaz.
+   const order={
+     id:nextLocalOrderId(orders),createdAt,createdAtTR,status:'new',statusUpdatedAt:createdAt,
+     requestId,sheetSyncStatus:'pending',sheetSyncError:'',...body
+   };
    orders.unshift(order);
-   writeJson('orders.json',orders); // yönetim paneli için yerel hızlı kopya
-   return res.json({ok:true,order});
+   writeJson('orders.json',orders);
+
+   // Render yeniden başlasa/deploy olsa da sipariş kaybolmasın diye GitHub'a da kalıcı kopyayı yaz.
+   // Bunlar müşteri cevabını bloke etmez; asıl sipariş zaten orders.json'a kaydedildi.
+   persistOrdersToGithub().catch(e=>console.error('Sipariş GitHub kalıcı kayıt:',e));
+   setTimeout(()=>syncPendingOrdersToSheets(),0);
+
+   return res.json({ok:true,order,pendingSheet:true});
  }catch(e){
-   console.error('Google E-Tablo sipariş kayıt hatası:',e);
-   return res.status(503).json({
-     ok:false,
-     message:'Sipariş kaydedilemedi. Bilgileriniz silinmedi; lütfen tekrar deneyin.'
-   });
+   console.error('Sipariş yerel kayıt hatası:',e);
+   return res.status(500).json({ok:false,message:'Sipariş sunucuya kaydedilemedi. Lütfen tekrar deneyin.'});
  }
 });
+
+// Yönetim panelinden gerektiğinde Google E-Tablo senkronizasyonunu elle tetikleyebilmek için.
+app.post('/api/orders/sync',requireAdmin,async(req,res)=>{
+  try{
+    await syncPendingOrdersToSheets();
+    const orders=readJson('orders.json',[]);
+    const pending=orders.filter(o=>o.sheetSyncStatus!=='synced').length;
+    res.json({ok:true,pending});
+  }catch(e){res.status(500).json({ok:false,message:String(e?.message||e)})}
+});
+
 app.post('/api/upload',requireAdmin, upload.array('files',250),async(req,res)=>{
  try{
    const files=(req.files||[]).map(f=>({name:f.originalname,filename:f.filename,url:'/uploads/'+f.filename,path:f.path}));
@@ -519,4 +583,6 @@ app.use((err,req,res,next)=>{
  res.status(400).json({ok:false,message:err.message||'İstek işlenemedi.'});
 });
 
+setInterval(()=>syncPendingOrdersToSheets().catch(()=>{}),60000);
+setTimeout(()=>syncPendingOrdersToSheets().catch(()=>{}),5000);
 app.listen(PORT,()=>console.log(`SHAZ çalışıyor: http://localhost:${PORT}`));

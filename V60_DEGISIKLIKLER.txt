@@ -1,0 +1,9 @@
+V60 — SİPARİŞ KAYIT MİMARİSİ DÜZELTİLDİ
+
+- Google E-Tablo artık siparişin oluşmasını bloke etmez.
+- Sipariş önce yönetim panelinin orders.json kaydına yazılır ve müşteriye başarı döner.
+- Aynı sipariş requestId ile çift kayıt oluşturmaz.
+- Siparişler GitHub data/orders.json dosyasına da arka planda kalıcı olarak yazılır.
+- Google E-Tablo geçici hata verirse sipariş pending olarak tutulur ve sunucu her 60 saniyede tekrar senkronize eder.
+- /api/orders/sync ile yönetici manuel senkronizasyon tetikleyebilir.
+- Google Apps Script yeni sürümünde sunucunun verdiği SHZ sipariş numarasını kullanır.
