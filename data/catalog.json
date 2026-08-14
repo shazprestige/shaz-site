@@ -19,7 +19,7 @@
     {
       "id": "saatler",
       "name": "Saat",
-      "order": 2,
+      "order": 1,
       "hidden": false,
       "cover": "",
       "size": "small"
