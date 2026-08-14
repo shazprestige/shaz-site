@@ -1,0 +1,584 @@
+
+let settings={},catalog={},cart=[],favorites=new Set(JSON.parse(localStorage.getItem('shazFavs')||'[]'));
+let activeCategory='tum';
+let checkoutState={payment:'cod',customer:null};
+const $=s=>document.querySelector(s);
+const money=n=>'₺'+Number(n||0).toLocaleString('tr-TR');
+
+async function init(){
+  settings=await fetch('/api/settings').then(r=>r.json());
+  catalog=await fetch('/api/catalog').then(r=>r.json());
+  apply(); renderCategories(); renderProducts(); renderCampaignCards(); bindCore(); updateFavoriteBadge(); updateCart();
+}
+function bindCore(){
+  if($('#overlay')) $('#overlay').onclick=closeDrawer;
+  if($('#search')) $('#search').oninput=e=>renderProducts(e.target.value);
+  if($('#favLink')) $('#favLink').onclick=e=>{e.preventDefault();showFavorites()};
+  if($('#cartBtn')) $('#cartBtn').onclick=checkout;
+  if($('#builderTopBtn')) $('#builderTopBtn').onclick=openBuilder;
+  if($('#builderSpotlightBtn')) $('#builderSpotlightBtn').onclick=openBuilder;
+  if($('#builderSpotlight')) $('#builderSpotlight').onclick=e=>{if(e.target.id!=='builderSpotlightBtn')openBuilder()};
+}
+function apply(){
+  document.documentElement.style.setProperty('--paper',settings.theme?.surface||'#f6f7f8');
+  document.documentElement.style.setProperty('--gold',settings.theme?.accent||'#c39a59');
+  if($('#announceWrap')) $('#announceWrap').style.display=settings.header?.showTopStrip===false?'none':'block';
+  if($('#campaign')) $('#campaign').textContent=settings.campaignText||'';
+  if($('#brandLogo')){
+    $('#brandLogo').src=settings.logoUrl||'/uploads/shaz-logo-transparent.png';
+    $('#brandLogo').style.width=(settings.header?.logoWidth||92)+'px';
+  }
+  if($('#heroTitle')) $('#heroTitle').textContent=settings.heroTitle||'Tarzına uygun saatini seç.';
+  if($('#heroSubtitle')) $('#heroSubtitle').textContent=settings.heroSubtitle||'Saatini seç, setini kişiselleştir ve siparişini birkaç adımda tamamla.';
+  if($('#wa')) $('#wa').href='https://wa.me/'+settings.whatsapp;
+  if($('#ig')) $('#ig').href='https://instagram.com/'+settings.instagram;
+  if($('#cargoLink')) $('#cargoLink').href=settings.cargoTrackingUrl||'https://ebranch.araskargo.com.tr/';
+}
+function renderCampaignCards(){
+  const wrap=$('#campaignCards'); if(!wrap)return;
+  const cards=(settings.campaignCards||[]).filter(x=>x.enabled!==false).sort((a,b)=>(a.order||0)-(b.order||0));
+  wrap.innerHTML=cards.map(c=>{
+    const bg=c.imageUrl?`background-image:url('${c.imageUrl}')`:'background-image:linear-gradient(120deg,#2c3037,#0f1115)';
+    const h=Math.max(180,Number(c.height||330));
+    const op=Math.min(.75,Math.max(0,Number(c.overlayOpacity??28)/100));
+    return `<section class="campaignCard" style="${bg};height:${h}px;--campaign-overlay:${op}">
+      <div class="campaignMarquee"><div class="campaignMarqueeTrack">${escapeHtml(c.marqueeText||'')}</div></div>
+      <div class="campaignContent">
+        <h2>${escapeHtml(c.title||'')}</h2>
+        <p>${escapeHtml(c.subtitle||'')}</p>
+        ${c.buttonText?`<a class="campaignBtn" href="${escapeAttr(c.buttonLink||'#products')}">${escapeHtml(c.buttonText)}</a>`:''}
+      </div>
+    </section>`;
+  }).join('');
+}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function escapeAttr(s){return String(s??'').replace(/"/g,'&quot;')}
+function renderCategories(){
+  const cats=[{id:'tum',name:'Tüm Ürünler',order:-1},...catalog.categories.filter(c=>!c.hidden&&c.id!=='tum')].sort((a,b)=>(a.order??0)-(b.order??0));
+  const nav=$('#catalogNav');
+  if(!nav)return;
+  nav.innerHTML=cats.map(c=>`<button class="tab ${activeCategory===c.id?'active':''}" title="${escapeAttr(c.name)}" data-category-id="${escapeAttr(c.id)}" data-category-name="${escapeAttr(c.name)}">${escapeHtml(c.name)}</button>`).join('');
+  nav.querySelectorAll('.tab').forEach(btn=>{
+    btn.addEventListener('click',()=>setCategory(btn.dataset.categoryId,btn.dataset.categoryName));
+  });
+}
+function setCategory(id,name){
+  activeCategory=id;
+  if($('#catalogTitle')) $('#catalogTitle').textContent=name;
+  renderCategories(); renderProducts($('#search')?.value||'');
+}
+function renderProducts(filter=''){
+  const q=(filter||'').toLocaleLowerCase('tr-TR');
+  const list=catalog.products.filter(x=>!x.hidden&&(activeCategory==='tum'||x.category===activeCategory)&&(x.name||'').toLocaleLowerCase('tr-TR').includes(q));
+  if(!$('#productsList')) return;
+  $('#productsList').innerHTML=list.length?list.map(p=>`<div class="card" data-product-id="${escapeAttr(p.id)}"><div class="photo" data-preview-field="photo">${p.image?`<img src="${p.image}" alt="${escapeAttr(p.name)}">`:'⌚'}${p.badge?`<span class="badge" data-preview-field="badge">${escapeHtml(p.badge)}</span>`:''}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(p.name)}</h3><div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}<button class="btn" data-preview-field="button" onclick="startProduct('${p.id}')">Ürünü Seç</button></div></div>`).join(''):`<div class="panel"><b>Bu kategoride henüz ürün yok.</b></div>`;
+}
+function updateFavoriteBadge(){if($('#favBadge'))$('#favBadge').textContent=favorites.size}
+function toggleFav(id,e){e?.stopPropagation();favorites.has(id)?favorites.delete(id):favorites.add(id);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));updateFavoriteBadge();renderProducts($('#search')?.value||'')}
+function showFavorites(){const ps=catalog.products.filter(p=>favorites.has(p.id));openDrawer(`<div class=wizardHead><h2>Favorilerim</h2><button class="pill" onclick=closeDrawer()>Kapat</button></div>${ps.length?ps.map(p=>`<div class=wizardCard><b>${escapeHtml(p.name)}</b><br>${money(p.price)}<br><br><button class=btn onclick="startProduct('${p.id}')">Ürünü Seç</button></div>`).join(''):'Henüz favoriniz yok.'}`)}
+function openDrawer(html){$('#overlay').classList.remove('hidden');$('#drawer').classList.remove('hidden');$('#drawer').innerHTML=html}
+function closeDrawer(){$('#overlay').classList.add('hidden');$('#drawer').classList.add('hidden')}
+function toast(msg){const t=$('#toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+function updateCart(){
+  const count=cart.reduce((s,x)=>s+Number(x.qty||1),0);
+  if($('#cartCount')) $('#cartCount').textContent=count;
+  if($('#cartBadge')) $('#cartBadge').textContent=count;
+}
+
+/* Yönetim panelindeki canlı önizleme için kaydetmeden geçici değişiklik */
+window.addEventListener('message',e=>{
+  if(!e.data)return;
+  if(e.data.type==='shaz-preview'){
+    if(e.data.settings) settings=structuredClone(e.data.settings);
+    if(e.data.catalog) catalog=structuredClone(e.data.catalog);
+    apply();renderCampaignCards();renderCategories();renderProducts($('#search')?.value||'');
+    updateFavoriteBadge();updateCart();
+    return;
+  }
+  if(e.data.type==='shaz-preview-focus'){
+    const target=e.data.target;
+    const shouldScroll=e.data.scroll!==false;
+
+    document.querySelectorAll('.adminPreviewHighlight').forEach(x=>x.classList.remove('adminPreviewHighlight'));
+
+    let el=target?document.querySelector(target):null;
+
+    // Ürün görünür değilse önizlemeyi Tüm Ürünler'e al.
+    if(!el && target && target.includes('[data-product-id=')){
+      activeCategory='tum';
+      if($('#catalogTitle')) $('#catalogTitle').textContent='Tüm Ürünler';
+      renderCategories();
+      renderProducts($('#search')?.value||'');
+      el=document.querySelector(target);
+    }
+    if(!el)return;
+
+    el.classList.add('adminPreviewHighlight');
+    if(!shouldScroll)return;
+
+    const header=document.querySelector('header');
+
+    // Üst sabit paneldeki hedef için dikey kaydırma yapma.
+    if(el.closest('header')){
+      const tabs=el.closest('.tabs');
+      if(tabs){
+        const er=el.getBoundingClientRect();
+        const tr=tabs.getBoundingClientRect();
+        if(er.left<tr.left || er.right>tr.right){
+          const desired=tabs.scrollLeft + (er.left-tr.left) - (tr.width-er.width)/2;
+          tabs.scrollLeft=Math.max(0,desired);
+        }
+      }
+      return;
+    }
+
+    const viewportH=window.innerHeight||document.documentElement.clientHeight;
+    const headerH=header?.getBoundingClientRect().height||0;
+    const topSafe=headerH+18;
+    const bottomSafe=24;
+    const visibleBottom=viewportH-bottomSafe;
+    const rect=el.getBoundingClientRect();
+
+    // Zaten görünüyorsa dokunma.
+    if(rect.top>=topSafe && rect.bottom<=visibleBottom)return;
+
+    const usable=Math.max(120,visibleBottom-topSafe);
+    const currentY=window.scrollY||document.documentElement.scrollTop||0;
+    const desiredTop=topSafe + Math.max(0,(usable-rect.height)/2);
+    const desired=currentY + rect.top - desiredTop;
+    const maxY=Math.max(0,document.documentElement.scrollHeight-viewportH);
+    const exactY=Math.max(0,Math.min(maxY,desired));
+
+    window.scrollTo({top:exactY,left:0,behavior:'auto'});
+  }
+});
+
+function startProduct(id){
+  const p=catalog.products.find(x=>x.id===id); if(!p)return;
+  if(p.isSet&&Array.isArray(p.setItems)&&p.setItems.length) return startSetWizard(p);
+  startSingleWizard(p);
+}
+
+/* SINGLE PRODUCT FLOW */
+function startSingleWizard(p){
+  openDrawer(`<div class=wizardHead><div><div class=wizardProgress>1 / 2</div><h2>${p.name}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+  <div class=wizardCard><h3>Ürününüzün üzerine herhangi bir yazı yazdırmak ister misiniz?</h3>
+  <div class=choiceStack><button class="choiceBtn" onclick='addSingleNoText(${JSON.stringify(p.id)})'>Hayır, birebir bu şekilde istiyorum</button><button class="choiceBtn primary" onclick='singleWriteStep(${JSON.stringify(p.id)})'>Evet, yazı yazdırmak istiyorum</button></div></div>`);
+}
+function addSingleNoText(id){const p=catalog.products.find(x=>x.id===id);cart.push({product:p,qty:1,personalized:false});updateCart();closeDrawer();toast('✓ Ürün sepete eklendi')}
+function singleWriteStep(id){
+  const p=catalog.products.find(x=>x.id===id);
+  const positions=(p.writePositions&&p.writePositions.length)?p.writePositions:["Ön yüz","Arka yüz"];
+  openDrawer(`<div class=wizardHead><div><div class=wizardProgress>2 / 2</div><h2>${p.name}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+  <div class=priceInfo><b>Yazı ücretlendirmesi:</b><br>İlk ürün +${money(catalog.personalizationPricing?.first||75)} · İkinci ürün +${money(catalog.personalizationPricing?.second||50)} · 3. ve sonrası +${money(catalog.personalizationPricing?.thirdPlus||25)}</div>
+  <div class=writeItem><h3>${p.name}</h3><div class=positionChoices>${positions.map((x,i)=>`<label class=positionChoice><input type=radio name=singlePos value="${x}" ${i===0?'checked':''}> ${x}</label>`).join('')}</div><input class=writeInput id=singleText placeholder="Yazdırmak istediğiniz yazıyı girin"></div>
+  <button class=btn onclick='finishSingleWrite(${JSON.stringify(p.id)})'>Sepete Ekle</button>`);
+}
+function finishSingleWrite(id){
+  const p=catalog.products.find(x=>x.id===id), text=$('#singleText').value.trim(), pos=document.querySelector('input[name=singlePos]:checked')?.value;
+  if(!text)return alert('Lütfen yazdırmak istediğiniz yazıyı girin.');
+  const fee=catalog.personalizationPricing?.first||75;
+  cart.push({product:{...p,price:p.price+fee},basePrice:p.price,qty:1,personalized:true,writes:[{item:p.name,position:pos,text,fee}]});
+  updateCart();closeDrawer();toast('✓ Ürün sepete eklendi');
+}
+
+/* SET WIZARD */
+let wiz=null;
+function startSetWizard(p){
+  wiz={product:p, keptIds:p.setItems.map(x=>x.id), writes:[], step:1, history:[]};
+  renderRemoveQuestion();
+}
+function head(title,canBack=true){return `<div class=wizardHead>${canBack?'<button class="pill backPill" onclick=setWizardBack()>← Geri</button>':''}<div><div class=wizardProgress>Adım ${wiz?.step||1}</div><h2>${title}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>`}
+function setWizardSnapshot(screen){
+  if(!wiz)return;
+  wiz.history=wiz.history||[];
+  wiz.history.push({screen,step:wiz.step,keptIds:[...(wiz.keptIds||[])],writes:JSON.parse(JSON.stringify(wiz.writes||[]))});
+  if(wiz.history.length>20)wiz.history.shift();
+}
+function setWizardNext(screen){setWizardSnapshot(screen);wiz.step=(wiz.step||1)+1}
+function setWizardBack(){
+  if(!wiz?.history?.length)return;
+  const prev=wiz.history.pop();
+  wiz.step=prev.step;wiz.keptIds=prev.keptIds;wiz.writes=prev.writes;
+  if(prev.screen==='removeQuestion')renderRemoveQuestion(true);
+  else if(prev.screen==='removalSelection')renderRemovalSelection(true);
+  else if(prev.screen==='writeQuestion')renderWriteQuestion(true);
+  else if(prev.screen==='writeSelection')renderWriteSelection(true);
+  else if(prev.screen==='writeDetails')renderWriteDetails(true);
+  else if(prev.screen==='summary')renderSetSummary(true);
+}
+
+function renderRemoveQuestion(restoring=false){
+  openDrawer(head(wiz.product.name,false)+`<div class=wizardCard><h3>Setinizin içerisinden çıkarmak istediğiniz bir ürün var mı?</h3><p>Seti birebir almak istiyorsanız ilk seçeneği seçin. Bir veya daha fazla ürün çıkarmak isterseniz ikinci seçeneğe geçin.</p>
+  <div class=choiceStack><button class="choiceBtn" onclick=keepAllSetItems()>Hayır, çıkarmak istemiyorum. Seti birebir almak istiyorum.</button><button class="choiceBtn primary" onclick=renderRemovalSelection()>Evet, bir veya daha fazla ürün çıkarmak istiyorum.</button></div></div>`);
+}
+function keepAllSetItems(){wiz.keptIds=wiz.product.setItems.map(x=>x.id);renderWriteQuestion()}
+function renderRemovalSelection(restoring=false){
+  if(!restoring)setWizardNext('removeQuestion');
+  openDrawer(head('Set içeriğini düzenle')+`<div class=wizardCard><h3>Size gönderilmesini istediğiniz ürünler işaretli kalsın.</h3><p>Çıkarmak istediğiniz ürünün tikini kaldırın. Çıkardığınız ürünün tanımlı tutarı toplamdan düşer.</p>
+  <div class=setItemList>${wiz.product.setItems.map(x=>`<label class=setItemToggle><span><b>${x.name}</b><div class=muted>Çıkarılırsa -${money(x.removeDiscount)}</div></span><input type=checkbox class=keepItem data-id="${x.id}" ${wiz.keptIds.includes(x.id)?'checked':''} onchange=refreshRemovalSummary()></label>`).join('')}</div>
+  <div id=removeSummary></div></div><button class=btn onclick=confirmRemoval()>Devam Et</button>`);
+  refreshRemovalSummary();
+}
+function refreshRemovalSummary(){
+  const kept=[...document.querySelectorAll('.keepItem:checked')].map(x=>x.dataset.id);
+  const removed=wiz.product.setItems.filter(x=>!kept.includes(x.id)), remain=wiz.product.setItems.filter(x=>kept.includes(x.id));
+  $('#removeSummary').innerHTML=`<div class=remainingList><b>Size gelecek ürünler:</b><br>${remain.length?remain.map(x=>'✓ '+x.name).join('<br>'):'Hiç ürün kalmadı.'}</div>${removed.length?`<div class=removedList><b>Çıkardığınız ürünler:</b><br>${removed.map(x=>'✕ '+x.name+' (-'+money(x.removeDiscount)+')').join('<br>')}</div>`:''}`;
+}
+function confirmRemoval(){
+  wiz.keptIds=[...document.querySelectorAll('.keepItem:checked')].map(x=>x.dataset.id);
+  if(!wiz.keptIds.length)return alert('Sette en az bir ürün kalmalıdır.');
+  renderWriteQuestion();
+}
+function renderWriteQuestion(restoring=false){
+  if(!restoring)setWizardNext(wiz.history?.length&&wiz.history[wiz.history.length-1]?.screen==='removalSelection'?'removalSelection':'removeQuestion');
+  const count=wiz.keptIds.length;
+  openDrawer(head(wiz.product.name)+`<div class=wizardCard><h3>${count>1?'Ürünlerinizin':'Ürününüzün'} üzerine yazı yazdırmak ister misiniz?</h3>
+  <div class=priceInfo><b>Yazı ücretlendirmesi:</b><br>İlk ürün yazısı +${money(catalog.personalizationPricing?.first||75)}<br>İkinci ürün yazısı +${money(catalog.personalizationPricing?.second||50)}<br>3. ve sonraki her ürün +${money(catalog.personalizationPricing?.thirdPlus||25)}</div>
+  <div class=choiceStack><button class=choiceBtn onclick=finishSetWithoutWrite()>Hayır, yazı istemiyorum</button><button class="choiceBtn primary" onclick=renderWriteSelection()>Evet, yazı yazdırmak istiyorum</button></div></div>`);
+}
+function finishSetWithoutWrite(){wiz.writes=[];renderSetSummary()}
+function renderWriteSelection(restoring=false){
+  if(!restoring)setWizardNext('writeQuestion');
+  const kept=wiz.product.setItems.filter(x=>wiz.keptIds.includes(x.id));
+  openDrawer(head('Yazı yazdırılacak ürünleri seçin')+`<div class=wizardCard><div class=priceInfo><b>Ücret sırası otomatik hesaplanır:</b><br>1. seçilen ürün +${money(catalog.personalizationPricing?.first||75)} · 2. seçilen +${money(catalog.personalizationPricing?.second||50)} · 3. ve sonrası +${money(catalog.personalizationPricing?.thirdPlus||25)}</div>
+  <div class=writeSelectGrid>${kept.map(x=>`<label class=setItemToggle><span><b>${x.name}</b><div class=muted>Bu ürüne yazı eklemek için işaretleyin</div></span><input type=checkbox class=writePick data-id="${x.id}" ${(wiz.pendingWriteIds||[]).includes(x.id)?'checked':''} onchange=refreshWriteFeePreview()></label>`).join('')}</div><div id=writeFeePreview></div></div>
+  <button class=btn onclick=renderWriteDetails()>Seçtiklerimle Devam Et</button>`);
+  refreshWriteFeePreview();
+}
+function feeForIndex(i){return i===0?(catalog.personalizationPricing?.first||75):i===1?(catalog.personalizationPricing?.second||50):(catalog.personalizationPricing?.thirdPlus||25)}
+function refreshWriteFeePreview(){
+  const ids=[...document.querySelectorAll('.writePick:checked')].map(x=>x.dataset.id);
+  const items=wiz.product.setItems.filter(x=>ids.includes(x.id));
+  $('#writeFeePreview').innerHTML=ids.length?`<div class=remainingList><b>Yazı seçimi:</b><br>${items.map((x,i)=>`${i+1}. ${x.name} +${money(feeForIndex(i))}`).join('<br>')}<br><br><b>Toplam yazı ücreti: ${money(ids.reduce((s,_,i)=>s+feeForIndex(i),0))}</b></div>`:'';
+}
+function renderWriteDetails(restoring=false){
+  let ids;
+  if(restoring){ids=wiz.pendingWriteIds||[]}else{ids=[...document.querySelectorAll('.writePick:checked')].map(x=>x.dataset.id);wiz.pendingWriteIds=[...ids]}
+  if(!ids.length)return alert('En az bir ürün seçin veya geri dönüp yazı istemiyorum seçeneğini kullanın.');
+  const items=ids.map(id=>wiz.product.setItems.find(x=>x.id===id));
+  if(!restoring)setWizardNext('writeSelection');
+  openDrawer(head('Yazı detayları')+`<div class=wizardCard><h3>Her ürün için konumu seçin ve yazıyı girin.</h3><p>Bütün alanlar açık halde gösterilir; tek tek pencere açılmaz.</p>
+  ${items.map((x,i)=>`<div class=writeItem data-write-id="${x.id}" data-fee="${feeForIndex(i)}"><div class=writeItemTop><b>${x.name}</b><span>+${money(feeForIndex(i))}</span></div><div class=writeDetails><div class=muted>${x.name} yazısı nereye işlensin?</div><div class=positionChoices>${x.writePositions.map((pos,j)=>`<label class=positionChoice><input type=radio name="pos-${x.id}" value="${pos}" ${j===0?'checked':''}> ${pos}</label>`).join('')}</div><input class=writeInput id="text-${x.id}" placeholder="${x.name} üzerine yazdırmak istediğiniz yazı"></div></div>`).join('')}</div>
+  <button class=btn onclick=confirmWriteDetails()>Özeti Gör</button>`);
+}
+function confirmWriteDetails(){
+  const cards=[...document.querySelectorAll('[data-write-id]')], writes=[];
+  for(const c of cards){
+    const id=c.dataset.writeId, item=wiz.product.setItems.find(x=>x.id===id), text=$('#text-'+id).value.trim(), position=document.querySelector(`input[name="pos-${id}"]:checked`)?.value;
+    if(!text)return alert(item.name+' için yazıyı girin.');
+    writes.push({itemId:id,item:item.name,position,text,fee:Number(c.dataset.fee)});
+  }
+  wiz.writes=writes; renderSetSummary();
+}
+function calcSetPrice(){
+  const removed=wiz.product.setItems.filter(x=>!wiz.keptIds.includes(x.id)).reduce((s,x)=>s+Number(x.removeDiscount||0),0);
+  const writeFee=wiz.writes.reduce((s,x)=>s+Number(x.fee||0),0);
+  return {base:Number(wiz.product.price),removed,writeFee,total:Math.max(0,Number(wiz.product.price)-removed+writeFee)};
+}
+function renderSetSummary(restoring=false){
+  if(!restoring){
+    const last=wiz.history?.[wiz.history.length-1]?.screen;
+    setWizardNext(last==='writeDetails'?'writeDetails':'writeQuestion');
+  }
+  const pr=calcSetPrice(), kept=wiz.product.setItems.filter(x=>wiz.keptIds.includes(x.id)), removed=wiz.product.setItems.filter(x=>!wiz.keptIds.includes(x.id));
+  openDrawer(head('Sipariş özeti')+`<div class=wizardCard><h3>Size gönderilecek ürünler</h3>${kept.map(x=>`<div class=summaryLine><span>✓ ${x.name}</span><span></span></div>`).join('')}</div>
+  ${removed.length?`<div class=wizardCard><h3>Setten çıkardığınız ürünler</h3>${removed.map(x=>`<div class=summaryLine><span>✕ ${x.name}</span><span>-${money(x.removeDiscount)}</span></div>`).join('')}</div>`:''}
+  ${wiz.writes.length?`<div class=wizardCard><h3>Kişiye özel yazılar</h3>${wiz.writes.map(x=>`<div class=summaryLine><span><b>${x.item}</b><br><span class=muted>${x.position}: “${x.text}”</span></span><span>+${money(x.fee)}</span></div>`).join('')}</div>`:''}
+  <div class=wizardCard><div class=summaryLine><span>Set fiyatı</span><span>${money(pr.base)}</span></div>${pr.removed?`<div class=summaryLine><span>Çıkarılan ürünler</span><span>-${money(pr.removed)}</span></div>`:''}${pr.writeFee?`<div class=summaryLine><span>Yazı işlemleri</span><span>+${money(pr.writeFee)}</span></div>`:''}<div class="summaryLine summaryTotal"><span>Toplam</span><span>${money(pr.total)}</span></div></div>
+  <button class=btn onclick=addSetToCart()>Sepete Ekle</button>`);
+}
+function addSetToCart(){
+  const pr=calcSetPrice();
+  cart.push({product:{...wiz.product,price:pr.total},basePrice:wiz.product.price,qty:1,personalized:wiz.writes.length>0,setCustomization:{keptIds:wiz.keptIds,removedIds:wiz.product.setItems.filter(x=>!wiz.keptIds.includes(x.id)).map(x=>x.id),writes:wiz.writes}});
+  updateCart(); closeDrawer(); toast('✓ Ürün sepete eklendi');
+}
+
+/* CART + CHECKOUT */
+
+function checkout(){
+  if(!cart.length)return openDrawer('<h2>Sepetiniz boş</h2>');
+  openDrawer(`<div class=wizardHead><h2>Sepetim</h2><button class=pill onclick=closeDrawer()>Kapat</button></div>
+    <div class=wizardCard>${cart.map((x,i)=>cartItemSummary(x,i)).join('')}
+      <div class="summaryLine summaryTotal"><span>Toplam</span><span>${money(cart.reduce((a,x)=>a+Number(x.product.price||0),0))}</span></div>
+    </div>
+    <div class=wizardCard><b>Ödeme yöntemi</b>
+      <select id=pay class=formControl style="margin-top:8px">
+        <option value=cod>Kapıda ödeme</option>
+        <option value=online>Online ödeme</option>
+      </select>
+    </div>
+    <button class=btn onclick="addressStep()">Adres Bilgilerine Devam Et</button>`);
+}
+function cartItemSummary(x,i){
+  const lines=[];
+  if(x.setCustomization){
+    const removed=(x.setCustomization.removedIds||[]).map(id=>(x.product.setItems||[]).find(s=>s.id===id)?.name).filter(Boolean);
+    if(removed.length) lines.push(`<div class=muted>Çıkarılan: ${removed.map(escapeHtml).join(', ')}</div>`);
+    const writes=x.setCustomization.writes||[];
+    if(writes.length) lines.push(`<div class=muted>Yazılar: ${writes.map(w=>`${escapeHtml(w.item)} — ${escapeHtml(w.position)}: “${escapeHtml(w.text)}”`).join('<br>')}</div>`);
+  }
+  if(x.builderItems?.length) lines.push(`<div class=muted>Set içeriği: ${x.builderItems.map(p=>escapeHtml(p.name)).join(', ')}</div>`);
+  const writes=x.writes||x.setCustomization?.writes||[];
+  if(!x.setCustomization && writes.length) lines.push(`<div class=muted>Yazı: ${writes.map(w=>`${escapeHtml(w.item)} — ${escapeHtml(w.position)}: “${escapeHtml(w.text)}”`).join('<br>')}</div>`);
+  return `<div class=orderCartItem><div class=summaryLine><span><b>${escapeHtml(x.product.name)}</b></span><span>${money(x.product.price)}</span></div>${lines.join('')}</div>`;
+}
+function addressStep(){
+  checkoutState.payment=$('#pay')?.value||'cod';
+  const c=checkoutState.customer||{};
+  openDrawer(`<div class=wizardHead><div><div class=wizardProgress>Sipariş Bilgileri</div><h2>Teslimat Adresi</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+    <div class=notice><b>Zorunlu alanlar *</b> ile işaretlidir. Cadde veya sokaktan yalnızca birini doldurmanız yeterlidir.</div>
+    <div class=addressGrid>
+      ${addrInput('Ad Soyad *','fullName',c.fullName)}
+      ${addrInput('Telefon *','phone',c.phone,'tel')}
+      ${addrInput('Ek Telefon *','extraPhone',c.extraPhone,'tel')}
+      ${addrInput('İl *','province',c.province)}
+      ${addrInput('İlçe *','district',c.district)}
+      ${addrInput('Mahalle *','neighborhood',c.neighborhood)}
+      ${addrInput('Cadde','avenue',c.avenue)}
+      ${addrInput('Sokak','street',c.street)}
+      ${addrInput('Bina No *','buildingNo',c.buildingNo)}
+      ${addrInput('Kat *','floor',c.floor)}
+      ${addrInput('Daire / Kapı No','doorNo',c.doorNo)}
+      <div class=field><label><b>Teslimat yeri *</b></label>
+        <select id="addr-placeType" class=formControl onchange="toggleBusinessName()">
+          <option value="home" ${c.placeType!=='business'?'selected':''}>Ev</option>
+          <option value="business" ${c.placeType==='business'?'selected':''}>Dükkan / İş yeri</option>
+        </select>
+      </div>
+      <div class=field id=businessNameWrap style="${c.placeType==='business'?'':'display:none'}"><label><b>Dükkan / İş yeri adı *</b></label><input class=formControl id=addr-businessName value="${escapeAttr(c.businessName||'')}" placeholder="Örn: SHAZ Saat"></div>
+    </div>
+    <div class=field><label><b>Adres tarifi / not</b></label><textarea class=formControl id=addr-note rows=3 placeholder="Kurye için ek açıklama">${escapeHtml(c.note||'')}</textarea></div>
+    <button class=btn onclick="saveAddressAndContinue()">Bilgileri Kontrol Et ve Devam Et</button>`);
+}
+function addrInput(label,id,value='',type='text'){
+  return `<div class=field><label><b>${label}</b></label><input class=formControl id="addr-${id}" type="${type}" value="${escapeAttr(value||'')}"></div>`;
+}
+function toggleBusinessName(){
+  const business=$('#addr-placeType')?.value==='business';
+  if($('#businessNameWrap')) $('#businessNameWrap').style.display=business?'flex':'none';
+}
+function saveAddressAndContinue(){
+  const g=id=>($('#addr-'+id)?.value||'').trim();
+  const customer={
+    fullName:g('fullName'),phone:g('phone'),extraPhone:g('extraPhone'),province:g('province'),district:g('district'),
+    neighborhood:g('neighborhood'),avenue:g('avenue'),street:g('street'),buildingNo:g('buildingNo'),floor:g('floor'),
+    doorNo:g('doorNo'),placeType:g('placeType')||'home',businessName:g('businessName'),note:g('note')
+  };
+  const missing=[];
+  ['fullName','phone','extraPhone','province','district','neighborhood','buildingNo','floor'].forEach(k=>{if(!customer[k])missing.push(k)});
+  if(!customer.avenue&&!customer.street)return alert('Cadde veya Sokak alanlarından en az birini doldurun.');
+  if(customer.placeType==='business'&&!customer.businessName)return alert('Dükkan / iş yeri adını yazın.');
+  if(missing.length)return alert('Lütfen * işaretli zorunlu alanları doldurun.');
+  checkoutState.customer=customer;
+  const hasPersonal=cart.some(x=>x.personalized);
+  if(checkoutState.payment==='cod'&&hasPersonal){
+    openDrawer(`<h2>Kişiye özel ürün bilgilendirmesi</h2><div class=notice>${settings.personalizedNotice}</div><div class=wizardCard><button class=btn onclick="shippingNotice(true)">Onaylıyorum, devam et</button></div>`);
+  }else shippingNotice(false);
+}
+function shippingNotice(personalApproved=false){
+  openDrawer(`<h2>Kargo bilgilendirmesi</h2><div class=notice>${settings.shippingNotice}</div><div class=wizardCard><button class=btn onclick="finalizeOrder(${personalApproved})">Okudum, siparişi oluştur</button></div>`);
+}
+async function finalizeOrder(personalApproved){
+  if(!checkoutState.customer)return addressStep();
+  const order={
+    items:cart,
+    customer:checkoutState.customer,
+    payment:checkoutState.payment,
+    personalApproval:personalApproved?{approved:true,method:'button',at:new Date().toISOString()}:null,
+    shippingNoticeAccepted:true,
+    total:cart.reduce((a,x)=>a+Number(x.product.price||0),0)
+  };
+  const r=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(order)}).then(r=>r.json());
+  cart=[];checkoutState={payment:'cod',customer:null};updateCart();success(r.order.id);
+}
+function success(id){
+  openDrawer(`<div class=success><div class=check>✅</div><h2>${settings.successTitle}</h2><p>${settings.successMessage}</p><p><b>${settings.successTagline}</b></p><p>Sipariş No: ${id}</p><div class=actions><a class="contactBtn wa" href="https://wa.me/${settings.whatsapp}"><span class=contactIcon>◉</span><span><b>Aklınıza takılan bir şey mi var?</b><small>WhatsApp'tan yazın</small></span></a><a class="contactBtn ig" href="https://instagram.com/${settings.instagram}"><span class=contactIcon>◎</span><span><b>Aklınıza takılan bir şey mi var?</b><small>Instagram'dan yazın</small></span></a></div></div>`);
+}
+
+
+/* CUSTOM BUILDER — kategori adımlı */
+let customBuilder=null;
+
+function getBuilderCategories(){
+  const b=catalog.builder||{};
+  const allowed=(b.allowedCategories||[]).filter(id=>id!=='setler'&&id!=='tum');
+  const ordered=(b.categoryOrder||[]).filter(id=>allowed.includes(id));
+  allowed.forEach(id=>{if(!ordered.includes(id))ordered.push(id)});
+  return ordered.map(id=>catalog.categories.find(c=>c.id===id)).filter(Boolean).filter(c=>!c.hidden);
+}
+function getBuilderProducts(categoryId){
+  return catalog.products.filter(p=>
+    !p.hidden &&
+    !p.isSet &&
+    p.category!=='setler' &&
+    p.category===categoryId &&
+    p.setEligible!==false
+  );
+}
+function openBuilder(){
+  const cats=getBuilderCategories();
+  if(!cats.length){
+    return openDrawer(`<div class=wizardHead><h2>Kendi Setini Oluştur</h2><button class=pill onclick=closeDrawer()>Kapat</button></div><div class=builderEmptyCategory>Şu anda set oluşturma için açık kategori bulunmuyor.</div>`);
+  }
+  customBuilder={categories:cats,index:0,selections:{},writes:[]};
+  renderBuilderCategoryStep();
+}
+function renderBuilderCategoryStep(){
+  const cat=customBuilder.categories[customBuilder.index];
+  const products=getBuilderProducts(cat.id);
+  const total=customBuilder.categories.length;
+  const selectedId=customBuilder.selections[cat.id]||null;
+  const progress=((customBuilder.index+1)/total)*100;
+  const chosenCount=Object.values(customBuilder.selections).filter(Boolean).length;
+
+  openDrawer(`<div class=wizardHead><div><div class=wizardProgress>Kendi Setini Oluştur</div><h2>${escapeHtml(cat.name)}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+    <div class=builderStepMeta><span class=builderStepName>${customBuilder.index+1}. ADIM / ${total}</span><span class=builderChosen>${chosenCount} ürün seçildi</span></div>
+    <div class=builderProgressBar><div class=builderProgressFill style="width:${progress}%"></div></div>
+    <div class=wizardCard>
+      <h3>${escapeHtml(cat.name)} kategorisinden hangisini setinize eklemek istersiniz?</h3>
+      <p class=muted>Bu kategoride yalnızca normal tekli ürünler gösterilir. Hazır setler burada görünmez.</p>
+      ${products.length?`<div class=builderProductGrid>${products.map(p=>`
+        <div class="builderProductCard ${selectedId===p.id?'selected':''}" onclick="builderChoose('${escapeAttr(cat.id)}','${escapeAttr(p.id)}')">
+          <div class=builderProductPhoto>${p.image?`<img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.name)}">`:'⌚'}<span class=builderSelectMark>${selectedId===p.id?'✓':''}</span></div>
+          <div class=builderProductBody><b>${escapeHtml(p.name)}</b><small>${money(p.price)} tekli satış fiyatı</small></div>
+        </div>`).join('')}</div>`:`<div class=builderEmptyCategory>Bu kategoride set oluşturmaya açık tekli ürün bulunmuyor.</div>`}
+      <button class=builderSkip onclick="builderSkipCurrent()">Bu kategoriden ürün eklemek istemiyorum</button>
+    </div>
+    <div class=builderNav>
+      ${customBuilder.index>0?`<button class="btn secondary" onclick=builderPrev()>← Geri</button>`:''}
+      <button class=btn onclick=builderNext()>${customBuilder.index===total-1?'Seçimlerimi Gör':'Devam Et →'}</button>
+    </div>`);
+}
+function builderChoose(categoryId,productId){
+  customBuilder.selections[categoryId]=productId;
+  renderBuilderCategoryStep();
+}
+function builderSkipCurrent(){
+  customBuilder.selections[customBuilder.categories[customBuilder.index].id]=null;
+  builderNext();
+}
+function builderPrev(){if(customBuilder.index>0){customBuilder.index--;renderBuilderCategoryStep()}}
+function builderNext(){
+  if(customBuilder.index<customBuilder.categories.length-1){customBuilder.index++;renderBuilderCategoryStep();return}
+  renderBuilderSelectionSummary();
+}
+function getBuilderSelectedProducts(){
+  return customBuilder.categories.map(c=>{
+    const id=customBuilder.selections[c.id];
+    return id?catalog.products.find(p=>p.id===id):null;
+  }).filter(Boolean);
+}
+function getBuilderRule(count){
+  return (catalog.builder?.pricingRules||[]).find(r=>Number(r.count)===Number(count));
+}
+function builderTotalFor(count){
+  const rule=getBuilderRule(count);
+  return rule?Number(rule.pricePerItem||0)*count:0;
+}
+function renderBuilderSelectionSummary(){
+  const selected=getBuilderSelectedProducts();
+  const min=Number(catalog.builder?.minItems||1);
+  const max=Number(catalog.builder?.maxItems||99);
+  const valid=selected.length>=min&&selected.length<=max;
+  const total=builderTotalFor(selected.length);
+  const rule=getBuilderRule(selected.length);
+
+  openDrawer(`<div class=wizardHead><div><div class=wizardProgress>Seçim Özeti</div><h2>Setiniz</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+    <div class=wizardCard>
+      <h3>Seçtiğiniz ürünler</h3>
+      <div class=builderSummaryItems>${selected.length?selected.map(p=>`
+        <div class=builderSummaryItem>
+          <div class=builderSummaryThumb>${p.image?`<img src="${escapeAttr(p.image)}">`:'⌚'}</div>
+          <div class=builderSummaryInfo><b>${escapeHtml(p.name)}</b><small>${escapeHtml((catalog.categories.find(c=>c.id===p.category)||{}).name||p.category)}</small></div>
+        </div>`).join(''):'<div class=builderEmptyCategory>Henüz ürün seçmediniz.</div>'}</div>
+    </div>
+    <div class=wizardCard>
+      <div class=summaryLine><span>Seçilen ürün sayısı</span><span>${selected.length}</span></div>
+      <div class=summaryLine><span>Minimum gerekli</span><span>${min}</span></div>
+      ${rule?`<div class=summaryLine><span>Özel set ürün başı fiyatı</span><span>${money(rule.pricePerItem)}</span></div>`:''}
+      <div class="summaryLine summaryTotal"><span>Set toplamı</span><span>${rule?money(total):'Fiyat tanımlı değil'}</span></div>
+    </div>
+    ${!valid?`<div class=notice>Bu seti tamamlamak için en az ${min}, en fazla ${max} ürün seçmelisiniz.</div>`:''}
+    ${valid&&!rule?`<div class=notice>${selected.length} ürün için yönetim panelinde özel set fiyatı tanımlanmamış.</div>`:''}
+    <div class=builderNav><button class="btn secondary" onclick=builderEditSelections()>← Seçimleri Düzenle</button><button class=btn ${valid&&rule?'':'disabled'} onclick="${valid&&rule?'builderAskWrite()':"alert('Önce geçerli ürün sayısı ve fiyat kuralı gerekli.')"}">Devam Et</button></div>`);
+}
+function builderEditSelections(){customBuilder.index=0;renderBuilderCategoryStep()}
+
+function defaultPositionsForProduct(p){
+  if(Array.isArray(p.writePositions)&&p.writePositions.length)return p.writePositions;
+  const cat=((catalog.categories.find(c=>c.id===p.category)||{}).name||p.category||'').toLocaleLowerCase('tr-TR');
+  if(cat.includes('saat'))return ['Arka kapak','Kordon'];
+  if(cat.includes('cüzdan'))return ['Ön yüz','İç yüz'];
+  if(cat.includes('çakmak'))return ['Ön yüz','Arka yüz'];
+  if(cat.includes('kemer'))return ['Toka','Kemer ucu'];
+  if(cat.includes('bileklik'))return ['Ön yüz','Arka yüz'];
+  if(cat.includes('tesp')||cat.includes('tesb'))return ['Püskül / metal parça','Uygun görülen alan'];
+  return ['Ön yüz','Arka yüz'];
+}
+function builderAskWrite(){
+  const selected=getBuilderSelectedProducts();
+  openDrawer(`<div class=wizardHead><div><div class=wizardProgress>Kişiselleştirme</div><h2>Set ürünlerinize yazı ister misiniz?</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+    <div class=priceInfo><b>Yazı ücretlendirmesi:</b><br>İlk ürün +${money(catalog.personalizationPricing?.first||75)} · İkinci ürün +${money(catalog.personalizationPricing?.second||50)} · 3. ve sonrası +${money(catalog.personalizationPricing?.thirdPlus||25)}</div>
+    <div class=wizardCard><p>${selected.length} ürünlük setiniz hazır. İsterseniz seçtiğiniz ürünlerden bazılarına kişiye özel yazı ekleyebilirsiniz.</p>
+    <div class=choiceStack><button class=choiceBtn onclick=builderFinishNoWrite()>Hayır, yazı istemiyorum</button><button class="choiceBtn primary" onclick=builderWriteSelection()>Evet, yazı eklemek istiyorum</button></div></div>`);
+}
+function builderFinishNoWrite(){customBuilder.writes=[];renderBuilderFinalSummary()}
+function builderWriteSelection(){
+  const selected=getBuilderSelectedProducts();
+  openDrawer(`<div class=wizardHead><div><div class=wizardProgress>Yazı Seçimi</div><h2>Hangi ürünlere yazı yazılsın?</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+    <div class=priceInfo>İşaretleme sırasına göre ücret: 1. ürün ${money(catalog.personalizationPricing?.first||75)}, 2. ürün ${money(catalog.personalizationPricing?.second||50)}, 3. ve sonrası ${money(catalog.personalizationPricing?.thirdPlus||25)}.</div>
+    <div class=wizardCard>${selected.map(p=>`<label class=setItemToggle><span><b>${escapeHtml(p.name)}</b></span><input type=checkbox class=builderWritePick data-id="${escapeAttr(p.id)}"></label>`).join('')}</div>
+    <button class=btn onclick=builderWriteDetails()>Seçtiklerimle Devam Et</button>`);
+}
+function builderFeeForIndex(i){return i===0?(catalog.personalizationPricing?.first||75):i===1?(catalog.personalizationPricing?.second||50):(catalog.personalizationPricing?.thirdPlus||25)}
+function builderWriteDetails(){
+  const ids=[...document.querySelectorAll('.builderWritePick:checked')].map(x=>x.dataset.id);
+  if(!ids.length)return alert('En az bir ürün seçin veya geri dönüp yazı istemiyorum seçeneğini seçin.');
+  const selected=ids.map(id=>catalog.products.find(p=>p.id===id)).filter(Boolean);
+  openDrawer(`<div class=wizardHead><div><div class=wizardProgress>Yazı Detayları</div><h2>Yazıları belirleyin</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+    <div class=wizardCard>${selected.map((p,i)=>{
+      const positions=defaultPositionsForProduct(p);
+      return `<div class=builderWriteCard data-product-id="${escapeAttr(p.id)}" data-fee="${builderFeeForIndex(i)}">
+        <div class=builderWriteTop><b>${escapeHtml(p.name)}</b><span>+${money(builderFeeForIndex(i))}</span></div>
+        <div class=builderWriteDetails>
+          <div class=muted>Yazı konumu</div>
+          <div class=positionChoices>${positions.map((pos,j)=>`<label class=positionChoice><input type=radio name="builder-pos-${escapeAttr(p.id)}" value="${escapeAttr(pos)}" ${j===0?'checked':''}> ${escapeHtml(pos)}</label>`).join('')}</div>
+          <input class=writeInput id="builder-text-${escapeAttr(p.id)}" placeholder="${escapeAttr(p.name)} için yazı">
+        </div>
+      </div>`;
+    }).join('')}</div><button class=btn onclick=builderConfirmWrites()>Son Özeti Gör</button>`);
+}
+function builderConfirmWrites(){
+  const cards=[...document.querySelectorAll('.builderWriteCard')],writes=[];
+  for(const c of cards){
+    const id=c.dataset.productId,p=catalog.products.find(x=>x.id===id),text=$('#builder-text-'+id)?.value.trim();
+    const pos=document.querySelector(`input[name="builder-pos-${id}"]:checked`)?.value;
+    if(!text)return alert((p?.name||'Ürün')+' için yazıyı girin.');
+    writes.push({productId:id,item:p?.name||id,position:pos,text,fee:Number(c.dataset.fee||0)});
+  }
+  customBuilder.writes=writes;renderBuilderFinalSummary();
+}
+function renderBuilderFinalSummary(){
+  const selected=getBuilderSelectedProducts(),rule=getBuilderRule(selected.length);
+  const base=builderTotalFor(selected.length);
+  const writeFee=(customBuilder.writes||[]).reduce((s,w)=>s+Number(w.fee||0),0);
+  const total=base+writeFee;
+  openDrawer(`<div class=wizardHead><div><div class=wizardProgress>Son Kontrol</div><h2>Kendi Setiniz Hazır</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+    <div class=wizardCard><h3>Setin içindekiler</h3><div class=builderSummaryItems>${selected.map(p=>`<div class=builderSummaryItem><div class=builderSummaryThumb>${p.image?`<img src="${escapeAttr(p.image)}">`:'⌚'}</div><div class=builderSummaryInfo><b>${escapeHtml(p.name)}</b><small>${escapeHtml((catalog.categories.find(c=>c.id===p.category)||{}).name||'')}</small></div></div>`).join('')}</div></div>
+    ${customBuilder.writes?.length?`<div class=wizardCard><h3>Kişiye özel yazılar</h3>${customBuilder.writes.map(w=>`<div class=summaryLine><span><b>${escapeHtml(w.item)}</b><br><span class=muted>${escapeHtml(w.position)}: “${escapeHtml(w.text)}”</span></span><span>+${money(w.fee)}</span></div>`).join('')}</div>`:''}
+    <div class=wizardCard>
+      <div class=summaryLine><span>${selected.length} ürün özel set</span><span>${money(base)}</span></div>
+      ${writeFee?`<div class=summaryLine><span>Yazı işlemleri</span><span>+${money(writeFee)}</span></div>`:''}
+      <div class="summaryLine summaryTotal"><span>Toplam</span><span>${money(total)}</span></div>
+    </div>
+    <button class=btn onclick=builderAddToCart()>Setimi Sepete Ekle</button>`);
+}
+function builderAddToCart(){
+  const selected=getBuilderSelectedProducts(),base=builderTotalFor(selected.length),writeFee=(customBuilder.writes||[]).reduce((s,w)=>s+Number(w.fee||0),0),total=base+writeFee;
+  const customProduct={id:'custom-'+Date.now(),name:`Kendi Setim (${selected.length} ürün)`,price:total,stock:999,isSet:true};
+  cart.push({product:customProduct,basePrice:base,qty:1,personalized:(customBuilder.writes||[]).length>0,builderItems:selected.map(p=>({id:p.id,name:p.name,category:p.category,image:p.image})),writes:customBuilder.writes||[]});
+  updateCart();closeDrawer();toast('✓ Kendi setiniz sepete eklendi');
+}
+
+init();

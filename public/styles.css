@@ -1,0 +1,507 @@
+
+*{box-sizing:border-box}
+:root{--ink:#10131a;--gold:#c39a59;--paper:#f6f7f8;--card:#fff;--line:#e6e8eb;--green:#25a85a}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+button,a{font:inherit}
+.announce{background:#0f0f10;color:#fff;overflow:hidden;white-space:nowrap;font-size:11px}
+.track{display:inline-block;padding:7px 0;animation:marquee 18s linear infinite}
+@keyframes marquee{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+
+/* Dar, sabit üst panel */
+header{position:sticky;top:0;z-index:20;background:rgba(246,247,248,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:5px 12px 0}
+.headrow{display:flex;align-items:center;justify-content:center;position:relative;min-height:64px}
+.logo{width:92px;height:auto;display:block}
+.headActions{position:absolute;right:2px;top:50%;transform:translateY(-50%);display:flex;gap:11px;align-items:flex-start}
+.headerAction{position:relative;border:0;background:transparent;min-width:49px;padding:3px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;color:#14171d;cursor:pointer}
+.headerActionIcon{font-size:25px;line-height:1}
+.bagIcon{font-size:24px;transform:rotate(0deg)}
+.headerActionText{font-size:8px;line-height:1.1;font-weight:700;white-space:nowrap}
+.cartBadge{position:absolute;top:-4px;right:1px;background:#111;color:#fff;border:2px solid var(--paper);min-width:19px;height:19px;border-radius:999px;display:grid;place-items:center;font-size:10px;font-weight:800}
+.tabs{display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;padding:2px 4px 0;justify-content:flex-start}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;border:0;background:transparent;padding:8px 2px 9px;font-size:11px;letter-spacing:.25px;font-weight:750;color:#262a31;border-bottom:2px solid transparent}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* Fotoğraflı kampanya alanları */
+.campaignCard{position:relative;width:100%;overflow:hidden;background:#18191c;background-size:cover;background-position:center;display:flex;align-items:flex-end;justify-content:center;color:#fff}
+.campaignCard:before{content:"";position:absolute;inset:0;background:rgba(0,0,0,var(--campaign-overlay,.28))}
+.campaignMarquee{position:absolute;left:0;right:0;top:10px;overflow:hidden;white-space:nowrap;z-index:2;font-size:30px;font-weight:850;letter-spacing:-1px}
+.campaignMarqueeTrack{display:inline-block;animation:campaignMove 14s linear infinite}
+@keyframes campaignMove{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+.campaignContent{position:relative;z-index:2;text-align:center;padding:45px 18px 28px;width:100%}
+.campaignContent h2{font-size:27px;line-height:1.05;margin:0 0 8px}
+.campaignContent p{font-size:13px;margin:0 auto 18px;max-width:430px}
+.campaignBtn{display:inline-flex;align-items:center;justify-content:center;min-width:190px;border:1px solid #fff;border-radius:18px;padding:13px 20px;color:#fff;background:rgba(0,0,0,.12);text-decoration:none;font-weight:650}
+
+.hero{padding:28px 18px 18px;text-align:center}
+.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:29px;line-height:1.12;font-weight:400;margin:7px auto 10px;max-width:520px}
+.hero .rule{width:100px;height:1px;background:var(--gold);margin:13px auto;position:relative}
+.hero .rule:after{content:"";width:8px;height:8px;background:var(--gold);position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(45deg)}
+.hero p{font-size:13px;line-height:1.5;color:#5c6168;max-width:460px;margin:0 auto 19px}
+.actions{display:grid;gap:9px;max-width:340px;margin:0 auto}
+.btn{border:0;border-radius:13px;padding:13px 15px;font-size:14px;font-weight:800;background:#111;color:#fff;cursor:pointer}
+.btn.secondary{background:#fff;color:#111;border:1px solid #d9dce0}
+.builderCard{margin:25px auto 0;max-width:560px;min-height:180px;border-radius:24px;padding:22px;display:flex;align-items:center;justify-content:space-between;text-align:left;color:#fff;background:linear-gradient(125deg,#12161d,#202a35);overflow:hidden}
+.builderCard h3{font-family:Georgia,"Times New Roman",serif;font-size:27px;font-weight:400;margin:7px 0}
+.builderCard p{font-size:13px;line-height:1.45;color:#e1e4e7;margin:0;max-width:220px}
+.gold{color:var(--gold);font-size:11px;letter-spacing:2px;font-weight:800}
+.arrow{width:52px;height:52px;border-radius:50%;border:1px solid #ffffff4a;background:#ffffff12;color:#fff;font-size:27px}
+.section{padding:32px 14px 110px}
+.sectionHead{text-align:center;margin-bottom:16px}
+.sectionHead .gold{display:block;margin-bottom:6px}
+.section h2{font-family:Georgia,"Times New Roman",serif;font-size:31px;font-weight:400;margin:0}
+.tools{display:flex;justify-content:center;gap:10px;margin:0 auto 18px;max-width:420px}
+.tool{flex:1;border:1px solid #dce0e3;background:#fff;border-radius:12px;padding:11px;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.photo{height:180px;background:#eef0f2;display:grid;place-items:center;font-size:54px;position:relative}
+.photo img{width:100%;height:100%;object-fit:cover}
+.badge{position:absolute;left:8px;top:8px;background:#111;color:#fff;font-size:8px;font-weight:800;padding:6px 7px;border-radius:6px}
+.fav{position:absolute;right:8px;top:8px;width:32px;height:32px;border:0;border-radius:50%;background:#fff;font-size:17px}
+.info{padding:11px}
+.info h3{font-size:14px;line-height:1.25;margin:0 0 8px}
+.price{font-weight:850;font-size:17px}
+.old{font-size:11px;color:#9ba0a6;text-decoration:line-through}
+.info .btn{width:100%;font-size:12px;padding:11px 8px;margin-top:9px}
+.floating{position:fixed;right:10px;bottom:10px;z-index:24;display:grid;gap:5px}
+.contact{display:flex;align-items:center;gap:7px;width:176px;padding:7px 9px;border-radius:11px;color:#fff;box-shadow:0 4px 14px #00000013;text-decoration:none}
+.contact.green{background:var(--green)} .contact.black{background:#161616}
+.contactIcon{font-size:15px;line-height:1}
+.contact b{display:block;font-size:9px;line-height:1.15}
+.contact small{display:block;font-size:8px;line-height:1.2;opacity:.9;margin-top:2px}
+
+/* Sepet / wizard */
+.overlay{position:fixed;inset:0;background:#0008;z-index:30}
+.drawer{position:fixed;right:0;top:0;height:100%;width:min(520px,100%);background:#fff;z-index:31;padding:20px;overflow:auto}
+.hidden{display:none!important}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(10px);opacity:0;background:#111;color:#fff;padding:11px 15px;border-radius:999px;z-index:50;font-weight:800;font-size:12px;transition:.2s}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.wizardHead{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}
+.wizardProgress{font-size:12px;color:#777;font-weight:700}
+.wizardCard{border:1px solid #e8e3dc;border-radius:18px;padding:16px;margin:12px 0;background:#fff}
+.choiceStack{display:grid;gap:10px;margin-top:14px}
+.choiceBtn{padding:14px;border:1px solid #ddd;border-radius:13px;background:#fff;font-weight:700;text-align:left;cursor:pointer}
+.choiceBtn.primary{background:#111;color:#fff;border-color:#111}
+.setItemList{display:grid;gap:9px;margin-top:12px}
+.setItemToggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;border:1px solid #e6e0d7;border-radius:13px;background:#fff}
+.setItemToggle input{width:20px;height:20px}
+.muted{color:#777;font-size:12px}
+.removedList{margin-top:12px;padding:12px;border-radius:13px;background:#fff8f2;border:1px solid #f0dfcf}
+.remainingList{margin-top:12px;padding:12px;border-radius:13px;background:#f6fbf7;border:1px solid #dbeadf}
+.priceInfo{padding:14px;border-radius:14px;background:#fffaf1;border:1px solid #eadcc8;line-height:1.5}
+.writeSelectGrid{display:grid;gap:10px;margin-top:12px}
+.writeItem{border:1px solid #e6e0d7;border-radius:14px;padding:14px;background:#fff}
+.writeItemTop{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.writeDetails{margin-top:12px;border-top:1px solid #eee;padding-top:12px}
+.positionChoices{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px}
+.positionChoice{display:flex;align-items:center;gap:6px;padding:9px 11px;border:1px solid #ddd;border-radius:999px;background:#fff}
+.writeInput{width:100%;padding:12px;border:1px solid #d9d2c8;border-radius:10px}
+.summaryLine{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed #e4ddd4}
+.summaryLine:last-child{border-bottom:0}.summaryTotal{font-size:21px;font-weight:800}
+.notice{white-space:pre-wrap;background:#fffaf1;border:1px solid #eadcc8;border-radius:14px;padding:13px;line-height:1.5;font-size:13px}
+.pill{border:1px solid #ddd;background:#fff;border-radius:999px;padding:9px 12px}
+.search{width:100%;padding:12px;border:1px solid #ddd;border-radius:12px}
+
+/* Yönetim paneli + canlı mobil önizleme */
+.admin{display:grid;grid-template-columns:220px minmax(470px,1fr) 430px;min-height:100vh;background:#f3f4f6}
+.sidebar{background:#111;color:#fff;padding:20px 14px;position:sticky;top:0;height:100vh;overflow:auto}
+.sidebar h2{margin:0 0 8px}.sidebar p{font-size:12px;color:#bbb;line-height:1.4}
+.sidebar button{width:100%;margin:4px 0;padding:10px;border:0;border-radius:9px;text-align:left;font-size:12px;cursor:pointer}
+.content{padding:22px;min-width:0}
+.panel{border:1px solid #ddd;border-radius:16px;padding:18px;margin-bottom:16px;background:#fff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.field label{font-size:13px}
+.field input,.field textarea,.field select{padding:10px;border:1px solid #ccc;border-radius:9px;background:#fff}
+.help{font-size:11px;color:#667085;line-height:1.45}
+.previewPane{position:sticky;top:0;height:100vh;padding:16px 16px 16px 0;display:flex;flex-direction:column}
+.previewPane h3{font-size:13px;margin:0 0 8px}
+.previewNote{font-size:11px;color:#667085;margin-bottom:9px;line-height:1.4}
+.phoneShell{background:#111;border-radius:32px;padding:10px;box-shadow:0 20px 50px #0002;flex:1;min-height:0}
+.phoneScreen{width:100%;height:100%;border:0;border-radius:23px;background:#fff}
+.previewToolbar{display:flex;gap:8px;margin-top:9px}
+.previewToolbar button{flex:1;border:1px solid #d7dbe0;background:#fff;border-radius:9px;padding:8px;font-size:11px}
+.sectionTip{background:#f8fafc;border-left:3px solid #c39a59;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.45;margin-bottom:14px}
+.campaignAdmin{border:1px solid #e2e4e8;border-radius:15px;padding:14px;margin:12px 0;background:#fafafa}
+.campaignAdminHead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.dangerBtn{border:1px solid #efb2b2;background:#fff5f5;color:#a11;padding:7px 9px;border-radius:8px}
+.smallBtn{border:1px solid #ddd;background:#fff;padding:8px 10px;border-radius:8px}
+.saveBar{position:sticky;bottom:10px;background:#ffffffea;backdrop-filter:blur(8px);border:1px solid #ddd;border-radius:14px;padding:10px;display:flex;gap:9px;box-shadow:0 12px 30px #0001}
+.saveBar .btn{flex:1}
+
+@media(max-width:1100px){
+ .admin{grid-template-columns:200px 1fr}
+ .previewPane{position:relative;grid-column:2;padding:0 22px 22px;height:760px}
+}
+@media(max-width:800px){
+ .admin{display:block}
+ .sidebar{height:auto;position:relative}
+ .content{padding:14px}
+ .previewPane{height:740px;padding:0 14px 14px}
+ .grid2{grid-template-columns:1fr}
+}
+@media(max-width:390px){
+ .logo{width:84px}
+ .hero h1{font-size:27px}
+ .contact{width:164px}
+ .headerActionText{font-size:7.5px}
+}
+
+/* v13 header commerce icons */
+.headerIconWrap{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:28px;min-height:28px}
+.headerCountBadge{position:absolute;right:-8px;top:-8px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#111;color:#fff;font:700 10px/17px Arial,sans-serif;text-align:center;z-index:2}
+.bagIcon{width:20px;height:18px;border:2px solid currentColor;border-radius:3px;box-sizing:border-box;position:relative;display:inline-block}
+.bagIcon:before{content:"";position:absolute;left:4px;right:4px;top:-8px;height:8px;border:2px solid currentColor;border-bottom:0;border-radius:8px 8px 0 0;box-sizing:border-box}
+
+/* v14 marka konumlandırma başlığı */
+.hero #heroTitle{max-width:560px}
+.hero #heroSubtitle{
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size:15px;
+  line-height:1.45;
+  letter-spacing:.15px;
+  color:#34383e;
+  max-width:520px;
+}
+
+/* v15 üst menü */
+.headActions{gap:7px}
+.headerAction{min-width:47px;text-decoration:none}
+.cargoAction{min-width:62px}
+.headerIconWrap{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:27px;min-height:27px}
+.headerCountBadge{position:absolute;right:-8px;top:-8px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#111;color:#fff;border:2px solid var(--paper);font:700 9px/13px Arial,sans-serif;text-align:center;z-index:2}
+.cargoIcon{font-size:22px}
+.bagIcon{width:20px;height:18px;border:2px solid currentColor;border-radius:3px;box-sizing:border-box;position:relative;display:inline-block}
+.bagIcon:before{content:"";position:absolute;left:4px;right:4px;top:-8px;height:8px;border:2px solid currentColor;border-bottom:0;border-radius:8px 8px 0 0;box-sizing:border-box}
+
+/* v15 kategori adımlı kendi setini oluştur */
+.builderStepMeta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 14px}
+.builderStepName{font-size:12px;font-weight:800;color:var(--gold)}
+.builderChosen{font-size:11px;color:#65707c}
+.builderProductGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.builderProductCard{border:1px solid #e3e5e8;border-radius:15px;overflow:hidden;background:#fff;cursor:pointer;position:relative}
+.builderProductCard.selected{outline:2px solid #111;outline-offset:-2px}
+.builderProductPhoto{height:135px;background:#eef0f2;display:grid;place-items:center;font-size:42px;position:relative}
+.builderProductPhoto img{width:100%;height:100%;object-fit:cover}
+.builderProductBody{padding:10px}
+.builderProductBody b{display:block;font-size:12px;line-height:1.25}
+.builderProductBody small{display:block;margin-top:5px;color:#667085}
+.builderSelectMark{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:#fff;border:1px solid #d8dce1;display:grid;place-items:center;font-weight:900}
+.builderProductCard.selected .builderSelectMark{background:#111;color:#fff}
+.builderSkip{width:100%;padding:12px;border:1px dashed #bbc1c8;border-radius:12px;background:#fafbfc;color:#444;font-weight:750;cursor:pointer}
+.builderNav{display:flex;gap:9px;margin-top:12px}
+.builderNav .btn{flex:1}
+.builderSummaryItems{display:grid;gap:9px}
+.builderSummaryItem{display:flex;align-items:center;gap:10px;padding:9px;border:1px solid #e5e7ea;border-radius:12px}
+.builderSummaryThumb{width:48px;height:48px;border-radius:10px;background:#eef0f2;display:grid;place-items:center;overflow:hidden;flex:0 0 auto}
+.builderSummaryThumb img{width:100%;height:100%;object-fit:cover}
+.builderSummaryInfo{min-width:0;flex:1}
+.builderSummaryInfo b{font-size:12px}
+.builderSummaryInfo small{display:block;color:#667085;font-size:10px;margin-top:3px}
+.builderEmptyCategory{padding:16px;border:1px dashed #ccd1d7;border-radius:14px;text-align:center;color:#667085;background:#fafafa}
+.builderProgressBar{height:5px;background:#eceff2;border-radius:999px;overflow:hidden;margin:6px 0 16px}
+.builderProgressFill{height:100%;background:#111;transition:.2s}
+.builderWriteCard{border:1px solid #e5e7ea;border-radius:14px;padding:12px;margin:9px 0}
+.builderWriteTop{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.builderWriteDetails{margin-top:10px;padding-top:10px;border-top:1px solid #eee}
+@media(max-width:390px){
+  .headActions{gap:3px;right:-3px}
+  .headerAction{min-width:43px}
+  .cargoAction{min-width:56px}
+  .headerActionText{font-size:6.8px}
+  .headerActionIcon{font-size:22px}
+  .builderProductPhoto{height:125px}
+}
+
+/* v16 üst panel hizalama ve kargo paketi ikonu */
+.headrow{min-height:58px}
+.logo{width:88px}
+.headActions{right:4px;top:50%;transform:translateY(-50%);align-items:center}
+.cargoAction{min-width:50px}
+.cargoText{display:flex;flex-direction:column;align-items:center;line-height:1.02}
+.packageIcon{
+  width:22px;height:18px;display:inline-block;position:relative;
+  border:2px solid currentColor;border-radius:2px;
+  box-sizing:border-box;
+}
+.packageIcon:before{
+  content:"";position:absolute;left:3px;right:3px;top:-6px;height:7px;
+  border:2px solid currentColor;border-bottom:0;
+  transform:skewX(-18deg);
+  background:transparent;
+}
+.packageIcon:after{
+  content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;
+  background:currentColor;transform:translateX(-50%);
+}
+.headerActionText{margin-top:1px}
+@media(max-width:390px){
+  .headrow{min-height:54px}
+  .logo{width:82px}
+  .headActions{right:0;gap:1px}
+  .headerAction{min-width:39px}
+  .cargoAction{min-width:44px}
+  .headerActionText{font-size:6.4px}
+}
+
+/* v18 checkout adres */
+.formControl{width:100%;padding:11px;border:1px solid #d0d5dd;border-radius:10px;background:#fff}
+.addressGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.orderCartItem{padding:6px 0}
+
+/* v18 sade yönetim */
+.simpleAdmin{grid-template-columns:205px minmax(560px,1fr) 400px}
+.simpleSidebar button{font-size:13px;padding:12px}
+.categoryAdminBlock{background:#fff;border:1px solid #dfe3e8;border-radius:18px;padding:16px;margin-bottom:18px}
+.categoryAdminHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.compactCategorySettings{border-bottom:1px solid #eee;padding-bottom:8px;margin-bottom:14px}
+.adminProductGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.adminProductCard{border:1px solid #e1e4e8;border-radius:15px;padding:11px;background:#fafbfc}
+.adminProductImage{height:140px;border-radius:11px;background:#eef0f2;display:grid;place-items:center;overflow:hidden;margin-bottom:10px;color:#777;font-size:12px}
+.adminProductImage img{width:100%;height:100%;object-fit:cover}
+.twoMini{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.productToggles{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;margin:8px 0 10px}
+.emptyAdmin{padding:24px;border:1px dashed #ccd2d9;border-radius:12px;color:#667085}
+.setAdminRow{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px;border-top:1px solid #eee;padding-top:12px;margin-top:12px}
+
+/* sipariş yönetimi */
+.orderAdminCard{background:#fff;border:1px solid #dfe3e8;border-radius:17px;padding:16px;margin-bottom:13px}
+.orderAdminTop{display:flex;justify-content:space-between;gap:15px;border-bottom:1px solid #eee;padding-bottom:10px;margin-bottom:10px}
+.orderTime{font-size:12px;color:#667085;margin-top:4px}.orderTotal{font-size:21px;font-weight:850}
+.orderColumns{display:grid;grid-template-columns:.85fr 1.4fr;gap:18px}
+.orderColumns h4{margin:0 0 6px}
+.orderLine{padding:8px 0;border-bottom:1px dashed #e3e6e8}.orderLine:last-child{border-bottom:0}
+.orderSub{font-size:12px;color:#475467;margin-top:4px}
+.orderWrites{font-size:12px;margin-top:6px;background:#fff9ee;border:1px solid #eedcbc;border-radius:9px;padding:8px}
+.orderMeta{font-size:11px;color:#667085;border-top:1px solid #eee;margin-top:10px;padding-top:9px}
+
+@media(max-width:1150px){
+ .simpleAdmin{grid-template-columns:190px 1fr}
+ .simpleAdmin .previewPane{grid-column:2;height:720px}
+}
+@media(max-width:800px){
+ .addressGrid{grid-template-columns:1fr}
+ .simpleAdmin{display:block}
+ .setAdminRow{grid-template-columns:1fr}
+ .orderColumns{grid-template-columns:1fr}
+}
+
+.orderToolbar{display:grid;grid-template-columns:180px 180px auto auto auto;gap:10px;align-items:end}.bulkStatus{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid #eee}.bulkStatus button,.orderActions button{border:1px solid #d8dde3;background:#fff;border-radius:9px;padding:8px 11px;font-weight:700;cursor:pointer}.orderIdentity{display:flex;gap:11px;align-items:flex-start}.orderSelect{width:20px;height:20px}.orderId{font-size:18px}.statusBadge{display:inline-block;padding:6px 9px;border-radius:999px;font-size:11px;font-weight:850}.statusBadge.new{background:#f0f2f4}.statusBadge.prepared{background:#fff2cf}.statusBadge.shipped{background:#dff5e7}.orderActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}.orderAdminCard.status-prepared{border-left:5px solid #d4a62a}.orderAdminCard.status-shipped{border-left:5px solid #2f9b5b}@media(max-width:1000px){.orderToolbar{grid-template-columns:1fr 1fr}.orderToolbar>a{grid-column:1/-1}}
+
+/* v21 geri dönüş kolaylığı */
+.backPill{margin-right:6px;flex:0 0 auto}
+.wizardHead{gap:8px}
+@media(max-width:520px){
+  .backPill{padding:8px 10px;font-size:12px}
+}
+/* v22 — karar değiştirme ve adım göstergesi */
+.wizardHead .backPill{order:-1;white-space:nowrap}
+.wizardProgress{font-weight:800;letter-spacing:.02em}
+
+/* v24 Excel aktarım takibi */
+.excelExported{font-size:11px;color:#18794e;font-weight:750;margin-top:4px}
+.excelNotExported{font-size:11px;color:#b42318;font-weight:750;margin-top:4px}
+
+/* v25: Siparişler ekranında canlı önizleme gereksiz; kaldır ve alanı genişlet */
+.simpleAdmin.ordersMode{grid-template-columns:205px minmax(0,1fr)}
+.simpleAdmin.ordersMode .content{max-width:none;width:auto}
+.simpleAdmin.ordersMode .previewPane{display:none!important}
+@media(max-width:1150px){
+  .simpleAdmin.ordersMode{grid-template-columns:190px minmax(0,1fr)}
+}
+
+/* v26: Canlı mobil önizlemeyi tekrar büyük ve kullanışlı yap */
+.simpleAdmin:not(.ordersMode){
+  grid-template-columns:205px minmax(560px,1fr) 470px;
+}
+.simpleAdmin:not(.ordersMode) .previewPane{
+  width:470px;
+  min-width:470px;
+  padding-right:14px;
+}
+.simpleAdmin:not(.ordersMode) .phoneShell{
+  width:390px;
+  height:780px;
+  margin:0 auto;
+  border-radius:34px;
+}
+.simpleAdmin:not(.ordersMode) .phoneScreen{
+  width:100%;
+  height:100%;
+}
+@media(max-width:1350px){
+  .simpleAdmin:not(.ordersMode){
+    grid-template-columns:190px minmax(520px,1fr) 420px;
+  }
+  .simpleAdmin:not(.ordersMode) .previewPane{
+    width:420px;
+    min-width:420px;
+  }
+  .simpleAdmin:not(.ordersMode) .phoneShell{
+    width:360px;
+    height:720px;
+  }
+}
+@media(max-width:1150px){
+  .simpleAdmin:not(.ordersMode){
+    grid-template-columns:190px minmax(0,1fr);
+  }
+  .simpleAdmin:not(.ordersMode) .previewPane{
+    grid-column:2;
+    width:auto;
+    min-width:0;
+    height:auto;
+    padding:16px 0 30px;
+  }
+  .simpleAdmin:not(.ordersMode) .phoneShell{
+    width:390px;
+    height:780px;
+  }
+}
+
+/* v27: Canlı önizleme artık soldaki sayfadan bağımsız sabit kalır */
+.simpleAdmin:not(.ordersMode) .previewPane{
+  position:sticky;
+  top:10px;
+  align-self:start;
+  height:calc(100vh - 20px);
+  overflow:hidden;
+}
+.simpleAdmin:not(.ordersMode) .phoneShell{
+  height:calc(100vh - 105px);
+  max-height:800px;
+  min-height:620px;
+}
+.simpleAdmin:not(.ordersMode) .phoneScreen{
+  width:100%;
+  height:100%;
+}
+
+/* Yönetimde seçilen gerçek müşteri alanını kırmızı vurgula */
+.adminPreviewHighlight{
+  position:relative!important;
+  z-index:999!important;
+  outline:3px solid #e00000!important;
+  outline-offset:3px!important;
+  border-radius:10px!important;
+  box-shadow:0 0 0 5px rgba(224,0,0,.13)!important;
+  transition:outline .15s ease,box-shadow .15s ease!important;
+}
+.tab.adminPreviewHighlight,
+.headerAction.adminPreviewHighlight,
+.contactBtn.adminPreviewHighlight{
+  border-radius:999px!important;
+}
+.announce.adminPreviewHighlight{
+  border-radius:0!important;
+  outline-offset:-3px!important;
+}
+
+@media(max-width:1150px){
+  .simpleAdmin:not(.ordersMode) .previewPane{
+    position:relative;
+    top:auto;
+    height:auto;
+    overflow:visible;
+  }
+  .simpleAdmin:not(.ordersMode) .phoneShell{
+    height:780px;
+  }
+}
+
+/* v28: sıfır zıplama / milimetrik canlı önizleme */
+html{scroll-behavior:auto!important}
+.simpleAdmin:not(.ordersMode) .previewPane{
+  position:sticky!important;
+  top:8px!important;
+  align-self:start!important;
+  height:calc(100vh - 16px)!important;
+  overflow:hidden!important;
+}
+.simpleAdmin:not(.ordersMode) .phoneShell{
+  height:calc(100vh - 100px)!important;
+  min-height:620px!important;
+  max-height:820px!important;
+}
+
+/* kırmızı vurgu yalnızca hedef elemanın kendi ölçüsünü sarar */
+.adminPreviewHighlight{
+  outline:2px solid #e00000!important;
+  outline-offset:2px!important;
+  box-shadow:0 0 0 2px rgba(224,0,0,.12)!important;
+  border-radius:5px!important;
+  position:relative!important;
+  z-index:50!important;
+}
+.price .adminPreviewHighlight,
+.info h3.adminPreviewHighlight,
+.muted.adminPreviewHighlight,
+.badge.adminPreviewHighlight{
+  display:inline-block!important;
+  width:max-content!important;
+  max-width:100%!important;
+}
+.photo.adminPreviewHighlight{
+  border-radius:12px!important;
+}
+.tab.adminPreviewHighlight,
+.headerAction.adminPreviewHighlight,
+.contactBtn.adminPreviewHighlight{
+  border-radius:999px!important;
+}
+.announce.adminPreviewHighlight{
+  border-radius:0!important;
+  outline-offset:-2px!important;
+}
+
+/* v29 kontrollü canlı önizleme */
+
+/* Yönetici sağdaki telefonu elle oynatmaz. */
+.simpleAdmin:not(.ordersMode) .phoneScreen{
+  pointer-events:none!important;
+}
+
+/* Uzun kategori isimleri üst menüyü bozmaz. */
+.tabs{
+  flex-wrap:nowrap!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  white-space:nowrap!important;
+  scroll-behavior:auto!important;
+}
+.tab{
+  flex:0 0 auto!important;
+  max-width:145px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+
+/* Sağ telefon sol panelden bağımsız sabit kalır. */
+.simpleAdmin:not(.ordersMode) .previewPane{
+  position:sticky!important;
+  top:8px!important;
+  align-self:start!important;
+  height:calc(100vh - 16px)!important;
+  overflow:hidden!important;
+}
+
+/* Hedefler sticky header altında kalmasın. */
+.card,.hero,.campaignCard,.sectionHead,[data-preview-field]{
+  scroll-margin-top:115px!important;
+}
+
+/* Kırmızı vurgu tam hedefin ölçüsünde. */
+.price [data-preview-field].adminPreviewHighlight,
+.info h3.adminPreviewHighlight,
+.muted.adminPreviewHighlight,
+.badge.adminPreviewHighlight{
+  display:inline-block!important;
+  width:max-content!important;
+  max-width:100%!important;
+}
+.photo.adminPreviewHighlight{
+  width:auto!important;
+  max-width:none!important;
+}

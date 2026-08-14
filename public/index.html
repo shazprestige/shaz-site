@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SHAZ</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="announce" id="announceWrap"><div class="track" id="campaign"></div></div>
+
+<header id="stickyHeader">
+  <div class="headrow">
+    <img class="logo" id="brandLogo" alt="SHAZ">
+    <div class="headActions">
+      <a class="headerAction cargoAction" id="cargoLink" href="https://ebranch.araskargo.com.tr/" target="_blank" rel="noopener">
+        <span class="headerIconWrap"><span class="packageIcon" aria-hidden="true"></span></span>
+        <span class="headerActionText cargoText"><span>Kargom</span><span>Nerede?</span></span>
+      </a>
+      <button class="headerAction" id="favLink" aria-label="Favorilerim">
+        <span class="headerIconWrap"><span class="headerCountBadge" id="favBadge">0</span><span class="headerActionIcon">♡</span></span>
+        <span class="headerActionText">Favorilerim</span>
+      </button>
+      <button class="headerAction cartAction" id="cartBtn" aria-label="Sepetim">
+        <span class="headerIconWrap"><span class="headerCountBadge" id="cartBadge">0</span><span class="headerActionIcon bagIcon"></span></span>
+        <span class="headerActionText">Sepetim</span>
+      </button>
+    </div>
+  </div>
+  <div class="tabs" id="catalogNav"></div>
+</header>
+
+<div id="campaignCards"></div>
+
+<section class="hero">
+  <h1 id="heroTitle"></h1>
+  <div class="rule"></div>
+  <p id="heroSubtitle"></p>
+  <div class="actions">
+    <button class="btn" id="builderTopBtn">＋ Kendi Setini Oluştur</button>
+    <button class="btn secondary" onclick="document.getElementById('products').scrollIntoView()">▦ Tüm Ürünleri Gör</button>
+  </div>
+  <div class="builderCard" id="builderSpotlight">
+    <div><span class="gold">KENDİN OLUŞTUR</span><h3>Setini sen seç.</h3><p>Ürünlerini bir araya getir, özel set fiyatını anında gör.</p></div>
+    <button class="arrow" id="builderSpotlightBtn">→</button>
+  </div>
+</section>
+
+<section class="section" id="products">
+  <div class="sectionHead"><span class="gold">KOLEKSİYON</span><h2 id="catalogTitle">Tüm Ürünler</h2></div>
+  <div class="tools"><button class="tool">⚲ Filtrele</button><button class="tool">⇅ Sırala</button></div>
+  <input id="search" class="search" placeholder="Ürün ara" style="display:none">
+  <div class="grid products" id="productsList"></div>
+</section>
+
+<div class="floating">
+  <a class="contact green" id="wa"><span class="contactIcon">◉</span><span><b>Aklınıza takılan bir şey mi var?</b><small>WhatsApp'tan yazın</small></span></a>
+  <a class="contact black" id="ig"><span class="contactIcon">◎</span><span><b>Aklınıza takılan bir şey mi var?</b><small>Instagram'dan yazın</small></span></a>
+</div>
+
+<div id="toast" class="toast"></div>
+<div class="overlay hidden" id="overlay"></div>
+<div class="drawer hidden" id="drawer"></div>
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+{
+  "brandName": "SHAZ",
+  "campaignText": "🎁 Ücretsiz kargo 1.000 TL ve üzeri | 🛡 Kapıda ödeme güvenli alışveriş • SHAZ • Yeni koleksiyon • Kişiye özel ürünler",
+  "heroTitle": "Türkiye’nin Erkek Aksesuar Markası.",
+  "heroSubtitle": "𝓟𝓻𝓮𝓼𝓽𝓲𝓳𝓲𝓷 𝓖𝓮𝓻ç𝓮𝓴 𝓢𝓪𝓱𝓲𝓹𝓵𝓮𝓻𝓲𝓷𝓮.",
+  "whatsapp": "905456863111",
+  "instagram": "shazprestige",
+  "shippingNotice": "**ÖNEMLİ** Kargonuzla ilgili bilgiler SMS olarak size iletilmektedir. Lütfen mesajlarınızı düzenli olarak kontrol edin. Tek yapmanız gereken, size gelen SMS’leri takip etmek — bu adımı atlamadığınız sürece herhangi bir sorun yaşanmaz. Nadiren de olsa Aras Kargo adresi bulamayabilir ve gönderi en yakın şubeye yönlendirilebilir. Böyle bir durumda kargonuzu şubeden teslim almanız gerekir. Kargo görevlileri bizim personelimiz olmadığı için teslim süreci bizim kontrolümüzde değildir. Bu yüzden, kargo teslim edilene kadar lütfen süreci önemseyin ve titizlikle takip edin. Anlayışınız için teşekkür ederiz.",
+  "personalizedNotice": "Bilgilendirme ve Onay Metni\n\nSiparişiniz, ürün üzerine talep ettiğiniz yazı işlenecek şekilde size özel olarak hazırlanacaktır.\n\n6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği kapsamında, tüketicinin özel istekleri ve kişisel ihtiyaçları doğrultusunda hazırlanan ürünlerde cayma hakkı kullanılamamaktadır.\n\nBu nedenle ürün üzerine yazı işlemi başladıktan sonra sipariş iptali, keyfi iade, değişim veya kargoyu teslim almama işlemi yapılamaz. Ürün kişiye özel hazırlandığı için tekrar satışa uygun olmayacaktır.\n\nKapıda ödemeli gönderimde, siparişimi teslim alacağımı ve ödemesini yapacağımı kabul ediyorum.\n\nSatıcı kaynaklı yazım hatası, hasar veya ayıplı ürün olması halinde gerekli destek sağlanacaktır.",
+  "approvalPhrase": "",
+  "successTitle": "Siparişiniz oluşturuldu",
+  "successMessage": "Bizi tercih ettiğiniz için teşekkür ederiz.",
+  "successTagline": "SHAZ — prestijin gerçek sahiplerine.",
+  "theme": {
+    "primary": "#111111",
+    "accent": "#b88b4a",
+    "surface": "#fffdf8",
+    "success": "#16a34a",
+    "cardRadius": 22,
+    "productCardWidth": 280,
+    "categoryCardHeight": 180
+  },
+  "productStockVisible": true,
+  "categoryCoverVisible": true,
+  "logoUrl": "/uploads/shaz-logo-transparent.png",
+  "header": {
+    "compact": true,
+    "logoWidth": 92,
+    "showTopStrip": true
+  },
+  "campaignCards": [
+    {
+      "id": "kampanya-1",
+      "name": "Yeni Ürünler",
+      "enabled": true,
+      "order": 1,
+      "imageUrl": "",
+      "marqueeText": "YENİ ÜRÜNLERİMİZİ KEŞFEDİN • YENİ ÜRÜNLERİMİZİ KEŞFEDİN •",
+      "title": "Yeni ürünlerimizi keşfedin.",
+      "subtitle": "SHAZ'ın yeni koleksiyonuna göz atın.",
+      "buttonText": "ÜRÜNLERİ GÖR",
+      "buttonLink": "#products",
+      "height": 330,
+      "overlayOpacity": 28
+    }
+  ],
+  "cargoTrackingUrl": "https://ebranch.araskargo.com.tr/"
+}
