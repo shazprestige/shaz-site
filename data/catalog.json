@@ -125,13 +125,6 @@
           "type": "",
           "removeDiscount": 0,
           "writePositions": []
-        },
-        {
-          "id": "setitem-1786749599394",
-          "name": "Yeni set ürünü",
-          "type": "",
-          "removeDiscount": 0,
-          "writePositions": []
         }
       ],
       "description": "su geçirmez\nçelik\nsafir çizilmez cam",
@@ -341,6 +334,25 @@
       "images": [
         "/uploads/1786749143198-3ow7ju.webp"
       ],
+      "hidden": false,
+      "setEligible": true,
+      "isSet": false,
+      "setItems": [],
+      "writePositions": []
+    },
+    {
+      "id": "urun-1786751615679",
+      "name": "Yeni Ürün",
+      "description": "",
+      "features": [],
+      "category": "gozlukler",
+      "price": 0,
+      "oldPrice": 0,
+      "stock": 0,
+      "badge": "",
+      "badgeColor": "orange",
+      "image": "",
+      "images": [],
       "hidden": false,
       "setEligible": true,
       "isSet": false,
