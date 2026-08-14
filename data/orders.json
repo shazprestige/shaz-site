@@ -1,131 +1,5 @@
 [
   {
-    "id": "SHZ3",
-    "createdAt": "2026-08-14T22:54:52.062Z",
-    "createdAtTR": "15.08.2026 01:54:52",
-    "status": "new",
-    "statusUpdatedAt": "2026-08-14T22:54:52.062Z",
-    "requestId": "39730fe5-10fb-497a-9a62-5c8f6599dc50",
-    "sheetSyncStatus": "pending",
-    "sheetSyncError": "",
-    "items": [
-      {
-        "product": {
-          "id": "p1",
-          "name": "gözlüklü erkek aksesuar seti",
-          "category": "setler",
-          "price": 1399,
-          "oldPrice": 1199,
-          "stock": 3,
-          "hidden": false,
-          "badge": "",
-          "image": "/uploads/1786724306426-vrpxf0.jpeg",
-          "setEligible": false,
-          "isSet": true,
-          "setItems": [
-            {
-              "id": "watch",
-              "name": "Saat",
-              "type": "Saat",
-              "removeDiscount": 250,
-              "writePositions": [
-                "Arka kapak",
-                "Kordon"
-              ]
-            },
-            {
-              "id": "lighter",
-              "name": "Çakmak",
-              "type": "Çakmak",
-              "removeDiscount": 120,
-              "writePositions": [
-                "Ön yüz",
-                "Arka yüz"
-              ]
-            },
-            {
-              "id": "wallet",
-              "name": "Cüzdan",
-              "type": "Cüzdan",
-              "removeDiscount": 180,
-              "writePositions": [
-                "Ön yüz",
-                "İç yüz"
-              ]
-            },
-            {
-              "id": "belt",
-              "name": "Kemer",
-              "type": "Kemer",
-              "removeDiscount": 140,
-              "writePositions": [
-                "Tokaya",
-                "Kemer ucuna"
-              ]
-            },
-            {
-              "id": "bracelet",
-              "name": "Bileklik",
-              "type": "Bileklik",
-              "removeDiscount": 90,
-              "writePositions": [
-                "Ön yüz",
-                "Arka yüz"
-              ]
-            }
-          ],
-          "description": "su geçirmez\nçelik\nsafir çizilmez cam",
-          "features": [],
-          "writePositions": [
-            "arka kapak",
-            "kordon"
-          ],
-          "images": [
-            "/uploads/1786724306426-vrpxf0.jpeg",
-            "/uploads/1786724306713-eorq5p.jpeg"
-          ]
-        },
-        "basePrice": 1399,
-        "qty": 1,
-        "personalized": false,
-        "setCustomization": {
-          "keptIds": [
-            "watch",
-            "lighter",
-            "wallet",
-            "belt",
-            "bracelet"
-          ],
-          "removedIds": [],
-          "writes": []
-        }
-      }
-    ],
-    "customer": {
-      "fullName": "ali",
-      "phone": "ali",
-      "extraPhone": "ali",
-      "province": "asa",
-      "district": "asa",
-      "deliveryMode": "branch",
-      "branchName": "asa",
-      "neighborhood": "Aras Kargo Şube Teslim",
-      "fullAddress": "",
-      "avenue": "asa",
-      "street": "",
-      "buildingNo": "",
-      "floor": "",
-      "doorNo": "",
-      "placeType": "home",
-      "businessName": "",
-      "note": ""
-    },
-    "payment": "cod",
-    "personalApproval": null,
-    "shippingNoticeAccepted": true,
-    "total": 1399
-  },
-  {
     "id": "SHZ2",
     "createdAt": "2026-08-14T22:30:43.402Z",
     "createdAtTR": "15.08.2026 01:30:43",
@@ -250,7 +124,7 @@
     "personalApproval": null,
     "shippingNoticeAccepted": true,
     "total": 1399,
-    "sheetLastTriedAt": "2026-08-14T22:54:20.841Z"
+    "sheetLastTriedAt": "2026-08-14T22:55:13.859Z"
   },
   {
     "id": "SHZ1",
@@ -310,6 +184,6 @@
     "personalApproval": null,
     "shippingNoticeAccepted": true,
     "total": 799,
-    "sheetLastTriedAt": "2026-08-14T22:54:09.618Z"
+    "sheetLastTriedAt": "2026-08-14T22:55:02.935Z"
   }
 ]
