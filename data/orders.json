@@ -7,7 +7,7 @@
     "statusUpdatedAt": "2026-08-14T22:30:43.402Z",
     "requestId": "bc93815a-f7e6-41a0-a3a8-75a92ce2f156",
     "sheetSyncStatus": "pending",
-    "sheetSyncError": "",
+    "sheetSyncError": "Hücreleri birleştirmek veya birleştirmeyi iptal etmek için, birleştirilen aralıktaki tüm hücreleri seçmelisiniz.",
     "items": [
       {
         "product": {
@@ -123,7 +123,8 @@
     "payment": "cod",
     "personalApproval": null,
     "shippingNoticeAccepted": true,
-    "total": 1399
+    "total": 1399,
+    "sheetLastTriedAt": "2026-08-14T22:31:09.975Z"
   },
   {
     "id": "SHZ1",
@@ -183,6 +184,6 @@
     "personalApproval": null,
     "shippingNoticeAccepted": true,
     "total": 799,
-    "sheetLastTriedAt": "2026-08-14T22:30:19.371Z"
+    "sheetLastTriedAt": "2026-08-14T22:30:58.073Z"
   }
 ]
