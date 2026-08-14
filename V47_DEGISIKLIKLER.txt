@@ -1,0 +1,6 @@
+V47
+- Aras Kargo örneği İstanbul / Kadıköy olarak değiştirildi.
+- Ana siyah kayan duyuru şeridi sayfa kaydırılırken üstte sabit kalır.
+- Üst duyuru ve reklam panosu kayan yazıları iki kopyalı kesintisiz döngüye çevrildi; önceki metnin tamamen çıkmasını beklemeden yenisi sağdan gelir.
+- Reklam sliderında flu yan sütunlar kaldırıldı; görsel paneli tam kaplar.
+- Mobil reklam panosu sabit ve dengeli bir yüksekliğe getirildi.

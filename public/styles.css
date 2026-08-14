@@ -1300,3 +1300,46 @@ header{background:rgba(255,255,255,.97)!important}
   .cartItemMain{gap:10px}
   .addressCheckActions{grid-template-columns:100px 1fr}
 }
+
+
+/* ===== V47 — tam reklam pano, sabit üst şerit, kesintisiz kayan yazılar ===== */
+:root{--announce-h:25px}
+.announce{
+  position:sticky!important;top:0!important;z-index:28!important;
+  height:25px;display:block;background:#0f0f10;color:#fff;
+  overflow:hidden!important;white-space:nowrap!important;
+}
+header{top:var(--announce-h,25px)!important;z-index:27!important}
+/* Kayan yazı bir nüshanın tamamen bitmesini beklemez: iki aynı kopya kesintisiz döner. */
+.announce .track{
+  display:flex!important;width:max-content!important;min-width:max-content!important;
+  padding:0!important;height:25px;align-items:center;
+  animation:shazMarqueeLoop 17s linear infinite!important;will-change:transform;
+}
+.announce .marqueeCopy{display:block;flex:none;padding-right:72px;line-height:25px}
+@keyframes shazMarqueeLoop{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+.campaignGlobalMarquee{overflow:hidden!important}
+.campaignGlobalMarquee .campaignMarqueeTrack{
+  display:flex!important;width:max-content!important;min-width:max-content!important;
+  animation:shazCampaignMarqueeLoop 12s linear infinite!important;will-change:transform;padding:0!important;
+}
+.campaignGlobalMarquee .campaignMarqueeCopy{display:block;flex:none;padding-right:64px}
+@keyframes shazCampaignMarqueeLoop{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* Reklam fotoğrafı paneli tamamen doldurur; yanlarda flu/siyah sütun kalmaz. */
+.campaignSlideBackdrop{display:none!important}
+.campaignSlideImage{
+  inset:0!important;width:100%!important;height:100%!important;
+  object-fit:cover!important;object-position:center!important;
+}
+.campaignSlider{background:#111!important}
+
+@media(max-width:520px){
+  .campaignSlider{
+    width:100%!important;height:255px!important;min-height:255px!important;max-height:255px!important;
+    aspect-ratio:auto!important;
+  }
+  .campaignSlideImage{object-fit:cover!important;object-position:center!important}
+  .campaignSlider .campaignContent{padding:38px 16px 27px!important}
+}

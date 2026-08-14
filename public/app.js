@@ -26,8 +26,10 @@ function bindCore(){
 function apply(){
   document.documentElement.style.setProperty('--paper',settings.theme?.surface||'#f6f7f8');
   document.documentElement.style.setProperty('--gold',settings.theme?.accent||'#c39a59');
-  if($('#announceWrap')) $('#announceWrap').style.display=settings.header?.showTopStrip===false?'none':'block';
-  if($('#campaign')) $('#campaign').textContent=settings.campaignText||'';
+  const announceVisible=settings.header?.showTopStrip!==false;
+  if($('#announceWrap')) $('#announceWrap').style.display=announceVisible?'block':'none';
+  document.documentElement.style.setProperty('--announce-h',announceVisible?'25px':'0px');
+  if($('#campaign')) renderLoopingMarquee($('#campaign'),settings.campaignText||'');
   if($('#brandLogo')){
     $('#brandLogo').src=settings.logoUrl||'/uploads/shaz-logo-transparent.png';
     $('#brandLogo').style.width=(settings.header?.logoWidth||92)+'px';
@@ -38,6 +40,14 @@ function apply(){
   if($('#ig')) $('#ig').href='https://instagram.com/'+settings.instagram;
   if($('#cargoLink')) $('#cargoLink').href=settings.cargoTrackingUrl||'https://ebranch.araskargo.com.tr/';
 }
+function renderLoopingMarquee(el,text){
+  if(!el)return;
+  const t=String(text||'').trim();
+  if(!t){el.innerHTML='';return}
+  const safe=escapeHtml(t);
+  el.innerHTML=`<span class="marqueeCopy">${safe}</span><span class="marqueeCopy" aria-hidden="true">${safe}</span>`;
+}
+
 function renderCampaignCards(){
   const wrap=$('#campaignCards'); if(!wrap)return;
   clearInterval(campaignSliderTimer); campaignSliderTimer=0;
@@ -59,7 +69,7 @@ function renderCampaignCards(){
           ${c.buttonText?`<button class="campaignBtn" type="button" data-campaign-target="${escapeAttr(c.targetCategory||'tum')}">${escapeHtml(c.buttonText)}</button>`:''}
         </div>
       </article>`}).join('')}</div>
-    ${marquee?`<div class="campaignGlobalMarquee campaignGlobalMarquee--${marqueePos}"><div class="campaignMarqueeTrack">${escapeHtml(marquee)}</div></div>`:''}
+    ${marquee?`<div class="campaignGlobalMarquee campaignGlobalMarquee--${marqueePos}"><div class="campaignMarqueeTrack"><span class="campaignMarqueeCopy">${escapeHtml(marquee)}</span><span class="campaignMarqueeCopy" aria-hidden="true">${escapeHtml(marquee)}</span></div></div>`:''}
     ${cards.length>1?`<button class="campaignArrow campaignPrev" type="button" aria-label="Önceki fotoğraf">‹</button><button class="campaignArrow campaignNext" type="button" aria-label="Sonraki fotoğraf">›</button><div class="campaignDots">${cards.map((_,i)=>`<button type="button" class="campaignDot ${i===campaignSliderIndex?'isActive':''}" data-slide-dot="${i}" aria-label="${i+1}. fotoğraf"></button>`).join('')}</div>`:''}
   </section>`;
   wrap.querySelectorAll('[data-campaign-target]').forEach(btn=>btn.addEventListener('click',()=>goToCampaignTarget(btn.dataset.campaignTarget)));
@@ -522,8 +532,8 @@ function addressStep(){
       </div>
 
       <div id="branchAddressFields" class="addressModeFields fieldWide" style="${branch?'':'display:none'}">
-        <div class="branchInfo">📍 <b>Aras Kargo şube adını net yazın.</b><br>Google Haritalar'dan kontrol edip şubenin tam adını girin. Aynı ilçede birden fazla şube olabilir.<br><span>Örnek: Şırnak / Cizre — Aras Kargo Meydan Şubesi</span></div>
-        <div class="field fieldWide"><label><b>Aras Kargo şube adı *</b></label><input class=formControl id=addr-branchName value="${escapeAttr(c.branchName||'')}" placeholder="Örn: Aras Kargo Meydan Şubesi"></div>
+        <div class="branchInfo">📍 <b>Aras Kargo şube adını net yazın.</b><br>Google Haritalar'dan kontrol edip şubenin tam adını girin. Aynı ilçede birden fazla şube olabilir.<br><span>Örnek: İstanbul / Kadıköy — Aras Kargo Kadıköy Şubesi</span></div>
+        <div class="field fieldWide"><label><b>Aras Kargo şube adı *</b></label><input class=formControl id=addr-branchName value="${escapeAttr(c.branchName||'')}" placeholder="Örn: Aras Kargo Kadıköy Şubesi"></div>
       </div>
 
       <div class="field fieldWide"><label><b>Teslimat notu</b><small class="fieldHelp">İsterseniz kurye veya teslimat için kısa bir not ekleyin.</small></label><textarea class=formControl id=addr-note rows=2 placeholder="İsteğe bağlı">${escapeHtml(c.note||'')}</textarea></div>
