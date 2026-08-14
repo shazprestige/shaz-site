@@ -1692,3 +1692,112 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
 .sheetSyncStatus.warn{border-color:#f0cf9c;background:#fff8ec;color:#765019}
 .sheetSynced{margin-top:3px;color:#198754;font-size:11px;font-weight:700}
 .sheetPending{margin-top:3px;color:#b36b00;font-size:11px;font-weight:700;max-width:540px;overflow-wrap:anywhere}
+
+/* ===== V62 — yalnızca istenen düzeltmeler ===== */
+/* Mobil iletişim kutuları: yalnızca sayfanın en son bölümünde sağdan alt ortaya geçer. */
+@media(max-width:700px){
+  .floating{transition:transform .14s linear!important;}
+}
+
+/* PC ürün detayı: fotoğraf ilk açılışta tamamen görünür; mobil görünüm değiştirilmez. */
+@media(min-width:701px){
+  .drawer .productDetailShell{
+    padding:14px 20px 104px!important;
+  }
+  .productDetailHead{
+    margin:0 0 8px!important;
+    padding:0 20px 8px!important;
+  }
+  .productDetailTitle .wizardProgress{
+    justify-content:center!important;
+    text-align:center!important;
+    padding:0 92px!important;
+  }
+  .productDetailTitle h2{
+    text-align:center!important;
+    padding:0 92px!important;
+    margin-top:5px!important;
+  }
+  .productDetailClose{
+    right:20px!important;
+  }
+  .productDetailGallery{
+    margin:0 -20px 13px!important;
+    width:auto!important;
+  }
+  .productDetailGallery .productDetailMedia{
+    position:relative!important;
+    width:100%!important;
+    height:clamp(360px,calc(100dvh - 230px),620px)!important;
+    min-height:0!important;
+    max-height:none!important;
+    aspect-ratio:auto!important;
+    margin:0!important;
+    border-left:0!important;
+    border-right:0!important;
+    border-radius:0!important;
+    background:#151515!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    overflow:hidden!important;
+  }
+  .productDetailGallery .productDetailMedia::before{
+    content:"";
+    position:absolute;
+    inset:-24px;
+    z-index:0;
+    pointer-events:none;
+    background-image:var(--detail-bg);
+    background-size:cover;
+    background-position:center;
+    filter:blur(18px);
+    opacity:.34;
+    transform:scale(1.08);
+  }
+  .productDetailGallery .productDetailMedia::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    background:rgba(0,0,0,.08);
+  }
+  .productDetailGallery .productDetailMedia img{
+    position:relative!important;
+    z-index:2!important;
+    display:block!important;
+    width:100%!important;
+    height:100%!important;
+    max-width:100%!important;
+    max-height:100%!important;
+    object-fit:contain!important;
+    object-position:center!important;
+    background:transparent!important;
+    border-radius:0!important;
+  }
+  .productDetailThumbs{
+    padding:8px 20px 0!important;
+    margin-top:0!important;
+  }
+
+  /* PC'deki set/kişiselleştirme adımları kenara yapışmasın; başlık gerçek orta hatta dursun. */
+  .drawer > .wizardHead:not(.productDetailHead){
+    padding:14px 20px 0!important;
+    margin-bottom:14px!important;
+  }
+  .drawer > .wizardHead:not(.productDetailHead) > div{
+    flex:1 1 auto!important;
+    min-width:0!important;
+    text-align:center!important;
+  }
+  .drawer > .wizardHead:not(.productDetailHead) .wizardProgress{
+    text-align:center!important;
+    margin:0 auto 4px!important;
+  }
+  .drawer > .wizardHead:not(.productDetailHead) h2{
+    text-align:center!important;
+    margin:0!important;
+    line-height:1.15!important;
+  }
+}

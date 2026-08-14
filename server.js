@@ -546,7 +546,13 @@ app.post('/api/orders/sheets-test',requireAdmin,async(req,res)=>{
     if(!GOOGLE_SHEETS_SECRET)throw new Error('Render Environment içinde GOOGLE_SHEETS_SECRET eksik.');
     const d=await sheetsRequest({action:'ping'});
     res.json({ok:true,version:d.version||'',sheet:d.sheet||''});
-  }catch(e){res.status(500).json({ok:false,message:String(e?.message||e)})}
+  }catch(e){
+    const message=String(e?.message||e);
+    if(message.toLocaleLowerCase('tr-TR').includes('geçersiz işlem')){
+      return res.status(409).json({ok:false,code:'OLD_APPS_SCRIPT',message:'Render URL ve SECRET Google tarafına ulaşıyor; ancak yayınlanmış Google Apps Script eski sürüm. ZIP içindeki google-apps-script.gs dosyasını Apps Script’e yapıştırıp yeni dağıtım yayınlayın.'});
+    }
+    res.status(500).json({ok:false,message});
+  }
 });
 
 app.post('/api/upload',requireAdmin, upload.array('files',250),async(req,res)=>{

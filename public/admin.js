@@ -592,8 +592,15 @@ async function syncOrdersToSheet(ev){
 }
 async function testSheetConnection(ev){
   const b=ev?.currentTarget;if(b){b.disabled=true;b.textContent='Test ediliyor…'}
-  try{const r=await fetch('/api/orders/sheets-test',{method:'POST'});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.message||'Bağlantı başarısız');alert('Google E-Tablo bağlantısı çalışıyor. '+(d.version?('Apps Script '+d.version):''));}
-  catch(e){alert('Google E-Tablo bağlantı hatası: '+e.message+'\n\nRender URL/SECRET veya Apps Script dağıtımı kontrol edilmeli.')}
+  try{
+    const r=await fetch('/api/orders/sheets-test',{method:'POST'});
+    const d=await r.json();
+    if(!r.ok||!d.ok){const err=new Error(d.message||'Bağlantı başarısız');err.code=d.code||'';throw err}
+    alert('Google E-Tablo bağlantısı çalışıyor. '+(d.version?('Apps Script '+d.version):''));
+  }catch(e){
+    if(e.code==='OLD_APPS_SCRIPT')alert('Google E-Tablo bağlantısı VAR; sorun Render keylerinde değil.\n\n'+e.message);
+    else alert('Google E-Tablo bağlantı hatası: '+e.message);
+  }
   finally{if(b){b.disabled=false;b.textContent='🔌 E-Tablo Bağlantısını Test Et'};loadSheetSyncStatus()}
 }
 function paintOrders(){const list=$('#ordersList');if(!list)return;const os=filteredOrders();list.innerHTML=os.length?os.map(orderCard).join(''):'<div class=panel>Bu filtrede sipariş yok.</div>'}

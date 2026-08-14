@@ -27,7 +27,7 @@ function doPost(e) {
       return json_({ok:false, message:'Yetkisiz istek.'});
     }
 
-    if (data.action === 'ping') return json_({ok:true, version:'V61', sheet:SHEET_NAME});
+    if (data.action === 'ping') return json_({ok:true, version:'V62', sheet:SHEET_NAME});
     if (data.action === 'create') return createOrder_(data);
     if (data.action === 'status') return updateStatus_(data);
 
@@ -90,9 +90,14 @@ function createOrder_(data) {
     const details = orderDetails_(order);
 
     // 1 müşteri = başlık + 8 bilgi satırı + ayırıcı.
+    // Sayfada önceden hazırlanmış / birleştirilmiş boş bloklar bulunabiliyor.
+    // Bir sonraki bloğu kullanmadan önce yalnızca o bloğun birleşimlerini çözüyoruz.
+    // Böylece "birleştirilen aralıktaki tüm hücreleri seçmelisiniz" hatası oluşmaz.
     const headerRow = sh.getLastRow() + 1;
     const start = headerRow + 1;
     const separatorRow = start + 8;
+    ensureRows_(sh, separatorRow);
+    prepareOrderBlock_(sh, headerRow, separatorRow);
 
     sh.getRange(headerRow,1,1,5).merge();
     sh.getRange(headerRow,1)
@@ -167,6 +172,23 @@ function createOrder_(data) {
   } finally {
     lock.releaseLock();
   }
+}
+
+
+function ensureRows_(sh, lastNeededRow) {
+  if (lastNeededRow <= sh.getMaxRows()) return;
+  sh.insertRowsAfter(sh.getMaxRows(), lastNeededRow - sh.getMaxRows() + 20);
+}
+
+function prepareOrderBlock_(sh, headerRow, separatorRow) {
+  // H sütununa kadar tüm blok seçildiği için, bu alanın içinde kalan eski
+  // birleştirmeler güvenli biçimde ayrılır. Mevcut siparişlerin üstüne dokunulmaz.
+  const rowCount = separatorRow - headerRow + 1;
+  const block = sh.getRange(headerRow, 1, rowCount, 8);
+  block.breakApart();
+  block.clearContent();
+  block.clearNote();
+  sh.getRange(headerRow, 4, rowCount, 2).clearDataValidations();
 }
 
 function updateStatus_(data) {

@@ -1,84 +1,36 @@
-SHAZ v31 — GOOGLE E-TABLO OTOMATİK KALICI SİPARİŞ KAYDI
+SHAZ V62 — GOOGLE E-TABLO OTOMATİK SİPARİŞ KAYDI
 
-AMAÇ
-Müşteri siparişi tamamladığı anda, manuel Excel indirmeye gerek kalmadan sipariş Google E-Tablo'ya yazılır.
-Google E-Tablo ana operasyon kaydıdır. Render yeniden deploy olsa bile bu kayıt kaybolmaz.
+ÖNEMLİ: Bu sürümde Render Environment değerlerini değiştirmen gerekmiyor.
+Ekranda “Geçersiz işlem.” gördüğün için Render URL + SECRET Google tarafına ulaşıyor; yayınlanan Apps Script eski sürümde.
+Ayrıca sipariş kartındaki “Hücreleri birleştirmek...” hatası, mevcut E-Tablo şablonundaki önceden birleştirilmiş boş bloklardan kaynaklanıyor.
+V62 Apps Script bu iki durumu düzeltir.
 
-EXCEL/E-TABLO DÜZENİ
-Her müşteri tam 8 satır:
-1) Ad Soyad
-2) Telefon (ikinci telefon yazılmaz)
-3) Açık adres
-4) İl + İlçe
-5) Tutar + "TL"
-6) Kapıda nakit / havale
-7) @
-8) Ürün adı + varsa çıkarılan ürün + varsa kişiselleştirme
+BİR KEZ YAPILACAK GOOGLE APPS SCRIPT GÜNCELLEMESİ
+1) Kullandığın SHAZ OTOMATİK Google E-Tablo'yu aç.
+2) Uzantılar > Apps Script.
+3) Editördeki eski kodun tamamını sil.
+4) Bu paketteki google-apps-script.gs dosyasının TAMAMINI yapıştır.
+5) Kaydet.
+6) Sağ üst: Dağıt / Deploy > Dağıtımları yönet / Manage deployments.
+7) Mevcut Web App dağıtımında kalem / Düzenle.
+8) Version / Sürüm kısmında “New version / Yeni sürüm” seç.
+9) Deploy / Dağıt.
 
-Sağ taraf:
-B = SİPARİŞ
-C = ADET (bir hazır set = 1)
-D = HAZIR MI
-E = KARGOYA VERİLDİ Mİ
+MEVCUT URL'Yİ DEĞİŞTİRME
+- Aynı Web App dağıtımını güncellersen .../exec adresin aynı kalır.
+- Render'daki GOOGLE_SHEETS_WEBHOOK_URL aynı kalabilir.
+- Script Properties içindeki SHAZ_WEBHOOK_SECRET değerini silme/değiştirme.
+- Render'daki GOOGLE_SHEETS_SECRET de aynı kalabilir.
 
-Hazır sette "Saat + Çakmak + ..." diye parçalama yapılmaz.
-Örn:
-3'lü Özel Set | Çıkarılan: Kemer | Yazı: Çakmak: Erdal (Ön yüz)
-
-KURULUM
-1. Google Drive'da yeni bir Google E-Tablo oluştur.
-   İsim önerisi: SHAZ Siparişler
-
-2. E-Tablo içinde:
-   Uzantılar > Apps Script
-
-3. Açılan editördeki mevcut kodu sil.
-   Bu paketteki "google-apps-script.gs" dosyasının tamamını yapıştır.
-
-4. Apps Script ekranında:
-   Project Settings / Proje Ayarları > Script Properties / Komut dosyası özellikleri
-   Yeni özellik ekle:
-   Property: SHAZ_WEBHOOK_SECRET
-   Value: kendin uzun rastgele bir gizli değer üret.
-   BU DEĞERİ KİMSEYLE PAYLAŞMA.
-
-5. Deploy > New deployment > Web app
-   Execute as: Me
-   Who has access: Anyone
-   Deploy.
-   Google izin ekranını onayla.
-   Sana ".../exec" ile biten Web app URL verecek. Kopyala.
-
-6. Render > SHAZ > Environment içine iki değişken daha ekle:
-   GOOGLE_SHEETS_WEBHOOK_URL = Apps Script'in .../exec adresi
-   GOOGLE_SHEETS_SECRET = 4. adımda oluşturduğun gizli değer
-
-7. Save, rebuild, and deploy.
+SONUÇ
+- Müşteri siparişi oluşturduğu anda sipariş önce panele güvenli biçimde kaydolur.
+- Ardından Google E-Tablo'ya OTOMATİK gönderilir; sen hiçbir indirme tuşuna basmazsın.
+- İlk gönderim anlık denenir; geçici hata olursa sunucu yaklaşık 60 saniyede bir bekleyen siparişleri tekrar dener.
+- V62, önceden birleştirilmiş boş E-Tablo bloklarını yalnızca yazacağı yeni blokta güvenli biçimde çözüp yeniden düzenler.
+- Mevcut eski siparişlere dokunmaz.
 
 TEST
-- Telefondan bir deneme siparişi oluştur.
-- Sipariş başarılı mesajı geldiyse Google E-Tablo'da 8 satırlık blok oluşmuş olmalı.
-- /admin > Siparişler'de de aynı sipariş görünür.
-- Yönetim panelinde Hazırlandı / Kargoya Verildi yaptığında E-Tablo'daki D/E alanları da otomatik güncellenir.
-
-ÖNEMLİ
-Bu sürümde sipariş Google E-Tablo'ya yazılamazsa müşteriye sipariş başarılı gösterilmez.
-Böylece "panelde gördüm sandık ama kalıcı yere yazılmadı" durumu oluşmaz.
-
-Google E-Tablo siparişler için kalıcı ana kayıt olur.
-Render'daki orders.json yönetim panelinin hızlı yerel kopyasıdır ve deploy'da sıfırlanabilir.
-
-
-V32 GÖRÜNÜM DÜZELTMELERİ
-- Her siparişten önce "1. MÜŞTERİ • SHZ1 • tarih", "2. MÜŞTERİ • SHZ2 • tarih" başlığı gelir.
-- Her müşteri bloğunun ardından gri ayırıcı satır gelir.
-- Google E-Tablo'da HAZIR MI / KARGOYA VERİLDİ Mİ alanları gerçek tıklanabilir checkbox'tır.
-- İndirilen .xlsx dosyada checkbox sembolleri görünür; üçüncü taraf Excel görüntüleyicilerinde gerçek form checkbox garantisi yoktur.
-
-
-V61 KONTROL
-- Yönetim paneli > Siparişler > “E-Tablo Bağlantısını Test Et” butonuna bas.
-- “Geçersiz işlem.” görürsen Apps Script eski sürümdür: google-apps-script.gs dosyasını yapıştır, Deploy > Manage deployments > Edit > New version > Deploy yap.
-- “Yetkisiz istek.” görürsen Apps Script > Script Properties içindeki SHAZ_WEBHOOK_SECRET ile Render GOOGLE_SHEETS_SECRET aynı değildir.
-- “GOOGLE_SHEETS_WEBHOOK_URL eksik” görürsen Render Environment URL değişkenini ekle.
-- Test başarılıysa bekleyen siparişlerde “E-Tablo'ya Şimdi Gönder” butonuna bas; otomatik senkron da 60 saniyede bir çalışır.
+1) Apps Script yeni sürümü deploy ettikten sonra siteyi/Render'ı aç.
+2) Yönetim > Siparişler > “E-Tablo Bağlantısını Test Et”.
+3) “Apps Script V62” görmelisin.
+4) Daha önce bekleyen siparişler de otomatik olarak tekrar gönderilir. İstersen beklemeden “E-Tablo'ya Şimdi Gönder”e bir kez basabilirsin; normal müşteriler için buna gerek yoktur.

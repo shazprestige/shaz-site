@@ -327,7 +327,7 @@ function openProductDetail(id,source='catalog'){
   openDrawer(`<div class="productDetailShell">
     <div class="wizardHead productDetailHead"><div class="productDetailTitle"><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div>${source==='favorites'?`<button class="pill productDetailClose" onclick="showFavorites()">← Favorilere Dön</button>`:`<button class="pill productDetailClose" onclick="closeDrawer()">Kapat</button>`}</div>
     ${productImages(p).length?`<div class=productDetailGallery>
-      <div class="productDetailMedia" onclick="openProductImageViewer()" role="button" tabindex="0" aria-label="Fotoğrafı büyüt"><img id=productDetailMain src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name||'Ürün')}"></div>
+      <div class="productDetailMedia" style="--detail-bg:url(&quot;${escapeAttr(mainProductImage(p))}&quot;)" onclick="openProductImageViewer()" role="button" tabindex="0" aria-label="Fotoğrafı büyüt"><img id=productDetailMain src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name||'Ürün')}"></div>
       ${productImages(p).length>1?`<div class=productDetailThumbs>${productImages(p).map((u,i)=>`<button class="${i===0?'active':''}" onclick="selectProductDetailImage(this,'${escapeAttr(u)}')"><img src="${escapeAttr(u)}" alt=""></button>`).join('')}</div>`:''}
     </div>`:'<div class=productDetailMedia><div class=productDetailPlaceholder>⌚</div></div>'}
     ${infoBlocks.length?`<div class="productDetailInfoBox">${infoBlocks.join('')}</div>`:''}
@@ -357,10 +357,13 @@ function bindFloatingContacts(){
       return;
     }
     const doc=document.documentElement;
-    const maxScroll=Math.max(1,doc.scrollHeight-window.innerHeight);
-    const ratio=Math.max(0,Math.min(1,(window.scrollY||0)/maxScroll));
-    // İlk bölümde sağda kalır; aşağı indikçe yatay olarak merkeze kayar.
-    const progress=Math.max(0,Math.min(1,(ratio-.22)/.55));
+    const scrollTop=window.scrollY||doc.scrollTop||0;
+    const distanceToBottom=Math.max(0,doc.scrollHeight-(scrollTop+window.innerHeight));
+    // İletişim kutuları sayfanın büyük bölümünde sağda kalır. Sadece son raddede,
+    // son ürünleri kapatmayacağı alana gelirken düz bir hat üzerinde alt ortaya kayar.
+    // Kullanıcı yukarı çıktığında aynı hareket tersine dönerek anında sağa döner.
+    const travelZone=Math.max(220,Math.min(420,window.innerHeight*.42));
+    const progress=Math.max(0,Math.min(1,1-(distanceToBottom/travelZone)));
     const width=floating.getBoundingClientRect().width||176;
     const currentRight=10;
     const centeredLeft=(window.innerWidth-width)/2;
@@ -375,7 +378,12 @@ function bindFloatingContacts(){
 }
 
 function selectProductDetailImage(btn,url){
-  const img=document.getElementById('productDetailMain');if(img)img.src=url;
+  const img=document.getElementById('productDetailMain');
+  if(img){
+    img.src=url;
+    const media=img.closest('.productDetailMedia');
+    if(media)media.style.setProperty('--detail-bg',`url("${String(url).replace(/"/g,'%22')}")`);
+  }
   document.querySelectorAll('.productDetailThumbs button').forEach(x=>x.classList.remove('active'));
   btn?.classList.add('active');
 }

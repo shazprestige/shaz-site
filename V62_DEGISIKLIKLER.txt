@@ -1,0 +1,22 @@
+SHAZ V62
+
+1) GOOGLE E-TABLO
+- “Geçersiz işlem.” tanısı: eski Apps Script sürümü net olarak algılanıyor.
+- Mevcut E-Tablo şablonundaki önceden birleştirilmiş boş hücre blokları güvenli biçimde hazırlanıyor.
+- “Birleştirilen aralıktaki tüm hücreleri seçmelisiniz” hatası giderildi.
+- Siparişler müşteri sipariş verdiğinde otomatik E-Tablo'ya gönderilmeye devam eder.
+- Bekleyen siparişler sunucu tarafından otomatik yeniden denenir.
+
+2) PC ÜRÜN DETAYI
+- Mobil görünüm değiştirilmedi.
+- PC'de ürün fotoğrafı ilk açılışta ekrana sığacak şekilde tamamen görünür.
+- Fotoğrafın yanlarında düz beyaz boşluk yerine aynı fotoğrafın yumuşak arka planı kullanılır.
+- Ürün başlığı ve “ÜRÜN DETAYI” satırı PC'de gerçek orta hatta alındı.
+- Set/kişiselleştirme ekranlarında “Adım” ve ürün başlığı kenara yapışmaz, ortalanır.
+
+3) MOBİL WHATSAPP / INSTAGRAM
+- Kutular sayfanın ortalarındayken artık erkenden merkeze gelmez.
+- Sayfanın yalnızca son bölümüne yaklaşınca sağdan düz biçimde alt ortaya kayar.
+- Yukarı çıkarken aynı yol üzerinden sağa geri döner.
+
+Bu sürümde kullanıcı tarafından istenmeyen diğer site ayarlarına dokunulmadı.
