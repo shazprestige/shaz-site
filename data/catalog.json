@@ -11,7 +11,7 @@
     {
       "id": "setler",
       "name": "Set",
-      "order": 2,
+      "order": 1,
       "hidden": false,
       "cover": "/uploads/1786724063083-3uyv87.jpeg",
       "size": "small"
@@ -19,7 +19,7 @@
     {
       "id": "saatler",
       "name": "Saat",
-      "order": 1,
+      "order": 2,
       "hidden": false,
       "cover": "",
       "size": "small"
@@ -27,7 +27,7 @@
     {
       "id": "gozlukler",
       "name": "Gözlük",
-      "order": 3,
+      "order": 7,
       "hidden": false,
       "cover": "",
       "size": "small"
@@ -35,7 +35,7 @@
     {
       "id": "cuzdanlar",
       "name": "Cüzdan",
-      "order": 4,
+      "order": 3,
       "hidden": false,
       "cover": "",
       "size": "small"
