@@ -322,8 +322,10 @@
       "stock": 0,
       "badge": "",
       "badgeColor": "orange",
-      "image": "",
-      "images": [],
+      "image": "/uploads/1786749143198-3ow7ju.webp",
+      "images": [
+        "/uploads/1786749143198-3ow7ju.webp"
+      ],
       "hidden": false,
       "setEligible": true,
       "isSet": false,
