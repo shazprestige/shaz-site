@@ -1,5 +1,131 @@
 [
   {
+    "id": "SHZ4",
+    "createdAt": "2026-08-14T23:04:27.756Z",
+    "createdAtTR": "15.08.2026 02:04:27",
+    "status": "new",
+    "statusUpdatedAt": "2026-08-14T23:04:27.756Z",
+    "requestId": "0c5cc791-c07b-4947-a815-f5522ecefd3c",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "p1",
+          "name": "gözlüklü erkek aksesuar seti",
+          "category": "setler",
+          "price": 1399,
+          "oldPrice": 1199,
+          "stock": 3,
+          "hidden": false,
+          "badge": "",
+          "image": "/uploads/1786724306426-vrpxf0.jpeg",
+          "setEligible": false,
+          "isSet": true,
+          "setItems": [
+            {
+              "id": "watch",
+              "name": "Saat",
+              "type": "Saat",
+              "removeDiscount": 250,
+              "writePositions": [
+                "Arka kapak",
+                "Kordon"
+              ]
+            },
+            {
+              "id": "lighter",
+              "name": "Çakmak",
+              "type": "Çakmak",
+              "removeDiscount": 120,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ]
+            },
+            {
+              "id": "wallet",
+              "name": "Cüzdan",
+              "type": "Cüzdan",
+              "removeDiscount": 180,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ]
+            },
+            {
+              "id": "belt",
+              "name": "Kemer",
+              "type": "Kemer",
+              "removeDiscount": 140,
+              "writePositions": [
+                "Tokaya",
+                "Kemer ucuna"
+              ]
+            },
+            {
+              "id": "bracelet",
+              "name": "Bileklik",
+              "type": "Bileklik",
+              "removeDiscount": 90,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ]
+            }
+          ],
+          "description": "su geçirmez\nçelik\nsafir çizilmez cam",
+          "features": [],
+          "writePositions": [
+            "arka kapak",
+            "kordon"
+          ],
+          "images": [
+            "/uploads/1786724306426-vrpxf0.jpeg",
+            "/uploads/1786724306713-eorq5p.jpeg"
+          ]
+        },
+        "basePrice": 1399,
+        "qty": 1,
+        "personalized": false,
+        "setCustomization": {
+          "keptIds": [
+            "watch",
+            "lighter",
+            "wallet",
+            "belt",
+            "bracelet"
+          ],
+          "removedIds": [],
+          "writes": []
+        }
+      }
+    ],
+    "customer": {
+      "fullName": "wqwq",
+      "phone": "qwq",
+      "extraPhone": "qwqq",
+      "province": "qwq",
+      "district": "qwq",
+      "deliveryMode": "branch",
+      "branchName": "wqqwq",
+      "neighborhood": "Aras Kargo Şube Teslim",
+      "fullAddress": "",
+      "avenue": "wqqwq",
+      "street": "",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": ""
+    },
+    "payment": "cod",
+    "personalApproval": null,
+    "shippingNoticeAccepted": true,
+    "total": 1399
+  },
+  {
     "id": "SHZ3",
     "createdAt": "2026-08-14T23:03:08.686Z",
     "createdAtTR": "15.08.2026 02:03:08",
