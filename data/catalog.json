@@ -51,7 +51,7 @@
       "stock": 3,
       "hidden": false,
       "badge": "",
-      "image": "",
+      "image": "/uploads/1786724306426-vrpxf0.jpeg",
       "setEligible": false,
       "isSet": true,
       "setItems": [
@@ -111,6 +111,10 @@
       "writePositions": [
         "arka kapak",
         "kordon"
+      ],
+      "images": [
+        "/uploads/1786724306426-vrpxf0.jpeg",
+        "/uploads/1786724306713-eorq5p.jpeg"
       ]
     },
     {
