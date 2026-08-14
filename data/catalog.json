@@ -44,13 +44,13 @@
   "products": [
     {
       "id": "p1",
-      "name": "3'lü Özel Set",
+      "name": "gözlüklü erkek aksesuar seti",
       "category": "setler",
-      "price": 1499,
-      "oldPrice": 1799,
-      "stock": 2,
+      "price": 1399,
+      "oldPrice": 1199,
+      "stock": 3,
       "hidden": false,
-      "badge": "SON 2 ADET",
+      "badge": "",
       "image": "",
       "setEligible": false,
       "isSet": true,
@@ -106,8 +106,12 @@
           ]
         }
       ],
-      "description": "",
-      "features": []
+      "description": "su geçirmez\nçelik\nsafir çizilmez cam",
+      "features": [],
+      "writePositions": [
+        "arka kapak",
+        "kordon"
+      ]
     },
     {
       "id": "p2",
