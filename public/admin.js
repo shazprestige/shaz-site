@@ -229,9 +229,17 @@ Paslanmaz çelik kasa"
         <input class=formControl data-preview-target="${attr(t('stock'))}" type=number value="${Number(p.stock||0)}"
           oninput="catalog.products[${i}].stock=Number(this.value);changed(this.dataset.previewTarget)">
       </div>
-      <div class=field><label>Etiket</label>
-        <input class=formControl data-preview-target="${attr(t('badge'))}" value="${attr(p.badge||'')}"
+      <div class=field><label>Ürün etiketi</label>
+        <input class=formControl data-preview-target="${attr(t('badge'))}" value="${attr(p.badge||'')}" placeholder="Örn: Sınırlı stok, En çok satan"
           oninput="catalog.products[${i}].badge=this.value;changed(this.dataset.previewTarget)">
+        <div class=help>Boş bırakırsan etiketi göstermez.</div>
+      </div>
+      <div class=field><label>Etiket rengi</label>
+        <select class=formControl data-preview-target="${attr(t('badge'))}" onchange="catalog.products[${i}].badgeColor=this.value;changed(this.dataset.previewTarget)">
+          <option value="orange" ${(p.badgeColor||'orange')==='orange'?'selected':''}>Turuncu</option>
+          <option value="purple" ${p.badgeColor==='purple'?'selected':''}>Mor</option>
+          <option value="red" ${p.badgeColor==='red'?'selected':''}>Kırmızı</option>
+        </select>
       </div>
     </div>
 
@@ -260,7 +268,7 @@ function addCategory(){
   changed('#products');renderCatalog();
 }
 function addProduct(categoryId){
-  catalog.products.push({id:'urun-'+Date.now(),name:'Yeni Ürün',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',image:'',images:[],hidden:false,setEligible:categoryId!=='setler',isSet:false,setItems:[],writePositions:[]});
+  catalog.products.push({id:'urun-'+Date.now(),name:'Yeni Ürün',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:'',images:[],hidden:false,setEligible:categoryId!=='setler',isSet:false,setItems:[],writePositions:[]});
   changed('#products');renderCatalog();
 }
 function deleteProduct(i){if(confirm('Ürün silinsin mi?')){catalog.products.splice(i,1);changed('#products');renderCatalog()}}

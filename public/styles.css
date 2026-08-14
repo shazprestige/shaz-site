@@ -1055,3 +1055,53 @@ header{background:rgba(255,255,255,.97)!important}
     max-width:none;
   }
 }
+
+
+/* ===== V43 — ürün detayında gerçek fotoğraf oranı + tek fiyat + renkli ürün etiketi ===== */
+/* Ürün detayında fotoğraf artık 4:3 kutuya zorlanmaz. Yüklenen görselin gerçek oranı neyse tamamı doğrudan görünür. */
+.productDetailGallery .productDetailMedia{
+  aspect-ratio:auto!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  display:block!important;
+  overflow:hidden;
+  background:#fff!important;
+}
+.productDetailGallery .productDetailMedia img{
+  display:block!important;
+  width:100%!important;
+  height:auto!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  background:#fff!important;
+}
+/* Detay gövdesindeki tekrar fiyat kaldırıldı; yalnızca alttaki sabit satın alma barındaki fiyat kullanılır. */
+.productDetailPrice{display:none!important}
+
+/* Yönetim panelinden seçilebilen Trendyol tipi ürün etiketleri. */
+.badge{
+  left:9px!important;
+  top:9px!important;
+  max-width:calc(100% - 58px);
+  padding:6px 10px!important;
+  border-radius:999px!important;
+  font-size:9px!important;
+  line-height:1.1;
+  letter-spacing:.15px;
+  font-weight:850!important;
+  color:#fff!important;
+  box-shadow:0 3px 10px rgba(0,0,0,.16);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.badge-orange{background:#f97316!important}
+.badge-purple{background:#7c3aed!important}
+.badge-red{background:#dc2626!important}
+
+@media(max-width:520px){
+  .productDetailGallery .productDetailMedia{margin-top:6px!important}
+  .badge{font-size:8px!important;padding:5px 8px!important;left:7px!important;top:7px!important}
+}

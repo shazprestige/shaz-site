@@ -1,0 +1,9 @@
+SHAZ V43
+
+- Ürün detayındaki ana fotoğraf artık sabit 4:3 alana zorlanmıyor; görselin gerçek en/boy oranı korunarak tamamı gösteriliyor.
+- Fotoğrafa tıklayıp büyütmek hâlâ mümkün, ancak fotoğrafı tam görmek için buna gerek yok.
+- Ürün detay gövdesindeki tekrar fiyat kaldırıldı. Fiyat yalnızca ekranın altındaki sabit Sepete Ekle barında kalıyor.
+- Yönetim paneline ürün etiketi rengi eklendi: Turuncu, Mor, Kırmızı.
+- Etiket yazısı serbest: Sınırlı stok, En çok satan, Yeni vb.
+- Etiketler ürün fotoğrafının sol üstünde yuvarlak/pill biçiminde görünüyor.
+- V42 masaüstü ürün boyutları, kalıcı GitHub fotoğraf/veri sistemi ve diğer ayarlar korunmuştur.

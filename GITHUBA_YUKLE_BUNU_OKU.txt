@@ -1,15 +1,12 @@
-V41 GITHUB YUKLEME
+SHAZ V43 — GITHUB'A YÜKLEME
 
-Kalıcı ürün/fotoğraf verilerini korumak için data ve uploads klasörlerine dokunma.
+1) Bu klasörün içine gir.
+2) İçindeki TÜM dosya ve klasörleri seç.
+3) GitHub'da shazprestige/shaz-site deposunun ANA DİZİNİNE yükle.
+4) Bu ana klasörün kendisini GitHub'a sürükleme; sadece içindekileri yükle.
+5) data / uploads klasörleri bu pakette özellikle yoktur. GitHub'daki mevcut data ve uploads klasörlerini SİLME. Böylece ürünler, kategori ayarları ve geçmiş fotoğraflar korunur.
 
-Bu sürümde değiştirilmesi gereken müşteri sitesi dosyaları public klasöründedir.
-GitHub -> shaz-site -> public -> Dosya ekle -> Dosya yükle yoluyla public klasörünün İÇİNDEKİ 5 dosyayı yükle:
-- admin.js
-- admin-login.html
-- app.js
-- index.html
-- styles.css
-
-Klasörün kendisini public içine sürükleme; aksi halde public/public oluşur.
-
-V42: Masaüstü ürün kartları dengelendi. Tüm ana klasör içeriğini repo köküne yükleyebilirsin; data/uploads GitHub’da kalıcıdır.
+V43 değişiklikleri:
+- Ürün detay fotoğrafı artık gerçek oranında TAM görünür.
+- Detay içindeki tekrar fiyat kaldırıldı; fiyat sadece alttaki sabit Sepete Ekle barında.
+- Yönetim panelinde ürün etiketi yazısı ve renk seçimi: Turuncu / Mor / Kırmızı.
