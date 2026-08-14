@@ -1007,3 +1007,51 @@ header{background:rgba(255,255,255,.97)!important}
   .productDetailBottomPrice{min-width:102px;font-size:17px}
   .productDetailBottomBar .detailAddBtn{min-height:48px;font-size:14px}
 }
+
+/* ===== V42 — masaüstünde ürün kartlarını normal ölçüde tut ===== */
+/* Geniş ekranlarda iki dev kart yerine daha zarif, sınırlı genişlikte kartlar. */
+@media (min-width: 801px){
+  #products.section{
+    max-width:1180px;
+    margin-left:auto;
+    margin-right:auto;
+    padding-left:24px;
+    padding-right:24px;
+  }
+  #products .products{
+    grid-template-columns:repeat(auto-fit,minmax(220px,260px));
+    justify-content:center;
+    align-items:start;
+    gap:18px;
+  }
+  #products .card{
+    width:100%;
+    max-width:260px;
+  }
+  #products .photo{
+    width:100%;
+    aspect-ratio:4 / 3;
+    max-height:195px;
+  }
+  #products .info{
+    padding:11px 12px 13px;
+  }
+  #products .info h3{
+    font-size:14px;
+    line-height:1.28;
+    margin-bottom:6px;
+  }
+  #products .price{
+    font-size:17px;
+  }
+}
+
+/* Tablet/mobil düzeni mevcut iki sütunlu yapıda kalır. */
+@media (max-width: 800px){
+  #products .products{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  #products .card{
+    max-width:none;
+  }
+}

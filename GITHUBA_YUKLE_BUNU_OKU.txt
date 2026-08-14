@@ -11,3 +11,5 @@ GitHub -> shaz-site -> public -> Dosya ekle -> Dosya yükle yoluyla public klas�
 - styles.css
 
 Klasörün kendisini public içine sürükleme; aksi halde public/public oluşur.
+
+V42: Masaüstü ürün kartları dengelendi. Tüm ana klasör içeriğini repo köküne yükleyebilirsin; data/uploads GitHub’da kalıcıdır.

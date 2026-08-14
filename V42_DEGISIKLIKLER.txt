@@ -1,0 +1,7 @@
+V42
+- Masaüstünde ürün kartlarının ekranı kaplayacak kadar büyümesi düzeltildi.
+- Geniş ekranlarda kart genişliği yaklaşık 260 px ile sınırlandı.
+- Ürün listesi ekran genişliğine göre otomatik 3/4 sütuna geçebilir ve ortalanır.
+- Fotoğraflar 4:3 oranında kalır; masaüstünde aşırı uzun görünmez.
+- Mobil/tablet görünümünde mevcut iki sütunlu düzen korunur.
+- V41'deki kalıcı GitHub veri/fotoğraf sistemi ve diğer özellikler değiştirilmedi.
