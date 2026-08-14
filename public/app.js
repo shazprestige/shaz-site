@@ -3,7 +3,8 @@ let settings={},catalog={},cart=[],favorites=new Set(JSON.parse(localStorage.get
 let activeCategory='tum';
 let productSort='priceAsc';
 let campaignSliderTimer=0,campaignSliderIndex=0,campaignTouchStartX=null;
-let checkoutState={payment:'cod',customer:null};
+let checkoutState={payment:'cod',customer:null,requestId:null};
+let orderSubmitting=false;
 const $=s=>document.querySelector(s);
 const money=n=>'₺'+Number(n||0).toLocaleString('tr-TR');
 
@@ -636,11 +637,22 @@ function continueAfterAddress(){
   }else shippingNotice(false);
 }
 function shippingNotice(personalApproved=false){
-  openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">SON ADIM</span><h2>Kargo bilgilendirmesi</h2><p>Siparişinizi oluşturmadan önce kısa bilgilendirmeyi okuyun.</p></div></div><div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="addressStep()">← Teslimata dön</button></div><div class="checkoutSteps"><span>1 Sepet</span><span>2 Teslimat</span><span class="active">3 Onay</span></div><div class=notice>${settings.shippingNotice}</div><button class="btn checkoutPrimary" onclick="finalizeOrder(${personalApproved})">Siparişi Oluştur ✓</button></div>`);
+  openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">SON ADIM</span><h2>Kargo bilgilendirmesi</h2><p>Siparişinizi oluşturmadan önce kısa bilgilendirmeyi okuyun.</p></div></div><div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="addressStep()">← Teslimata dön</button></div><div class="checkoutSteps"><span>1 Sepet</span><span>2 Teslimat</span><span class="active">3 Onay</span></div><div class=notice>${settings.shippingNotice}</div><button class="btn checkoutPrimary" onclick="finalizeOrder(${personalApproved},this)">Siparişi Oluştur ✓</button><small class="checkoutSubmitStatus" id="checkoutSubmitStatus"></small></div>`);
 }
-async function finalizeOrder(personalApproved){
-  if(!checkoutState.customer)return addressStep();
+function newOrderRequestId(){
+  try{return crypto.randomUUID()}catch{return 'shaz-'+Date.now()+'-'+Math.random().toString(36).slice(2)}
+}
+async function finalizeOrder(personalApproved,button){
+  // Çift/çoklu tıklama aynı siparişi birden fazla kez göndermesin.
+  if(orderSubmitting)return;
+  if(!checkoutState.customer){
+    alert('Teslimat bilgileri bulunamadı. Lütfen teslimat adımını kontrol edin.');
+    return;
+  }
+  if(!cart.length){alert('Sepetiniz boş.');return}
+  if(!checkoutState.requestId)checkoutState.requestId=newOrderRequestId();
   const order={
+    requestId:checkoutState.requestId,
     items:cart,
     customer:checkoutState.customer,
     payment:checkoutState.payment,
@@ -648,8 +660,29 @@ async function finalizeOrder(personalApproved){
     shippingNoticeAccepted:true,
     total:cart.reduce((a,x)=>a+Number(x.product.price||0),0)
   };
-  const r=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(order)}).then(r=>r.json());
-  cart=[];checkoutState={payment:'cod',customer:null};updateCart();success(r.order.id);
+  const btn=button||document.querySelector('.checkoutPrimary');
+  const status=document.querySelector('#checkoutSubmitStatus');
+  const oldText=btn?.textContent||'Siparişi Oluştur ✓';
+  orderSubmitting=true;
+  if(btn){btn.disabled=true;btn.textContent='Siparişiniz oluşturuluyor…'}
+  if(status)status.textContent='Lütfen bekleyin, siparişiniz kaydediliyor.';
+  try{
+    const response=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(order)});
+    let r={};
+    try{r=await response.json()}catch{}
+    if(!response.ok||!r.ok||!r.order?.id)throw new Error(r.message||'Sipariş oluşturulamadı. Lütfen tekrar deneyin.');
+    cart=[];
+    checkoutState={payment:'cod',customer:null,requestId:null};
+    updateCart();
+    success(r.order.id);
+  }catch(err){
+    console.error('Sipariş oluşturma hatası:',err);
+    if(status)status.textContent='Sipariş kaydedilemedi. Bilgileriniz silinmedi; tekrar deneyebilirsiniz.';
+    alert(err?.message||'Sipariş oluşturulamadı. Lütfen tekrar deneyin.');
+    if(btn){btn.disabled=false;btn.textContent=oldText}
+  }finally{
+    orderSubmitting=false;
+  }
 }
 function success(id){
   openDrawer(`<div class=success><div class=check>✅</div><h2>${settings.successTitle}</h2><p>${settings.successMessage}</p><p><b>${settings.successTagline}</b></p><p>Sipariş No: ${id}</p><div class=actions><a class="contactBtn wa" href="https://wa.me/${settings.whatsapp}"><span class="contactIcon brandIcon waIcon" aria-hidden="true"><svg viewBox="0 0 24 24" role="img"><path fill="currentColor" d="M12 2a9.5 9.5 0 0 0-8.21 14.27L2.5 21.5l5.38-1.25A9.5 9.5 0 1 0 12 2Zm0 17.2a7.7 7.7 0 0 1-3.92-1.07l-.28-.17-3.19.74.77-3.1-.18-.29A7.7 7.7 0 1 1 12 19.2Zm4.23-5.76c-.23-.12-1.37-.68-1.58-.76-.21-.08-.36-.12-.52.12-.15.23-.6.76-.74.92-.14.15-.27.17-.5.06-.23-.12-.98-.36-1.86-1.15-.69-.61-1.15-1.36-1.29-1.59-.13-.23-.01-.35.1-.46.1-.1.23-.27.35-.4.12-.14.15-.23.23-.39.08-.15.04-.29-.02-.4-.06-.12-.52-1.25-.71-1.71-.19-.45-.38-.39-.52-.4h-.44c-.15 0-.4.06-.61.29-.21.23-.8.78-.8 1.9 0 1.11.82 2.19.93 2.34.12.15 1.6 2.44 3.88 3.42.54.23.96.37 1.29.48.54.17 1.04.15 1.43.09.44-.07 1.37-.56 1.56-1.1.19-.54.19-1 .13-1.1-.06-.1-.21-.15-.44-.27Z"/></svg></span><span><b>Aklınıza takılan bir şey mi var?</b><small>Buraya tıkla ve iletişime geç</small></span></a><a class="contactBtn ig" href="https://ig.me/m/${String(settings.instagram||'').replace(/^@/,'')}"><span class="contactIcon brandIcon igIcon" aria-hidden="true"><svg viewBox="0 0 24 24" role="img"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5.2" ry="5.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.4" cy="6.9" r="1.2" fill="currentColor"/></svg></span><span><b>Aklınıza takılan bir şey mi var?</b><small>Buraya tıkla ve iletişime geç</small></span></a></div></div>`);

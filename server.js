@@ -416,11 +416,23 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
 });
 app.post('/api/orders',async(req,res)=>{
  const orders=readJson('orders.json',[]);
+ const clientRequestId=String(req.body?.requestId||'').trim();
+ const requestId=clientRequestId||crypto.randomUUID();
+
+ // Aynı telefonda butona art arda basılırsa veya ağ cevabı gecikirse aynı sipariş ikinci kez oluşmasın.
+ const existing=orders.find(o=>String(o.requestId||'')===requestId);
+ if(existing)return res.json({ok:true,order:existing,duplicate:true});
+
  const now=new Date();
  const createdAt=now.toISOString();
  const createdAtTR=new Intl.DateTimeFormat('tr-TR',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now);
- const requestId=crypto.randomUUID();
- const draft={createdAt,createdAtTR,status:'new',statusUpdatedAt:createdAt,requestId,...req.body};
+ const body={...(req.body||{})};
+ delete body.requestId;
+ const draft={createdAt,createdAtTR,status:'new',statusUpdatedAt:createdAt,requestId,...body};
+
+ if(!Array.isArray(draft.items)||!draft.items.length||!draft.customer?.fullName||!draft.customer?.phone){
+   return res.status(400).json({ok:false,message:'Sipariş bilgileri eksik. Lütfen sepet ve teslimat bilgilerini kontrol edin.'});
+ }
 
  // Google E-Tablo ana kayıt noktasıdır. Oraya yazılmadan müşteriye "sipariş oluştu" demiyoruz.
  try{
@@ -433,7 +445,7 @@ app.post('/api/orders',async(req,res)=>{
    console.error('Google E-Tablo sipariş kayıt hatası:',e);
    return res.status(503).json({
      ok:false,
-     message:'Siparişiniz güvenli kayıt sistemine yazılamadı. Lütfen tekrar deneyin.'
+     message:'Sipariş kaydedilemedi. Bilgileriniz silinmedi; lütfen tekrar deneyin.'
    });
  }
 });

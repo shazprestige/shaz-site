@@ -1,0 +1,7 @@
+V58
+- Mobil başlık, dar telefonlarda logo ile Kargom Nerede / Favorilerim / Sepetim ikonlarının üst üste binmemesi için ekran genişliğine göre yeniden ölçeklenir.
+- Panelde logo genişliği büyük ayarlansa bile mobilde güvenli maksimum genişlik uygulanır; masaüstü ayarı değiştirilmez.
+- Siparişi Oluştur butonu tek tıklamadan sonra kilitlenir ve kayıt bitene kadar tekrar basılamaz.
+- Sipariş isteğine benzersiz requestId eklenir; aynı sipariş tekrar gönderilirse sunucu ikinci sipariş oluşturmaz.
+- Sunucu/ağ hatasında adres ve sepet bilgileri silinmez, müşteri aynı son ekrandan tekrar deneyebilir.
+- Sipariş sırasında durum mesajı gösterilir ve eksik sipariş verisi sunucuda da doğrulanır.
