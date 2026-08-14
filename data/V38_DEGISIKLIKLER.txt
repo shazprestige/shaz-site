@@ -1,0 +1,20 @@
+SHAZ V38 DEĞİŞİKLİKLERİ
+
+1. Üst kategori sekmeleri düzeltildi.
+   - Setler / Saatler / Gözlükler vb. sekmeye dokununca kategori seçilir ve sayfa otomatik olarak o kategorinin ürün alanına kayar.
+   - Sol hamburger içindeki Kategoriler ekranının davranışı da korunur.
+
+2. Kategori kapak geçişi yeniden tasarlandı.
+   - Fotoğraf sağ tarafta mümkün olduğunca gerçek haliyle korunur.
+   - Fotoğrafın yalnızca sol kenarı, referans görseldeki gibi uzun ve yumuşak opacity geçişiyle kart zeminine erir.
+   - V37'deki fotoğraf rengini tüm karta yayma / blur mantığı kaldırıldı.
+
+3. Deploy sonrası panel verilerinin kaybolmaması için kalıcı disk desteği eklendi.
+   - Render Persistent Disk bağlanıp SHAZ_PERSIST_DIR=/var/data/shaz verilirse:
+     * kategori kapakları
+     * yüklenen ürün görselleri
+     * katalog
+     * site ayarları
+     * sipariş JSON'u
+     deploy/restart sonrası korunur.
+   - Kalıcı disk yoksa Render'ın geçici dosya sistemi nedeniyle yeniden deploy'da bu veriler yine kaybolabilir.

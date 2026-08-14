@@ -1,0 +1,8 @@
+SHAZ v36
+
+- Site genel arka planı beyaza çevrildi.
+- Üst SHAZ logosu ekranın geometrik merkezine sabitlendi.
+- Kategori kapak fotoğrafları sağdan görünür, sola doğru yumuşak degrade/mask ile zemine karışır; keskin dikey ayrım kaldırıldı.
+- Favoriler > Ürünü İncele akışında ürün detayından Favorilere Dön butonu eklendi.
+- Ana sayfadaki tekrarlı “Tüm Ürünleri Gör” butonu kaldırıldı.
+- v35 kategori merkezi, v34 ürün detay/set/kampanya özellikleri korunmuştur.
