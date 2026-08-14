@@ -64,7 +64,7 @@
       "oldPrice": 1199,
       "stock": 3,
       "hidden": false,
-      "badge": "",
+      "badge": "SINIRLI STOK",
       "image": "/uploads/1786724306426-vrpxf0.jpeg",
       "setEligible": false,
       "isSet": true,
@@ -143,7 +143,8 @@
       "images": [
         "/uploads/1786724306426-vrpxf0.jpeg",
         "/uploads/1786724306713-eorq5p.jpeg"
-      ]
+      ],
+      "badgeColor": "orange"
     },
     {
       "id": "urun-1786740541681-u8uqq",
