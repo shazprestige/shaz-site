@@ -9,7 +9,7 @@ const money=n=>'₺'+Number(n||0).toLocaleString('tr-TR');
 async function init(){
   settings=await fetch('/api/settings').then(r=>r.json());
   catalog=await fetch('/api/catalog').then(r=>r.json());
-  apply(); renderCampaignCards(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart();
+  apply(); renderCampaignCards(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart(); bindFloatingContacts();
 }
 function bindCore(){
   if($('#overlay')) $('#overlay').onclick=closeDrawer;
@@ -220,19 +220,53 @@ function openProductDetail(id,source='catalog'){
   const p=catalog.products.find(x=>x.id===id); if(!p)return;
   const features=productFeatureList(p);
   const positions=Array.isArray(p.writePositions)?p.writePositions.filter(Boolean):[];
+  const infoBlocks=[];
+  if(p.description) infoBlocks.push(`<div class="productInfoPart"><h3>Açıklama</h3><p>${escapeHtml(p.description)}</p></div>`);
+  if(features.length) infoBlocks.push(`<div class="productInfoPart"><h3>${p.isSet?'Setin içindekiler':'Özellikler'}</h3><div class=detailFeatureList>${features.map(x=>`<div>✓ ${escapeHtml(x)}</div>`).join('')}</div></div>`);
+  if(positions.length&&!p.isSet) infoBlocks.push(`<div class="productInfoPart"><h3>Kişiselleştirme alanları</h3><p>${positions.map(escapeHtml).join(' · ')}</p></div>`);
   openDrawer(`<div class="productDetailShell">
-    <div class=wizardHead><div><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div>${source==='favorites'?`<button class="pill" onclick="showFavorites()">← Favorilere Dön</button>`:`<button class="pill" onclick="closeDrawer()">Kapat</button>`}</div>
+    <div class="wizardHead productDetailHead"><div class="productDetailTitle"><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div>${source==='favorites'?`<button class="pill productDetailClose" onclick="showFavorites()">← Favorilere Dön</button>`:`<button class="pill productDetailClose" onclick="closeDrawer()">Kapat</button>`}</div>
     ${productImages(p).length?`<div class=productDetailGallery>
-      <div class=productDetailMedia><img id=productDetailMain src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name||'Ürün')}"></div>
+      <button class="productDetailMedia" type="button" onclick="openProductImageViewer()" aria-label="Fotoğrafı tam boy aç"><img id=productDetailMain src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name||'Ürün')}"><span class="imageZoomHint">Tam boy görüntüle</span></button>
       ${productImages(p).length>1?`<div class=productDetailThumbs>${productImages(p).map((u,i)=>`<button class="${i===0?'active':''}" onclick="selectProductDetailImage(this,'${escapeAttr(u)}')"><img src="${escapeAttr(u)}" alt=""></button>`).join('')}</div>`:''}
     </div>`:'<div class=productDetailMedia><div class=productDetailPlaceholder>⌚</div></div>'}
     <div class=productDetailPrice>${money(p.price)} ${p.oldPrice?`<span class=old>${money(p.oldPrice)}</span>`:''}</div>
-    ${p.description?`<div class=productDetailSection><h3>Açıklama</h3><p>${escapeHtml(p.description)}</p></div>`:''}
-    ${features.length?`<div class=productDetailSection><h3>${p.isSet?'Setin içindekiler':'Özellikler'}</h3><div class=detailFeatureList>${features.map(x=>`<div>✓ ${escapeHtml(x)}</div>`).join('')}</div></div>`:''}
-    ${positions.length&&!p.isSet?`<div class=productDetailSection><h3>Kişiselleştirme alanları</h3><p>${positions.map(escapeHtml).join(' · ')}</p></div>`:''}
+    ${infoBlocks.length?`<div class="productDetailInfoBox">${infoBlocks.join('')}</div>`:''}
     ${settings.productStockVisible?`<div class=productDetailStock>Stok: ${Number(p.stock||0)}</div>`:''}
     <button class="btn detailAddBtn" onclick="startProduct('${escapeAttr(p.id)}')">Sepete Ekle</button>
   </div>`);
+}
+
+
+function openProductImageViewer(){
+  const img=document.getElementById('productDetailMain');
+  if(!img?.src)return;
+  const viewer=document.createElement('div');
+  viewer.className='productImageViewer';
+  viewer.innerHTML=`<button class="imageViewerClose" type="button" aria-label="Kapat">×</button><img src="${escapeAttr(img.src)}" alt="${escapeAttr(img.alt||'Ürün fotoğrafı')}">`;
+  viewer.addEventListener('click',e=>{if(e.target===viewer||e.target.closest('.imageViewerClose'))viewer.remove()});
+  document.body.appendChild(viewer);
+}
+
+function bindFloatingContacts(){
+  const floating=document.querySelector('.floating');
+  if(!floating)return;
+  let raf=0;
+  const update=()=>{
+    raf=0;
+    const doc=document.documentElement;
+    const distance=Math.max(0,doc.scrollHeight-(window.scrollY+window.innerHeight));
+    const range=520;
+    const progress=Math.max(0,Math.min(1,(range-distance)/range));
+    const width=floating.getBoundingClientRect().width||176;
+    const targetShift=(-window.innerWidth/2)+10+(width/2);
+    floating.style.transform=`translate3d(${targetShift*progress}px,0,0)`;
+    floating.style.setProperty('--bottom-progress',String(progress));
+  };
+  const schedule=()=>{if(!raf)raf=requestAnimationFrame(update)};
+  window.addEventListener('scroll',schedule,{passive:true});
+  window.addEventListener('resize',schedule,{passive:true});
+  update();
 }
 
 function selectProductDetailImage(btn,url){
