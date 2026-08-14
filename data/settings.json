@@ -41,7 +41,8 @@
       "buttonText": "ÜRÜNLERİ GÖR",
       "buttonLink": "#products",
       "height": 330,
-      "overlayOpacity": 28
+      "overlayOpacity": 28,
+      "targetCategory": "tum"
     }
   ],
   "cargoTrackingUrl": "https://ebranch.araskargo.com.tr/"
