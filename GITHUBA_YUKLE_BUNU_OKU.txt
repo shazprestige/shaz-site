@@ -1,0 +1,13 @@
+V41 GITHUB YUKLEME
+
+Kalıcı ürün/fotoğraf verilerini korumak için data ve uploads klasörlerine dokunma.
+
+Bu sürümde değiştirilmesi gereken müşteri sitesi dosyaları public klasöründedir.
+GitHub -> shaz-site -> public -> Dosya ekle -> Dosya yükle yoluyla public klasörünün İÇİNDEKİ 5 dosyayı yükle:
+- admin.js
+- admin-login.html
+- app.js
+- index.html
+- styles.css
+
+Klasörün kendisini public içine sürükleme; aksi halde public/public oluşur.

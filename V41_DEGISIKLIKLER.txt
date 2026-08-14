@@ -1,0 +1,10 @@
+SHAZ V41
+
+- Ürün detayındaki ana görsel artık 4:3 alan içinde kırpılmadan tamamen görünür (object-fit: contain).
+- "Tam boy görüntüle" etiketi kaldırıldı. İstenirse görsele dokunarak büyütme hâlâ kullanılabilir.
+- Ürün detayındaki alt stok satırı kaldırıldı.
+- Ürün detayına ekranın altında sürekli görünen sabit fiyat + "Sepete Ekle" barı eklendi.
+- Ürün kartlarındaki "Ürünü İncele" butonu kaldırıldı.
+- Ürün kartının fotoğrafı, adı, açıklaması veya boş alanı dahil kartın herhangi bir yerine tıklanınca ürün detayına girilir.
+- Favori kalbi bağımsız çalışmaya devam eder.
+- Diğer ayarlara dokunulmadı.
