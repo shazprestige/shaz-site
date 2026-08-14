@@ -1,0 +1,5 @@
+V48
+- Sadece masaüstü reklam panosu yüksekliği/oranı düzenlendi.
+- Masaüstünde pano artık aşırı ince görünmüyor; geniş ekranı daha dengeli dolduruyor.
+- Mobil reklam panosunun V47 görünümü ve ölçüleri değiştirilmedi.
+- Slider, kayan yazılar, ürünler, sepet, teslimat ve yönetim panelinin diğer alanlarına dokunulmadı.

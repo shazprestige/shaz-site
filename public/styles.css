@@ -1343,3 +1343,32 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
   .campaignSlideImage{object-fit:cover!important;object-position:center!important}
   .campaignSlider .campaignContent{padding:38px 16px 27px!important}
 }
+
+/* ===== V48 — yalnızca masaüstü reklam panosu oranı =====
+   Mobil düzen V47 ile aynen korunur. Geniş ekranda pano artık aşırı ince kalmaz. */
+@media(min-width:701px){
+  .campaignSlider{
+    width:100%!important;
+    height:clamp(360px,30vw,520px)!important;
+    min-height:360px!important;
+    max-height:520px!important;
+    aspect-ratio:auto!important;
+  }
+  .campaignSlideImage{
+    width:100%!important;
+    height:100%!important;
+    object-fit:cover!important;
+    object-position:center!important;
+  }
+  .campaignSlider .campaignContent{
+    padding:58px 70px 42px!important;
+  }
+}
+
+/* V49 — gerçek marka ikonları */
+.brandIcon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 20px;width:20px;height:20px}
+.brandIcon svg{display:block;width:20px;height:20px}
+.waIcon{color:#fff}
+.igIcon{color:#fff}
+.contact.black .igIcon{background:radial-gradient(circle at 30% 110%,#ffd600 0 18%,#ff7a00 35%,#ff0169 58%,#d300c5 76%,#7638fa 100%);border-radius:6px;padding:2px;box-sizing:border-box}
+.contactBtn .brandIcon{margin-right:6px}
