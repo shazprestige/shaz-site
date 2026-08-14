@@ -35,9 +35,18 @@ for(const name of ['settings.json','catalog.json','orders.json']){
 console.log('SHAZ veri dizini:',persistRoot);
 app.use(express.json({limit:'5mb'}));
 app.use(express.urlencoded({extended:true}));
-app.use('/uploads', express.static(uploadDir));
+app.use('/uploads', express.static(uploadDir,{maxAge:'7d'}));
 
-app.use(express.static(path.join(root,'public')));
+// Yeni sürümlerde telefonların eski JS/CSS'i tutup sipariş isteğini eski kodla göndermesini engelle.
+app.use((req,res,next)=>{
+  if (/\.(?:html?|js|css)$/i.test(req.path) || req.path==='/' || req.path==='/admin') {
+    res.setHeader('Cache-Control','no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma','no-cache');
+    res.setHeader('Expires','0');
+  }
+  next();
+});
+app.use(express.static(path.join(root,'public'),{etag:false,lastModified:false}));
 
 // ---------- Yönetici güvenliği ----------
 const ADMIN_USER = process.env.ADMIN_USER || '';
@@ -472,11 +481,16 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
  res.setHeader('Content-Disposition',`attachment; filename=SHAZ-Siparisler-${stamp}.xlsx`);
  res.type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet').send(buf);
 });
+let lastOrderIngress={at:'',requestId:'',ok:null,error:''};
+app.get('/api/orders/last-ingress',requireAdmin,(req,res)=>res.json({ok:true,...lastOrderIngress}));
+
 app.post('/api/orders',async(req,res)=>{
+ const ingressAt=new Date().toISOString();
  try{
    const orders=readJson('orders.json',[]);
    const clientRequestId=String(req.body?.requestId||'').trim();
    const requestId=clientRequestId||crypto.randomUUID();
+   lastOrderIngress={at:ingressAt,requestId,ok:null,error:''};
 
    // Aynı sipariş tekrar gelirse yeni kayıt açma.
    const existing=orders.find(o=>String(o.requestId||'')===requestId);
@@ -509,9 +523,11 @@ app.post('/api/orders',async(req,res)=>{
    persistOrdersToGithub().catch(e=>console.error('Sipariş GitHub kalıcı kayıt:',e));
    setTimeout(()=>syncPendingOrdersToSheets(),0);
 
+   lastOrderIngress={at:ingressAt,requestId,ok:true,error:''};
    return res.json({ok:true,order,pendingSheet:true});
  }catch(e){
    console.error('Sipariş yerel kayıt hatası:',e);
+   lastOrderIngress={at:ingressAt,requestId:String(req.body?.requestId||''),ok:false,error:String(e?.message||e)};
    return res.status(500).json({ok:false,message:'Sipariş sunucuya kaydedilemedi. Lütfen tekrar deneyin.'});
  }
 });
@@ -545,6 +561,7 @@ app.post('/api/orders/sheets-test',requireAdmin,async(req,res)=>{
     if(!GOOGLE_SHEETS_WEBHOOK_URL)throw new Error('Render Environment içinde GOOGLE_SHEETS_WEBHOOK_URL eksik.');
     if(!GOOGLE_SHEETS_SECRET)throw new Error('Render Environment içinde GOOGLE_SHEETS_SECRET eksik.');
     const d=await sheetsRequest({action:'ping'});
+    setTimeout(()=>syncPendingOrdersToSheets().catch(()=>{}),0);
     res.json({ok:true,version:d.version||'',sheet:d.sheet||''});
   }catch(e){
     const message=String(e?.message||e);

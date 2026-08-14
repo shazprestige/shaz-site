@@ -1,0 +1,12 @@
+SHAZ V63
+
+- Google E-Tablo hazır şablonundaki birleşik hücre hatası düzeltildi.
+- Yeni müşteri bloğu, son gerçek MÜŞTERİ başlığından sonraki 10 satırlık bloğa yazılır.
+- Birleşimler artık yalnız gerçek merged range nesneleri üzerinden ayrılır.
+- Google bağlantı testi başarılı olduğunda bekleyen siparişlerin otomatik senkronu hemen tetiklenir.
+- HTML/JS/CSS için no-cache eklendi; mobil cihazların eski sipariş kodunu çalıştırması engellendi.
+- index/admin assetlerine v=63 cache-bust eklendi.
+- Sipariş POST isteği için son gelen istek teşhis endpointi eklendi.
+- Sipariş gönderilmeden önce cihazda geçici pending draft tutulur; başarıda temizlenir.
+
+Diğer site ayarları değiştirilmedi.

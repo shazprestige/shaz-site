@@ -27,7 +27,7 @@ function doPost(e) {
       return json_({ok:false, message:'Yetkisiz istek.'});
     }
 
-    if (data.action === 'ping') return json_({ok:true, version:'V62', sheet:SHEET_NAME});
+    if (data.action === 'ping') return json_({ok:true, version:'V63', sheet:SHEET_NAME});
     if (data.action === 'create') return createOrder_(data);
     if (data.action === 'status') return updateStatus_(data);
 
@@ -93,7 +93,7 @@ function createOrder_(data) {
     // Sayfada önceden hazırlanmış / birleştirilmiş boş bloklar bulunabiliyor.
     // Bir sonraki bloğu kullanmadan önce yalnızca o bloğun birleşimlerini çözüyoruz.
     // Böylece "birleştirilen aralıktaki tüm hücreleri seçmelisiniz" hatası oluşmaz.
-    const headerRow = sh.getLastRow() + 1;
+    const headerRow = nextHeaderRow_(sh);
     const start = headerRow + 1;
     const separatorRow = start + 8;
     ensureRows_(sh, separatorRow);
@@ -180,12 +180,27 @@ function ensureRows_(sh, lastNeededRow) {
   sh.insertRowsAfter(sh.getMaxRows(), lastNeededRow - sh.getMaxRows() + 20);
 }
 
+function nextHeaderRow_(sh) {
+  // Hazır şablonda aşağıda biçimlendirilmiş boş bloklar bulunduğu için getLastRow()+1
+  // tek başına güvenilir değildir. A sütunundaki gerçek müşteri başlıklarını bulup
+  // bir sonraki 10 satırlık bloğa geçiyoruz: başlık + 8 satır + ayırıcı.
+  const max = Math.max(2, sh.getLastRow());
+  const vals = sh.getRange(2, 1, max - 1, 1).getDisplayValues().flat();
+  let lastHeader = 0;
+  vals.forEach((v, i) => {
+    if (/MÜŞTERİ/i.test(String(v || ''))) lastHeader = i + 2;
+  });
+  if (lastHeader) return lastHeader + 10;
+  return 2;
+}
+
 function prepareOrderBlock_(sh, headerRow, separatorRow) {
-  // H sütununa kadar tüm blok seçildiği için, bu alanın içinde kalan eski
-  // birleştirmeler güvenli biçimde ayrılır. Mevcut siparişlerin üstüne dokunulmaz.
+  // block.breakApart() bazı hazır şablon birleşimlerinde kısmi kesişim hatası verebiliyor.
+  // Bu yüzden yalnızca gerçekten kesişen birleşik aralıkları kendi tam aralıkları üzerinden ayırıyoruz.
   const rowCount = separatorRow - headerRow + 1;
   const block = sh.getRange(headerRow, 1, rowCount, 8);
-  block.breakApart();
+  const merges = block.getMergedRanges();
+  merges.forEach(r => r.breakApart());
   block.clearContent();
   block.clearNote();
   sh.getRange(headerRow, 4, rowCount, 2).clearDataValidations();

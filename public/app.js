@@ -668,6 +668,8 @@ async function finalizeOrder(personalApproved,button){
     shippingNoticeAccepted:true,
     total:cart.reduce((a,x)=>a+Number(x.product.price||0),0)
   };
+  // Ağ/önbellek kaynaklı geçici bir sorunda sipariş taslağı müşterinin cihazında da korunsun.
+  try{localStorage.setItem('shaz_pending_order_v63',JSON.stringify(order))}catch{}
   const btn=button||document.querySelector('.checkoutPrimary');
   const status=document.querySelector('#checkoutSubmitStatus');
   const oldText=btn?.textContent||'Siparişi Oluştur ✓';
@@ -682,6 +684,7 @@ async function finalizeOrder(personalApproved,button){
     cart=[];
     checkoutState={payment:'cod',customer:null,requestId:null};
     updateCart();
+    try{localStorage.removeItem('shaz_pending_order_v63')}catch{}
     success(r.order.id);
   }catch(err){
     console.error('Sipariş oluşturma hatası:',err);
