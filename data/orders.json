@@ -6,7 +6,7 @@
     "status": "new",
     "statusUpdatedAt": "2026-08-14T23:03:08.686Z",
     "requestId": "84151e37-6446-4313-8662-89c65c8c6dbf",
-    "sheetSyncStatus": "pending",
+    "sheetSyncStatus": "synced",
     "sheetSyncError": "",
     "items": [
       {
@@ -123,7 +123,9 @@
     "payment": "cod",
     "personalApproval": null,
     "shippingNoticeAccepted": true,
-    "total": 1399
+    "total": 1399,
+    "sheetSyncedAt": "2026-08-14T23:03:12.156Z",
+    "sheetId": "SHZ3"
   },
   {
     "id": "SHZ2",
