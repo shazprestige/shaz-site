@@ -10,7 +10,7 @@
     },
     {
       "id": "setler",
-      "name": "Setler",
+      "name": "Set",
       "order": 1,
       "hidden": false,
       "cover": "/uploads/1786724063083-3uyv87.jpeg",
@@ -18,7 +18,7 @@
     },
     {
       "id": "saatler",
-      "name": "Saatler",
+      "name": "Saat",
       "order": 2,
       "hidden": false,
       "cover": "",
@@ -26,7 +26,7 @@
     },
     {
       "id": "gozlukler",
-      "name": "Gözlükler",
+      "name": "Gözlük",
       "order": 3,
       "hidden": false,
       "cover": "",
@@ -34,7 +34,7 @@
     },
     {
       "id": "cuzdanlar",
-      "name": "Cüzdanlar",
+      "name": "Cüzdan",
       "order": 4,
       "hidden": false,
       "cover": "",
@@ -42,7 +42,7 @@
     },
     {
       "id": "kategori-1786740581832",
-      "name": "Çakmaklar",
+      "name": "Çakmak",
       "order": 6,
       "hidden": false,
       "cover": ""
