@@ -1,0 +1,76 @@
+SHAZ v31 — GOOGLE E-TABLO OTOMATİK KALICI SİPARİŞ KAYDI
+
+AMAÇ
+Müşteri siparişi tamamladığı anda, manuel Excel indirmeye gerek kalmadan sipariş Google E-Tablo'ya yazılır.
+Google E-Tablo ana operasyon kaydıdır. Render yeniden deploy olsa bile bu kayıt kaybolmaz.
+
+EXCEL/E-TABLO DÜZENİ
+Her müşteri tam 8 satır:
+1) Ad Soyad
+2) Telefon (ikinci telefon yazılmaz)
+3) Açık adres
+4) İl + İlçe
+5) Tutar + "TL"
+6) Kapıda nakit / havale
+7) @
+8) Ürün adı + varsa çıkarılan ürün + varsa kişiselleştirme
+
+Sağ taraf:
+B = SİPARİŞ
+C = ADET (bir hazır set = 1)
+D = HAZIR MI
+E = KARGOYA VERİLDİ Mİ
+
+Hazır sette "Saat + Çakmak + ..." diye parçalama yapılmaz.
+Örn:
+3'lü Özel Set | Çıkarılan: Kemer | Yazı: Çakmak: Erdal (Ön yüz)
+
+KURULUM
+1. Google Drive'da yeni bir Google E-Tablo oluştur.
+   İsim önerisi: SHAZ Siparişler
+
+2. E-Tablo içinde:
+   Uzantılar > Apps Script
+
+3. Açılan editördeki mevcut kodu sil.
+   Bu paketteki "google-apps-script.gs" dosyasının tamamını yapıştır.
+
+4. Apps Script ekranında:
+   Project Settings / Proje Ayarları > Script Properties / Komut dosyası özellikleri
+   Yeni özellik ekle:
+   Property: SHAZ_WEBHOOK_SECRET
+   Value: kendin uzun rastgele bir gizli değer üret.
+   BU DEĞERİ KİMSEYLE PAYLAŞMA.
+
+5. Deploy > New deployment > Web app
+   Execute as: Me
+   Who has access: Anyone
+   Deploy.
+   Google izin ekranını onayla.
+   Sana ".../exec" ile biten Web app URL verecek. Kopyala.
+
+6. Render > SHAZ > Environment içine iki değişken daha ekle:
+   GOOGLE_SHEETS_WEBHOOK_URL = Apps Script'in .../exec adresi
+   GOOGLE_SHEETS_SECRET = 4. adımda oluşturduğun gizli değer
+
+7. Save, rebuild, and deploy.
+
+TEST
+- Telefondan bir deneme siparişi oluştur.
+- Sipariş başarılı mesajı geldiyse Google E-Tablo'da 8 satırlık blok oluşmuş olmalı.
+- /admin > Siparişler'de de aynı sipariş görünür.
+- Yönetim panelinde Hazırlandı / Kargoya Verildi yaptığında E-Tablo'daki D/E alanları da otomatik güncellenir.
+
+ÖNEMLİ
+Bu sürümde sipariş Google E-Tablo'ya yazılamazsa müşteriye sipariş başarılı gösterilmez.
+Böylece "panelde gördüm sandık ama kalıcı yere yazılmadı" durumu oluşmaz.
+
+Google E-Tablo siparişler için kalıcı ana kayıt olur.
+Render'daki orders.json yönetim panelinin hızlı yerel kopyasıdır ve deploy'da sıfırlanabilir.
+
+
+V32 GÖRÜNÜM DÜZELTMELERİ
+- Her siparişten önce "1. MÜŞTERİ • SHZ1 • tarih", "2. MÜŞTERİ • SHZ2 • tarih" başlığı gelir.
+- Her müşteri bloğunun ardından gri ayırıcı satır gelir.
+- Google E-Tablo'da HAZIR MI / KARGOYA VERİLDİ Mİ alanları gerçek tıklanabilir checkbox'tır.
+- İndirilen .xlsx dosyada checkbox sembolleri görünür; üçüncü taraf Excel görüntüleyicilerinde gerçek form checkbox garantisi yoktur.

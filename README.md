@@ -128,3 +128,25 @@ ADMIN_PASSWORD
 SESSION_SECRET
 
 SESSION_SECRET için uzun ve rastgele bir değer kullanın.
+
+
+V31 — OTOMATİK GOOGLE E-TABLO
+- Sipariş başarıyla oluşmadan önce Google E-Tablo'ya kalıcı olarak kaydedilir.
+- Google kaydı başarısızsa müşteriye sahte başarı mesajı gösterilmez.
+- Ağ kaynaklı çift gönderimde requestId ile mükerrer sipariş engellenir.
+- SHZ sıra numarası Google E-Tablo tarafında kalıcı olarak üretilir: SHZ1, SHZ2, SHZ3...
+- Yönetim panelindeki Hazırlandı / Kargoya Verildi durumları Google E-Tablo'ya da aktarılır.
+- Müşteri başına 8 satırlık daha önce belirlenen format korunur.
+- İkinci telefon otomatik tabloya yazılmaz.
+- Hazır set parçalanmaz; set adı tek ürün olarak yazılır. Yalnızca çıkarılan ürün ve kişiselleştirmeler belirtilir.
+
+Yeni Render değişkenleri:
+GOOGLE_SHEETS_WEBHOOK_URL
+GOOGLE_SHEETS_SECRET
+
+
+V32
+- Müşteriler arası ayırıcı satır eklendi.
+- Her sipariş bloğuna numaralı müşteri başlığı eklendi.
+- Google E-Tablo D/E durum alanları gerçek tıklanabilir checkbox oldu.
+- Excel exportta müşteri başlığı + ayırıcı düzeni eklendi.

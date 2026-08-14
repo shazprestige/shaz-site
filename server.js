@@ -81,6 +81,42 @@ const registerLoginFailure=key=>{
 const readJson=(name,fallback)=>{try{return JSON.parse(fs.readFileSync(path.join(dataDir,name),'utf8'))}catch(e){return fallback}};
 const writeJson=(name,data)=>fs.writeFileSync(path.join(dataDir,name),JSON.stringify(data,null,2),'utf8');
 
+const GOOGLE_SHEETS_WEBHOOK_URL=process.env.GOOGLE_SHEETS_WEBHOOK_URL||'';
+const GOOGLE_SHEETS_SECRET=process.env.GOOGLE_SHEETS_SECRET||'';
+
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+async function sheetsRequest(payload){
+  if(!GOOGLE_SHEETS_WEBHOOK_URL || !GOOGLE_SHEETS_SECRET){
+    throw new Error('Google E-Tablo bağlantısı yapılandırılmamış.');
+  }
+  const body=JSON.stringify({...payload,secret:GOOGLE_SHEETS_SECRET});
+  let lastErr;
+  for(let attempt=1;attempt<=2;attempt++){
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),10000);
+    try{
+      const r=await fetch(GOOGLE_SHEETS_WEBHOOK_URL,{
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body,
+        signal:controller.signal,
+        redirect:'follow'
+      });
+      clearTimeout(timer);
+      const txt=await r.text();
+      let data={};
+      try{data=JSON.parse(txt)}catch{}
+      if(!r.ok || !data.ok)throw new Error(data.message||`Google E-Tablo HTTP ${r.status}`);
+      return data;
+    }catch(e){
+      clearTimeout(timer);
+      lastErr=e;
+      if(attempt<2)await delay(900);
+    }
+  }
+  throw lastErr||new Error('Google E-Tablo kaydı başarısız.');
+}
+
 const storage = multer.diskStorage({
  destination:(req,file,cb)=>cb(null,uploadDir),
  filename:(req,file,cb)=>cb(null,Date.now()+'-'+Math.random().toString(36).slice(2,8)+path.extname(file.originalname).toLowerCase())
@@ -99,9 +135,15 @@ app.post('/api/settings',requireAdmin,(req,res)=>{writeJson('settings.json',req.
 app.get('/api/catalog',(req,res)=>res.json(readJson('catalog.json',{categories:[],products:[],builder:{}})));
 app.post('/api/catalog',requireAdmin,(req,res)=>{writeJson('catalog.json',req.body);res.json({ok:true})});
 app.get('/api/orders',requireAdmin,(req,res)=>res.json(readJson('orders.json',[])));
-app.patch('/api/orders/status',requireAdmin,(req,res)=>{
+app.patch('/api/orders/status',requireAdmin,async(req,res)=>{
  const ids=Array.isArray(req.body.ids)?req.body.ids:[]; const status=req.body.status;
  if(!['new','prepared','shipped'].includes(status))return res.status(400).json({ok:false});
+ try{
+   await sheetsRequest({action:'status',ids,status});
+ }catch(e){
+   console.error('Google E-Tablo durum güncelleme hatası:',e);
+   return res.status(503).json({ok:false,message:'Durum Google E-Tablo’ya kaydedilemedi. Tekrar deneyin.'});
+ }
  const orders=readJson('orders.json',[]); const now=new Date().toISOString();
  orders.forEach(o=>{if(ids.includes(o.id)){o.status=status;o.statusUpdatedAt=now;}});
  writeJson('orders.json',orders);res.json({ok:true,orders});
@@ -153,18 +195,35 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
   return [road,nums].filter(Boolean).join(' ')+biz;
  };
 
- // İlk satır: bu Excel'in tam olarak ne zaman alındığı.
- // İkinci satır: eski başlık düzeni.
+ // İlk satır: Excel'in alınma zamanı.
+ // İkinci satır: sütun başlıkları.
+ // Her müşteri: 1 başlık + 8 bilgi satırı + 1 ayırıcı satır.
  const aoa=[
    [`Excel'e aktarma tarihi: ${exportAtTR}`,'','','',''],
    ['','SİPARİŞ','ADET','HAZIR MI','KARGOYA VERİLDİ Mİ']
  ];
  const merges=[{s:{r:0,c:0},e:{r:0,c:4}}];
+ const rowHeights=[{hpt:24},{hpt:24}];
 
  orders.forEach((o,idx)=>{
    const c=o.customer||{};
-   const r=2+idx*8; // 2 üst satırdan sonra her müşteri 8 satır
+   const blockStart=2+idx*10;
+   const headerRow=blockStart;
+   const r=blockStart+1; // 8 bilgi satırı burada başlar
+   const separatorRow=blockStart+9;
    const details=orderProducts(o);
+
+   // Müşteri numarası açıkça görünsün.
+   aoa[headerRow]=[
+     `${idx+1}. MÜŞTERİ${o.id?` • ${o.id}`:''}`,
+     o.createdAtTR||'',
+     '',
+     '',
+     ''
+   ];
+   merges.push({s:{r:headerRow,c:0},e:{r:headerRow,c:4}});
+   rowHeights[headerRow]={hpt:22};
+
    const left=[
     c.fullName||'',
     c.phone||'',
@@ -175,6 +234,7 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
     '@',
     details
    ];
+
    for(let i=0;i<8;i++){
      aoa[r+i]=[
        left[i],
@@ -183,22 +243,26 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
        i===0?(o.status==='prepared'||o.status==='shipped'?'✓':'☐'):'',
        i===0?(o.status==='shipped'?'✓':'☐'):''
      ];
+     rowHeights[r+i]={hpt:i===7?34:22};
    }
+
    merges.push(
      {s:{r,c:1},e:{r:r+7,c:1}},
      {s:{r,c:2},e:{r:r+7,c:2}},
      {s:{r,c:3},e:{r:r+7,c:3}},
      {s:{r,c:4},e:{r:r+7,c:4}}
    );
+
+   // Müşteriler birbirine yapışmasın: araya net bir ayırıcı satır.
+   aoa[separatorRow]=['────────────────────────────────','','','',''];
+   merges.push({s:{r:separatorRow,c:0},e:{r:separatorRow,c:4}});
+   rowHeights[separatorRow]={hpt:10};
  });
 
  const ws=XLSX.utils.aoa_to_sheet(aoa);
  ws['!merges']=merges;
  ws['!cols']=[{wch:42},{wch:54},{wch:9},{wch:14},{wch:22}];
- ws['!rows']=[{hpt:24},{hpt:24}];
- for(let i=0;i<orders.length;i++){
-   for(let j=0;j<8;j++)ws['!rows'][2+i*8+j]={hpt:j===7?34:22};
- }
+ ws['!rows']=rowHeights;
  const wb=XLSX.utils.book_new();
  XLSX.utils.book_append_sheet(wb,ws,'Siparişler');
  const buf=XLSX.write(wb,{type:'buffer',bookType:'xlsx'});
@@ -219,14 +283,28 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
  res.setHeader('Content-Disposition',`attachment; filename=SHAZ-Siparisler-${stamp}.xlsx`);
  res.type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet').send(buf);
 });
-app.post('/api/orders',(req,res)=>{
+app.post('/api/orders',async(req,res)=>{
  const orders=readJson('orders.json',[]);
  const now=new Date();
  const createdAt=now.toISOString();
  const createdAtTR=new Intl.DateTimeFormat('tr-TR',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now);
- const maxNo=orders.reduce((m,o)=>Math.max(m,Number(String(o.id||'').replace(/^SHZ/i,''))||0),0);
- const order={id:'SHZ'+(maxNo+1),createdAt,createdAtTR,status:'new',statusUpdatedAt:createdAt,...req.body};
- orders.unshift(order); writeJson('orders.json',orders); res.json({ok:true,order});
+ const requestId=crypto.randomUUID();
+ const draft={createdAt,createdAtTR,status:'new',statusUpdatedAt:createdAt,requestId,...req.body};
+
+ // Google E-Tablo ana kayıt noktasıdır. Oraya yazılmadan müşteriye "sipariş oluştu" demiyoruz.
+ try{
+   const sheet=await sheetsRequest({action:'create',requestId,order:draft});
+   const order={...draft,id:sheet.id};
+   orders.unshift(order);
+   writeJson('orders.json',orders); // yönetim paneli için yerel hızlı kopya
+   return res.json({ok:true,order});
+ }catch(e){
+   console.error('Google E-Tablo sipariş kayıt hatası:',e);
+   return res.status(503).json({
+     ok:false,
+     message:'Siparişiniz güvenli kayıt sistemine yazılamadı. Lütfen tekrar deneyin.'
+   });
+ }
 });
 app.post('/api/upload',requireAdmin, upload.array('files',250),(req,res)=>{
  res.json({ok:true,files:(req.files||[]).map(f=>({name:f.originalname,url:'/uploads/'+f.filename}))});
