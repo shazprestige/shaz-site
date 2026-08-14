@@ -78,7 +78,7 @@ function closeCategoryHub(){
 function renderCategoryHub(){
   const wrap=$('#categoryHubGrid'); if(!wrap)return;
   const cats=catalog.categories.filter(c=>!c.hidden&&c.id!=='tum').sort((a,b)=>(a.order??0)-(b.order??0));
-  wrap.innerHTML=cats.map(c=>`<button class="categoryTile ${c.cover?'hasCover':''}" onclick="chooseCategoryFromHub('${escapeAttr(c.id)}','${escapeAttr(c.name)}')">
+  wrap.innerHTML=cats.map(c=>`<button class="categoryTile ${c.cover?'hasCover':''}" ${c.cover?`style="--cat-cover:url('${escapeAttr(c.cover)}')"`:''} onclick="chooseCategoryFromHub('${escapeAttr(c.id)}','${escapeAttr(c.name)}')">
     <div class="categoryTileText"><b>${escapeHtml(c.name)}</b><span>Ürünleri gör →</span></div>
     <div class="categoryTileMedia">${c.cover?`<img src="${escapeAttr(c.cover)}" alt="${escapeAttr(c.name)}">`:`<span class="categoryPlaceholder">${escapeHtml((c.name||'?').slice(0,1))}</span>`}</div>
   </button>`).join('');

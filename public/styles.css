@@ -680,12 +680,34 @@ header{background:rgba(255,255,255,.97)!important}
 #brandLogo.logo{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;margin:0!important;z-index:1}
 .menuBtn,.headActions{z-index:2}
 
-/* Kategori kapağı sağda keskin bitmez; sola doğru saydamlaşıp zemine karışır. */
+/* v37: kategori görseli kendi renklerinden türeyerek sola doğru erir.
+   Beyaz/gri bir katman bindirmiyoruz. Aynı fotoğrafın büyütülmüş + blur uygulanmış
+   kopyası yazının altına uzanıyor; sağdaki asıl fotoğraf da bunun içine yumuşakça birleşiyor. */
 .categoryTile{background:#f1f2f3;isolation:isolate}
-.categoryTileText{z-index:3;flex:0 0 55%;padding-right:2px}
-.categoryTileMedia{position:absolute;inset:0 0 0 auto;width:62%;min-width:0;height:100%;z-index:1;overflow:hidden;display:block}
-.categoryTileMedia img{width:100%;height:100%;object-fit:cover;object-position:center;transform:scale(1.035);filter:saturate(.96) contrast(.98);-webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.08) 10%,rgba(0,0,0,.32) 27%,rgba(0,0,0,.72) 48%,#000 68%);mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.08) 10%,rgba(0,0,0,.32) 27%,rgba(0,0,0,.72) 48%,#000 68%)}
-.categoryTile.hasCover:after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(90deg,#f1f2f3 0%,rgba(241,242,243,.96) 34%,rgba(241,242,243,.62) 48%,rgba(241,242,243,.12) 66%,transparent 78%)}
+.categoryTileText{z-index:4;flex:0 0 55%;padding-right:2px}
+.categoryTile.hasCover{background:#e9eaec}
+.categoryTile.hasCover:before{
+  content:"";position:absolute;inset:-18px;z-index:0;pointer-events:none;
+  background-image:var(--cat-cover);background-size:cover;background-position:center;
+  filter:blur(22px) saturate(.78) brightness(1.18) contrast(.88);
+  transform:scale(1.10);
+  opacity:.82;
+  -webkit-mask-image:linear-gradient(to right,rgba(0,0,0,.74) 0%,rgba(0,0,0,.68) 24%,rgba(0,0,0,.48) 43%,rgba(0,0,0,.16) 61%,transparent 76%);
+  mask-image:linear-gradient(to right,rgba(0,0,0,.74) 0%,rgba(0,0,0,.68) 24%,rgba(0,0,0,.48) 43%,rgba(0,0,0,.16) 61%,transparent 76%);
+}
+.categoryTileMedia{position:absolute;inset:0 0 0 auto;width:62%;min-width:0;height:100%;z-index:2;overflow:hidden;display:block}
+.categoryTileMedia img{
+  width:100%;height:100%;object-fit:cover;object-position:center;transform:scale(1.025);
+  filter:saturate(.98) contrast(.99);
+  -webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.10) 12%,rgba(0,0,0,.32) 28%,rgba(0,0,0,.70) 48%,#000 67%);
+  mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.10) 12%,rgba(0,0,0,.32) 28%,rgba(0,0,0,.70) 48%,#000 67%);
+}
+/* Önceki beyaz/gri geçiş katmanı tamamen kaldırıldı. */
+.categoryTile.hasCover:after{display:none!important}
+.categoryTile.hasCover .categoryTileText b,
+.categoryTile.hasCover .categoryTileText span{
+  text-shadow:0 1px 10px rgba(255,255,255,.48),0 1px 2px rgba(255,255,255,.70);
+}
 .categoryTile:not(.hasCover) .categoryTileMedia{position:relative;inset:auto;width:45%;margin-left:auto;display:flex}
 
 @media(max-width:390px){
