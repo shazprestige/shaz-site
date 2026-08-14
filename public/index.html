@@ -30,25 +30,23 @@
   <div class="tabs" id="catalogNav"></div>
 </header>
 
-<div id="campaignCards"></div>
 
 <section class="hero">
   <h1 id="heroTitle"></h1>
   <div class="rule"></div>
   <p id="heroSubtitle"></p>
   <div class="actions">
-    <button class="btn" id="builderTopBtn">＋ Kendi Setini Oluştur</button>
     <button class="btn secondary" onclick="document.getElementById('products').scrollIntoView()">▦ Tüm Ürünleri Gör</button>
   </div>
   <div class="builderCard" id="builderSpotlight">
-    <div><span class="gold">KENDİN OLUŞTUR</span><h3>Setini sen seç.</h3><p>Ürünlerini bir araya getir, özel set fiyatını anında gör.</p></div>
+    <div><span class="gold">KENDİ SETİNİ OLUŞTUR</span><h3>Setini sen seç.</h3><p>Ürünlerini bir araya getir, özel set fiyatını anında gör.</p></div>
     <button class="arrow" id="builderSpotlightBtn">→</button>
   </div>
 </section>
 
 <section class="section" id="products">
   <div class="sectionHead"><span class="gold">KOLEKSİYON</span><h2 id="catalogTitle">Tüm Ürünler</h2></div>
-  <div class="tools"><button class="tool">⚲ Filtrele</button><button class="tool">⇅ Sırala</button></div>
+  <div class="tools sortTools"><label class="sortLabel" for="sortProducts">Sırala</label><select class="tool sortSelect" id="sortProducts" aria-label="Ürünleri sırala"><option value="featured">Önerilen sıralama</option><option value="priceAsc">Fiyat: Düşükten yükseğe</option><option value="priceDesc">Fiyat: Yüksekten düşüğe</option></select></div>
   <input id="search" class="search" placeholder="Ürün ara" style="display:none">
   <div class="grid products" id="productsList"></div>
 </section>

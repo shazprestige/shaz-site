@@ -133,7 +133,7 @@ async function uploadCampaign(i){
 
 function renderCatalog(){
   const cats=catalog.categories.filter(c=>c.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0));
-  let html=`<div class=panel><div class=campaignAdminHead><div><h2>Kategoriler & Ürünler</h2><div class=help>Ürün eklemek için ayrı bir menü yok. Hangi kategorideysen ürününü doğrudan onun altına ekle.</div></div><button class=btn style="max-width:200px" onclick=addCategory()>＋ Kategori Ekle</button></div></div>`;
+  let html=`<div class=panel><div class=campaignAdminHead><div><h2>Kategoriler & Ürünler</h2><div class=help>İstediğin kadar ürün ekleyebilirsin. Ürünü hangi kategoride göstermek istiyorsan o kategorinin altındaki Ürün Ekle butonunu kullan.</div></div><button class=btn style="max-width:200px" onclick=addCategory()>＋ Kategori Ekle</button></div></div>`;
   html+=cats.map(c=>categoryBlock(c)).join('');
   shell('Kategoriler & Ürünler','Kategori ayarları ve o kategoriye ait bütün ürünler aynı yerde. Ürün kartları yan yana dizilir; istediğin kadar ürün ekleyebilirsin.',html);
 }
@@ -165,6 +165,12 @@ function productCard(p){
     <div class=field><label><b>Ürün adı</b></label>
       <input class=formControl data-preview-target="${attr(t('name'))}" value="${attr(p.name)}"
         oninput="catalog.products[${i}].name=this.value;changed(this.dataset.previewTarget)">
+    </div>
+
+    <div class=field><label><b>Ürün açıklaması</b></label>
+      <textarea class=formControl data-preview-target="${attr(t('description'))}" rows=3 placeholder="Müşterinin ürün kartında okuyacağı kısa açıklama"
+        oninput="catalog.products[${i}].description=this.value;changed(this.dataset.previewTarget)">${esc(p.description||'')}</textarea>
+      <div class=help>Örn: Paslanmaz çelik kasa, günlük kullanıma uygun, şık ve sade tasarım.</div>
     </div>
 
     <div class=twoMini>
@@ -208,7 +214,7 @@ function addCategory(){
   changed('#products');renderCatalog();
 }
 function addProduct(categoryId){
-  catalog.products.push({id:'urun-'+Date.now(),name:'Yeni Ürün',category:categoryId,price:0,oldPrice:0,stock:0,badge:'',image:'',hidden:false,setEligible:categoryId!=='setler',isSet:false,setItems:[],writePositions:[]});
+  catalog.products.push({id:'urun-'+Date.now(),name:'Yeni Ürün',description:'',category:categoryId,price:0,oldPrice:0,stock:0,badge:'',image:'',hidden:false,setEligible:categoryId!=='setler',isSet:false,setItems:[],writePositions:[]});
   changed('#products');renderCatalog();
 }
 function deleteProduct(i){if(confirm('Ürün silinsin mi?')){catalog.products.splice(i,1);changed('#products');renderCatalog()}}

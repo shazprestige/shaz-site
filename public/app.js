@@ -1,6 +1,7 @@
 
 let settings={},catalog={},cart=[],favorites=new Set(JSON.parse(localStorage.getItem('shazFavs')||'[]'));
 let activeCategory='tum';
+let productSort='featured';
 let checkoutState={payment:'cod',customer:null};
 const $=s=>document.querySelector(s);
 const money=n=>'₺'+Number(n||0).toLocaleString('tr-TR');
@@ -8,19 +9,19 @@ const money=n=>'₺'+Number(n||0).toLocaleString('tr-TR');
 async function init(){
   settings=await fetch('/api/settings').then(r=>r.json());
   catalog=await fetch('/api/catalog').then(r=>r.json());
-  apply(); renderCategories(); renderProducts(); renderCampaignCards(); bindCore(); updateFavoriteBadge(); updateCart();
+  apply(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart();
 }
 function bindCore(){
   if($('#overlay')) $('#overlay').onclick=closeDrawer;
   if($('#search')) $('#search').oninput=e=>renderProducts(e.target.value);
   if($('#favLink')) $('#favLink').onclick=e=>{e.preventDefault();showFavorites()};
   if($('#cartBtn')) $('#cartBtn').onclick=checkout;
-  if($('#builderTopBtn')) $('#builderTopBtn').onclick=openBuilder;
   if($('#builderSpotlightBtn')) $('#builderSpotlightBtn').onclick=openBuilder;
   if($('#builderSpotlight')) $('#builderSpotlight').onclick=e=>{if(e.target.id!=='builderSpotlightBtn')openBuilder()};
+  if($('#sortProducts')) $('#sortProducts').onchange=e=>{productSort=e.target.value;renderProducts($('#search')?.value||'')};
 }
 function apply(){
-  document.documentElement.style.setProperty('--paper',settings.theme?.surface||'#f6f7f8');
+  document.documentElement.style.setProperty('--paper','#f6f7f8');
   document.documentElement.style.setProperty('--gold',settings.theme?.accent||'#c39a59');
   if($('#announceWrap')) $('#announceWrap').style.display=settings.header?.showTopStrip===false?'none':'block';
   if($('#campaign')) $('#campaign').textContent=settings.campaignText||'';
@@ -69,9 +70,15 @@ function setCategory(id,name){
 }
 function renderProducts(filter=''){
   const q=(filter||'').toLocaleLowerCase('tr-TR');
-  const list=catalog.products.filter(x=>!x.hidden&&(activeCategory==='tum'||x.category===activeCategory)&&(x.name||'').toLocaleLowerCase('tr-TR').includes(q));
+  let list=catalog.products.filter(x=>!x.hidden&&(activeCategory==='tum'||x.category===activeCategory)&&((x.name||'')+' '+(x.description||'')).toLocaleLowerCase('tr-TR').includes(q));
+  if(productSort==='priceAsc') list=[...list].sort((a,b)=>Number(a.price||0)-Number(b.price||0));
+  if(productSort==='priceDesc') list=[...list].sort((a,b)=>Number(b.price||0)-Number(a.price||0));
   if(!$('#productsList')) return;
-  $('#productsList').innerHTML=list.length?list.map(p=>`<div class="card" data-product-id="${escapeAttr(p.id)}"><div class="photo" data-preview-field="photo">${p.image?`<img src="${p.image}" alt="${escapeAttr(p.name)}">`:'⌚'}${p.badge?`<span class="badge" data-preview-field="badge">${escapeHtml(p.badge)}</span>`:''}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(p.name)}</h3><div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}<button class="btn" data-preview-field="button" onclick="startProduct('${p.id}')">Ürünü Seç</button></div></div>`).join(''):`<div class="panel"><b>Bu kategoride henüz ürün yok.</b></div>`;
+  $('#productsList').innerHTML=list.length?list.map(p=>{
+    const name=p.name||'SHAZ Ürün';
+    const desc=p.description?`<p class="productDescription" data-preview-field="description">${escapeHtml(p.description)}</p>`:'';
+    return `<div class="card" data-product-id="${escapeAttr(p.id)}"><div class="photo" data-preview-field="photo">${p.image?`<img src="${p.image}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge" data-preview-field="badge">${escapeHtml(p.badge)}</span>`:''}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}<button class="btn" data-preview-field="button" onclick="startProduct('${p.id}')">Ürünü Seç</button></div></div>`;
+  }).join(''):`<div class="panel"><b>Bu kategoride henüz ürün yok.</b></div>`;
 }
 function updateFavoriteBadge(){if($('#favBadge'))$('#favBadge').textContent=favorites.size}
 function toggleFav(id,e){e?.stopPropagation();favorites.has(id)?favorites.delete(id):favorites.add(id);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));updateFavoriteBadge();renderProducts($('#search')?.value||'')}
@@ -91,7 +98,7 @@ window.addEventListener('message',e=>{
   if(e.data.type==='shaz-preview'){
     if(e.data.settings) settings=structuredClone(e.data.settings);
     if(e.data.catalog) catalog=structuredClone(e.data.catalog);
-    apply();renderCampaignCards();renderCategories();renderProducts($('#search')?.value||'');
+    apply();renderCategories();renderProducts($('#search')?.value||'');
     updateFavoriteBadge();updateCart();
     return;
   }
@@ -162,7 +169,7 @@ function startProduct(id){
 /* SINGLE PRODUCT FLOW */
 function startSingleWizard(p){
   openDrawer(`<div class=wizardHead><div><div class=wizardProgress>1 / 2</div><h2>${p.name}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
-  <div class=wizardCard><h3>Ürününüzün üzerine herhangi bir yazı yazdırmak ister misiniz?</h3>
+  ${p.description?`<div class="productDetailIntro"><b>Ürün açıklaması</b><p>${escapeHtml(p.description)}</p></div>`:''}<div class=wizardCard><h3>Ürününüzün üzerine herhangi bir yazı yazdırmak ister misiniz?</h3>
   <div class=choiceStack><button class="choiceBtn" onclick='addSingleNoText(${JSON.stringify(p.id)})'>Hayır, birebir bu şekilde istiyorum</button><button class="choiceBtn primary" onclick='singleWriteStep(${JSON.stringify(p.id)})'>Evet, yazı yazdırmak istiyorum</button></div></div>`);
 }
 function addSingleNoText(id){const p=catalog.products.find(x=>x.id===id);cart.push({product:p,qty:1,personalized:false});updateCart();closeDrawer();toast('✓ Ürün sepete eklendi')}
@@ -297,19 +304,16 @@ function addSetToCart(){
 /* CART + CHECKOUT */
 
 function checkout(){
-  if(!cart.length)return openDrawer('<h2>Sepetiniz boş</h2>');
-  openDrawer(`<div class=wizardHead><h2>Sepetim</h2><button class=pill onclick=closeDrawer()>Kapat</button></div>
-    <div class=wizardCard>${cart.map((x,i)=>cartItemSummary(x,i)).join('')}
-      <div class="summaryLine summaryTotal"><span>Toplam</span><span>${money(cart.reduce((a,x)=>a+Number(x.product.price||0),0))}</span></div>
-    </div>
-    <div class=wizardCard><b>Ödeme yöntemi</b>
-      <select id=pay class=formControl style="margin-top:8px">
-        <option value=cod>Kapıda ödeme</option>
-        <option value=online>Online ödeme</option>
-      </select>
-    </div>
-    <button class=btn onclick="addressStep()">Adres Bilgilerine Devam Et</button>`);
+  if(!cart.length)return openDrawer('<div class="checkoutEmpty"><h2>Sepetiniz boş</h2><p>Beğendiğiniz ürünleri sepete ekleyerek siparişe başlayabilirsiniz.</p><button class="btn" onclick="closeDrawer()">Ürünlere Dön</button></div>');
+  const total=cart.reduce((a,x)=>a+Number(x.product.price||0),0);
+  openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">SHAZ GÜVENLİ SİPARİŞ</span><h2>Sepetiniz</h2><p>Ürünlerinizi kontrol edin, ardından teslimat bilgilerinize geçin.</p></div><button class="pill" onclick=closeDrawer()>Kapat</button></div>
+    <div class="checkoutSteps"><span class="active">1 Sepet</span><span>2 Teslimat</span><span>3 Onay</span></div>
+    <div class="checkoutProductPanel">${cart.map((x,i)=>cartItemSummary(x,i)).join('')}</div>
+    <div class="checkoutTotal"><span>Toplam</span><strong>${money(total)}</strong></div>
+    <div class="checkoutPayment"><label for="pay"><b>Ödeme yöntemi</b><small>Ödeme tercihinizi seçin.</small></label><select id="pay" class="formControl"><option value="cod">Kapıda ödeme</option><option value="online">Online ödeme</option></select></div>
+    <button class="btn checkoutPrimary" onclick="addressStep()">Teslimat Bilgilerine Geç →</button></div>`);
 }
+
 function cartItemSummary(x,i){
   const lines=[];
   if(x.setCustomization){
@@ -326,12 +330,13 @@ function cartItemSummary(x,i){
 function addressStep(){
   checkoutState.payment=$('#pay')?.value||'cod';
   const c=checkoutState.customer||{};
-  openDrawer(`<div class=wizardHead><div><div class=wizardProgress>Sipariş Bilgileri</div><h2>Teslimat Adresi</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
-    <div class=notice><b>Zorunlu alanlar *</b> ile işaretlidir. Cadde veya sokaktan yalnızca birini doldurmanız yeterlidir.</div>
+  openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">TESLİMAT BİLGİLERİ</span><h2>Siparişinizi nereye gönderelim?</h2><p>Kargo teslimatı için bilgileri eksiksiz girin.</p></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+    <div class="checkoutSteps"><span>1 Sepet</span><span class="active">2 Teslimat</span><span>3 Onay</span></div>
+    <div class="addressSectionTitle"><b>İletişim</b><small>* işaretli alanlar zorunludur.</small></div>
     <div class=addressGrid>
       ${addrInput('Ad Soyad *','fullName',c.fullName)}
       ${addrInput('Telefon *','phone',c.phone,'tel')}
-      ${addrInput('Ek Telefon *','extraPhone',c.extraPhone,'tel')}
+      ${addrInput('Ek Telefon','extraPhone',c.extraPhone,'tel')}
       ${addrInput('İl *','province',c.province)}
       ${addrInput('İlçe *','district',c.district)}
       ${addrInput('Mahalle *','neighborhood',c.neighborhood)}
@@ -340,17 +345,13 @@ function addressStep(){
       ${addrInput('Bina No *','buildingNo',c.buildingNo)}
       ${addrInput('Kat *','floor',c.floor)}
       ${addrInput('Daire / Kapı No','doorNo',c.doorNo)}
-      <div class=field><label><b>Teslimat yeri *</b></label>
-        <select id="addr-placeType" class=formControl onchange="toggleBusinessName()">
-          <option value="home" ${c.placeType!=='business'?'selected':''}>Ev</option>
-          <option value="business" ${c.placeType==='business'?'selected':''}>Dükkan / İş yeri</option>
-        </select>
-      </div>
+      <div class=field><label><b>Teslimat yeri *</b></label><select id="addr-placeType" class=formControl onchange="toggleBusinessName()"><option value="home" ${c.placeType!=='business'?'selected':''}>Ev</option><option value="business" ${c.placeType==='business'?'selected':''}>Dükkan / İş yeri</option></select></div>
       <div class=field id=businessNameWrap style="${c.placeType==='business'?'':'display:none'}"><label><b>Dükkan / İş yeri adı *</b></label><input class=formControl id=addr-businessName value="${escapeAttr(c.businessName||'')}" placeholder="Örn: SHAZ Saat"></div>
     </div>
-    <div class=field><label><b>Adres tarifi / not</b></label><textarea class=formControl id=addr-note rows=3 placeholder="Kurye için ek açıklama">${escapeHtml(c.note||'')}</textarea></div>
-    <button class=btn onclick="saveAddressAndContinue()">Bilgileri Kontrol Et ve Devam Et</button>`);
+    <div class=field><label><b>Adres tarifi / not</b></label><textarea class=formControl id=addr-note rows=3 placeholder="Kurye için bina, kapı veya teslimat notu">${escapeHtml(c.note||'')}</textarea></div>
+    <button class="btn checkoutPrimary" onclick="saveAddressAndContinue()">Siparişi Kontrol Et →</button></div>`);
 }
+
 function addrInput(label,id,value='',type='text'){
   return `<div class=field><label><b>${label}</b></label><input class=formControl id="addr-${id}" type="${type}" value="${escapeAttr(value||'')}"></div>`;
 }
@@ -366,18 +367,18 @@ function saveAddressAndContinue(){
     doorNo:g('doorNo'),placeType:g('placeType')||'home',businessName:g('businessName'),note:g('note')
   };
   const missing=[];
-  ['fullName','phone','extraPhone','province','district','neighborhood','buildingNo','floor'].forEach(k=>{if(!customer[k])missing.push(k)});
+  ['fullName','phone','province','district','neighborhood','buildingNo','floor'].forEach(k=>{if(!customer[k])missing.push(k)});
   if(!customer.avenue&&!customer.street)return alert('Cadde veya Sokak alanlarından en az birini doldurun.');
   if(customer.placeType==='business'&&!customer.businessName)return alert('Dükkan / iş yeri adını yazın.');
   if(missing.length)return alert('Lütfen * işaretli zorunlu alanları doldurun.');
   checkoutState.customer=customer;
   const hasPersonal=cart.some(x=>x.personalized);
   if(checkoutState.payment==='cod'&&hasPersonal){
-    openDrawer(`<h2>Kişiye özel ürün bilgilendirmesi</h2><div class=notice>${settings.personalizedNotice}</div><div class=wizardCard><button class=btn onclick="shippingNotice(true)">Onaylıyorum, devam et</button></div>`);
+    openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">SİPARİŞ ONAYI</span><h2>Kişiye özel ürün bilgilendirmesi</h2></div></div><div class="checkoutSteps"><span>1 Sepet</span><span>2 Teslimat</span><span class="active">3 Onay</span></div><div class=notice>${settings.personalizedNotice}</div><button class="btn checkoutPrimary" onclick="shippingNotice(true)">Onaylıyorum, devam et →</button></div>`);
   }else shippingNotice(false);
 }
 function shippingNotice(personalApproved=false){
-  openDrawer(`<h2>Kargo bilgilendirmesi</h2><div class=notice>${settings.shippingNotice}</div><div class=wizardCard><button class=btn onclick="finalizeOrder(${personalApproved})">Okudum, siparişi oluştur</button></div>`);
+  openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">SON ADIM</span><h2>Kargo bilgilendirmesi</h2><p>Siparişinizi oluşturmadan önce kısa bilgilendirmeyi okuyun.</p></div></div><div class="checkoutSteps"><span>1 Sepet</span><span>2 Teslimat</span><span class="active">3 Onay</span></div><div class=notice>${settings.shippingNotice}</div><button class="btn checkoutPrimary" onclick="finalizeOrder(${personalApproved})">Siparişi Oluştur ✓</button></div>`);
 }
 async function finalizeOrder(personalApproved){
   if(!checkoutState.customer)return addressStep();
