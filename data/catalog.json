@@ -310,6 +310,25 @@
       "isSet": false,
       "setItems": [],
       "writePositions": []
+    },
+    {
+      "id": "urun-1786749082450",
+      "name": "Yeni Ürün",
+      "description": "",
+      "features": [],
+      "category": "kategori-1786740581832",
+      "price": 0,
+      "oldPrice": 0,
+      "stock": 0,
+      "badge": "",
+      "badgeColor": "orange",
+      "image": "",
+      "images": [],
+      "hidden": false,
+      "setEligible": true,
+      "isSet": false,
+      "setItems": [],
+      "writePositions": []
     }
   ],
   "builder": {
