@@ -8,9 +8,32 @@ const crypto = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const root = __dirname;
-const dataDir = path.join(root,'data');
-const uploadDir = path.join(root,'uploads');
+// Render'da normal servis diski deploy/restart sırasında sıfırlanabilir.
+// Kalıcı disk bağlandıysa SHAZ_PERSIST_DIR=/var/data/shaz vererek katalog, ayarlar ve yüklenen görselleri orada sakla.
+// Değişken verilmemiş olsa bile /var/data yazılabiliyorsa otomatik kullanılır.
+const requestedPersistDir = process.env.SHAZ_PERSIST_DIR || '/var/data/shaz';
+let persistRoot = root;
+try{
+  const parent=path.dirname(requestedPersistDir);
+  if(fs.existsSync(parent)){
+    fs.mkdirSync(requestedPersistDir,{recursive:true});
+    fs.accessSync(requestedPersistDir,fs.constants.W_OK);
+    persistRoot=requestedPersistDir;
+  }
+}catch(e){
+  console.warn('Kalıcı disk bulunamadı; geçici servis diski kullanılacak. Deploy sonrası panel verileri sıfırlanabilir.');
+}
+const dataDir = path.join(persistRoot,'data');
+const uploadDir = path.join(persistRoot,'uploads');
+fs.mkdirSync(dataDir,{recursive:true});
 fs.mkdirSync(uploadDir,{recursive:true});
+// İlk kullanımda repodaki başlangıç JSON'larını kalıcı alana yalnızca bir kez kopyala.
+for(const name of ['settings.json','catalog.json','orders.json']){
+  const dst=path.join(dataDir,name);
+  const seed=path.join(root,'data',name);
+  if(!fs.existsSync(dst) && fs.existsSync(seed)) fs.copyFileSync(seed,dst);
+}
+console.log('SHAZ veri dizini:',persistRoot);
 app.use(express.json({limit:'5mb'}));
 app.use(express.urlencoded({extended:true}));
 app.use('/uploads', express.static(uploadDir));

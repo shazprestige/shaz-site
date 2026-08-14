@@ -62,7 +62,7 @@ function renderCategories(){
   if(!nav)return;
   nav.innerHTML=cats.map(c=>`<button class="tab ${activeCategory===c.id?'active':''}" title="${escapeAttr(c.name)}" data-category-id="${escapeAttr(c.id)}" data-category-name="${escapeAttr(c.name)}">${escapeHtml(c.name)}</button>`).join('');
   nav.querySelectorAll('.tab').forEach(btn=>{
-    btn.addEventListener('click',()=>setCategory(btn.dataset.categoryId,btn.dataset.categoryName));
+    btn.addEventListener('click',()=>setCategory(btn.dataset.categoryId,btn.dataset.categoryName,{scroll:true}));
   });
 }
 
@@ -84,14 +84,34 @@ function renderCategoryHub(){
   </button>`).join('');
 }
 function chooseCategoryFromHub(id,name){
-  setCategory(id,name); closeCategoryHub();
-  setTimeout(()=>document.getElementById('products')?.scrollIntoView({behavior:'smooth',block:'start'}),40);
+  // Hub kapanırken body overflow açıldıktan sonra scroll yap.
+  setCategory(id,name,{scroll:false});
+  closeCategoryHub();
+  setTimeout(()=>{
+    const target=document.getElementById('products');
+    if(!target)return;
+    const header=document.querySelector('.siteHeader');
+    const offset=(header?.getBoundingClientRect().height||105)+8;
+    const y=Math.max(0,target.getBoundingClientRect().top+window.scrollY-offset);
+    window.scrollTo({top:y,left:0,behavior:'smooth'});
+  },60);
 }
 
-function setCategory(id,name){
+function setCategory(id,name,opts={}){
   activeCategory=id;
   if($('#catalogTitle')) $('#catalogTitle').textContent=name;
   renderCategories(); renderProducts($('#search')?.value||'');
+  // Üst kategori sekmesinden seçim yapıldığında ürün alanına gerçekten götür.
+  if(opts.scroll!==false){
+    requestAnimationFrame(()=>{
+      const target=document.getElementById('products');
+      if(!target)return;
+      const header=document.querySelector('.siteHeader');
+      const offset=(header?.getBoundingClientRect().height||105)+8;
+      const y=Math.max(0,target.getBoundingClientRect().top+window.scrollY-offset);
+      window.scrollTo({top:y,left:0,behavior:'smooth'});
+    });
+  }
 }
 function renderProducts(filter=''){
   const q=(filter||'').toLocaleLowerCase('tr-TR');

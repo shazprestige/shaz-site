@@ -715,3 +715,49 @@ header{background:rgba(255,255,255,.97)!important}
   .categoryTileText{flex-basis:57%}
   .categoryTileMedia{width:64%}
 }
+
+/* v38: kategori görseli referanstaki gibi doğal şekilde beyaza erir.
+   Fotoğraf sağ tarafta mümkün olduğunca korunur; yalnızca sol kenarında yumuşak opacity geçişi vardır. */
+.categoryTile.hasCover{
+  background:#f1f2f3!important;
+  isolation:isolate;
+}
+.categoryTile.hasCover:before,
+.categoryTile.hasCover:after{display:none!important}
+.categoryTile.hasCover .categoryTileText{
+  position:relative;z-index:4;flex:0 0 54%;padding-right:0;
+}
+.categoryTile.hasCover .categoryTileMedia{
+  position:absolute;inset:0 0 0 auto!important;
+  width:68%!important;height:100%;min-width:0!important;
+  z-index:2;overflow:hidden;display:block!important;
+}
+.categoryTile.hasCover .categoryTileMedia img{
+  position:absolute;inset:0;
+  width:100%;height:100%;object-fit:cover;object-position:center right;
+  filter:none!important;transform:none!important;opacity:1!important;
+  -webkit-mask-image:linear-gradient(to right,
+    transparent 0%,
+    rgba(0,0,0,.08) 8%,
+    rgba(0,0,0,.28) 17%,
+    rgba(0,0,0,.62) 28%,
+    rgba(0,0,0,.88) 39%,
+    #000 50%,
+    #000 100%);
+  mask-image:linear-gradient(to right,
+    transparent 0%,
+    rgba(0,0,0,.08) 8%,
+    rgba(0,0,0,.28) 17%,
+    rgba(0,0,0,.62) 28%,
+    rgba(0,0,0,.88) 39%,
+    #000 50%,
+    #000 100%);
+}
+.categoryTile.hasCover .categoryTileText b,
+.categoryTile.hasCover .categoryTileText span{
+  text-shadow:0 1px 1px rgba(255,255,255,.45);
+}
+@media(max-width:390px){
+  .categoryTile.hasCover .categoryTileMedia{width:70%!important}
+  .categoryTile.hasCover .categoryTileText{flex-basis:55%}
+}
