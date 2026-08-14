@@ -1479,3 +1479,77 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
   from{transform:translate3d(0,0,0)}
   to{transform:translate3d(-50%,0,0)}
 }
+
+/* ===== V52 — kesintisiz kampanya yazısı + ürün detay yerleşimi ===== */
+/* 12 aynı kopya bir kopya genişliği kadar kayar. Döngü sıfırlansa bile ekrandaki
+   görüntü aynıdır; yazı yarıda geri atlamaz ve yeni kopya sağdan doğal şekilde girer. */
+.campaignGlobalMarquee .campaignMarqueeTrack{
+  position:static!important;
+  left:auto!important;
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  width:max-content!important;
+  min-width:max-content!important;
+  gap:0!important;
+  padding:0!important;
+  transform:translate3d(0,0,0)!important;
+  animation:shazCampaignTickerV52 18s linear infinite!important;
+  will-change:transform!important;
+}
+.campaignGlobalMarquee .campaignMarqueeCopy{
+  display:block!important;
+  flex:0 0 auto!important;
+  padding-right:72px!important;
+  white-space:nowrap!important;
+}
+@keyframes shazCampaignTickerV52{
+  from{transform:translate3d(0,0,0)}
+  to{transform:translate3d(-8.3333333333%,0,0)}
+}
+
+/* Drawer üstteki sabit siyah şeridin altından başlar; Kapat artık şeridin arkasında kalmaz. */
+.drawer{
+  top:var(--announce-h,25px)!important;
+  height:calc(100% - var(--announce-h,25px))!important;
+}
+
+/* Ürün detay başlığı: Kapat sadece üst satırda yer kaplar, ürün adı alt satırda tüm genişliği kullanır. */
+.productDetailHead{
+  display:block!important;
+  position:relative!important;
+  min-height:0!important;
+  padding:0 0 8px!important;
+  margin-bottom:4px!important;
+}
+.productDetailTitle{
+  width:100%!important;
+  min-width:0!important;
+  padding-right:0!important;
+}
+.productDetailTitle .wizardProgress{
+  min-height:30px!important;
+  padding-right:96px!important;
+  display:flex!important;
+  align-items:center!important;
+}
+.productDetailTitle h2{
+  width:100%!important;
+  max-width:none!important;
+  padding-right:0!important;
+  margin:5px 0 0!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+  hyphens:none!important;
+  line-height:1.12!important;
+}
+.productDetailClose{
+  top:0!important;
+  right:0!important;
+  z-index:3!important;
+}
+
+@media(max-width:520px){
+  .productDetailHead{margin-left:16px!important;margin-right:16px!important;}
+  .productDetailTitle .wizardProgress{padding-right:88px!important;}
+  .productDetailTitle h2{font-size:clamp(24px,6.2vw,29px)!important;letter-spacing:-.02em!important;}
+}

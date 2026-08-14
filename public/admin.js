@@ -35,7 +35,7 @@ async function load(){
   if(settings.campaignMarqueeText===undefined){
     settings.campaignMarqueeText=(settings.campaignCards.find(c=>c.marqueeText)?.marqueeText)||'';
   }
-  if(!['full','center'].includes(settings.campaignMarqueePosition))settings.campaignMarqueePosition='full';
+  if(!['full','center','middle'].includes(settings.campaignMarqueePosition))settings.campaignMarqueePosition='full';
   settings.theme=settings.theme||{};
   show('site');
   setTimeout(()=>{sendPreview();previewTo('header')},600);

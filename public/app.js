@@ -69,7 +69,7 @@ function renderCampaignCards(){
           ${c.buttonText?`<button class="campaignBtn" type="button" data-campaign-target="${escapeAttr(c.targetCategory||'tum')}">${escapeHtml(c.buttonText)}</button>`:''}
         </div>
       </article>`}).join('')}</div>
-    ${marquee?`<div class="campaignGlobalMarquee campaignGlobalMarquee--${marqueePos}"><div class="campaignMarqueeTrack"><span class="campaignMarqueeCopy">${escapeHtml(marquee)}</span><span class="campaignMarqueeCopy" aria-hidden="true">${escapeHtml(marquee)}</span></div></div>`:''}
+    ${marquee?`<div class="campaignGlobalMarquee campaignGlobalMarquee--${marqueePos}"><div class="campaignMarqueeTrack">${Array.from({length:12},(_,n)=>`<span class="campaignMarqueeCopy"${n?` aria-hidden="true"`:''}>${escapeHtml(marquee)}</span>`).join('')}</div></div>`:''}
     ${cards.length>1?`<button class="campaignArrow campaignPrev" type="button" aria-label="Önceki fotoğraf">‹</button><button class="campaignArrow campaignNext" type="button" aria-label="Sonraki fotoğraf">›</button><div class="campaignDots">${cards.map((_,i)=>`<button type="button" class="campaignDot ${i===campaignSliderIndex?'isActive':''}" data-slide-dot="${i}" aria-label="${i+1}. fotoğraf"></button>`).join('')}</div>`:''}
   </section>`;
   wrap.querySelectorAll('[data-campaign-target]').forEach(btn=>btn.addEventListener('click',()=>goToCampaignTarget(btn.dataset.campaignTarget)));

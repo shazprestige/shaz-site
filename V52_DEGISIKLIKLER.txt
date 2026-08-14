@@ -1,0 +1,6 @@
+V52
+- Kampanya kayan yazısı yarıda sıfırlanmaz; 12 eş kopyalı kesintisiz ticker kullanır.
+- Yeni kayan yazı kopyaları sağ kenardan doğal biçimde girer.
+- Ürün detay çekmecesi sabit üst siyah şeridin altından başlar; Kapat butonu şeridin arkasında kalmaz.
+- Ürün detay başlığı alt satırda tam genişliği kullanır; sağdaki boş alan gereksiz yere rezerve edilmez.
+- Yönetim panelinde 'Tam ortada' kayan yazı konumu kalıcı olarak kabul edilir.
