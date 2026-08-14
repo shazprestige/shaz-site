@@ -30,10 +30,10 @@ async function load(){
   setTimeout(()=>{sendPreview();previewTo('header')},600);
 }
 async function saveAll(){
-  await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(settings)});
-  await fetch('/api/catalog',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(catalog)});
+  const r=await fetch('/api/admin/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({settings,catalog})}).then(r=>r.json());
+  if(!r.ok)return alert(r.message||'Kaydedilemedi.');
   sendPreview();
-  alert('Kaydedildi.');
+  alert(r.github?.ok?'Kaydedildi ve GitHub’a kalıcı olarak işlendi.':'Kaydedildi. GitHub kalıcı kayıt henüz bağlı değil.');
 }
 function sendPreview(){
   const f=$('#previewFrame');
@@ -132,7 +132,7 @@ async function uploadCampaign(i){
   const f=$('#campFile'+i)?.files?.[0];if(!f)return alert('Fotoğraf seç.');
   const fd=new FormData();fd.append('files',f);
   const r=await fetch('/api/upload',{method:'POST',body:fd}).then(r=>r.json());
-  if(r.files?.[0]){settings.campaignCards[i].imageUrl=r.files[0].url;changed('#campaignCards');renderSite()}
+  if(r.files?.[0]){settings.campaignCards[i].imageUrl=r.files[0].url;await fetch('/api/admin/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({settings,catalog})});changed('#campaignCards');renderSite()}
 }
 
 function renderCatalog(){
@@ -164,16 +164,32 @@ async function uploadCategoryCover(ci){
   const f=$('#catFile'+ci)?.files?.[0]; if(!f)return alert('Kategori fotoğrafı seç.');
   const fd=new FormData(); fd.append('files',f);
   const r=await fetch('/api/upload',{method:'POST',body:fd}).then(r=>r.json());
-  if(r.files?.[0]){catalog.categories[ci].cover=r.files[0].url;changed('#categoryHub');renderCatalog();}
+  if(r.files?.[0]){catalog.categories[ci].cover=r.files[0].url;await fetch('/api/admin/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({settings,catalog})});changed('#categoryHub');renderCatalog();}
 }
 
 function previewCategory(id,name){previewTo(`[data-category-id="${id}"]`,true);}
+function productImages(p){
+  const list=Array.isArray(p.images)?p.images.filter(Boolean):[];
+  if(p.image&&!list.includes(p.image))list.unshift(p.image);
+  return [...new Set(list)];
+}
+function productGalleryAdmin(p,i){
+  const imgs=productImages(p);
+  if(!imgs.length)return '<div class="help">Henüz ürün fotoğrafı yok.</div>';
+  return `<div class=adminGallery>${imgs.map((url,gi)=>`<div class="adminGalleryItem ${url===p.image?'main':''}">
+    <img src="${attr(url)}">
+    <div class=adminGalleryActions>
+      ${url===p.image?'<span>Ana fotoğraf</span>':`<button type=button onclick="makeMainPhoto(${i},${gi})">Ana yap</button>`}
+      <button type=button onclick="removeProductPhoto(${i},${gi})">Kaldır</button>
+    </div>
+  </div>`).join('')}</div>`;
+}
 function productCard(p){
   const i=catalog.products.findIndex(x=>x.id===p.id);
   const root=`[data-product-id="${p.id}"]`;
   const t=field=>`${root} [data-preview-field="${field}"]`;
   return `<article class=adminProductCard>
-    <div class=adminProductImage>${p.image?`<img src="${attr(p.image)}">`:'<span>Fotoğraf yok</span>'}</div>
+    <div class=adminProductImage>${(p.image||productImages(p)[0])?`<img src="${attr(p.image||productImages(p)[0])}">`:'<span>Fotoğraf yok</span>'}</div>
 
     <div class=field><label><b>Ürün adı</b></label>
       <input class=formControl data-preview-target="${attr(t('name'))}" value="${attr(p.name)}"
@@ -219,10 +235,11 @@ Paslanmaz çelik kasa"
       </div>
     </div>
 
-    <div class=field><label><b>Fotoğraf</b></label>
-      <input id="prodFile${i}" data-preview-target="${attr(t('photo'))}" type=file accept="image/*">
-      <button class=smallBtn onclick="uploadProductImage(${i})">PC'den Yükle</button>
-      <div class=help>Dosya uploads klasörüne kaydolur; ürün otomatik bağlanır.</div>
+    <div class=field><label><b>Ürün fotoğrafları</b></label>
+      <input id="prodFile${i}" data-preview-target="${attr(t('photo'))}" type=file accept="image/*" multiple>
+      <button class=smallBtn onclick="uploadProductImages(${i})">Seçilen Fotoğrafları Yükle</button>
+      <div class=help>Aynı ürüne 1, 3, 10 veya 50 fotoğrafı tek seferde seçebilirsin. İlk fotoğraf ana kapak olur; aşağıdan ana fotoğrafı değiştirebilirsin.</div>
+      ${productGalleryAdmin(p,i)}
     </div>
 
     <div class=productToggles>
@@ -243,22 +260,40 @@ function addCategory(){
   changed('#products');renderCatalog();
 }
 function addProduct(categoryId){
-  catalog.products.push({id:'urun-'+Date.now(),name:'Yeni Ürün',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',image:'',hidden:false,setEligible:categoryId!=='setler',isSet:false,setItems:[],writePositions:[]});
+  catalog.products.push({id:'urun-'+Date.now(),name:'Yeni Ürün',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',image:'',images:[],hidden:false,setEligible:categoryId!=='setler',isSet:false,setItems:[],writePositions:[]});
   changed('#products');renderCatalog();
 }
 function deleteProduct(i){if(confirm('Ürün silinsin mi?')){catalog.products.splice(i,1);changed('#products');renderCatalog()}}
-async function uploadProductImage(i){
-  const f=$('#prodFile'+i)?.files?.[0];if(!f)return alert('Fotoğraf seç.');
-  const fd=new FormData();fd.append('files',f);
-  const r=await fetch('/api/upload',{method:'POST',body:fd}).then(r=>r.json());
-  if(r.files?.[0]){
+async function uploadProductImages(i){
+  const fsx=[...($('#prodFile'+i)?.files||[])];if(!fsx.length)return alert('En az bir fotoğraf seç.');
+  const fd=new FormData();fsx.forEach(f=>fd.append('files',f));
+  const btn=event?.currentTarget;if(btn){btn.disabled=true;btn.textContent=`${fsx.length} fotoğraf yükleniyor...`;}
+  try{
+    const r=await fetch('/api/upload',{method:'POST',body:fd}).then(r=>r.json());
+    if(!r.ok)throw new Error(r.message||'Yükleme başarısız.');
     const pid=catalog.products[i].id;
-    catalog.products[i].image=r.files[0].url;
+    const current=productImages(catalog.products[i]);
+    const added=(r.files||[]).map(x=>x.url);
+    catalog.products[i].images=[...new Set([...current,...added])];
+    if(!catalog.products[i].image)catalog.products[i].image=catalog.products[i].images[0]||'';
+    const saved=await fetch('/api/admin/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({settings,catalog})}).then(x=>x.json());
+    if(!saved.ok)throw new Error(saved.message||'Fotoğraf bağlantıları kaydedilemedi.');
     changed(`[data-product-id="${pid}"] [data-preview-field="photo"]`);
     renderCatalog();
-    // renderCatalog sonrası admin scroll konumunu ve preview hedefini koru
     setTimeout(()=>previewTo(`[data-product-id="${pid}"] [data-preview-field="photo"]`,false),80);
-  }
+  }catch(e){alert(e.message||'Fotoğraflar yüklenemedi.');}
+  finally{if(btn){btn.disabled=false;btn.textContent='Seçilen Fotoğrafları Yükle';}}
+}
+function makeMainPhoto(i,gi){
+  const imgs=productImages(catalog.products[i]),url=imgs[gi];if(!url)return;
+  catalog.products[i].images=imgs;catalog.products[i].image=url;
+  changed(`[data-product-id="${catalog.products[i].id}"] [data-preview-field="photo"]`);renderCatalog();
+}
+function removeProductPhoto(i,gi){
+  const imgs=productImages(catalog.products[i]);const removed=imgs[gi];imgs.splice(gi,1);
+  catalog.products[i].images=imgs;
+  if(catalog.products[i].image===removed)catalog.products[i].image=imgs[0]||'';
+  changed(`[data-product-id="${catalog.products[i].id}"] [data-preview-field="photo"]`);renderCatalog();
 }
 
 function renderCustom(){

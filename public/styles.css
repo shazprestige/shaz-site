@@ -761,3 +761,23 @@ header{background:rgba(255,255,255,.97)!important}
   .categoryTile.hasCover .categoryTileMedia{width:70%!important}
   .categoryTile.hasCover .categoryTileText{flex-basis:55%}
 }
+
+
+/* ===== V39 — çoklu ürün fotoğrafı galerisi ===== */
+.adminGallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.adminGalleryItem{border:1px solid #dfe3e8;border-radius:8px;overflow:hidden;background:#fff}
+.adminGalleryItem.main{outline:2px solid var(--gold,#c39a59)}
+.adminGalleryItem>img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+.adminGalleryActions{display:flex;gap:4px;flex-wrap:wrap;padding:5px}
+.adminGalleryActions button,.adminGalleryActions span{font-size:9px;border:0;border-radius:5px;padding:5px 6px;background:#eef0f2}
+.adminGalleryActions button{cursor:pointer}
+.productDetailGallery{margin:10px 0 13px}
+.productDetailGallery .productDetailMedia{margin:0}
+.productDetailThumbs{display:flex;gap:7px;overflow-x:auto;padding:8px 1px 2px}
+.productDetailThumbs button{flex:0 0 58px;width:58px;height:58px;border:1px solid #dfe3e8;border-radius:7px;padding:2px;background:#fff;overflow:hidden}
+.productDetailThumbs button.active{outline:2px solid var(--gold)}
+.productDetailThumbs img{width:100%;height:100%;object-fit:cover;border-radius:4px}
+@media(max-width:520px){
+  .adminGallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .productDetailThumbs button{flex-basis:52px;width:52px;height:52px}
+}

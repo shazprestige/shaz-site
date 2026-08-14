@@ -8,20 +8,19 @@ const crypto = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const root = __dirname;
-// Render'da normal servis diski deploy/restart sırasında sıfırlanabilir.
-// Kalıcı disk bağlandıysa SHAZ_PERSIST_DIR=/var/data/shaz vererek katalog, ayarlar ve yüklenen görselleri orada sakla.
-// Değişken verilmemiş olsa bile /var/data yazılabiliyorsa otomatik kullanılır.
-const requestedPersistDir = process.env.SHAZ_PERSIST_DIR || '/var/data/shaz';
+// V39: Varsayılan veri yolu doğrudan repo klasörüdür.
+// Yalnızca gerçekten bir Render Persistent Disk kullanıyorsan SHAZ_PERSIST_DIR ver.
+const requestedPersistDir = (process.env.SHAZ_PERSIST_DIR||'').trim();
 let persistRoot = root;
-try{
-  const parent=path.dirname(requestedPersistDir);
-  if(fs.existsSync(parent)){
+if(requestedPersistDir){
+  try{
     fs.mkdirSync(requestedPersistDir,{recursive:true});
     fs.accessSync(requestedPersistDir,fs.constants.W_OK);
     persistRoot=requestedPersistDir;
+  }catch(e){
+    console.warn('SHAZ_PERSIST_DIR kullanılamadı; repo klasörü kullanılacak.');
+    persistRoot=root;
   }
-}catch(e){
-  console.warn('Kalıcı disk bulunamadı; geçici servis diski kullanılacak. Deploy sonrası panel verileri sıfırlanabilir.');
 }
 const dataDir = path.join(persistRoot,'data');
 const uploadDir = path.join(persistRoot,'uploads');
@@ -107,6 +106,73 @@ const writeJson=(name,data)=>fs.writeFileSync(path.join(dataDir,name),JSON.strin
 const GOOGLE_SHEETS_WEBHOOK_URL=process.env.GOOGLE_SHEETS_WEBHOOK_URL||'';
 const GOOGLE_SHEETS_SECRET=process.env.GOOGLE_SHEETS_SECRET||'';
 
+// ---------- V39: GitHub kalıcı katalog / fotoğraf deposu ----------
+const GITHUB_TOKEN=(process.env.SHAZ_GITHUB_TOKEN||'').trim();
+const GITHUB_REPO=(process.env.SHAZ_GITHUB_REPO||'').trim(); // owner/repo
+const GITHUB_BRANCH=(process.env.SHAZ_GITHUB_BRANCH||'main').trim();
+const githubEnabled=()=>!!(GITHUB_TOKEN&&/^[^/]+\/[^/]+$/.test(GITHUB_REPO)&&GITHUB_BRANCH);
+
+async function ghApi(endpoint,options={}){
+  if(!githubEnabled())throw new Error('GitHub kalıcı kayıt ayarları eksik.');
+  const r=await fetch(`https://api.github.com/repos/${GITHUB_REPO}${endpoint}`,{
+    ...options,
+    headers:{
+      'Accept':'application/vnd.github+json',
+      'Authorization':`Bearer ${GITHUB_TOKEN}`,
+      'X-GitHub-Api-Version':'2022-11-28',
+      'User-Agent':'SHAZ-Site',
+      ...(options.headers||{})
+    }
+  });
+  const txt=await r.text();
+  let data={};
+  try{data=txt?JSON.parse(txt):{}}catch{data={message:txt}}
+  if(!r.ok)throw new Error(data.message||`GitHub HTTP ${r.status}`);
+  return data;
+}
+
+async function githubCommitFiles(files,message){
+  if(!githubEnabled())return {ok:false,skipped:true};
+  const ref=await ghApi(`/git/ref/heads/${encodeURIComponent(GITHUB_BRANCH)}`);
+  const parentSha=ref.object.sha;
+  const parentCommit=await ghApi(`/git/commits/${parentSha}`);
+  const tree=[];
+  for(const f of files){
+    const blob=await ghApi('/git/blobs',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({content:f.content,encoding:f.encoding||'utf-8'})
+    });
+    tree.push({path:f.path,mode:'100644',type:'blob',sha:blob.sha});
+  }
+  const newTree=await ghApi('/git/trees',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({base_tree:parentCommit.tree.sha,tree})
+  });
+  const commit=await ghApi('/git/commits',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({message,tree:newTree.sha,parents:[parentSha]})
+  });
+  await ghApi(`/git/refs/heads/${encodeURIComponent(GITHUB_BRANCH)}`,{
+    method:'PATCH',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({sha:commit.sha,force:false})
+  });
+  return {ok:true,commit:commit.sha};
+}
+
+async function persistStateToGithub(){
+  if(!githubEnabled())return {ok:false,skipped:true};
+  const files=['settings.json','catalog.json'].map(name=>({
+    path:`data/${name}`,
+    content:fs.readFileSync(path.join(dataDir,name),'utf8'),
+    encoding:'utf-8'
+  }));
+  return githubCommitFiles(files,'SHAZ panel: katalog ve site ayarları güncellendi');
+}
+
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function sheetsRequest(payload){
   if(!GOOGLE_SHEETS_WEBHOOK_URL || !GOOGLE_SHEETS_SECRET){
@@ -154,9 +220,26 @@ const upload=multer({
 });
 
 app.get('/api/settings',(req,res)=>res.json(readJson('settings.json',{})));
-app.post('/api/settings',requireAdmin,(req,res)=>{writeJson('settings.json',req.body);res.json({ok:true})});
 app.get('/api/catalog',(req,res)=>res.json(readJson('catalog.json',{categories:[],products:[],builder:{}})));
+
+app.post('/api/admin/state',requireAdmin,async(req,res)=>{
+  try{
+    if(req.body.settings)writeJson('settings.json',req.body.settings);
+    if(req.body.catalog)writeJson('catalog.json',req.body.catalog);
+    let github={ok:false,skipped:true};
+    if(githubEnabled())github=await persistStateToGithub();
+    res.json({ok:true,github});
+  }catch(e){
+    console.error('Kalıcı durum kaydı:',e);
+    res.status(500).json({ok:false,message:e.message||'Kayıt başarısız.'});
+  }
+});
+app.post('/api/settings',requireAdmin,(req,res)=>{writeJson('settings.json',req.body);res.json({ok:true})});
 app.post('/api/catalog',requireAdmin,(req,res)=>{writeJson('catalog.json',req.body);res.json({ok:true})});
+app.get('/api/storage/status',requireAdmin,(req,res)=>res.json({
+  githubEnabled:githubEnabled(),repo:githubEnabled()?GITHUB_REPO:'',branch:GITHUB_BRANCH,
+  mode:githubEnabled()?'github':'local'
+}));
 app.get('/api/orders',requireAdmin,(req,res)=>res.json(readJson('orders.json',[])));
 app.patch('/api/orders/status',requireAdmin,async(req,res)=>{
  const ids=Array.isArray(req.body.ids)?req.body.ids:[]; const status=req.body.status;
@@ -329,8 +412,33 @@ app.post('/api/orders',async(req,res)=>{
    });
  }
 });
-app.post('/api/upload',requireAdmin, upload.array('files',250),(req,res)=>{
- res.json({ok:true,files:(req.files||[]).map(f=>({name:f.originalname,url:'/uploads/'+f.filename}))});
+app.post('/api/upload',requireAdmin, upload.array('files',250),async(req,res)=>{
+ try{
+   const files=(req.files||[]).map(f=>({name:f.originalname,filename:f.filename,url:'/uploads/'+f.filename,path:f.path}));
+   let github={ok:false,skipped:true};
+   if(files.length && githubEnabled()){
+     const commitFiles=files.map(f=>({
+       path:`uploads/${f.filename}`,
+       content:fs.readFileSync(f.path).toString('base64'),
+       encoding:'base64'
+     }));
+     github=await githubCommitFiles(commitFiles,`SHAZ panel: ${files.length} görsel eklendi`);
+   }
+   res.json({ok:true,files:files.map(({name,url,filename})=>({name,url,filename})),github});
+ }catch(e){
+   console.error('Fotoğraf kalıcı kayıt:',e);
+   res.status(500).json({ok:false,message:e.message||'Fotoğraf yüklenemedi.'});
+ }
+});
+
+app.get('/api/media',requireAdmin,(req,res)=>{
+ try{
+   const names=fs.readdirSync(uploadDir).filter(n=>/\.(jpe?g|png|webp|gif)$/i.test(n));
+   names.sort((a,b)=>{
+     try{return fs.statSync(path.join(uploadDir,b)).mtimeMs-fs.statSync(path.join(uploadDir,a)).mtimeMs}catch{return 0}
+   });
+   res.json({ok:true,files:names.map(name=>({name,url:'/uploads/'+name}))});
+ }catch(e){res.json({ok:true,files:[]})}
 });
 
 app.get('/admin/login',(req,res)=>{

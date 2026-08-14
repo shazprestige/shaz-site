@@ -56,6 +56,12 @@ function renderCampaignCards(){
 }
 function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function escapeAttr(s){return String(s??'').replace(/"/g,'&quot;')}
+function productImages(p){
+  const list=Array.isArray(p?.images)?p.images.filter(Boolean):[];
+  if(p?.image&&!list.includes(p.image))list.unshift(p.image);
+  return [...new Set(list)];
+}
+function mainProductImage(p){return p?.image||productImages(p)[0]||''}
 function renderCategories(){
   const cats=[{id:'tum',name:'Tüm Ürünler',order:-1},...catalog.categories.filter(c=>!c.hidden&&c.id!=='tum')].sort((a,b)=>(a.order??0)-(b.order??0));
   const nav=$('#catalogNav');
@@ -122,7 +128,7 @@ function renderProducts(filter=''){
   $('#productsList').innerHTML=list.length?list.map(p=>{
     const name=p.name||'SHAZ Ürün';
     const desc=p.description?`<p class="productDescription" data-preview-field="description">${escapeHtml(p.description)}</p>`:'';
-    return `<div class="card" data-product-id="${escapeAttr(p.id)}"><div class="photo" data-preview-field="photo">${p.image?`<img src="${p.image}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge" data-preview-field="badge">${escapeHtml(p.badge)}</span>`:''}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}<button class="btn inspectBtn" data-preview-field="button" onclick="openProductDetail('${p.id}')">Ürünü İncele</button></div></div>`;
+    return `<div class="card" data-product-id="${escapeAttr(p.id)}"><div class="photo" data-preview-field="photo">${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge" data-preview-field="badge">${escapeHtml(p.badge)}</span>`:''}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}<button class="btn inspectBtn" data-preview-field="button" onclick="openProductDetail('${p.id}')">Ürünü İncele</button></div></div>`;
   }).join(''):`<div class="panel"><b>Bu kategoride henüz ürün yok.</b></div>`;
 }
 function updateFavoriteBadge(){if($('#favBadge'))$('#favBadge').textContent=favorites.size}
@@ -216,7 +222,10 @@ function openProductDetail(id,source='catalog'){
   const positions=Array.isArray(p.writePositions)?p.writePositions.filter(Boolean):[];
   openDrawer(`<div class="productDetailShell">
     <div class=wizardHead><div><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div>${source==='favorites'?`<button class="pill" onclick="showFavorites()">← Favorilere Dön</button>`:`<button class="pill" onclick="closeDrawer()">Kapat</button>`}</div>
-    <div class=productDetailMedia>${p.image?`<img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.name||'Ürün')}">`:'<div class=productDetailPlaceholder>⌚</div>'}</div>
+    ${productImages(p).length?`<div class=productDetailGallery>
+      <div class=productDetailMedia><img id=productDetailMain src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name||'Ürün')}"></div>
+      ${productImages(p).length>1?`<div class=productDetailThumbs>${productImages(p).map((u,i)=>`<button class="${i===0?'active':''}" onclick="selectProductDetailImage(this,'${escapeAttr(u)}')"><img src="${escapeAttr(u)}" alt=""></button>`).join('')}</div>`:''}
+    </div>`:'<div class=productDetailMedia><div class=productDetailPlaceholder>⌚</div></div>'}
     <div class=productDetailPrice>${money(p.price)} ${p.oldPrice?`<span class=old>${money(p.oldPrice)}</span>`:''}</div>
     ${p.description?`<div class=productDetailSection><h3>Açıklama</h3><p>${escapeHtml(p.description)}</p></div>`:''}
     ${features.length?`<div class=productDetailSection><h3>${p.isSet?'Setin içindekiler':'Özellikler'}</h3><div class=detailFeatureList>${features.map(x=>`<div>✓ ${escapeHtml(x)}</div>`).join('')}</div></div>`:''}
@@ -224,6 +233,12 @@ function openProductDetail(id,source='catalog'){
     ${settings.productStockVisible?`<div class=productDetailStock>Stok: ${Number(p.stock||0)}</div>`:''}
     <button class="btn detailAddBtn" onclick="startProduct('${escapeAttr(p.id)}')">Sepete Ekle</button>
   </div>`);
+}
+
+function selectProductDetailImage(btn,url){
+  const img=document.getElementById('productDetailMain');if(img)img.src=url;
+  document.querySelectorAll('.productDetailThumbs button').forEach(x=>x.classList.remove('active'));
+  btn?.classList.add('active');
 }
 
 function startProduct(id){
@@ -507,7 +522,7 @@ function renderBuilderCategoryStep(){
       <p class=muted>Bu kategoride yalnızca normal tekli ürünler gösterilir. Hazır setler burada görünmez.</p>
       ${products.length?`<div class=builderProductGrid>${products.map(p=>`
         <div class="builderProductCard ${selectedId===p.id?'selected':''}" onclick="builderChoose('${escapeAttr(cat.id)}','${escapeAttr(p.id)}')">
-          <div class=builderProductPhoto>${p.image?`<img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.name)}">`:'⌚'}<span class=builderSelectMark>${selectedId===p.id?'✓':''}</span></div>
+          <div class=builderProductPhoto>${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name)}">`:'⌚'}<span class=builderSelectMark>${selectedId===p.id?'✓':''}</span></div>
           <div class=builderProductBody><b>${escapeHtml(p.name)}</b><small>${money(p.price)} tekli satış fiyatı</small></div>
         </div>`).join('')}</div>`:`<div class=builderEmptyCategory>Bu kategoride set oluşturmaya açık tekli ürün bulunmuyor.</div>`}
       <button class=builderSkip onclick="builderSkipCurrent()">Bu kategoriden ürün eklemek istemiyorum</button>
@@ -556,7 +571,7 @@ function renderBuilderSelectionSummary(){
       <h3>Seçtiğiniz ürünler</h3>
       <div class=builderSummaryItems>${selected.length?selected.map(p=>`
         <div class=builderSummaryItem>
-          <div class=builderSummaryThumb>${p.image?`<img src="${escapeAttr(p.image)}">`:'⌚'}</div>
+          <div class=builderSummaryThumb>${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}">`:'⌚'}</div>
           <div class=builderSummaryInfo><b>${escapeHtml(p.name)}</b><small>${escapeHtml((catalog.categories.find(c=>c.id===p.category)||{}).name||p.category)}</small></div>
         </div>`).join(''):'<div class=builderEmptyCategory>Henüz ürün seçmediniz.</div>'}</div>
     </div>
@@ -632,7 +647,7 @@ function renderBuilderFinalSummary(){
   const writeFee=(customBuilder.writes||[]).reduce((s,w)=>s+Number(w.fee||0),0);
   const total=base+writeFee;
   openDrawer(`<div class=wizardHead><div><div class=wizardProgress>Son Kontrol</div><h2>Kendi Setiniz Hazır</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
-    <div class=wizardCard><h3>Setin içindekiler</h3><div class=builderSummaryItems>${selected.map(p=>`<div class=builderSummaryItem><div class=builderSummaryThumb>${p.image?`<img src="${escapeAttr(p.image)}">`:'⌚'}</div><div class=builderSummaryInfo><b>${escapeHtml(p.name)}</b><small>${escapeHtml((catalog.categories.find(c=>c.id===p.category)||{}).name||'')}</small></div></div>`).join('')}</div></div>
+    <div class=wizardCard><h3>Setin içindekiler</h3><div class=builderSummaryItems>${selected.map(p=>`<div class=builderSummaryItem><div class=builderSummaryThumb>${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}">`:'⌚'}</div><div class=builderSummaryInfo><b>${escapeHtml(p.name)}</b><small>${escapeHtml((catalog.categories.find(c=>c.id===p.category)||{}).name||'')}</small></div></div>`).join('')}</div></div>
     ${customBuilder.writes?.length?`<div class=wizardCard><h3>Kişiye özel yazılar</h3>${customBuilder.writes.map(w=>`<div class=summaryLine><span><b>${escapeHtml(w.item)}</b><br><span class=muted>${escapeHtml(w.position)}: “${escapeHtml(w.text)}”</span></span><span>+${money(w.fee)}</span></div>`).join('')}</div>`:''}
     <div class=wizardCard>
       <div class=summaryLine><span>${selected.length} ürün özel set</span><span>${money(base)}</span></div>
@@ -644,7 +659,7 @@ function renderBuilderFinalSummary(){
 function builderAddToCart(){
   const selected=getBuilderSelectedProducts(),base=builderTotalFor(selected.length),writeFee=(customBuilder.writes||[]).reduce((s,w)=>s+Number(w.fee||0),0),total=base+writeFee;
   const customProduct={id:'custom-'+Date.now(),name:`Kendi Setim (${selected.length} ürün)`,price:total,stock:999,isSet:true};
-  cart.push({product:customProduct,basePrice:base,qty:1,personalized:(customBuilder.writes||[]).length>0,builderItems:selected.map(p=>({id:p.id,name:p.name,category:p.category,image:p.image})),writes:customBuilder.writes||[]});
+  cart.push({product:customProduct,basePrice:base,qty:1,personalized:(customBuilder.writes||[]).length>0,builderItems:selected.map(p=>({id:p.id,name:p.name,category:p.category,image:mainProductImage(p)})),writes:customBuilder.writes||[]});
   updateCart();closeDrawer();toast('✓ Kendi setiniz sepete eklendi');
 }
 

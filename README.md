@@ -150,3 +150,27 @@ V32
 - Her sipariş bloğuna numaralı müşteri başlığı eklendi.
 - Google E-Tablo D/E durum alanları gerçek tıklanabilir checkbox oldu.
 - Excel exportta müşteri başlığı + ayırıcı düzeni eklendi.
+
+
+SHAZ V39 — KALICI GITHUB VERİSİ + ÇOKLU FOTOĞRAF
+
+1) Ürün başına çoklu fotoğraf
+- Tek seferde 1, 3, 10, 50 veya daha fazla görsel seçilebilir.
+- Ürün fotoğrafları galeri olarak tutulur.
+- İstenilen fotoğraf "Ana yap" ile kapak yapılabilir.
+- Müşteri "Ürünü İncele" ekranında küçük fotoğraflardan diğer görsellere geçebilir.
+
+2) Deploy sonrası kaybolmama
+- SHAZ_GITHUB_TOKEN, SHAZ_GITHUB_REPO ve SHAZ_GITHUB_BRANCH Render Environment'a girilirse:
+  * panelden yüklenen fotoğraflar GitHub /uploads klasörüne TEK batch commit ile kalıcı yazılır.
+  * Site Ayarları + Katalog data/settings.json ve data/catalog.json olarak GitHub'a kalıcı yazılır.
+- Yeni kod sürümü deploy edildiğinde GitHub'daki geçmiş data ve uploads korunur.
+
+3) Önemli Render ayarı
+- İçerik kaydında gereksiz deploy olmaması için Render Auto-Deploy OFF önerilir.
+- Yeni site sürümü geldiğinde GitHub'a dosyaları yükledikten sonra Manual Deploy -> Deploy latest commit yapılır.
+- Böylece ürün/fotoğraf yüklemek siteyi her seferinde yeniden başlatmaz.
+
+4) Kart / ücretli depolama yok
+- Fotoğraf deposu GitHub reposudur.
+- Render Free yalnızca siteyi çalıştırır.
