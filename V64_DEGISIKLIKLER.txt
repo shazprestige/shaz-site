@@ -1,0 +1,18 @@
+V64 — SADE SET YÖNETİMİ + SÜRÜKLE SIRALA + TÜM ÜRÜNLER + YUVARLAK ETİKET
+
+Yalnızca istenen alanlar değiştirildi:
+1) Setler & Kişiselleştirme ekranı sadeleştirildi.
+2) Hazır setlerde aynı tür ürünlerin (Saat, Cüzdan, Çakmak vb.) çıkarma tutarı ve yazı konumları tek yerden bütün hazır setlere uygulanabilir.
+3) Hazır setler tek tek kapalı kartlar halinde açılıp düzenlenebilir; mevcut set içerikleri değiştirilmedi.
+4) Kategori başlıkları yönetim panelinde sürükle-bırak ile sıralanabilir. Sayısal sıra alanı yerine sürükleme kullanılır.
+5) Hamburger menüsündeki Kategoriler ekranına en başa Tüm Ürünler eklendi.
+6) Ürün etiketleri yuvarlak, hafif çapraz rozet görünümüne geçirildi.
+7) Aynı etiket ürün detay ekranında da fotoğrafın sol üstünde gösterilir.
+
+DOKUNULMADI:
+- Sipariş sistemi
+- Google E-Tablo / Excel kodları
+- server.js
+- google-apps-script.gs
+- Sepet / ödeme / teslimat akışı
+- Kampanya sliderı ve iletişim kutuları

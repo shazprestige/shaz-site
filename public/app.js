@@ -173,10 +173,10 @@ function closeCategoryHub(){
 }
 function renderCategoryHub(){
   const wrap=$('#categoryHubGrid'); if(!wrap)return;
-  const cats=catalog.categories.filter(c=>!c.hidden&&c.id!=='tum').sort((a,b)=>(a.order??0)-(b.order??0));
-  wrap.innerHTML=cats.map(c=>`<button class="categoryTile ${c.cover?'hasCover':''}" ${c.cover?`style="--cat-cover:url('${escapeAttr(c.cover)}')"`:''} onclick="chooseCategoryFromHub('${escapeAttr(c.id)}','${escapeAttr(c.name)}')">
-    <div class="categoryTileText"><b>${escapeHtml(c.name)}</b><span>Ürünleri gör →</span></div>
-    <div class="categoryTileMedia">${c.cover?`<img src="${escapeAttr(c.cover)}" alt="${escapeAttr(c.name)}">`:`<span class="categoryPlaceholder">${escapeHtml((c.name||'?').slice(0,1))}</span>`}</div>
+  const cats=[{id:'tum',name:'Tüm Ürünler',cover:'',allProducts:true},...catalog.categories.filter(c=>!c.hidden&&c.id!=='tum').sort((a,b)=>(a.order??0)-(b.order??0))];
+  wrap.innerHTML=cats.map(c=>`<button class="categoryTile ${c.cover?'hasCover':''} ${c.allProducts?'allProductsTile':''}" ${c.cover?`style="--cat-cover:url('${escapeAttr(c.cover)}')"`:''} onclick="chooseCategoryFromHub('${escapeAttr(c.id)}','${escapeAttr(c.name)}')">
+    <div class="categoryTileText"><b>${escapeHtml(c.name)}</b><span>${c.allProducts?'Tümünü gör →':'Ürünleri gör →'}</span></div>
+    <div class="categoryTileMedia">${c.cover?`<img src="${escapeAttr(c.cover)}" alt="${escapeAttr(c.name)}">`:`<span class="categoryPlaceholder">${c.allProducts?'TÜ':escapeHtml((c.name||'?').slice(0,1))}</span>`}</div>
   </button>`).join('');
 }
 function chooseCategoryFromHub(id,name){
@@ -327,9 +327,9 @@ function openProductDetail(id,source='catalog'){
   openDrawer(`<div class="productDetailShell">
     <div class="wizardHead productDetailHead"><div class="productDetailTitle"><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div>${source==='favorites'?`<button class="pill productDetailClose" onclick="showFavorites()">← Favorilere Dön</button>`:`<button class="pill productDetailClose" onclick="closeDrawer()">Kapat</button>`}</div>
     ${productImages(p).length?`<div class=productDetailGallery>
-      <div class="productDetailMedia" style="--detail-bg:url(&quot;${escapeAttr(mainProductImage(p))}&quot;)" onclick="openProductImageViewer()" role="button" tabindex="0" aria-label="Fotoğrafı büyüt"><img id=productDetailMain src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name||'Ürün')}"></div>
+      <div class="productDetailMedia" style="--detail-bg:url(&quot;${escapeAttr(mainProductImage(p))}&quot;)" onclick="openProductImageViewer()" role="button" tabindex="0" aria-label="Fotoğrafı büyüt">${p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'}">${escapeHtml(p.badge)}</span>`:''}<img id=productDetailMain src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name||'Ürün')}"></div>
       ${productImages(p).length>1?`<div class=productDetailThumbs>${productImages(p).map((u,i)=>`<button class="${i===0?'active':''}" onclick="selectProductDetailImage(this,'${escapeAttr(u)}')"><img src="${escapeAttr(u)}" alt=""></button>`).join('')}</div>`:''}
-    </div>`:'<div class=productDetailMedia><div class=productDetailPlaceholder>⌚</div></div>'}
+    </div>`:`<div class=productDetailMedia>${p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'}">${escapeHtml(p.badge)}</span>`:''}<div class=productDetailPlaceholder>⌚</div></div>`}
     ${infoBlocks.length?`<div class="productDetailInfoBox">${infoBlocks.join('')}</div>`:''}
     <div class="productDetailBottomBar"><div class="productDetailBottomPrice">${money(p.price)}${p.oldPrice?` <span class=old>${money(p.oldPrice)}</span>`:''}</div><button class="btn detailAddBtn" onclick="startProduct('${escapeAttr(p.id)}')">Sepete Ekle</button></div>
   </div>`);

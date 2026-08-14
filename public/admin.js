@@ -1,6 +1,8 @@
 
 let settings={},catalog={};
 let adminOpenCategory=null,adminProductSearch="",adminOpenProduct=null;
+let adminDraggedCategory=null;
+let setBulkDraft={};
 let currentPreviewTarget=null;
 let previewFocusToken=0;
 function preserveAdminViewport(fn){
@@ -209,11 +211,11 @@ function renderCatalog(){
   if(!adminOpenCategory||!cats.some(c=>c.id===adminOpenCategory))adminOpenCategory=cats[0]?.id||null;
   const nav=cats.map(c=>{
     const count=catalog.products.filter(p=>p.category===c.id).length;
-    return `<button class="categoryJumpBtn ${adminOpenCategory===c.id?'active':''}" onclick="jumpAdminCategory('${attr(c.id)}')">${esc(c.name)} <span>${count}</span></button>`;
+    return `<button class="categoryJumpBtn ${adminOpenCategory===c.id?'active':''}" draggable="true" data-category-drag-id="${attr(c.id)}" onclick="jumpAdminCategory('${attr(c.id)}')" ondragstart="categoryDragStart(event,'${attr(c.id)}')" ondragover="categoryDragOver(event,'${attr(c.id)}')" ondrop="categoryDrop(event,'${attr(c.id)}')" ondragend="categoryDragEnd(event)"><span class=categoryDragGrip aria-hidden=true>⠿</span>${esc(c.name)} <span>${count}</span></button>`;
   }).join('');
   const active=cats.find(c=>c.id===adminOpenCategory);
   let html=`<div class="panel catalogControlPanel">
-    <div class=campaignAdminHead><div><h2>Kategoriler & Ürünler</h2><div class=help>Kategori seç; yalnızca o kategorinin ürünleri açılır. 100 ürün olsa bile diğer kategoriye geçmek için aşağı kaydırman gerekmez.</div></div><button class=btn style="max-width:200px" onclick=addCategory()>＋ Kategori Ekle</button></div>
+    <div class=campaignAdminHead><div><h2>Kategoriler & Ürünler</h2><div class=help>Kategori seç; yalnızca o kategorinin ürünleri açılır. Sıralamayı değiştirmek için kategori başlıklarını sürükleyip bırak.</div></div><button class=btn style="max-width:200px" onclick=addCategory()>＋ Kategori Ekle</button></div>
     <div class=catalogToolbar>
       <div class=categoryQuickNav>${nav}</div>
       <div class=adminProductSearch><input class=formControl value="${attr(adminProductSearch)}" placeholder="Bu kategoride ürün ara..." oninput="filterAdminProducts(this.value)"></div>
@@ -221,6 +223,36 @@ function renderCatalog(){
   </div>`;
   html+=active?categoryBlock(active):'<div class=panel>Henüz kategori yok.</div>';
   shell('Kategoriler & Ürünler','Ürün yönetimi artık kategori bazlıdır. Üstten kategori değiştir; ürünleri kompakt listeden açıp düzenle.',html);
+}
+function categoryDragStart(e,id){
+  adminDraggedCategory=id;
+  e.currentTarget?.classList.add('dragging');
+  if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id)}
+}
+function categoryDragOver(e,id){
+  if(!adminDraggedCategory||adminDraggedCategory===id)return;
+  e.preventDefault();
+  if(e.dataTransfer)e.dataTransfer.dropEffect='move';
+  e.currentTarget?.classList.add('dragOver');
+}
+function categoryDrop(e,targetId){
+  e.preventDefault();
+  const sourceId=adminDraggedCategory||(e.dataTransfer?.getData('text/plain')||'');
+  document.querySelectorAll('.categoryJumpBtn.dragOver').forEach(x=>x.classList.remove('dragOver'));
+  if(!sourceId||sourceId===targetId)return categoryDragEnd(e);
+  const ordered=catalog.categories.filter(c=>c.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0));
+  const from=ordered.findIndex(c=>c.id===sourceId),to=ordered.findIndex(c=>c.id===targetId);
+  if(from<0||to<0)return categoryDragEnd(e);
+  const [moved]=ordered.splice(from,1);ordered.splice(to,0,moved);
+  ordered.forEach((c,i)=>c.order=i+1);
+  adminOpenCategory=sourceId;
+  adminDraggedCategory=null;
+  changed('header');
+  renderCatalog();
+}
+function categoryDragEnd(e){
+  adminDraggedCategory=null;
+  document.querySelectorAll('.categoryJumpBtn.dragging,.categoryJumpBtn.dragOver').forEach(x=>x.classList.remove('dragging','dragOver'));
 }
 function jumpAdminCategory(id){
   adminOpenCategory=id;
@@ -257,7 +289,7 @@ function categoryBlock(c){
       <details class=categorySettingsDetails><summary>Kategori ayarları</summary>
         <div class="grid2 compactCategorySettings">
           ${input('Kategori adı',`catalog.categories[${ci}].name`,c.name,'Aynı ad hem üst menüde hem Kategoriler ekranında görünür.',catTarget)}
-          ${input('Sıra',`catalog.categories[${ci}].order`,c.order||0,'Aynı sıra hem üst menüde hem Kategoriler ekranında kullanılır.',catTarget,'number')}
+          <div class=field><label><b>Sıralama</b></label><div class=categoryOrderHint>Üstteki kategori başlığını sürükleyip istediğin yere bırak.</div></div>
           <div class=field><label><b>Kategori kapak fotoğrafı</b></label><input id="catFile${ci}" type=file accept="image/*"><button class=smallBtn onclick="uploadCategoryCover(${ci})">Fotoğrafı Yükle</button><div class=help>Bu görsel Kategoriler ekranındaki kutuda görünür.</div>${c.cover?`<img src="${attr(c.cover)}" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px">`:''}</div>
           <div class=field><label><b>Kategoriyi gizle</b></label><label><input data-preview-target="${attr(catTarget)}" type=checkbox ${c.hidden?'checked':''} onchange="catalog.categories[${ci}].hidden=this.checked;changed(this.dataset.previewTarget)"> Gizli</label></div>
         </div>
@@ -454,20 +486,76 @@ function renderCustom(){
   catalog.personalizationPricing=catalog.personalizationPricing||{first:75,second:50,thirdPlus:25};
   catalog.builder=catalog.builder||{allowedCategories:[],categoryOrder:[],pricingRules:[]};
   const pricing=catalog.personalizationPricing;
-  const sets=catalog.products.filter(p=>p.isSet).map(p=>renderSetAdminPanel(p)).join('');
+  const readySets=catalog.products.filter(p=>p.isSet);
+  const sets=readySets.map(p=>renderSetAdminPanel(p)).join('');
   const allowed=catalog.categories.filter(c=>c.id!=='tum'&&c.id!=='setler').map(c=>{
     const checked=(catalog.builder.allowedCategories||[]).includes(c.id);
     return `<label class=setItemToggle><span><b>${esc(c.name)}</b><small class=muted>Set oluşturma ekranında kategori adımı</small></span><input type=checkbox ${checked?'checked':''} onchange="toggleBuilderCategory('${attr(c.id)}',this.checked)"></label>`;
   }).join('');
-  shell('Setler & Kişiselleştirme','Her hazır setin içeriğini ayrı ayrı kurabilirsin. Sete eklediğin ürünler müşteriye tikli görünür ve müşteri isterse tek tek çıkarabilir.',
-  `<div class="panel grid2"><h2 style="grid-column:1/-1">Yazı Ücretleri</h2>
+  shell('Setler & Kişiselleştirme','En sık kullandığın hazır set ayarlarını tek yerden topluca uygulayabilir, gerektiğinde yalnızca ilgili seti açıp ayrıntısını değiştirebilirsin.',
+  `<details class="panel simpleAdminDetails"><summary>Yazı ücretleri <small>Kişiselleştirme fiyatları</small></summary><div class="grid2 simpleDetailsBody">
     ${input('İlk ürün yazısı','catalog.personalizationPricing.first',pricing.first,'İlk seçilen yazılı ürün.','.drawer','number')}
     ${input('İkinci ürün yazısı','catalog.personalizationPricing.second',pricing.second,'İkinci seçilen yazılı ürün.','.drawer','number')}
     ${input('3. ve sonrası','catalog.personalizationPricing.thirdPlus',pricing.thirdPlus,'Üçüncü ve sonraki her ürün.','.drawer','number')}
-  </div>
-  <div class=panel><h2>Kendi Setini Oluştur — Kategoriler</h2><div class=help>Müşteri 1 ürün de seçebilir, 2 ürün de; işaretlediğin bütün kategorileri kullanabilir.</div><div class=setItemList>${allowed}</div></div>
-  <div class=panel><h2>Hazır Setler</h2><div class=help>Bir ürünü “Hazır set” olarak işaretlediğinde burada görünür. Her setin içeriği birbirinden bağımsızdır.</div></div>
+  </div></details>
+  <details class="panel simpleAdminDetails"><summary>Kendi Setini Oluştur <small>Kullanılacak kategoriler</small></summary><div class=simpleDetailsBody><div class=help>Müşteri set oluştururken hangi kategori adımlarını göreceğini seç.</div><div class=setItemList>${allowed}</div></div></details>
+  ${renderBulkSetSettings(readySets)}
+  <div class="panel readySetsIntro"><h2>Hazır Setler</h2><div class=help>Tek bir sete özel farklılık gerekiyorsa o seti aç. Normalde ortak ayarları yukarıdan tek seferde uygulaman yeterli.</div></div>
   ${sets||'<div class=panel><b>Henüz hazır set yok.</b><div class=help>Kategoriler & Ürünler bölümünden bir üründe “Hazır set” seçeneğini aç.</div></div>'}`);
+}
+function normalizeSetGroupName(v){
+  return String(v||'').trim().toLocaleLowerCase('tr-TR').replace(/\s+/g,' ');
+}
+function setItemGroupInfo(it){
+  const linked=it.productId?catalog.products.find(x=>x.id===it.productId):null;
+  const linkedCat=linked?(catalog.categories.find(c=>c.id===linked.category)||{}).name:'';
+  const label=(it.type||linkedCat||it.name||linked?.name||'Set ürünü').trim();
+  return {key:normalizeSetGroupName(label),label,linked};
+}
+function getBulkSetGroups(sets){
+  const groups=new Map();
+  sets.forEach(set=>(set.setItems||[]).forEach(it=>{
+    const info=setItemGroupInfo(it);if(!info.key)return;
+    if(!groups.has(info.key))groups.set(info.key,{key:info.key,label:info.label,count:0,removeDiscount:Number(it.removeDiscount||0),writePositions:[...(it.writePositions||info.linked?.writePositions||[])]});
+    groups.get(info.key).count++;
+  }));
+  return [...groups.values()].map(g=>{
+    const draft=setBulkDraft[g.key];
+    return draft?{...g,...draft}:g;
+  });
+}
+function renderBulkSetSettings(sets){
+  const groups=getBulkSetGroups(sets);
+  if(!sets.length)return '';
+  return `<details class="panel simpleAdminDetails bulkSetSettings" open><summary>Tüm hazır setlere ortak ayar <small>${sets.length} sete tek seferde uygula</small></summary>
+    <div class=simpleDetailsBody>
+      <div class=bulkSetNote>Buradaki değerleri değiştirip <b>“Tüm Hazır Setlere Uygula”</b> dediğinde aynı türdeki mevcut ürünler bütün hazır setlerde güncellenir. Setlere ürün eklenmez veya setten ürün silinmez.</div>
+      <div class=bulkSetRows>${groups.map(g=>`<div class=bulkSetRow>
+        <div class=bulkSetName><b>${esc(g.label)}</b><small>${g.count} set içi satırda kullanılıyor</small></div>
+        <div class=field><label>Çıkarılırsa düşecek TL</label><input class=formControl type=number value="${Number(g.removeDiscount||0)}" oninput='setBulkDraft[${JSON.stringify(g.key)}]={...(setBulkDraft[${JSON.stringify(g.key)}]||{}),removeDiscount:Number(this.value)}'></div>
+        <div class=field><label>Yazı konumları</label><input class=formControl value="${attr((g.writePositions||[]).join(', '))}" placeholder="Örn: Ön yüz, İç yüz" oninput='setBulkDraft[${JSON.stringify(g.key)}]={...(setBulkDraft[${JSON.stringify(g.key)}]||{}),writePositions:this.value.split(",").map(x=>x.trim()).filter(Boolean)}'></div>
+      </div>`).join('')||'<div class=emptyAdmin>Hazır setlerin içinde henüz ürün yok.</div>'}</div>
+      ${groups.length?'<button class="btn bulkApplyBtn" onclick="applyBulkSetSettings()">Tüm Hazır Setlere Uygula</button>':''}
+    </div>
+  </details>`;
+}
+function applyBulkSetSettings(){
+  const sets=catalog.products.filter(p=>p.isSet);
+  const groups=getBulkSetGroups(sets);
+  let changedCount=0;
+  groups.forEach(g=>{
+    const draft=setBulkDraft[g.key]||{removeDiscount:g.removeDiscount,writePositions:g.writePositions};
+    sets.forEach(set=>(set.setItems||[]).forEach(it=>{
+      if(setItemGroupInfo(it).key!==g.key)return;
+      it.removeDiscount=Number(draft.removeDiscount??g.removeDiscount??0);
+      it.writePositions=[...(draft.writePositions??g.writePositions??[])];
+      changedCount++;
+    }));
+  });
+  changed('.drawer');
+  setBulkDraft={};
+  renderCustom();
+  alert(`${changedCount} set içi ürün satırı topluca güncellendi. Değişiklikleri Kaydet'e basınca kalıcı olur.`);
 }
 function renderSetAdminPanel(p){
   const pi=catalog.products.findIndex(x=>x.id===p.id);
@@ -482,11 +570,11 @@ function renderSetAdminPanel(p){
       <button class=dangerBtn onclick="removeSetItem(${pi},${ii})">Bu Ürünü Setten Çıkar</button>
     </div>`;
   }).join('');
-  return `<div class=panel data-set-admin="${attr(p.id)}"><div class=campaignAdminHead><div><h2>${esc(p.name)}</h2><div class=help>${(p.setItems||[]).length} ürün · Her setin içeriği ayrı tutulur.</div></div></div>
+  return `<details class="panel setAdminDetails" data-set-admin="${attr(p.id)}"><summary><span><b>${esc(p.name)}</b><small>${(p.setItems||[]).length} ürün</small></span><span class=setDetailsOpenText>Aç / Düzenle</span></summary><div class=setAdminDetailsBody>
     <div class=setAddBar><select id="setAdd-${attr(p.id)}" class=formControl><option value="">Katalogdan ürün seç...</option>${options}</select><button class=smallBtn onclick="addExistingProductToSet('${attr(p.id)}')">＋ Seçili Ürünü Ekle</button><button class=smallBtn onclick="addBlankSetItem('${attr(p.id)}')">＋ Elle İçerik Ekle</button></div>
-    <div class=help>Setin içinde olan her ürün müşteri ekranında tikli görünür. Müşteri tik kaldırırsa “çıkarılırsa düşecek TL” kadar indirim uygulanır.</div>
+    <div class=help>Bu sette gerçekten farklı bir değer gerekiyorsa aşağıdan değiştir. Ortak fiyatları yukarıdaki toplu ayardan yönetebilirsin.</div>
     ${rows||'<div class=emptyAdmin>Bu setin içeriği boş. Yukarıdan ürün ekle.</div>'}
-  </div>`;
+  </div></details>`;
 }
 function addExistingProductToSet(setId){
   const set=catalog.products.find(x=>x.id===setId),sel=$('#setAdd-'+CSS.escape(setId));
