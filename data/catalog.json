@@ -118,6 +118,20 @@
             "Ön yüz",
             "Arka yüz"
           ]
+        },
+        {
+          "id": "setitem-1786749598298",
+          "name": "Yeni set ürünü",
+          "type": "",
+          "removeDiscount": 0,
+          "writePositions": []
+        },
+        {
+          "id": "setitem-1786749599394",
+          "name": "Yeni set ürünü",
+          "type": "",
+          "removeDiscount": 0,
+          "writePositions": []
         }
       ],
       "description": "su geçirmez\nçelik\nsafir çizilmez cam",
@@ -358,12 +372,16 @@
     "allowedCategories": [
       "saatler",
       "gozlukler",
-      "cuzdanlar"
+      "cuzdanlar",
+      "kategori-1786740581832",
+      "kategori-1786740619033"
     ],
     "categoryOrder": [
       "saatler",
       "gozlukler",
-      "cuzdanlar"
+      "cuzdanlar",
+      "kategori-1786740581832",
+      "kategori-1786740619033"
     ],
     "allowSkip": true,
     "excludeSetProducts": true
