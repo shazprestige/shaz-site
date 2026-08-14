@@ -1,0 +1,6 @@
+V55
+- Yönetim panelinde Kategoriler & Ürünler alanına üstte hızlı kategori menüsü eklendi.
+- Kategori blokları açılır/kapanır hale getirildi; yüzlerce üründe sürekli aşağı kaydırma gerekmiyor.
+- Ürün arama alanı eklendi.
+- Her ürüne “Aynısını Çoğalt” eklendi. Açıklama, özellikler, fiyat, stok, etiket, set ayarları ve diğer bilgiler kopyalanır.
+- Çoğaltılan üründe fotoğraflar kopyalanmaz; yeni ürün boş fotoğraf alanıyla açılır.
