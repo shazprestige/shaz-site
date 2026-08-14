@@ -14,7 +14,7 @@
   "theme": {
     "primary": "#111111",
     "accent": "#b88b4a",
-    "surface": "#fffdf8",
+    "surface": "#ffffff",
     "success": "#16a34a",
     "cardRadius": 22,
     "productCardWidth": 280,

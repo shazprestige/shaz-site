@@ -78,7 +78,7 @@ function closeCategoryHub(){
 function renderCategoryHub(){
   const wrap=$('#categoryHubGrid'); if(!wrap)return;
   const cats=catalog.categories.filter(c=>!c.hidden&&c.id!=='tum').sort((a,b)=>(a.order??0)-(b.order??0));
-  wrap.innerHTML=cats.map(c=>`<button class="categoryTile" onclick="chooseCategoryFromHub('${escapeAttr(c.id)}','${escapeAttr(c.name)}')">
+  wrap.innerHTML=cats.map(c=>`<button class="categoryTile ${c.cover?'hasCover':''}" onclick="chooseCategoryFromHub('${escapeAttr(c.id)}','${escapeAttr(c.name)}')">
     <div class="categoryTileText"><b>${escapeHtml(c.name)}</b><span>Ürünleri gör →</span></div>
     <div class="categoryTileMedia">${c.cover?`<img src="${escapeAttr(c.cover)}" alt="${escapeAttr(c.name)}">`:`<span class="categoryPlaceholder">${escapeHtml((c.name||'?').slice(0,1))}</span>`}</div>
   </button>`).join('');
@@ -107,7 +107,7 @@ function renderProducts(filter=''){
 }
 function updateFavoriteBadge(){if($('#favBadge'))$('#favBadge').textContent=favorites.size}
 function toggleFav(id,e){e?.stopPropagation();favorites.has(id)?favorites.delete(id):favorites.add(id);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));updateFavoriteBadge();renderProducts($('#search')?.value||'')}
-function showFavorites(){const ps=catalog.products.filter(p=>favorites.has(p.id));openDrawer(`<div class=wizardHead><h2>Favorilerim</h2><button class="pill" onclick=closeDrawer()>Kapat</button></div>${ps.length?ps.map(p=>`<div class=wizardCard><b>${escapeHtml(p.name)}</b><br>${money(p.price)}<br><br><button class=btn onclick="openProductDetail('${p.id}')">Ürünü İncele</button></div>`).join(''):'Henüz favoriniz yok.'}`)}
+function showFavorites(){const ps=catalog.products.filter(p=>favorites.has(p.id));openDrawer(`<div class=wizardHead><h2>Favorilerim</h2><button class="pill" onclick=closeDrawer()>Kapat</button></div>${ps.length?ps.map(p=>`<div class=wizardCard><b>${escapeHtml(p.name)}</b><br>${money(p.price)}<br><br><button class=btn onclick="openProductDetail('${p.id}','favorites')">Ürünü İncele</button></div>`).join(''):'Henüz favoriniz yok.'}`)}
 function openDrawer(html){$('#overlay').classList.remove('hidden');$('#drawer').classList.remove('hidden');$('#drawer').innerHTML=html}
 function closeDrawer(){$('#overlay').classList.add('hidden');$('#drawer').classList.add('hidden')}
 function toast(msg){const t=$('#toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
@@ -190,12 +190,12 @@ function productFeatureList(p){
   const setFeatures=(p.isSet&&Array.isArray(p.setItems))?p.setItems.map(x=>x.name).filter(Boolean):[];
   return [...new Set([...manual,...setFeatures])];
 }
-function openProductDetail(id){
+function openProductDetail(id,source='catalog'){
   const p=catalog.products.find(x=>x.id===id); if(!p)return;
   const features=productFeatureList(p);
   const positions=Array.isArray(p.writePositions)?p.writePositions.filter(Boolean):[];
   openDrawer(`<div class="productDetailShell">
-    <div class=wizardHead><div><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+    <div class=wizardHead><div><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div>${source==='favorites'?`<button class="pill" onclick="showFavorites()">← Favorilere Dön</button>`:`<button class="pill" onclick="closeDrawer()">Kapat</button>`}</div>
     <div class=productDetailMedia>${p.image?`<img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.name||'Ürün')}">`:'<div class=productDetailPlaceholder>⌚</div>'}</div>
     <div class=productDetailPrice>${money(p.price)} ${p.oldPrice?`<span class=old>${money(p.oldPrice)}</span>`:''}</div>
     ${p.description?`<div class=productDetailSection><h3>Açıklama</h3><p>${escapeHtml(p.description)}</p></div>`:''}
