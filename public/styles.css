@@ -1155,3 +1155,148 @@ header{background:rgba(255,255,255,.97)!important}
   .campaignSimpleRow{align-items:flex-start;flex-direction:column}
   .campaignFileRow{width:100%;justify-content:flex-start;flex-wrap:wrap}
 }
+
+
+/* ===== V45 — slider stabilitesi, tam reklam görseli, kategori 50/50, mobil tam-kenar ürün ===== */
+
+/* Slider: yüklenen reklam görselini kesme. Aynı görselin flu kopyası boşlukları zarifçe doldurur. */
+.campaignSlider{
+  height:auto!important;
+  aspect-ratio:16 / 5.2;
+  min-height:250px;
+  max-height:430px;
+  background:#111!important;
+}
+.campaignSlide{align-items:flex-end!important}
+.campaignSlideBackdrop{
+  position:absolute;inset:-22px;z-index:0;
+  background-size:cover;background-position:center;
+  filter:blur(22px) brightness(.62) saturate(.9);
+  transform:scale(1.08);
+  opacity:.82;
+}
+.campaignSlideImage{
+  position:absolute!important;inset:0!important;
+  width:100%!important;height:100%!important;
+  object-fit:contain!important;object-position:center!important;
+  z-index:1!important;
+}
+.campaignSlideShade{z-index:2!important;background:rgba(0,0,0,var(--campaign-overlay,.20))!important}
+.campaignSlider .campaignContent{z-index:3!important}
+
+/* Üst kayan yazı artık bütün slider için tek katmandır; slayttan bağımsız akar. */
+.campaignGlobalMarquee{
+  position:absolute;top:9px;z-index:6;overflow:hidden;white-space:nowrap;
+  pointer-events:none;color:#fff;font-size:clamp(15px,2.3vw,28px);font-weight:850;
+  text-shadow:0 2px 10px rgba(0,0,0,.65);
+}
+.campaignGlobalMarquee--full{left:0;right:0}
+.campaignGlobalMarquee--center{left:50%;width:min(72%,680px);transform:translateX(-50%);border-radius:8px}
+.campaignGlobalMarquee .campaignMarqueeTrack{display:inline-block;animation:campaignMove 14s linear infinite;padding-inline:12px}
+.campaignGlobalSettings{display:grid;grid-template-columns:1fr 260px;gap:12px;align-items:start;border-top:1px solid #eef0f2;padding-top:12px}
+
+/* Ürün listesi: gerçek fotoğraf eklendiğinde de kart yüksekliği bozulmaz; bilgi bölümü mutlaka görünür. */
+#productsList .card{display:flex!important;flex-direction:column!important;overflow:hidden!important}
+#productsList .card .photo{
+  position:relative!important;width:100%!important;height:auto!important;
+  aspect-ratio:4 / 3!important;max-height:none!important;min-height:0!important;
+  overflow:hidden!important;flex:0 0 auto!important;background:#eef0f2!important;
+}
+#productsList .card .photo>img{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  object-fit:cover!important;object-position:center!important;display:block!important;
+}
+#productsList .card .info{display:block!important;position:relative!important;z-index:1!important;flex:0 0 auto!important;background:#fff!important}
+
+/* Kategori merkezi: önceki blur/maske geçişi yok. Sol yarı metin, sağ yarı fotoğraf. */
+.categoryTile,.categoryTile.hasCover{background:#f1f2f3!important;isolation:auto!important}
+.categoryTile:before,.categoryTile:after,.categoryTile.hasCover:before,.categoryTile.hasCover:after{display:none!important}
+.categoryTile .categoryTileText,.categoryTile.hasCover .categoryTileText{
+  position:relative!important;z-index:2!important;flex:0 0 50%!important;width:50%!important;
+  padding:18px 12px 14px 16px!important;background:#f1f2f3!important;
+}
+.categoryTile .categoryTileMedia,.categoryTile.hasCover .categoryTileMedia{
+  position:absolute!important;inset:0 0 0 auto!important;width:50%!important;height:100%!important;
+  min-width:0!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  overflow:hidden!important;border-left:1px solid #e1e3e6!important;background:#eef0f2!important;
+}
+.categoryTile .categoryTileMedia img,.categoryTile.hasCover .categoryTileMedia img{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  object-fit:cover!important;object-position:center!important;filter:none!important;transform:none!important;opacity:1!important;
+  -webkit-mask-image:none!important;mask-image:none!important;
+}
+.categoryTile.hasCover .categoryTileText b,.categoryTile.hasCover .categoryTileText span{text-shadow:none!important}
+.categoryTile:not(.hasCover) .categoryTileMedia{margin:0!important}
+.categoryTile .categoryPlaceholder{margin:0!important}
+
+/* Mobil ürün detayı: Trendyol benzeri şekilde ana görsel ekranın iki kenarına tam oturur.
+   Sabit fiyat + Sepete Ekle barının kendi kenar boşluğu aynen korunur. */
+@media(max-width:520px){
+  .drawer .productDetailShell{padding:14px 0 108px!important;background:#fff!important}
+  .productDetailHead{margin-left:16px!important;margin-right:16px!important}
+  .productDetailGallery{margin:6px 0 13px!important;width:100%!important}
+  .productDetailGallery .productDetailMedia{
+    width:100%!important;margin:0!important;border-left:0!important;border-right:0!important;
+    border-radius:0!important;background:#fff!important;
+  }
+  .productDetailGallery .productDetailMedia img{width:100%!important;height:auto!important;display:block!important}
+  .productDetailThumbs{padding:8px 16px 2px!important}
+  .productDetailInfoBox{margin-left:16px!important;margin-right:16px!important}
+  .campaignSlider{aspect-ratio:16 / 7.2;min-height:220px;max-height:300px}
+  .campaignGlobalMarquee{top:7px;font-size:16px}
+  .campaignGlobalMarquee--center{width:78%}
+  .campaignGlobalSettings{grid-template-columns:1fr}
+  .categoryTile .categoryTileText,.categoryTile.hasCover .categoryTileText{padding:15px 8px 12px 12px!important}
+}
+
+/* Canlı önizleme: aktif düzenlenen slider parçası kırmızı çerçevede net görünür. */
+.campaignSlide.adminPreviewHighlight,
+.campaignContent.adminPreviewHighlight,
+.campaignBtn.adminPreviewHighlight,
+.campaignGlobalMarquee.adminPreviewHighlight{
+  outline:2px solid #e00000!important;
+  outline-offset:-2px!important;
+  box-shadow:inset 0 0 0 2px rgba(224,0,0,.10)!important;
+}
+
+
+/* V46 — sade sepet, kompakt teslimat, Aras Kargo şube teslim */
+.cartToolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-4px 0 10px;font-size:12px;color:#667085}
+.cartClearBtn,.cartRemoveBtn,.checkoutBackBtn{border:0;background:transparent;cursor:pointer;font:inherit}
+.cartClearBtn{color:#b42318;font-weight:800;text-decoration:underline;text-underline-offset:3px}
+.cartItemMain{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.cartItemRight{display:flex;flex-direction:column;align-items:flex-end;gap:8px;white-space:nowrap}
+.cartItemRight strong{font-size:15px}
+.cartRemoveBtn{color:#b42318;font-size:11px;font-weight:800;padding:0}
+.checkoutBackRow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-3px 0 8px}
+.checkoutBackRow small{font-size:10px;color:#7a8088}
+.checkoutBackBtn{font-weight:800;color:#344054;padding:5px 0}
+.addressCompact{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.addressCompact .field{display:flex;flex-direction:column;gap:6px}
+.fieldWide{grid-column:1/-1}
+.fieldHelp{display:block;font-weight:400;color:#667085;font-size:10px;line-height:1.35;margin-top:3px}
+.branchChoice{display:flex;align-items:flex-start;gap:11px;padding:13px;border:1px solid #d0d5dd;border-radius:10px;background:#fff;cursor:pointer}
+.branchChoice input{width:19px;height:19px;margin:1px 0 0;accent-color:#111;flex:0 0 auto}
+.branchChoice span{display:flex;flex-direction:column;gap:3px}
+.branchChoice small{color:#667085;font-size:10px;line-height:1.4}
+.addressModeFields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.branchInfo{grid-column:1/-1;background:#fff9ed;border:1px solid #ead7ad;border-radius:10px;padding:12px;font-size:11px;line-height:1.5;color:#5f4b22}
+.branchInfo span{color:#7a6232}
+.addressCheckModal{position:fixed;inset:0;z-index:999999;background:rgba(15,17,20,.48);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
+.addressCheckCard{position:relative;width:min(430px,100%);background:#fff;border-radius:16px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.22)}
+.addressCheckCard h3{font-size:23px;margin:7px 0 6px}.addressCheckHint{color:#667085;font-size:12px;line-height:1.45;margin:0 0 14px}
+.addressCheckX{position:absolute;right:13px;top:11px;width:35px;height:35px;border:0;border-radius:50%;background:#f2f4f7;font-size:24px;cursor:pointer}
+.addressCheckData{display:flex;flex-direction:column;gap:5px;background:#f8f9fa;border:1px solid #e4e7ec;border-radius:10px;padding:13px;font-size:12px;line-height:1.45}
+.addressCheckData strong{margin-top:5px}.addressCheckData small{color:#8a6519}
+.addressCheckActions{display:grid;grid-template-columns:110px 1fr;gap:9px;margin-top:14px}.addressCheckActions .btn{margin:0;padding:12px}
+@media(max-width:700px){
+  .addressCompact{grid-template-columns:1fr;gap:10px}
+  .fieldWide{grid-column:1}
+  .addressModeFields{grid-template-columns:1fr;gap:10px}
+  .branchInfo{grid-column:1}
+  .checkoutShell{padding-top:15px}
+  .checkoutTop{margin-bottom:10px}
+  .checkoutTop h2{margin-top:3px}
+  .cartItemMain{gap:10px}
+  .addressCheckActions{grid-template-columns:100px 1fr}
+}

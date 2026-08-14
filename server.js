@@ -131,8 +131,7 @@ async function ghApi(endpoint,options={}){
   return data;
 }
 
-async function githubCommitFiles(files,message){
-  if(!githubEnabled())return {ok:false,skipped:true};
+async function githubCommitFilesOnce(files,message){
   const ref=await ghApi(`/git/ref/heads/${encodeURIComponent(GITHUB_BRANCH)}`);
   const parentSha=ref.object.sha;
   const parentCommit=await ghApi(`/git/commits/${parentSha}`);
@@ -161,6 +160,30 @@ async function githubCommitFiles(files,message){
     body:JSON.stringify({sha:commit.sha,force:false})
   });
   return {ok:true,commit:commit.sha};
+}
+
+// Aynı anda fotoğraf + ayar kaydı geldiğinde GitHub dalı ilerleyebilir.
+// Yazmaları tek kuyruğa alıp non-fast-forward durumunda güncel HEAD üzerinden tekrar deneriz.
+let githubWriteQueue=Promise.resolve();
+function githubCommitFiles(files,message){
+  if(!githubEnabled())return Promise.resolve({ok:false,skipped:true});
+  const run=async()=>{
+    let lastErr;
+    for(let attempt=1;attempt<=5;attempt++){
+      try{return await githubCommitFilesOnce(files,message)}
+      catch(e){
+        lastErr=e;
+        const msg=String(e?.message||e).toLowerCase();
+        const retryable=msg.includes('fast forward')||msg.includes('reference update')||msg.includes('conflict')||msg.includes('422');
+        if(!retryable||attempt===5)throw e;
+        await delay(250*attempt);
+      }
+    }
+    throw lastErr;
+  };
+  const task=githubWriteQueue.then(run,run);
+  githubWriteQueue=task.catch(()=>{});
+  return task;
 }
 
 async function persistStateToGithub(){
@@ -295,6 +318,8 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
  };
  const itemCount=o=>(o.items||[]).reduce((n,x)=>n+Math.max(1,Number(x.qty||1)),0)||1;
  const fullAddress=c=>{
+  if(c.deliveryMode==='branch') return `ARAS KARGO ŞUBE TESLİM — ${c.branchName||''}`.trim();
+  if(c.fullAddress) return [c.neighborhood,c.fullAddress].filter(Boolean).join(' ');
   const road=[c.neighborhood,c.avenue,c.street].filter(Boolean).join(' ');
   const nums=[c.buildingNo?`no:${c.buildingNo}`:'',c.floor?`kat:${c.floor}`:'',c.doorNo?`daire:${c.doorNo}`:''].filter(Boolean).join(' ');
   const biz=c.placeType==='business'&&c.businessName?` ${c.businessName}`:'';

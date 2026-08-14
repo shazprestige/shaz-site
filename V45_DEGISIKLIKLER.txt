@@ -1,0 +1,12 @@
+V45 DEĞİŞİKLİKLER
+
+- 6+ slider fotoğrafında görülebilen GitHub "Update is not a fast forward" yarışı giderildi; GitHub yazmaları sıraya alındı ve güvenli retry eklendi.
+- Slider toplu yükleme üst sınırı 10 fotoğraf olarak netleştirildi.
+- Üst kayan yazı slayt başına olmaktan çıkarıldı; bütün slider için tek ayar oldu.
+- Kayan yazı için "üstte tam şerit" ve "üst ortada" konumu eklendi.
+- Canlı önizlemede düzenlenen slider/slayt bölgesi kırmızı çerçeveyle işaretlenir.
+- Slider reklam fotoğrafları artık üstten/alttan kırpılmaz; görselin tamamı görünür.
+- Fotoğraflı ürün kartlarında görselin bilgi alanını yutması engellendi; ad/açıklama/fiyat alanı her zaman görünür.
+- Kategori kartlarındaki blur/geçiş efekti kaldırıldı; sol metin + sağ fotoğraf şeklinde net 50/50 düzen yapıldı.
+- Mobil ürün detayında ana fotoğraf sağ/sol kenarlara tam oturur; sabit fiyat + Sepete Ekle barının boşlukları değiştirilmedi.
+- Diğer işleyiş ve kalıcı GitHub veri sistemi değiştirilmedi.

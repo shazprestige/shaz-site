@@ -1,0 +1,10 @@
+V46
+- Sepetten tek ürün kaldırma eklendi.
+- Sepeti tamamen boşaltma eklendi.
+- Sepet üstündeki “SHAZ Güvenli Sipariş” ibaresi kaldırıldı.
+- Teslimat ekranına Sepete dön butonu eklendi.
+- Teslimat formu kompaktlaştırıldı: Ad Soyad, Telefon, 2. Telefon, İl, İlçe, Mahalle ve tek Tam Adres alanı.
+- 2. telefon alanına anne/baba/arkadaş gibi ikinci ulaşılabilir numara açıklaması eklendi.
+- Aras Kargo şubesinden teslim seçeneği eklendi. Şube adı Google Haritalar’dan net kontrol edilerek giriliyor.
+- Teslimat bilgilerinden sonra küçük adres kontrol penceresi eklendi; Düzenle veya devam et seçilebilir.
+- Yeni teslimat tipi yönetim paneli ve Excel/Google Sheets adres çıktılarıyla uyumlu hale getirildi.

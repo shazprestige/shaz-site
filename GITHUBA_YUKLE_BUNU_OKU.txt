@@ -1,7 +1,7 @@
-V44 GITHUB YÜKLEME
+V45 GITHUB YÜKLEME
 
-1) ZIP'i çıkar.
-2) SHAZ-PC-v44-OTOMATIK-SLIDER-KOLAY-YONLENDIRME klasörünün İÇİNE gir.
-3) İçeride gördüğün dosya ve klasörlerin tamamını shaz-site GitHub deposunun ANA DİZİNİNE yükle.
-4) Klasörün kendisini public klasörünün içine atma.
-5) GitHub'daki mevcut data ve uploads klasörlerini silme. Bu pakette özellikle data/uploads yok; kalıcı ürün ve fotoğrafların yerinde kalır.
+1) Bu klasörün içine gir.
+2) İçindeki TÜM dosya ve klasörleri shaz-site GitHub deposunun ANA DİZİNİNE yükle.
+3) Klasörün kendisini public klasörünün içine atma.
+4) Bu pakette data ve uploads yoktur; GitHub’daki mevcut data/ ve uploads/ klasörlerini SİLME.
+5) Değişiklikleri kaydet; Render otomatik deploy etsin.

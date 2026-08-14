@@ -44,19 +44,22 @@ function renderCampaignCards(){
   const cards=(settings.campaignCards||[]).filter(x=>x.enabled!==false&&x.imageUrl).sort((a,b)=>(a.order||0)-(b.order||0));
   if(!cards.length){wrap.innerHTML='';return}
   if(campaignSliderIndex>=cards.length)campaignSliderIndex=0;
+  const marquee=String(settings.campaignMarqueeText||'').trim();
+  const marqueePos=settings.campaignMarqueePosition==='center'?'center':'full';
   wrap.innerHTML=`<section class="campaignSlider" id="campaignSlider" aria-label="Kampanyalar">
     <div class="campaignSlides">${cards.map((c,i)=>{
       const op=Math.min(.75,Math.max(0,Number(c.overlayOpacity??28)/100));
-      return `<article class="campaignSlide ${i===campaignSliderIndex?'isActive':''}" data-slide-index="${i}" style="--campaign-overlay:${op}">
+      return `<article class="campaignSlide ${i===campaignSliderIndex?'isActive':''}" data-slide-index="${i}" data-campaign-id="${escapeAttr(c.id||('slide-'+i))}" style="--campaign-overlay:${op}">
+        <div class="campaignSlideBackdrop" style="background-image:url('${escapeAttr(c.imageUrl)}')"></div>
         <img class="campaignSlideImage" src="${escapeAttr(c.imageUrl)}" alt="${escapeAttr(c.title||'SHAZ kampanya')}">
         <div class="campaignSlideShade"></div>
-        ${c.marqueeText?`<div class="campaignMarquee"><div class="campaignMarqueeTrack">${escapeHtml(c.marqueeText)}</div></div>`:''}
         <div class="campaignContent">
           ${c.title?`<h2>${escapeHtml(c.title)}</h2>`:''}
           ${c.subtitle?`<p>${escapeHtml(c.subtitle)}</p>`:''}
           ${c.buttonText?`<button class="campaignBtn" type="button" data-campaign-target="${escapeAttr(c.targetCategory||'tum')}">${escapeHtml(c.buttonText)}</button>`:''}
         </div>
       </article>`}).join('')}</div>
+    ${marquee?`<div class="campaignGlobalMarquee campaignGlobalMarquee--${marqueePos}"><div class="campaignMarqueeTrack">${escapeHtml(marquee)}</div></div>`:''}
     ${cards.length>1?`<button class="campaignArrow campaignPrev" type="button" aria-label="Önceki fotoğraf">‹</button><button class="campaignArrow campaignNext" type="button" aria-label="Sonraki fotoğraf">›</button><div class="campaignDots">${cards.map((_,i)=>`<button type="button" class="campaignDot ${i===campaignSliderIndex?'isActive':''}" data-slide-dot="${i}" aria-label="${i+1}. fotoğraf"></button>`).join('')}</div>`:''}
   </section>`;
   wrap.querySelectorAll('[data-campaign-target]').forEach(btn=>btn.addEventListener('click',()=>goToCampaignTarget(btn.dataset.campaignTarget)));
@@ -68,8 +71,8 @@ function renderCampaignCards(){
     slider.addEventListener('touchstart',e=>{campaignTouchStartX=e.touches?.[0]?.clientX??null},{passive:true});
     slider.addEventListener('touchend',e=>{
       if(campaignTouchStartX===null)return;
-      const x=e.changedTouches?.[0]?.clientX??campaignTouchStartX;
-      const dx=x-campaignTouchStartX;campaignTouchStartX=null;
+      const end=e.changedTouches?.[0]?.clientX??campaignTouchStartX;
+      const dx=end-campaignTouchStartX;campaignTouchStartX=null;
       if(Math.abs(dx)>45)showCampaignSlide(campaignSliderIndex+(dx<0?1:-1),cards.length,true);
     },{passive:true});
     slider.addEventListener('mouseenter',()=>clearInterval(campaignSliderTimer));
@@ -462,12 +465,24 @@ function addSetToCart(){
 function checkout(){
   if(!cart.length)return openDrawer('<div class="checkoutEmpty"><h2>Sepetiniz boş</h2><p>Beğendiğiniz ürünleri sepete ekleyerek siparişe başlayabilirsiniz.</p><button class="btn" onclick="closeDrawer()">Ürünlere Dön</button></div>');
   const total=cart.reduce((a,x)=>a+Number(x.product.price||0),0);
-  openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">SHAZ GÜVENLİ SİPARİŞ</span><h2>Sepetiniz</h2><p>Ürünlerinizi kontrol edin, ardından teslimat bilgilerinize geçin.</p></div><button class="pill" onclick=closeDrawer()>Kapat</button></div>
+  openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><h2>Sepetiniz</h2><p>Ürünlerinizi kontrol edin, ardından teslimat bilgilerinize geçin.</p></div><button class="pill" onclick=closeDrawer()>Kapat</button></div>
     <div class="checkoutSteps"><span class="active">1 Sepet</span><span>2 Teslimat</span><span>3 Onay</span></div>
+    <div class="cartToolbar"><span>${cart.reduce((n,x)=>n+Number(x.qty||1),0)} ürün</span><button type="button" class="cartClearBtn" onclick="clearCartFromCheckout()">Sepeti boşalt</button></div>
     <div class="checkoutProductPanel">${cart.map((x,i)=>cartItemSummary(x,i)).join('')}</div>
     <div class="checkoutTotal"><span>Toplam</span><strong>${money(total)}</strong></div>
     <div class="checkoutPayment"><label for="pay"><b>Ödeme yöntemi</b><small>Ödeme tercihinizi seçin.</small></label><select id="pay" class="formControl"><option value="cod">Kapıda ödeme</option><option value="online">Online ödeme</option></select></div>
     <button class="btn checkoutPrimary" onclick="addressStep()">Teslimat Bilgilerine Geç →</button></div>`);
+}
+
+function removeCartItem(i){
+  if(i<0||i>=cart.length)return;
+  cart.splice(i,1);updateCart();
+  if(cart.length) checkout(); else closeDrawer();
+}
+function clearCartFromCheckout(){
+  if(!cart.length)return;
+  if(!confirm('Sepetteki tüm ürünler kaldırılsın mı?'))return;
+  cart=[];updateCart();closeDrawer();toast('Sepet boşaltıldı');
 }
 
 function cartItemSummary(x,i){
@@ -481,60 +496,87 @@ function cartItemSummary(x,i){
   if(x.builderItems?.length) lines.push(`<div class=muted>Set içeriği: ${x.builderItems.map(p=>escapeHtml(p.name)).join(', ')}</div>`);
   const writes=x.writes||x.setCustomization?.writes||[];
   if(!x.setCustomization && writes.length) lines.push(`<div class=muted>Yazı: ${writes.map(w=>`${escapeHtml(w.item)} — ${escapeHtml(w.position)}: “${escapeHtml(w.text)}”`).join('<br>')}</div>`);
-  return `<div class=orderCartItem><div class=summaryLine><span><b>${escapeHtml(x.product.name)}</b></span><span>${money(x.product.price)}</span></div>${lines.join('')}</div>`;
+  return `<div class="orderCartItem"><div class="cartItemMain"><div><b>${escapeHtml(x.product.name)}</b>${lines.join('')}</div><div class="cartItemRight"><strong>${money(x.product.price)}</strong><button type="button" class="cartRemoveBtn" onclick="removeCartItem(${i})">Kaldır</button></div></div></div>`;
 }
+
 function addressStep(){
-  checkoutState.payment=$('#pay')?.value||'cod';
+  checkoutState.payment=$('#pay')?.value||checkoutState.payment||'cod';
   const c=checkoutState.customer||{};
-  openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">TESLİMAT BİLGİLERİ</span><h2>Siparişinizi nereye gönderelim?</h2><p>Kargo teslimatı için bilgileri eksiksiz girin.</p></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+  const branch=c.deliveryMode==='branch';
+  openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">TESLİMAT BİLGİLERİ</span><h2>Siparişinizi nereye gönderelim?</h2><p>Size ulaşabilmemiz ve kargoyu doğru yere gönderebilmemiz için bilgileri girin.</p></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+    <div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="checkout()">← Sepete dön</button><small>* zorunlu alan</small></div>
     <div class="checkoutSteps"><span>1 Sepet</span><span class="active">2 Teslimat</span><span>3 Onay</span></div>
-    <div class="addressSectionTitle"><b>İletişim</b><small>* işaretli alanlar zorunludur.</small></div>
-    <div class=addressGrid>
+    <div class="addressCompact">
       ${addrInput('Ad Soyad *','fullName',c.fullName)}
       ${addrInput('Telefon *','phone',c.phone,'tel')}
-      ${addrInput('Ek Telefon','extraPhone',c.extraPhone,'tel')}
+      <div class="field fieldWide"><label><b>2. Telefon Numarası</b><small class="fieldHelp">Teslimatın sorunsuz gerçekleşmesi için ulaşılabilecek ikinci bir numara yazın; anne, baba, arkadaş vb. olabilir.</small></label><input class=formControl id=addr-extraPhone type=tel value="${escapeAttr(c.extraPhone||'')}" placeholder="Örn: 05xx xxx xx xx"></div>
+
+      <label class="branchChoice fieldWide"><input id="addr-branchToggle" type="checkbox" ${branch?'checked':''} onchange="toggleBranchDelivery()"><span><b>Kargom Aras Kargo şubesine gelsin</b><small>Adrese değil, seçtiğiniz Aras Kargo şubesinden teslim alırsınız.</small></span></label>
+
       ${addrInput('İl *','province',c.province)}
       ${addrInput('İlçe *','district',c.district)}
-      ${addrInput('Mahalle *','neighborhood',c.neighborhood)}
-      ${addrInput('Cadde','avenue',c.avenue)}
-      ${addrInput('Sokak','street',c.street)}
-      ${addrInput('Bina No *','buildingNo',c.buildingNo)}
-      ${addrInput('Kat *','floor',c.floor)}
-      ${addrInput('Daire / Kapı No','doorNo',c.doorNo)}
-      <div class=field><label><b>Teslimat yeri *</b></label><select id="addr-placeType" class=formControl onchange="toggleBusinessName()"><option value="home" ${c.placeType!=='business'?'selected':''}>Ev</option><option value="business" ${c.placeType==='business'?'selected':''}>Dükkan / İş yeri</option></select></div>
-      <div class=field id=businessNameWrap style="${c.placeType==='business'?'':'display:none'}"><label><b>Dükkan / İş yeri adı *</b></label><input class=formControl id=addr-businessName value="${escapeAttr(c.businessName||'')}" placeholder="Örn: SHAZ Saat"></div>
+
+      <div id="homeAddressFields" class="addressModeFields fieldWide" style="${branch?'display:none':''}">
+        ${addrInput('Mahalle *','neighborhood',c.neighborhood)}
+        <div class="field fieldWide"><label><b>Tam adres *</b><small class="fieldHelp">Cadde/sokak, bina no, kat ve daire bilgilerini tek alana yazın.</small></label><textarea class=formControl id=addr-fullAddress rows=3 placeholder="Örn: Bağlarbaşı Mah. Atatürk Cad. No:12 Kat:2 Daire:5">${escapeHtml(c.fullAddress||c.avenue||'')}</textarea></div>
+      </div>
+
+      <div id="branchAddressFields" class="addressModeFields fieldWide" style="${branch?'':'display:none'}">
+        <div class="branchInfo">📍 <b>Aras Kargo şube adını net yazın.</b><br>Google Haritalar'dan kontrol edip şubenin tam adını girin. Aynı ilçede birden fazla şube olabilir.<br><span>Örnek: Şırnak / Cizre — Aras Kargo Meydan Şubesi</span></div>
+        <div class="field fieldWide"><label><b>Aras Kargo şube adı *</b></label><input class=formControl id=addr-branchName value="${escapeAttr(c.branchName||'')}" placeholder="Örn: Aras Kargo Meydan Şubesi"></div>
+      </div>
+
+      <div class="field fieldWide"><label><b>Teslimat notu</b><small class="fieldHelp">İsterseniz kurye veya teslimat için kısa bir not ekleyin.</small></label><textarea class=formControl id=addr-note rows=2 placeholder="İsteğe bağlı">${escapeHtml(c.note||'')}</textarea></div>
     </div>
-    <div class=field><label><b>Adres tarifi / not</b></label><textarea class=formControl id=addr-note rows=3 placeholder="Kurye için bina, kapı veya teslimat notu">${escapeHtml(c.note||'')}</textarea></div>
-    <button class="btn checkoutPrimary" onclick="saveAddressAndContinue()">Siparişi Kontrol Et →</button></div>`);
+    <button class="btn checkoutPrimary" onclick="saveAddressAndContinue()">Bilgilerimi Kontrol Et →</button></div>`);
 }
 
 function addrInput(label,id,value='',type='text'){
   return `<div class=field><label><b>${label}</b></label><input class=formControl id="addr-${id}" type="${type}" value="${escapeAttr(value||'')}"></div>`;
 }
-function toggleBusinessName(){
-  const business=$('#addr-placeType')?.value==='business';
-  if($('#businessNameWrap')) $('#businessNameWrap').style.display=business?'flex':'none';
+function toggleBranchDelivery(){
+  const on=!!$('#addr-branchToggle')?.checked;
+  if($('#homeAddressFields')) $('#homeAddressFields').style.display=on?'none':'grid';
+  if($('#branchAddressFields')) $('#branchAddressFields').style.display=on?'grid':'none';
 }
 function saveAddressAndContinue(){
   const g=id=>($('#addr-'+id)?.value||'').trim();
+  const branch=!!$('#addr-branchToggle')?.checked;
   const customer={
     fullName:g('fullName'),phone:g('phone'),extraPhone:g('extraPhone'),province:g('province'),district:g('district'),
-    neighborhood:g('neighborhood'),avenue:g('avenue'),street:g('street'),buildingNo:g('buildingNo'),floor:g('floor'),
-    doorNo:g('doorNo'),placeType:g('placeType')||'home',businessName:g('businessName'),note:g('note')
+    deliveryMode:branch?'branch':'address', branchName:branch?g('branchName'):'',
+    neighborhood:branch?'Aras Kargo Şube Teslim':g('neighborhood'), fullAddress:branch?'':g('fullAddress'),
+    avenue:branch?g('branchName'):g('fullAddress'), street:'',buildingNo:'',floor:'',doorNo:'',placeType:'home',businessName:'',note:g('note')
   };
-  const missing=[];
-  ['fullName','phone','province','district','neighborhood','buildingNo','floor'].forEach(k=>{if(!customer[k])missing.push(k)});
-  if(!customer.avenue&&!customer.street)return alert('Cadde veya Sokak alanlarından en az birini doldurun.');
-  if(customer.placeType==='business'&&!customer.businessName)return alert('Dükkan / iş yeri adını yazın.');
-  if(missing.length)return alert('Lütfen * işaretli zorunlu alanları doldurun.');
+  if(!customer.fullName||!customer.phone||!customer.province||!customer.district)return alert('Lütfen * işaretli zorunlu alanları doldurun.');
+  if(branch&&!customer.branchName)return alert('Teslim almak istediğiniz Aras Kargo şubesinin tam adını yazın.');
+  if(!branch&&(!customer.neighborhood||!customer.fullAddress))return alert('Mahalle ve tam adres alanlarını doldurun.');
   checkoutState.customer=customer;
+  showAddressConfirmation(customer);
+}
+function customerAddressText(c){
+  if(c.deliveryMode==='branch') return `${c.province} / ${c.district} — ${c.branchName}`;
+  return `${c.neighborhood}, ${c.fullAddress} — ${c.district} / ${c.province}`;
+}
+function showAddressConfirmation(c){
+  document.querySelector('.addressCheckModal')?.remove();
+  const el=document.createElement('div');
+  el.className='addressCheckModal';
+  el.innerHTML=`<div class="addressCheckCard"><button class="addressCheckX" onclick="this.closest('.addressCheckModal').remove()">×</button><span class="checkoutEyebrow">ADRES KONTROLÜ</span><h3>Bilgilerinizi kontrol edin</h3><p class="addressCheckHint">Yanlış veya eksik adres, kargonun gecikmesine neden olabilir.</p><div class="addressCheckData"><b>${escapeHtml(c.fullName)}</b><span>${escapeHtml(c.phone)}${c.extraPhone?` · 2. tel: ${escapeHtml(c.extraPhone)}`:''}</span><strong>${c.deliveryMode==='branch'?'📦 Şubeden teslim':'📍 Adrese teslim'}</strong><span>${escapeHtml(customerAddressText(c))}</span>${c.deliveryMode==='branch'?'<small>Şube adını Google Haritalar’dan kontrol ettiğinizden emin olun.</small>':''}</div><div class="addressCheckActions"><button class="pill" onclick="this.closest('.addressCheckModal').remove()">Düzenle</button><button class="btn" onclick="confirmAddressAndContinue()">Bilgiler doğru, devam et →</button></div></div>`;
+  document.body.appendChild(el);
+}
+function confirmAddressAndContinue(){
+  document.querySelector('.addressCheckModal')?.remove();
+  continueAfterAddress();
+}
+function continueAfterAddress(){
   const hasPersonal=cart.some(x=>x.personalized);
   if(checkoutState.payment==='cod'&&hasPersonal){
-    openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">SİPARİŞ ONAYI</span><h2>Kişiye özel ürün bilgilendirmesi</h2></div></div><div class="checkoutSteps"><span>1 Sepet</span><span>2 Teslimat</span><span class="active">3 Onay</span></div><div class=notice>${settings.personalizedNotice}</div><button class="btn checkoutPrimary" onclick="shippingNotice(true)">Onaylıyorum, devam et →</button></div>`);
+    openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">SİPARİŞ ONAYI</span><h2>Kişiye özel ürün bilgilendirmesi</h2></div></div><div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="addressStep()">← Teslimata dön</button></div><div class="checkoutSteps"><span>1 Sepet</span><span>2 Teslimat</span><span class="active">3 Onay</span></div><div class=notice>${settings.personalizedNotice}</div><button class="btn checkoutPrimary" onclick="shippingNotice(true)">Onaylıyorum, devam et →</button></div>`);
   }else shippingNotice(false);
 }
 function shippingNotice(personalApproved=false){
-  openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">SON ADIM</span><h2>Kargo bilgilendirmesi</h2><p>Siparişinizi oluşturmadan önce kısa bilgilendirmeyi okuyun.</p></div></div><div class="checkoutSteps"><span>1 Sepet</span><span>2 Teslimat</span><span class="active">3 Onay</span></div><div class=notice>${settings.shippingNotice}</div><button class="btn checkoutPrimary" onclick="finalizeOrder(${personalApproved})">Siparişi Oluştur ✓</button></div>`);
+  openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">SON ADIM</span><h2>Kargo bilgilendirmesi</h2><p>Siparişinizi oluşturmadan önce kısa bilgilendirmeyi okuyun.</p></div></div><div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="addressStep()">← Teslimata dön</button></div><div class="checkoutSteps"><span>1 Sepet</span><span>2 Teslimat</span><span class="active">3 Onay</span></div><div class=notice>${settings.shippingNotice}</div><button class="btn checkoutPrimary" onclick="finalizeOrder(${personalApproved})">Siparişi Oluştur ✓</button></div>`);
 }
 async function finalizeOrder(personalApproved){
   if(!checkoutState.customer)return addressStep();

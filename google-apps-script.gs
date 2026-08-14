@@ -231,6 +231,8 @@ function paymentText_(payment) {
 }
 
 function fullAddress_(c) {
+  if (c.deliveryMode === 'branch') return ('ARAS KARGO ŞUBE TESLİM — ' + (c.branchName || '')).trim();
+  if (c.fullAddress) return [c.neighborhood, c.fullAddress].filter(Boolean).join(' ');
   const road = [c.neighborhood, c.avenue, c.street].filter(Boolean).join(' ');
   const nums = [
     c.buildingNo ? 'no:' + c.buildingNo : '',
