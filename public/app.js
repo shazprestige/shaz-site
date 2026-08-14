@@ -43,9 +43,41 @@ function apply(){
 function renderLoopingMarquee(el,text){
   if(!el)return;
   const t=String(text||'').trim();
-  if(!t){el.innerHTML='';return}
+  if(!t){stopLiveTicker(el);el.innerHTML='';return}
   const safe=escapeHtml(t);
-  el.innerHTML=`<span class="marqueeCopy">${safe}</span><span class="marqueeCopy" aria-hidden="true">${safe}</span>`;
+  // Kısa metinlerde dahi ekran boş kalmasın diye aynı parçadan yeterince üret.
+  el.innerHTML=Array.from({length:14},(_,i)=>`<span class="marqueeCopy"${i?' aria-hidden="true"':''}>${safe}</span>`).join('');
+  requestAnimationFrame(()=>startLiveTicker(el,38));
+}
+
+function stopLiveTicker(track){
+  if(track?._shazTickerRaf){cancelAnimationFrame(track._shazTickerRaf);track._shazTickerRaf=0}
+}
+function startLiveTicker(track,speed=36){
+  if(!track)return;
+  stopLiveTicker(track);
+  // CSS animasyonu bazı mobil tarayıcılarda donuyordu. Hareketi JS ile piksel bazlı yapıyoruz.
+  track.style.setProperty('animation','none','important');
+  let x=0,last=performance.now(),step=0;
+  const measure=()=>{
+    const first=track.firstElementChild;
+    if(!first)return 0;
+    const cs=getComputedStyle(first);
+    return first.getBoundingClientRect().width + (parseFloat(cs.marginRight)||0);
+  };
+  const tick=now=>{
+    const newStep=measure();
+    if(newStep>1)step=newStep;
+    const dt=Math.min(50,Math.max(0,now-last)); last=now;
+    if(step>1){
+      x-=speed*(dt/1000);
+      // Aynı parçalar art arda olduğu için bu modulo geçişi görüntüde sıçrama oluşturmaz.
+      while(x<=-step)x+=step;
+      track.style.setProperty('transform',`translate3d(${x.toFixed(2)}px,0,0)`,'important');
+    }
+    track._shazTickerRaf=requestAnimationFrame(tick);
+  };
+  track._shazTickerRaf=requestAnimationFrame(tick);
 }
 
 function renderCampaignCards(){
@@ -88,6 +120,8 @@ function renderCampaignCards(){
     slider.addEventListener('mouseenter',()=>clearInterval(campaignSliderTimer));
     slider.addEventListener('mouseleave',()=>startCampaignAutoplay(cards.length));
   }
+  const campaignTicker=wrap.querySelector('.campaignMarqueeTrack');
+  if(campaignTicker)requestAnimationFrame(()=>startLiveTicker(campaignTicker,42));
   startCampaignAutoplay(cards.length);
 }
 function showCampaignSlide(next,total,userAction=false){

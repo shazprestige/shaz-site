@@ -1553,3 +1553,15 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
   .productDetailTitle .wizardProgress{padding-right:88px!important;}
   .productDetailTitle h2{font-size:clamp(24px,6.2vw,29px)!important;letter-spacing:-.02em!important;}
 }
+
+/* ===== V54 — kayan yazılar gerçekten canlı =====
+   CSS keyframe yerine app.js requestAnimationFrame kullanır. Safari/iOS'ta
+   animation override çakışması yüzünden sabit kalma sorunu böyle kaldırıldı. */
+.announce .track,
+.campaignGlobalMarquee .campaignMarqueeTrack{
+  animation:none!important;
+  transform:translate3d(0,0,0);
+  will-change:transform!important;
+}
+.announce .track{display:flex!important;width:max-content!important;min-width:max-content!important}
+.campaignGlobalMarquee .campaignMarqueeTrack{display:flex!important;width:max-content!important;min-width:max-content!important}

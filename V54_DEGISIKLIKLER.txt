@@ -1,0 +1,6 @@
+V54
+- En üst siyah şeritteki metin CSS animasyonundan çıkarıldı; JavaScript requestAnimationFrame ile sürekli sağdan sola akar.
+- Kampanya/reklam panosu üzerindeki kayan yazı da aynı sağlam animasyon motoruna geçirildi.
+- Metinler kısa olsa bile 14 kopya oluşturularak ekranda boşluk oluşması engellendi.
+- Döngü bir metin parçası genişliğinde modulo ile devam eder; sıfırlama anında görüntü aynı olduğundan zıplama olmaz.
+- V53 favoriden kaldır / favorileri temizle özellikleri korunmuştur.
