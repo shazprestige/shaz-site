@@ -138,7 +138,8 @@
           "removeDiscount": 10,
           "writePositions": [
             "j"
-          ]
+          ],
+          "preferredWritePosition": "SFGFGDFGSFG"
         }
       ],
       "description": "CAM VE KAUÇUK KARIŞIMIDIR",
