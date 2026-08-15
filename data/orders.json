@@ -6,7 +6,7 @@
     "status": "new",
     "statusUpdatedAt": "2026-08-15T17:17:29.189Z",
     "requestId": "73234040-0d91-4da8-970d-cef0d0fb4c0a",
-    "sheetSyncStatus": "pending",
+    "sheetSyncStatus": "synced",
     "sheetSyncError": "",
     "items": [
       {
@@ -116,7 +116,9 @@
         "discount": 500
       }
     ],
-    "total": 1300
+    "total": 1300,
+    "sheetSyncedAt": "2026-08-15T17:17:34.075Z",
+    "sheetId": "SHZ8"
   },
   {
     "id": "SHZ7",
