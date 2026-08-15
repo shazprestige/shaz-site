@@ -59,9 +59,9 @@
   "campaignMarqueePosition": "middle",
   "siteAnnouncement": {
     "enabled": true,
-    "eyebrow": "",
+    "eyebrow": " ",
     "title": "BÜYÜK KAMPANYA!",
-    "text": "YAPACAĞINIZ 3000 TL VE ÜSTÜ ALIŞVERİŞTE 1 SAAT HEDİYE BİZDEN. KAMPANYA 15.08.2026 TARİHİ 00:00'A KADAR GEÇERLİDİR",
+    "text": "YAPACAĞINIZ 3000 TL VE ÜSTÜ ALIŞVERİŞTE 1 SAAT HEDİYE BİZDEN. KAMPANYA 15.08.2026\n TARİHİ 00:00'A KADAR GEÇERLİDİR",
     "buttonText": "Kapat"
   }
 }
