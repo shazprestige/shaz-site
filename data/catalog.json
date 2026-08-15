@@ -27,7 +27,7 @@
     {
       "id": "gozlukler",
       "name": "Gözlük",
-      "order": 8,
+      "order": 7,
       "hidden": false,
       "cover": "",
       "size": "small"
@@ -43,21 +43,21 @@
     {
       "id": "kategori-1786740581832",
       "name": "Çakmak",
-      "order": 6,
+      "order": 4,
       "hidden": false,
       "cover": "/uploads/1786749319709-ofaslc.jpeg"
     },
     {
       "id": "kategori-1786740619033",
       "name": "Kemer",
-      "order": 7,
+      "order": 6,
       "hidden": false,
       "cover": ""
     },
     {
       "id": "kategori-1786798033844",
       "name": "Tesbih",
-      "order": 8,
+      "order": 5,
       "hidden": false,
       "cover": ""
     }
@@ -145,125 +145,6 @@
         "/uploads/1786724306713-eorq5p.jpeg"
       ],
       "badgeColor": "orange"
-    },
-    {
-      "id": "urun-1786740541681-u8uqq",
-      "name": "gözlüklü erkek aksesuar seti Kopya",
-      "category": "setler",
-      "price": 1399,
-      "oldPrice": 1199,
-      "stock": 3,
-      "hidden": false,
-      "badge": "",
-      "image": "",
-      "setEligible": false,
-      "isSet": true,
-      "setItems": [
-        {
-          "id": "setitem-1786740541681-0-5ln",
-          "name": "Saat",
-          "type": "Saat",
-          "removeDiscount": 250,
-          "writePositions": [
-            "Arka kapak",
-            "Kordon"
-          ]
-        },
-        {
-          "id": "setitem-1786740541681-1-myr",
-          "name": "Çakmak",
-          "type": "Çakmak",
-          "removeDiscount": 120,
-          "writePositions": [
-            "Ön yüz",
-            "Arka yüz"
-          ]
-        },
-        {
-          "id": "setitem-1786740541681-2-xfe",
-          "name": "Cüzdan",
-          "type": "Cüzdan",
-          "removeDiscount": 180,
-          "writePositions": [
-            "Ön yüz",
-            "İç yüz"
-          ]
-        },
-        {
-          "id": "setitem-1786740541681-3-b02",
-          "name": "Kemer",
-          "type": "Kemer",
-          "removeDiscount": 140,
-          "writePositions": [
-            "Tokaya",
-            "Kemer ucuna"
-          ]
-        },
-        {
-          "id": "setitem-1786740541681-4-bqs",
-          "name": "Bileklik",
-          "type": "Bileklik",
-          "removeDiscount": 90,
-          "writePositions": [
-            "Ön yüz",
-            "Arka yüz"
-          ]
-        }
-      ],
-      "description": "su geçirmez\nçelik\nsafir çizilmez cam",
-      "features": [],
-      "writePositions": [
-        "arka kapak",
-        "kordon"
-      ],
-      "images": []
-    },
-    {
-      "id": "p2",
-      "name": "2'li Prestige Set",
-      "category": "setler",
-      "price": 1199,
-      "oldPrice": 1499,
-      "stock": 5,
-      "hidden": false,
-      "badge": "EKSTRA İNDİRİM",
-      "image": "",
-      "setEligible": false,
-      "isSet": true,
-      "setItems": [
-        {
-          "id": "watch",
-          "name": "Saat",
-          "type": "Saat",
-          "removeDiscount": 250,
-          "writePositions": [
-            "Arka kapak",
-            "Kordon"
-          ]
-        },
-        {
-          "id": "wallet",
-          "name": "Cüzdan",
-          "type": "Cüzdan",
-          "removeDiscount": 180,
-          "writePositions": [
-            "Ön yüz",
-            "İç yüz"
-          ]
-        },
-        {
-          "id": "lighter",
-          "name": "Çakmak",
-          "type": "Çakmak",
-          "removeDiscount": 120,
-          "writePositions": [
-            "Ön yüz",
-            "Arka yüz"
-          ]
-        }
-      ],
-      "description": "",
-      "features": []
     },
     {
       "id": "p3",
@@ -394,14 +275,16 @@
       "cuzdanlar",
       "kategori-1786740581832",
       "saatler",
-      "kategori-1786740619033"
+      "kategori-1786740619033",
+      "kategori-1786798033844"
     ],
     "categoryOrder": [
       "gozlukler",
       "cuzdanlar",
       "kategori-1786740581832",
       "saatler",
-      "kategori-1786740619033"
+      "kategori-1786740619033",
+      "kategori-1786798033844"
     ],
     "allowSkip": true,
     "excludeSetProducts": true
