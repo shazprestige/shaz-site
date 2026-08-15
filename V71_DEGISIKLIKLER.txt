@@ -1,0 +1,25 @@
+V71 — yalnızca istenen düzeltmeler
+
+1) Telefon doğrulama
+- Ana telefon ve 2. telefon, 0 ile girilirse 11; 5 ile girilirse 10 hane kabul edilir.
+- Veri tarafında baştaki 0 kaldırılır ve 10 hane saklanır.
+- Eksik/fazla girişte kısa uyarı gösterilir.
+- İki telefon aynıysa siparişe devam edilmez ve farklı yedek numara istenir.
+- Aynı kontrol sunucu tarafında da vardır.
+
+2) Cüzdan fotoğraf akışı
+- Tek cüzdanda üç ana seçenek korunur: birebir / yazı / fotoğraf.
+- Hazır set ve Kendi Setini Oluştur akışında cüzdan satırında fotoğraf seçeneği yazı seçimi sırasında görünür.
+- Fotoğraf seçildikten sonra ayrıca ön/iç yüz normal yazısı istenebilir.
+
+3) Ücret mantığı
+- Tek cüzdanda sadece fotoğraf: ilk kişiselleştirme ücreti (varsayılan 75 TL) toplamdır.
+- Tek cüzdanda fotoğraf + ayrı normal yazı: normal yazı ilk kişiselleştirme ücreti + fotoğraf ek ücreti (varsayılan 25 TL).
+- Setlerde cüzdan fotoğrafı kişiselleştirme sırasındaki bir ürün gibi sayılır.
+- Set içinde başka kişiselleştirme de varsa fotoğraflı cüzdanın sıra ücreti üzerine fotoğraf ek ücreti uygulanır.
+- Set içinde tek kişiselleştirme yalnızca cüzdan fotoğrafıysa toplam ilk kişiselleştirme ücretinde kalır.
+
+4) Fotoğraf uyarısı
+- Yükleme ekranında çok karanlık/aşırı parlak fotoğraflardan kaçınılması, net ve dengeli fotoğraf kullanılması ve göz fotoğrafının genelde iyi sonuç verdiği bilgisi gösterilir.
+
+Bunların dışında yönetim ayarları, kampanyalar, ürünler, Excel/E-Tablo, tasarım ve diğer sistemlere dokunulmadı.

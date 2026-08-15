@@ -534,10 +534,13 @@ app.post('/api/orders',async(req,res)=>{
    const normalizedExtra=body.customer.extraPhone?normalizeTRMobile(body.customer.extraPhone):'';
 
    if(!Array.isArray(body.items)||!body.items.length||!body.customer?.fullName||!normalizedPhone){
-     return res.status(400).json({ok:false,message:'Sipariş bilgileri eksik veya telefon numarası geçersiz. Telefon 05 ile başlıyorsa 11, 5 ile başlıyorsa 10 hane olmalıdır.'});
+     return res.status(400).json({ok:false,message:'Sipariş bilgileri eksik veya telefon numarası eksik/fazla. Lütfen numarayı kontrol edin.'});
    }
    if(body.customer.extraPhone&&!normalizedExtra){
-     return res.status(400).json({ok:false,message:'2. telefon numarası geçersiz. Numara 05 ile başlıyorsa 11, 5 ile başlıyorsa 10 hane olmalıdır.'});
+     return res.status(400).json({ok:false,message:'2. telefon numarası eksik veya fazla. Lütfen numarayı kontrol edin.'});
+   }
+   if(normalizedExtra&&normalizedExtra===normalizedPhone){
+     return res.status(400).json({ok:false,message:'İki telefon numarası aynı olamaz. Lütfen yedek olarak farklı bir telefon numarası girin.'});
    }
    body.customer.phone=normalizedPhone;
    body.customer.extraPhone=normalizedExtra;
