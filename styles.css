@@ -2027,3 +2027,125 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
 .walletCaptionFields.hidden,#walletRegularWriteFields.hidden{display:none!important}
 .orderPhotoCustomization a{font-weight:800;text-decoration:underline}
 @media(max-width:560px){.walletCaptionFields{grid-template-columns:1fr}.recommendedHint{font-size:9px;padding:3px 6px}}
+
+
+/* V68: sadece cüzdan fotoğraf ayarı ve tercih edilen kontrolü */
+.walletAdminBox{border:1px solid #e2e5e9;border-radius:14px;padding:14px;margin:10px 0;background:#fafbfc}
+.walletAdminBox .setItemToggle{margin:0 0 10px}
+.recommendedHint{display:inline-flex;align-items:center;margin-left:7px;padding:3px 7px;border-radius:999px;background:#fff4df;color:#8b5d16;font-size:11px;font-weight:800;line-height:1.1;white-space:nowrap}
+.positionChoice{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+
+/* V70 — yalnızca sepet kampanyaları ve kampanya teşvik satırları */
+.campaignPromptBox{display:grid;gap:6px;margin:10px 0;padding:10px 12px;border:1px solid #ead9b9;border-radius:11px;background:#fffaf0;color:#5e4a27;font-size:11px;line-height:1.4}
+.campaignPromptBox strong{color:#8a5b12}
+.checkoutPriceBreakdown{margin-top:10px;border:1px solid #e4e6e8;border-radius:12px;overflow:hidden;background:#fff}
+.checkoutPriceBreakdown>div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid #eef0f2;font-size:12px}
+.checkoutPriceBreakdown>div:last-child{border-bottom:0}
+.checkoutDiscountLine{color:#157347;background:#f4fbf6}
+.checkoutDiscountLine strong{font-weight:900}
+.checkoutPriceBreakdown .checkoutTotal{font-size:15px;background:#fafafa;margin:0;border-radius:0}
+.campaignCreateRow,.campaignRuleHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.discountCampaignAdmin>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer}
+.discountCampaignAdmin>summary small{color:#737b86;font-weight:600}
+.discountCampaignAdmin .simpleDetailsBody{padding-top:12px}
+.campaignScopeBox{margin-top:12px;padding:11px;border:1px solid #e1e5e9;border-radius:10px;background:#fafbfc}
+.campaignScopeBox>b{display:block;margin-bottom:8px;font-size:11px}
+.campaignScopeChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:190px;overflow:auto}
+.campaignScopeChoices label{display:flex;align-items:center;gap:6px;padding:7px 8px;border:1px solid #e6e8eb;border-radius:8px;background:#fff;font-size:10px}
+.campaignScopeGroup{border:1px solid #e4e7ea;border-radius:8px;background:#fff;margin:6px 0;overflow:hidden}
+.campaignScopeGroup>summary{padding:8px 9px;cursor:pointer;font-size:10px;font-weight:800}
+.campaignScopeGroup>summary small{color:#7d8590;font-weight:500}
+.campaignScopeGroup .campaignScopeChoices{padding:8px;border-top:1px solid #eef0f2}
+.campaignRuleNote{margin-top:10px;padding:9px 10px;border-radius:8px;background:#f3f5f7;color:#596270;font-size:10px;line-height:1.45}
+@media(max-width:760px){.campaignCreateRow,.campaignRuleHead{align-items:stretch;flex-direction:column}.campaignCreateRow .btn,.campaignRuleHead .dangerBtn{width:100%}.campaignScopeChoices{grid-template-columns:1fr}}
+
+
+/* ===== V72 — yalnızca mobil kişiselleştirme düzeni + her adımda geri erişimi ===== */
+.backPill{white-space:nowrap;flex:0 0 auto}
+@media(max-width:700px){
+  /* Sadece mobil sihirbaz/kişiselleştirme ekranları: daha kompakt ve dengeli. */
+  .drawer > .wizardHead:not(.productDetailHead){
+    display:grid!important;
+    grid-template-columns:auto minmax(0,1fr) auto!important;
+    align-items:center!important;
+    gap:8px!important;
+    padding:12px 14px 2px!important;
+    margin-bottom:10px!important;
+  }
+  .drawer > .wizardHead:not(.productDetailHead)>div{min-width:0!important;text-align:center!important}
+  .drawer > .wizardHead:not(.productDetailHead) h2{font-size:20px!important;line-height:1.18!important;margin:1px 0 0!important;overflow-wrap:anywhere}
+  .drawer > .wizardHead:not(.productDetailHead) .wizardProgress{font-size:10px!important;line-height:1.25!important;margin-bottom:2px!important}
+  .drawer > .wizardHead:not(.productDetailHead) .pill{padding:7px 9px!important;border-radius:9px!important;font-size:11px!important;min-height:34px!important}
+
+  .wizardCard{padding:13px!important;border-radius:14px!important;margin:10px 0!important}
+  .wizardCard h3{font-size:16px!important;line-height:1.3!important;margin:0 0 8px!important}
+  .wizardCard p,.wizardCard .muted{line-height:1.4!important}
+  .priceInfo{padding:11px 12px!important;border-radius:11px!important;font-size:12px!important;line-height:1.45!important;margin-bottom:10px!important}
+  .choiceStack{display:grid!important;gap:8px!important;width:100%!important}
+  .choiceBtn{width:100%!important;box-sizing:border-box!important;padding:11px 12px!important;border-radius:10px!important;font-size:13px!important;line-height:1.3!important;min-height:43px!important}
+  .walletPhotoChoice{border-style:solid!important}
+
+  /* Ekran görüntüsündeki büyük oval seçimleri normal, naif kutulara dönüştürür. */
+  .writeSelectGrid{display:grid!important;gap:9px!important}
+  .writeSelectGrid .setItemToggle,
+  .wizardCard [data-builder-personalize-row].setItemToggle{
+    display:block!important;
+    padding:11px 12px!important;
+    border-radius:11px!important;
+    background:#fff!important;
+  }
+  .writeSelectGrid .setItemToggle>span,
+  .wizardCard [data-builder-personalize-row].setItemToggle>span{display:block!important;margin-bottom:8px!important}
+  .writeSelectGrid .setItemToggle>span>b,
+  .wizardCard [data-builder-personalize-row].setItemToggle>span>b{font-size:15px!important;line-height:1.25!important}
+  .writeSelectGrid .setItemToggle .muted{font-size:11px!important;margin-top:3px!important}
+
+  .writeSelectGrid .choiceStack .positionChoice,
+  .wizardCard [data-builder-personalize-row] .choiceStack .positionChoice,
+  .writeSelectGrid .setItemToggle>label.positionChoice,
+  .wizardCard [data-builder-personalize-row]>label.positionChoice{
+    width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:9px!important;
+    padding:9px 10px!important;
+    border:1px solid #dfe3e7!important;
+    border-radius:9px!important;
+    background:#fafbfc!important;
+    font-size:13px!important;
+    line-height:1.28!important;
+  }
+  .writeSelectGrid .positionChoice input,
+  .wizardCard [data-builder-personalize-row] .positionChoice input{width:18px!important;height:18px!important;flex:0 0 18px!important;margin:0!important}
+  .writeSelectGrid .positionChoice span,
+  .wizardCard [data-builder-personalize-row] .positionChoice span{min-width:0!important;overflow-wrap:anywhere!important}
+
+  /* Yazı konumu seçimleri de dev kapsül yerine düzenli küçük kutular olur. */
+  .writeDetails .positionChoices,.builderWriteDetails .positionChoices,#walletRegularWriteFields .positionChoices,[id^="builderWalletRegularFields-"] .positionChoices{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:7px!important;
+  }
+  .writeDetails .positionChoice,.builderWriteDetails .positionChoice,#walletRegularWriteFields .positionChoice,[id^="builderWalletRegularFields-"] .positionChoice{
+    width:100%!important;box-sizing:border-box!important;border-radius:9px!important;padding:8px 9px!important;font-size:12px!important;line-height:1.2!important;background:#fafbfc!important;min-width:0!important
+  }
+  .writeDetails .positionChoice input,.builderWriteDetails .positionChoice input,#walletRegularWriteFields .positionChoice input,[id^="builderWalletRegularFields-"] .positionChoice input{width:17px!important;height:17px!important;flex:0 0 17px!important;margin:0!important}
+  .recommendedHint{margin-left:0!important;margin-top:3px!important;font-size:8.5px!important;padding:2px 5px!important;border-radius:6px!important;white-space:normal!important}
+
+  .setItemToggle{border-radius:11px!important;padding:11px!important}
+  .setItemToggle input{width:18px!important;height:18px!important}
+  .writeItem,.builderWriteCard{border-radius:11px!important;padding:11px!important}
+  .writeInput,.formControl{font-size:14px!important;border-radius:9px!important}
+  .walletToggle{padding:9px 10px!important;margin-top:10px!important;border:1px solid #e3e6e9!important;border-radius:9px!important;background:#fafbfc!important;font-size:12px!important;line-height:1.35!important}
+  .walletToggle input{width:18px!important;height:18px!important;flex:0 0 18px!important}
+  .remainingList,.removedList{padding:10px!important;border-radius:10px!important;font-size:12px!important;line-height:1.45!important}
+  .builderNav{gap:8px!important}
+  .builderNav .btn{min-height:43px!important;border-radius:10px!important;padding:10px 12px!important;font-size:13px!important}
+}
+@media(max-width:380px){
+  .writeDetails .positionChoices,.builderWriteDetails .positionChoices,#walletRegularWriteFields .positionChoices,[id^="builderWalletRegularFields-"] .positionChoices{grid-template-columns:1fr!important}
+  .drawer > .wizardHead:not(.productDetailHead) h2{font-size:18px!important}
+}

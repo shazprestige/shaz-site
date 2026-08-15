@@ -1,0 +1,6 @@
+V74
+- Ürün özellikleri alanı ürün kimliğine göre güvenli biçimde kaydedilir.
+- Kaydet tuşuna basılmadan hemen önce ekrandaki açık özellik alanları tekrar kataloğa senkronlanır; yazılan özelliklerin sıfırlanması engellenir.
+- Ürünlerin kapalı listesinden doğrudan Gizle/Göster yapılabilir.
+- Aynı kategori içindeki ürünler ↑ ve ↓ ile sıralanabilir; katalogdaki ürün dizilimi de buna göre değişir.
+- Bunların dışında işlev değiştirilmedi.

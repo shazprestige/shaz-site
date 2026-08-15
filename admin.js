@@ -28,6 +28,14 @@ async function load(){
   settings=await fetch('/api/settings').then(r=>r.json());
   catalog=await fetch('/api/catalog').then(r=>r.json());
   catalog.walletPhotoFee=Number(catalog.walletPhotoFee??25);
+  catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
+  (catalog.products||[]).forEach(p=>{
+    if(adminIsWalletProduct(p)&&p.walletPhotoEnabled===undefined)p.walletPhotoEnabled=true;
+    if(p.writeEnabled===undefined){
+      const n=adminNormalizedTR(adminCategoryName(p)+' '+(p?.name||''));
+      p.writeEnabled=!(n.includes('tesb')||n.includes('tesp'));
+    }
+  });
   settings.campaignCards=settings.campaignCards||[];
   settings.siteAnnouncement=settings.siteAnnouncement||{enabled:false,eyebrow:'DUYURU',title:'',text:'',buttonText:'Kapat'};
   settings.campaignCards.forEach((c,i)=>{
@@ -46,6 +54,7 @@ async function load(){
   setTimeout(()=>{sendPreview();previewTo('header')},600);
 }
 async function saveAll(){
+  syncVisibleProductFeatures();
   const r=await fetch('/api/admin/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({settings,catalog})}).then(r=>r.json());
   if(!r.ok)return alert(r.message||'Kaydedilemedi.');
   sendPreview();
@@ -104,6 +113,39 @@ function preferredPositionOptions(positions,selected=''){
   return `<option value="">Tercih işareti yok</option>`+vals.map(x=>`<option value="${attr(x)}" ${String(selected||'')===String(x)?'selected':''}>${esc(x)}</option>`).join('');
 }
 
+function adminNormalizedTR(v){return String(v||'').toLocaleLowerCase('tr-TR')}
+function adminCategoryName(p){return (catalog.categories||[]).find(c=>c.id===p?.category)?.name||p?.category||''}
+function adminIsWalletProduct(p){return adminNormalizedTR(adminCategoryName(p)+' '+(p?.name||'')).includes('cüzdan')}
+function adminIsWalletSetItem(it){
+  const linked=it?.productId?(catalog.products||[]).find(p=>p.id===it.productId):null;
+  return adminNormalizedTR((it?.type||'')+' '+(it?.name||'')+' '+adminCategoryName(linked)+' '+(linked?.name||'')).includes('cüzdan');
+}
+function adminSetItemWriteEnabled(it){
+  const linked=it?.productId?(catalog.products||[]).find(p=>p.id===it.productId):null;
+  return it?.writeEnabled!==false && linked?.writeEnabled!==false;
+}
+function previewProductStage(productId,stage='write'){
+  const f=$('#previewFrame'); if(!f?.contentWindow)return;
+  sendPreview();
+  setTimeout(()=>f.contentWindow.postMessage({type:'shaz-preview-product-stage',productId,stage},'*'),70);
+}
+function syncPreferredSelect(input,selectId,productIndex){
+  const sel=document.getElementById(selectId); if(!sel)return;
+  const current=catalog.products[productIndex].preferredWritePosition||'';
+  sel.innerHTML=preferredPositionOptions(catalog.products[productIndex].writePositions||[],current);
+  if(current && !(catalog.products[productIndex].writePositions||[]).includes(current)){
+    catalog.products[productIndex].preferredWritePosition=''; sel.value='';
+  }
+}
+function syncSetPreferredSelect(selectId,productIndex,itemIndex){
+  const sel=document.getElementById(selectId); if(!sel)return;
+  const item=catalog.products?.[productIndex]?.setItems?.[itemIndex]; if(!item)return;
+  const current=item.preferredWritePosition||'';
+  const positions=item.writePositions||[];
+  sel.innerHTML=preferredPositionOptions(positions,current);
+  if(current && !positions.includes(current)){item.preferredWritePosition='';sel.value='';}
+}
+
 function show(tab){
   const adminRoot=document.querySelector('.simpleAdmin');
   const preview=document.querySelector('.previewPane');
@@ -114,6 +156,7 @@ function show(tab){
   if(tab==='site')return renderSite();
   if(tab==='catalog')return renderCatalog();
   if(tab==='custom')return renderCatalog();
+  if(tab==='discounts')return renderDiscountCampaigns();
   if(tab==='orders')return renderOrders();
 }
 function campaignCategoryOptions(selected='tum'){
@@ -278,7 +321,7 @@ async function bulkCreateProductsFromPhotos(){
     const start=catalog.products.filter(p=>p.category===categoryId).length;
     (r.files||[]).forEach((f,n)=>{
       const id='urun-'+Date.now()+'-'+n+'-'+Math.random().toString(36).slice(2,6);
-      catalog.products.push({id,name:`Yeni Ürün ${start+n+1}`,description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:f.url,images:[f.url],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[],preferredWritePosition:''});
+      catalog.products.push({id,name:`Yeni Ürün ${start+n+1}`,description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:f.url,images:[f.url],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[],preferredWritePosition:'',writeEnabled:true,walletPhotoEnabled:true});
       if(status)status.textContent=`${n+1} / ${(r.files||[]).length} ürün hazırlandı.`;
     });
     const saved=await fetch('/api/admin/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({settings,catalog})}).then(x=>x.json());
@@ -289,6 +332,49 @@ async function bulkCreateProductsFromPhotos(){
   }catch(e){if(status)status.textContent='Hata: '+(e.message||'Yükleme başarısız.');alert(e.message||'Yükleme başarısız.');}
   finally{if(btn){btn.disabled=false;btn.textContent='Seçili Fotoğrafları Ayrı Ürünler Olarak Yükle'}}
 }
+
+function discountCampaignScopeProducts(rule,index){
+  const scope=rule.scopeType||'category';
+  if(scope==='all')return '<div class=help>Bu kampanya sepetteki tüm ürünleri sayar.</div>';
+  if(scope==='products'){
+    const groups=(catalog.categories||[]).filter(c=>c.id!=='tum').map(c=>{
+      const ps=(catalog.products||[]).filter(p=>p.category===c.id);
+      if(!ps.length)return '';
+      return `<details class="campaignScopeGroup"><summary>${esc(c.name||c.id)} <small>${ps.length} ürün</small></summary><div class="campaignScopeChoices">${ps.map(p=>`<label><input type=checkbox ${(rule.productIds||[]).includes(p.id)?'checked':''} onchange="toggleDiscountCampaignProduct(${index},'${attr(p.id)}',this.checked)"> ${esc(p.name)}</label>`).join('')}</div></details>`;
+    }).join('');
+    return `<div class=campaignScopeBox><b>Uygulanacak ürünler</b>${groups||'<div class=help>Ürün bulunamadı.</div>'}</div>`;
+  }
+  return `<div class=campaignScopeBox><b>Uygulanacak kategoriler</b><div class=campaignScopeChoices>${(catalog.categories||[]).filter(c=>c.id!=='tum').map(c=>`<label><input type=checkbox ${(rule.categoryIds||[]).includes(c.id)?'checked':''} onchange="toggleDiscountCampaignCategory(${index},'${attr(c.id)}',this.checked)"> ${esc(c.name||c.id)}</label>`).join('')}</div></div>`;
+}
+function discountTypeHelp(rule){
+  if(rule.discountType==='percent')return 'Eşiğe ulaşınca kampanyaya dahil ürünlerin toplamından bu yüzde düşer.';
+  if(rule.discountType==='bundlePrice')return 'Örn. minimum 3 ve değer 1300 ise, kampanyaya uyan ilk 3 ürünün kampanya toplamı 1300 TL olur.';
+  return 'Eşiğe ulaşınca sepet toplamından bu TL tutarı bir kez düşer.';
+}
+function renderDiscountCampaigns(){
+  catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
+  const cards=catalog.checkoutCampaigns.map((r,i)=>`<details class="panel simpleAdminDetails discountCampaignAdmin" ${i===catalog.checkoutCampaigns.length-1?'open':''}><summary><span>${esc(r.name||('Kampanya '+(i+1)))}</span><small>${r.enabled!==false?'Aktif':'Kapalı'} · En az ${Math.max(1,Number(r.minQty||1))} ürün</small></summary><div class=simpleDetailsBody>
+    <div class=campaignRuleHead><label class=setItemToggle><span><b>Kampanya aktif</b><small class=muted>İstediğinde kapatabilirsin; silmek zorunda değilsin.</small></span><input type=checkbox ${r.enabled!==false?'checked':''} onchange="catalog.checkoutCampaigns[${i}].enabled=this.checked;changed('.drawer')"></label><button class=dangerBtn onclick="removeDiscountCampaign(${i})">Kampanyayı Sil</button></div>
+    <div class=grid2>
+      ${input('Kampanya adı',`catalog.checkoutCampaigns[${i}].name`,r.name||'Yeni Kampanya','Müşteri sepette bu adı görür.','.drawer')}
+      ${input('Kampanya için gerekli adet',`catalog.checkoutCampaigns[${i}].minQty`,Math.max(1,Number(r.minQty||1)),'Yalnızca seçtiğin ürün/kategoriler bu adede sayılır. Sepette başka ürün bulunması kampanyayı bozmaz.','.drawer','number')}
+      <div class=field><label><b>Kampanya hangi ürünlerde?</b></label><select class=formControl onchange="catalog.checkoutCampaigns[${i}].scopeType=this.value;renderDiscountCampaigns()"><option value=category ${(r.scopeType||'category')==='category'?'selected':''}>Kategori seç</option><option value=products ${r.scopeType==='products'?'selected':''}>Tek tek ürün seç</option><option value=all ${r.scopeType==='all'?'selected':''}>Tüm ürünler</option></select><div class=help>Örn. sadece Saat kategorisi veya istediğin tek tek ürünler.</div></div>
+      <div class=field><label><b>İndirim türü</b></label><select class=formControl onchange="catalog.checkoutCampaigns[${i}].discountType=this.value;renderDiscountCampaigns()"><option value=fixed ${(r.discountType||'fixed')==='fixed'?'selected':''}>Sabit TL indirim</option><option value=percent ${r.discountType==='percent'?'selected':''}>Yüzdelik indirim</option><option value=bundlePrice ${r.discountType==='bundlePrice'?'selected':''}>Kampanyalı toplam fiyat</option></select><div class=help>${discountTypeHelp(r)}</div></div>
+      ${input(r.discountType==='percent'?'İndirim yüzdesi':r.discountType==='bundlePrice'?'Kampanyalı toplam fiyat':'İndirim tutarı',`catalog.checkoutCampaigns[${i}].discountValue`,Number(r.discountValue||0),r.discountType==='percent'?'Örn: 15 = %15 indirim.':r.discountType==='bundlePrice'?'Örn: 1300 = seçilen adet kampanyada toplam 1300 TL.':'Örn: 400 = toplamdan 400 TL düşer.','.drawer','number')}
+    </div>
+    ${discountCampaignScopeProducts(r,i)}
+    <div class=campaignRuleNote>Sepette kampanya şartı henüz tamamlanmadıysa müşteri, kaç ürün daha eklerse kampanyaya ulaşacağını küçük bir bilgilendirme olarak görür. Sepette başka ürünler olması bu kampanyanın sayımını bozmaz.</div>
+  </div></details>`).join('');
+  shell('Kampanyalar','Sepet indirimi kuralları burada. Her kampanya kapalı kutu halinde durur; açıp yalnızca o kampanyayı düzenlersin.',`<div class=panel><div class=campaignCreateRow><div><h2>Sepet Kampanyaları</h2><div class=help>TL indirim, yüzdelik indirim veya belirli adette kampanyalı toplam fiyat oluşturabilirsin.</div></div><button class=btn onclick=addDiscountCampaign()>+ Kampanya Ekle</button></div><div class=campaignRuleNote>Aynı ürün birden fazla aktif kampanyanın şartını aynı anda karşılarsa kampanyalar birlikte uygulanır.</div></div>${cards||'<div class=panel><b>Henüz sepet kampanyası yok.</b><div class=help>“Kampanya Ekle” ile ilk kampanyanı oluştur.</div></div>'}`);
+}
+function addDiscountCampaign(){
+  catalog.checkoutCampaigns=catalog.checkoutCampaigns||[];
+  catalog.checkoutCampaigns.push({id:'sepet-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),name:'Yeni Kampanya',enabled:true,scopeType:'category',categoryIds:[],productIds:[],minQty:3,discountType:'fixed',discountValue:0});
+  renderDiscountCampaigns();
+}
+function removeDiscountCampaign(i){if(confirm('Bu kampanya silinsin mi?')){catalog.checkoutCampaigns.splice(i,1);renderDiscountCampaigns()}}
+function toggleDiscountCampaignCategory(i,id,on){const r=catalog.checkoutCampaigns[i];r.categoryIds=r.categoryIds||[];if(on&&!r.categoryIds.includes(id))r.categoryIds.push(id);if(!on)r.categoryIds=r.categoryIds.filter(x=>x!==id);changed('.drawer')}
+function toggleDiscountCampaignProduct(i,id,on){const r=catalog.checkoutCampaigns[i];r.productIds=r.productIds||[];if(on&&!r.productIds.includes(id))r.productIds.push(id);if(!on)r.productIds=r.productIds.filter(x=>x!==id);changed('.drawer')}
 
 function renderCatalog(){
   const cats=catalog.categories.filter(c=>c.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0));
@@ -393,7 +479,12 @@ function productCompactRow(p){
         <span class=compactMeta><b>${esc(p.name||'Yeni Ürün')}</b><small>₺${Number(p.price||0).toLocaleString('tr-TR')} · Stok ${Number(p.stock||0)}${p.isSet?' · Hazır set':''}</small></span>
         <span class=compactEdit>${open?'Düzenlemeyi kapat':'Düzenle'}</span>
       </button>
-      <button class=duplicateBtn onclick="duplicateProduct(${i})">⧉ Çoğalt</button>
+      <div class=compactQuickActions>
+        <button class=duplicateBtn type=button title="Yukarı taşı" onclick="moveProductWithinCategory('${attr(p.id)}',-1)">↑</button>
+        <button class=duplicateBtn type=button title="Aşağı taşı" onclick="moveProductWithinCategory('${attr(p.id)}',1)">↓</button>
+        <button class=duplicateBtn type=button onclick="quickToggleProductHidden('${attr(p.id)}')">${p.hidden?'Göster':'Gizle'}</button>
+        <button class=duplicateBtn onclick="duplicateProduct(${i})">⧉ Çoğalt</button>
+      </div>
     </div>
     ${open?`<div class=compactEditor>${productCard(p,true)}</div>`:''}
   </div>`;
@@ -422,6 +513,37 @@ function productGalleryAdmin(p,i){
     </div>
   </div>`).join('')}</div>`;
 }
+function updateProductFeatures(productId,value){
+  const p=(catalog.products||[]).find(x=>x.id===productId);
+  if(!p)return;
+  p.features=String(value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  changed(`[data-product-id=\"${productId}\"]`);
+}
+function syncVisibleProductFeatures(){
+  document.querySelectorAll('[data-product-features-id]').forEach(el=>{
+    const p=(catalog.products||[]).find(x=>x.id===el.dataset.productFeaturesId);
+    if(p)p.features=String(el.value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  });
+}
+function moveProductWithinCategory(productId,direction){
+  const i=(catalog.products||[]).findIndex(x=>x.id===productId);
+  if(i<0)return;
+  const p=catalog.products[i];
+  const same=(catalog.products||[]).map((x,idx)=>({x,idx})).filter(o=>o.x.category===p.category);
+  const pos=same.findIndex(o=>o.idx===i);
+  const other=same[pos+(direction<0?-1:1)];
+  if(!other)return;
+  [catalog.products[i],catalog.products[other.idx]]=[catalog.products[other.idx],catalog.products[i]];
+  changed('#products');
+  renderCatalog();
+}
+function quickToggleProductHidden(productId){
+  const p=(catalog.products||[]).find(x=>x.id===productId);
+  if(!p)return;
+  p.hidden=!p.hidden;
+  changed('#products');
+  renderCatalog();
+}
 function productCard(p,embedded=false){
   const i=catalog.products.findIndex(x=>x.id===p.id);
   const root=`[data-product-id="${p.id}"]`;
@@ -442,24 +564,30 @@ function productCard(p,embedded=false){
     </div>
 
     <div class=field><label><b>Özellikler / tikli maddeler</b></label>
-      <textarea class=formControl data-preview-target="${attr(root)}" rows=3 placeholder="Her satıra bir özellik yaz
+      <textarea class=formControl data-product-features-id="${attr(p.id)}" data-preview-target="${attr(root)}" rows=3 placeholder="Her satıra bir özellik yaz
 UV400 koruma
 Paslanmaz çelik kasa"
-        oninput="catalog.products[${i}].features=this.value.split('\n').map(x=>x.trim()).filter(Boolean);changed(this.dataset.previewTarget)">${esc((p.features||[]).join('\n'))}</textarea>
+        oninput="updateProductFeatures('${attr(p.id)}',this.value)" onchange="updateProductFeatures('${attr(p.id)}',this.value)">${esc((Array.isArray(p.features)?p.features:String(p.features||'').split(/\r?\n/)).filter(Boolean).join('\n'))}</textarea>
       <div class=help>Ürünü İncele ekranında ✓ işaretli maddeler halinde görünür. Hazır sette set içeriği de ayrıca otomatik görünür.</div>
     </div>
 
+    ${!p.isSet?`<label class=setItemToggle><span><b>Yazı işlemini müşteriye kapat</b><small class=muted>Örn. tesbihte yazı yapılmıyorsa bunu işaretle. Müşteriye yazı seçeneği hiç gösterilmez.</small></span><input type=checkbox ${p.writeEnabled===false?'checked':''} onchange="catalog.products[${i}].writeEnabled=!this.checked;changed('.drawer');previewProductStage('${attr(p.id)}','write')"></label>
     <div class=field><label><b>Yazı / kişiselleştirme konumları</b></label>
       <input class=formControl data-preview-target=".drawer" value="${attr((p.writePositions||[]).join(', '))}" placeholder="Örn: Arka kapak, Kordon"
-        oninput="catalog.products[${i}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);changed(this.dataset.previewTarget)">
-      <div class=help>Örn. saatte “Arka kapak, Kordon”. Ön yüz / arka yüz zorunlu değil; burayı istediğin gibi değiştir.</div>
+        onfocus="previewProductStage('${attr(p.id)}','write')" oninput="catalog.products[${i}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);syncPreferredSelect(this,'preferred-${attr(p.id)}',${i});changed(this.dataset.previewTarget);previewProductStage('${attr(p.id)}','write')">
+      <div class=help>Örn. saatte “Arka kapak, Kordon”. Virgülle ayırdığın her ifade müşteride ayrı seçenek olur.</div>
     </div>
-    <div class=field><label><b>Genelde tercih edilen konum</b></label>
-      <select class=formControl data-preview-target=".drawer" onfocus="changed(this.dataset.previewTarget)" onchange="catalog.products[${i}].preferredWritePosition=this.value;changed(this.dataset.previewTarget)">
+    <div class=field><label><b>⭐ Genelde tercih edilen</b></label>
+      <select id="preferred-${attr(p.id)}" class=formControl onfocus="previewProductStage('${attr(p.id)}','write')" onchange="catalog.products[${i}].preferredWritePosition=this.value;changed('.drawer');previewProductStage('${attr(p.id)}','write')">
         ${preferredPositionOptions(p.writePositions||[],p.preferredWritePosition||'')}
       </select>
-      <div class=help>Müşteri kararsız kaldığında yardımcı olmak için seçtiğin konumun yanında “Genelde tercih edilen” ibaresi görünür. Seçim zorunlu değildir.</div>
-    </div>
+      <div class=help>Buradan bir konum seçersen müşteride o seçeneğin yanında <b>“Genelde tercih edilen”</b> yazar. Yazı konumunu yukarıda değiştirirken bu liste de anında güncellenir.</div>
+    </div>`:''}
+    ${adminIsWalletProduct(p)?`<div class=walletAdminBox>
+      <label class=setItemToggle><span><b>📷 Cüzdana fotoğraf işleme</b><small class=muted>Müşteriye “Cüzdana fotoğraf işleme istiyorum” seçeneğini gösterir.</small></span><input type=checkbox ${p.walletPhotoEnabled!==false?'checked':''} onchange="catalog.products[${i}].walletPhotoEnabled=this.checked;changed('.drawer');previewProductStage('${attr(p.id)}','wallet-toggle')"></label>
+      <div class=twoMini><div class=field><label><b>Fotoğraf işleme ücreti</b></label><input class=formControl type=number value="${Number(catalog.walletPhotoFee??25)}" onfocus="previewProductStage('${attr(p.id)}','wallet')" oninput="catalog.walletPhotoFee=Number(this.value);changed('.drawer');previewProductStage('${attr(p.id)}','wallet')"><div class=help>Normal yazı ücretlerinden bağımsız eklenir.</div></div></div>
+      <div class=help>Bu kutunun tikini kaldırırsan fotoğraf seçeneği yalnızca bu cüzdanda müşteriye gösterilmez. Normal yazı seçenekleri etkilenmez.</div>
+    </div>`:''}
 
     <div class=twoMini>
       <div class=field><label>Fiyat</label>
@@ -521,8 +649,10 @@ function renderInlineSetEditor(p,pi){
       <div class=setAdminRowTitle><b>${ii+1}. ${esc(it.name||linked?.name||'İçerik')}</b><small>Müşterinin set içeriğinde ve “ürün çıkar” adımında göreceği kalem</small></div>
       <div class=field><label><b>Ürün / içerik adı</b></label><input class=formControl value="${attr(it.name||linked?.name||'')}" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','remove')" oninput="catalog.products[${pi}].setItems[${ii}].name=this.value;changedSetStage('${attr(p.id)}','${attr(it.id)}','remove')"><div class=help>Bu isim müşterinin setten ürün çıkarma ekranında aynen görünür.</div></div>
       <div class=field><label><b>Çıkarılırsa düşecek TL</b></label><input class=formControl type=number value="${Number(it.removeDiscount||0)}" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','remove')" oninput="catalog.products[${pi}].setItems[${ii}].removeDiscount=Number(this.value);changedSetStage('${attr(p.id)}','${attr(it.id)}','remove')"><div class=help>Müşteri bu ürünü setten çıkarırsa set toplamından tam bu tutar düşer.</div></div>
-      <div class=field><label><b>Yazı konumları</b></label><input class=formControl value="${attr((it.writePositions||linked?.writePositions||[]).join(', '))}" placeholder="Arka kapak, Kordon" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','write')" oninput="catalog.products[${pi}].setItems[${ii}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);changedSetStage('${attr(p.id)}','${attr(it.id)}','write')"><div class=help>Virgülle ayırdığın her ifade müşteriye ayrı seçim olur: “Arka kapak, Kordon” → 2 seçenek.</div></div>
-      <div class=field><label><b>Genelde tercih edilen konum</b></label><select class=formControl onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','write')" onchange="catalog.products[${pi}].setItems[${ii}].preferredWritePosition=this.value;changedSetStage('${attr(p.id)}','${attr(it.id)}','write')">${preferredPositionOptions(it.writePositions||linked?.writePositions||[],it.preferredWritePosition||linked?.preferredWritePosition||'')}</select><div class=help>Müşteride bu konumun yanında “Genelde tercih edilen” görünür; diğer seçenekler aynen kalır.</div></div>
+      <label class=setItemToggle><span><b>Yazı işlemini müşteriye kapat</b><small class=muted>Bu set içindeki bu üründe yazı yapılamıyorsa işaretle.</small></span><input type=checkbox ${adminSetItemWriteEnabled(it)?'':'checked'} onchange="catalog.products[${pi}].setItems[${ii}].writeEnabled=!this.checked;changedSetStage('${attr(p.id)}','${attr(it.id)}','write')"></label>
+      <div class=field><label><b>Yazı konumları</b></label><input class=formControl value="${attr((it.writePositions||linked?.writePositions||[]).join(', '))}" placeholder="Arka kapak, Kordon" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','write')" oninput="catalog.products[${pi}].setItems[${ii}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);syncSetPreferredSelect('set-pref-inline-${attr(p.id)}-${attr(it.id)}',${pi},${ii});changedSetStage('${attr(p.id)}','${attr(it.id)}','write')"><div class=help>Virgülle ayırdığın her ifade müşteriye ayrı seçim olur: “Arka kapak, Kordon” → 2 seçenek.</div></div>
+      <div class=field><label><b>Genelde tercih edilen konum</b></label><select id="set-pref-inline-${attr(p.id)}-${attr(it.id)}" class=formControl onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','write')" onchange="catalog.products[${pi}].setItems[${ii}].preferredWritePosition=this.value;changedSetStage('${attr(p.id)}','${attr(it.id)}','write')">${preferredPositionOptions(it.writePositions||linked?.writePositions||[],it.preferredWritePosition||linked?.preferredWritePosition||'')}</select><div class=help>Yazı konumunu değiştirirken seçenekler anında yenilenir; seçtiğin konum müşteride “Genelde tercih edilen” olarak görünür.</div></div>
+      ${adminIsWalletSetItem(it)?`<label class=setItemToggle><span><b>📷 Bu sette cüzdan fotoğrafı göster</b><small class=muted>Kapatırsan müşteriye bu set içindeki cüzdan için fotoğraf seçeneği sunulmaz.</small></span><input type=checkbox ${it.walletPhotoEnabled!==false && linked?.walletPhotoEnabled!==false?'checked':''} onchange="catalog.products[${pi}].setItems[${ii}].walletPhotoEnabled=this.checked;changedSetStage('${attr(p.id)}','${attr(it.id)}','write')"></label>`:''}
       <button class=dangerBtn onclick="removeSetItem(${pi},${ii});renderCatalog()">Bu İçeriği Setten Çıkar</button>
     </div>`;
   }).join('');
@@ -537,13 +667,13 @@ function addExistingProductToInlineSet(setId){
   if(!set||!sel?.value)return alert('Önce bir ürün seç.');
   const p=catalog.products.find(x=>x.id===sel.value);if(!p)return;
   set.setItems=set.setItems||[];
-  set.setItems.push({id:'setitem-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),productId:p.id,name:p.name,type:(catalog.categories.find(c=>c.id===p.category)||{}).name||p.category,removeDiscount:Number(p.price||0),writePositions:[...(p.writePositions||[])],preferredWritePosition:p.preferredWritePosition||''});
+  set.setItems.push({id:'setitem-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),productId:p.id,name:p.name,type:(catalog.categories.find(c=>c.id===p.category)||{}).name||p.category,removeDiscount:Number(p.price||0),writePositions:[...(p.writePositions||[])],preferredWritePosition:p.preferredWritePosition||'',walletPhotoEnabled:p.walletPhotoEnabled!==false});
   changed('.drawer');renderCatalog();
 }
 function addBlankInlineSetItem(setId){
   const set=catalog.products.find(x=>x.id===setId);if(!set)return;
   set.setItems=set.setItems||[];
-  set.setItems.push({id:'setitem-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),productId:'',name:'Yeni içerik',type:'',removeDiscount:0,writePositions:[],preferredWritePosition:''});
+  set.setItems.push({id:'setitem-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),productId:'',name:'Yeni içerik',type:'',removeDiscount:0,writePositions:[],preferredWritePosition:'',writeEnabled:true,walletPhotoEnabled:true});
   changed('.drawer');renderCatalog();
 }
 function renderCopyProductSettingsPanel(p,i){
@@ -557,8 +687,9 @@ function renderCopyProductSettingsPanel(p,i){
     </div></details>`;
   }).join('');
   return `<details class="copySettingsPanel simpleAdminDetails"><summary>Bu bilgileri diğer ürünlerde kullan <small>Tekrar yazmak yerine seçtiklerine kopyala</small></summary><div class=simpleDetailsBody>
-    <div class=copySettingsExplain><b>Nasıl çalışır?</b> Önce hangi bilgilerin kopyalanacağını seç, sonra aşağıdan kategori ve ürünleri işaretle. <b>Ürün adı, fotoğraflar ve stok hiçbir zaman otomatik kopyalanmaz.</b></div>
+    <div class=copySettingsExplain><b>Nasıl çalışır?</b> Önce hangi bilgilerin kopyalanacağını seç, sonra aşağıdan kategori ve ürünleri işaretle. <b>Fotoğraflar ve stok hiçbir zaman otomatik kopyalanmaz.</b> Ürün adını istersen aşağıdaki kutudan ayrıca seçebilirsin.</div>
     <div class=copyFieldChoices>
+      <label><input type=checkbox class="copyField-${attr(p.id)}" value=name> Ürün adı</label>
       <label><input type=checkbox class="copyField-${attr(p.id)}" value=description checked> Açıklama</label>
       <label><input type=checkbox class="copyField-${attr(p.id)}" value=features checked> Özellikler</label>
       <label><input type=checkbox class="copyField-${attr(p.id)}" value=writePositions checked> Yazı konumları</label>
@@ -586,7 +717,8 @@ function applyProductInfoToSelected(sourceId){
   targetIds.forEach(id=>{
     const t=catalog.products.find(x=>x.id===id);if(!t)return;
     fields.forEach(f=>{
-      if(f==='description')t.description=src.description||'';
+      if(f==='name')t.name=src.name||'';
+      else if(f==='description')t.description=src.description||'';
       else if(f==='features')t.features=[...(src.features||[])];
       else if(f==='writePositions'){t.writePositions=[...(src.writePositions||[])];t.preferredWritePosition=src.preferredWritePosition||'';}
       else if(f==='price')t.price=Number(src.price||0);
@@ -613,7 +745,7 @@ function isSetCategory(categoryId){
 function addProduct(categoryId){
   const id='urun-'+Date.now();
   const readySet=isSetCategory(categoryId);
-  catalog.products.push({id,name:'Yeni Ürün',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:'',images:[],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[],preferredWritePosition:''});
+  catalog.products.push({id,name:'Yeni Ürün',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:'',images:[],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[],preferredWritePosition:'',writeEnabled:true,walletPhotoEnabled:true});
   adminOpenCategory=categoryId;adminProductSearch='';adminOpenProduct=id;
   changed('#products');renderCatalog();
   setTimeout(()=>document.getElementById('admin-product-'+id)?.scrollIntoView({behavior:'smooth',block:'nearest'}),80);
@@ -757,8 +889,9 @@ function renderSetAdminPanel(p){
       <div class=setAdminRowTitle><b>${ii+1}. İçerik</b><small>Müşterinin sette göreceği ürün/parça</small></div>
       <div class=field><label><b>Ürün / içerik adı</b></label><input class=formControl value="${attr(it.name||linked?.name||'')}" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','remove')" oninput="catalog.products[${pi}].setItems[${ii}].name=this.value;changedSetStage('${attr(p.id)}','${attr(it.id)}','remove')"><div class=help>${linked?'Katalogdan bağlı: '+esc(linked.name):'Elle tanımlı içerik.'} Bu isim müşterinin “setten ürün çıkarma” ekranında aynen görünür.</div></div>
       <div class=field><label><b>Setten çıkarılırsa düşecek fiyat</b></label><input class=formControl type=number value="${Number(it.removeDiscount||0)}" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','remove')" oninput="catalog.products[${pi}].setItems[${ii}].removeDiscount=Number(this.value);changedSetStage('${attr(p.id)}','${attr(it.id)}','remove')"><div class=help>Müşteri bu içeriğin tikini kaldırırsa set fiyatından tam olarak bu tutar düşer.</div></div>
-      <div class=field><label><b>Yazı konumları</b></label><input class=formControl value="${attr((it.writePositions||linked?.writePositions||[]).join(', '))}" placeholder="Arka kapak, Kordon" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','write')" oninput="catalog.products[${pi}].setItems[${ii}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);changedSetStage('${attr(p.id)}','${attr(it.id)}','write')"><div class=help>Virgülden önce/sonra yazdığın her ifade müşteriye ayrı konum seçeneği olur. Örn. “Arka kapak, Kordon”.</div></div>
-      <div class=field><label><b>Genelde tercih edilen konum</b></label><select class=formControl onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','write')" onchange="catalog.products[${pi}].setItems[${ii}].preferredWritePosition=this.value;changedSetStage('${attr(p.id)}','${attr(it.id)}','write')">${preferredPositionOptions(it.writePositions||linked?.writePositions||[],it.preferredWritePosition||linked?.preferredWritePosition||'')}</select><div class=help>Seçtiğin konum müşteride tavsiye ibaresiyle gösterilir.</div></div>
+      <label class=setItemToggle><span><b>Yazı işlemini müşteriye kapat</b><small class=muted>Bu set içindeki bu üründe yazı yapılamıyorsa işaretle.</small></span><input type=checkbox ${adminSetItemWriteEnabled(it)?'':'checked'} onchange="catalog.products[${pi}].setItems[${ii}].writeEnabled=!this.checked;changedSetStage('${attr(p.id)}','${attr(it.id)}','write')"></label>
+      <div class=field><label><b>Yazı konumları</b></label><input class=formControl value="${attr((it.writePositions||linked?.writePositions||[]).join(', '))}" placeholder="Arka kapak, Kordon" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','write')" oninput="catalog.products[${pi}].setItems[${ii}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);syncSetPreferredSelect('set-pref-${attr(p.id)}-${attr(it.id)}',${pi},${ii});changedSetStage('${attr(p.id)}','${attr(it.id)}','write')"><div class=help>Virgülden önce/sonra yazdığın her ifade müşteriye ayrı konum seçeneği olur. Örn. “Arka kapak, Kordon”.</div></div>
+      <div class=field><label><b>Genelde tercih edilen konum</b></label><select id="set-pref-${attr(p.id)}-${attr(it.id)}" class=formControl onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','write')" onchange="catalog.products[${pi}].setItems[${ii}].preferredWritePosition=this.value;changedSetStage('${attr(p.id)}','${attr(it.id)}','write')">${preferredPositionOptions(it.writePositions||linked?.writePositions||[],it.preferredWritePosition||linked?.preferredWritePosition||'')}</select><div class=help>Yazı konumunu değiştirirken seçenekler anında yenilenir; seçtiğin konum müşteride tavsiye ibaresiyle gösterilir.</div></div>
       <button class=dangerBtn onclick="removeSetItem(${pi},${ii})">Bu İçeriği Setten Çıkar</button>
     </div>`;
   }).join('');
@@ -780,12 +913,12 @@ function addExistingProductToSet(setId){
   if(!set||!sel?.value)return alert('Önce bir ürün seç.');
   const p=catalog.products.find(x=>x.id===sel.value); if(!p)return;
   set.setItems=set.setItems||[];
-  set.setItems.push({id:'setitem-'+Date.now(),productId:p.id,name:p.name,type:(catalog.categories.find(c=>c.id===p.category)||{}).name||p.category,removeDiscount:Number(p.price||0),writePositions:[...(p.writePositions||[])],preferredWritePosition:p.preferredWritePosition||''});
+  set.setItems.push({id:'setitem-'+Date.now(),productId:p.id,name:p.name,type:(catalog.categories.find(c=>c.id===p.category)||{}).name||p.category,removeDiscount:Number(p.price||0),writePositions:[...(p.writePositions||[])],preferredWritePosition:p.preferredWritePosition||'',walletPhotoEnabled:p.walletPhotoEnabled!==false});
   changed('.drawer');renderCustom();
 }
 function addBlankSetItem(setId){
   const set=catalog.products.find(x=>x.id===setId); if(!set)return;
-  set.setItems=set.setItems||[];set.setItems.push({id:'setitem-'+Date.now(),name:'Yeni içerik',type:'',removeDiscount:0,writePositions:[],preferredWritePosition:''});
+  set.setItems=set.setItems||[];set.setItems.push({id:'setitem-'+Date.now(),name:'Yeni içerik',type:'',removeDiscount:0,writePositions:[],preferredWritePosition:'',writeEnabled:true,walletPhotoEnabled:true});
   changed('.drawer');renderCustom();
 }
 function removeSetItem(pi,ii){
