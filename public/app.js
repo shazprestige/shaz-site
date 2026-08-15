@@ -5,6 +5,7 @@ let productSort='priceAsc';
 let campaignSliderTimer=0,campaignSliderIndex=0,campaignTouchStartX=null;
 let checkoutState={payment:'cod',customer:null,requestId:null};
 let orderSubmitting=false;
+let adminPreviewMode=false;
 const $=s=>document.querySelector(s);
 const money=n=>'₺'+Number(n||0).toLocaleString('tr-TR');
 
@@ -267,13 +268,15 @@ function updateCart(){
 window.addEventListener('message',e=>{
   if(!e.data)return;
   if(e.data.type==='shaz-preview'){
+    adminPreviewMode=true;
     if(e.data.settings) settings=structuredClone(e.data.settings);
     if(e.data.catalog) catalog=structuredClone(e.data.catalog);
     apply();renderCampaignCards();renderCategories();renderProducts($('#search')?.value||'');
-    updateFavoriteBadge();updateCart();renderSiteAnnouncement(false);
+    updateFavoriteBadge();updateCart();$('#siteAnnouncement')?.classList.add('hidden');
     return;
   }
   if(e.data.type==='shaz-preview-set-stage'){
+    $('#siteAnnouncement')?.classList.add('hidden');
     const p=catalog.products.find(x=>x.id===e.data.setId);
     if(!p||!p.isSet||!Array.isArray(p.setItems)||!p.setItems.length)return;
     const itemId=e.data.itemId||p.setItems[0].id;
@@ -295,7 +298,7 @@ window.addEventListener('message',e=>{
 
     document.querySelectorAll('.adminPreviewHighlight').forEach(x=>x.classList.remove('adminPreviewHighlight'));
 
-    if(target && target.includes('siteAnnouncement'))renderSiteAnnouncement(true);
+    if(target && target.includes('siteAnnouncement'))renderSiteAnnouncement(true); else $('#siteAnnouncement')?.classList.add('hidden');
     let el=target?document.querySelector(target):null;
 
     // Ürün görünür değilse önizlemeyi Tüm Ürünler'e al.
@@ -431,11 +434,34 @@ function startProduct(id){
   startSingleWizard(p);
 }
 
+function normalizedTR(v){return String(v||'').toLocaleLowerCase('tr-TR');}
+function productCategoryName(p){return (catalog.categories.find(c=>c.id===p?.category)||{}).name||p?.category||'';}
+function isWalletProduct(p){return normalizedTR(productCategoryName(p)+' '+(p?.name||'')).includes('cüzdan');}
+function isWalletSetItem(item){
+  const linked=item?.productId?catalog.products.find(p=>p.id===item.productId):null;
+  return normalizedTR((item?.type||'')+' '+(item?.name||'')+' '+productCategoryName(linked)+' '+(linked?.name||'')).includes('cüzdan');
+}
+function preferredForSetItem(item){const linked=item?.productId?catalog.products.find(p=>p.id===item.productId):null;return item?.preferredWritePosition||linked?.preferredWritePosition||'';}
+function positionOptionHtml(name,pos,index,preferred){
+  const pref=String(preferred||'')===String(pos);
+  return `<label class=positionChoice><input type=radio name="${name}" value="${escapeAttr(pos)}" ${index===0?'checked':''}> <span>${escapeHtml(pos)}</span>${pref?'<small class=recommendedHint>Genelde tercih edilen</small>':''}</label>`;
+}
+function walletPhotoFee(){return Number(catalog.walletPhotoFee??25);}
+async function uploadCustomerPhoto(file){
+  if(!file)throw new Error('Lütfen işlenecek fotoğrafı seçin.');
+  const fd=new FormData();fd.append('files',file);
+  const response=await fetch('/api/customer-upload',{method:'POST',body:fd});
+  let r={};try{r=await response.json()}catch{}
+  if(!response.ok||!r.ok||!r.files?.[0]?.url)throw new Error(r.message||'Fotoğraf yüklenemedi.');
+  return r.files[0];
+}
+
 /* SINGLE PRODUCT FLOW */
 function startSingleWizard(p){
+  const wallet=isWalletProduct(p);
   openDrawer(`<div class=wizardHead><div><div class=wizardProgress>1 / 2</div><h2>${p.name}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
-  ${p.description?`<div class="productDetailIntro"><b>Ürün açıklaması</b><p>${escapeHtml(p.description)}</p></div>`:''}<div class=wizardCard><h3>Ürününüzün üzerine herhangi bir yazı yazdırmak ister misiniz?</h3>
-  <div class=choiceStack><button class="choiceBtn" onclick='addSingleNoText(${JSON.stringify(p.id)})'>Hayır, birebir bu şekilde istiyorum</button><button class="choiceBtn primary" onclick='singleWriteStep(${JSON.stringify(p.id)})'>Evet, yazı yazdırmak istiyorum</button></div></div>`);
+  ${p.description?`<div class="productDetailIntro"><b>Ürün açıklaması</b><p>${escapeHtml(p.description)}</p></div>`:''}<div class=wizardCard><h3>Ürününüzü kişiselleştirmek ister misiniz?</h3>
+  <div class=choiceStack><button class="choiceBtn" onclick='addSingleNoText(${JSON.stringify(p.id)})'>Hayır, birebir bu şekilde istiyorum</button><button class="choiceBtn primary" onclick='singleWriteStep(${JSON.stringify(p.id)})'>Evet, yazı yazdırmak istiyorum</button>${wallet?`<button class="choiceBtn walletPhotoChoice" onclick='singleWalletPhotoStep(${JSON.stringify(p.id)})'>📷 Cüzdana fotoğraf işleme istiyorum</button>`:''}</div>${wallet?`<p class=muted>Fotoğraf işlemesini seçseniz bile isterseniz ayrıca ön/arka yüze normal yazı da ekleyebilirsiniz.</p>`:''}</div>`);
 }
 function addSingleNoText(id){const p=catalog.products.find(x=>x.id===id);cart.push({product:p,qty:1,personalized:false});updateCart();closeDrawer();toast('✓ Ürün sepete eklendi')}
 function singleWriteStep(id){
@@ -443,7 +469,7 @@ function singleWriteStep(id){
   const positions=defaultPositionsForProduct(p);
   openDrawer(`<div class=wizardHead><div><div class=wizardProgress>2 / 2</div><h2>${p.name}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
   <div class=priceInfo><b>Yazı ücretlendirmesi:</b><br>İlk ürün +${money(catalog.personalizationPricing?.first||75)} · İkinci ürün +${money(catalog.personalizationPricing?.second||50)} · 3. ve sonrası +${money(catalog.personalizationPricing?.thirdPlus||25)}</div>
-  <div class=writeItem><h3>${p.name}</h3><div class=positionChoices>${positions.map((x,i)=>`<label class=positionChoice><input type=radio name=singlePos value="${x}" ${i===0?'checked':''}> ${x}</label>`).join('')}</div><input class=writeInput id=singleText placeholder="Yazdırmak istediğiniz yazıyı girin"></div>
+  <div class=writeItem><h3>${p.name}</h3><div class=positionChoices>${positions.map((x,i)=>positionOptionHtml('singlePos',x,i,p.preferredWritePosition)).join('')}</div><input class=writeInput id=singleText placeholder="Yazdırmak istediğiniz yazıyı girin"></div>
   <button class=btn onclick='finishSingleWrite(${JSON.stringify(p.id)})'>Sepete Ekle</button>`);
 }
 function finishSingleWrite(id){
@@ -453,30 +479,63 @@ function finishSingleWrite(id){
   cart.push({product:{...p,price:p.price+fee},basePrice:p.price,qty:1,personalized:true,writes:[{item:p.name,position:pos,text,fee}]});
   updateCart();closeDrawer();toast('✓ Ürün sepete eklendi');
 }
+function singleWalletPhotoStep(id){
+  const p=catalog.products.find(x=>x.id===id);if(!p)return;
+  const positions=defaultPositionsForProduct(p);
+  openDrawer(`<div class=wizardHead><div><div class=wizardProgress>Cüzdan kişiselleştirme</div><h2>${p.name}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+    <div class=priceInfo><b>Fotoğraf işleme: +${money(walletPhotoFee())}</b><br>Bu ücret normal yazı ücretlerinden bağımsız olarak ayrıca eklenir.</div>
+    <div class="wizardCard walletPhotoCard"><h3>İşlenecek fotoğrafı yükleyin</h3><p>Göz, el, portre veya istediğiniz başka bir fotoğraf olabilir.</p><input id=walletPhotoFile class=formControl type=file accept="image/*">
+      <label class=walletToggle><input id=walletCaptionToggle type=checkbox onchange="document.querySelector('#walletCaptionFields').classList.toggle('hidden',!this.checked)"> Fotoğrafın yanında özel bir yazı da istiyorum</label>
+      <div id=walletCaptionFields class="walletCaptionFields hidden"><input id=walletCaptionText class=writeInput placeholder="Fotoğrafla birlikte işlenecek yazı"><select id=walletCaptionPosition class=formControl><option value=below>Fotoğrafın altında</option><option value=above>Fotoğrafın üstünde</option></select></div>
+    </div>
+    <div class=wizardCard><label class=walletToggle><input id=walletRegularWriteToggle type=checkbox onchange="document.querySelector('#walletRegularWriteFields').classList.toggle('hidden',!this.checked)"> Ayrıca cüzdana normal yazı da yazdırmak istiyorum</label>
+      <div id=walletRegularWriteFields class="hidden"><div class=priceInfo>Normal yazı ayrıca +${money(catalog.personalizationPricing?.first||75)} olarak hesaplanır.</div><div class=positionChoices>${positions.map((x,i)=>positionOptionHtml('walletRegularPos',x,i,p.preferredWritePosition)).join('')}</div><input id=walletRegularText class=writeInput placeholder="Normal yazıyı girin"></div>
+    </div>
+    <button class=btn id=walletPhotoSubmit onclick='finishSingleWalletPhoto(${JSON.stringify(p.id)},this)'>Fotoğrafı Yükle ve Sepete Ekle</button>`);
+}
+async function finishSingleWalletPhoto(id,button){
+  const p=catalog.products.find(x=>x.id===id), file=$('#walletPhotoFile')?.files?.[0];
+  if(!file)return alert('Lütfen cüzdana işlenecek fotoğrafı seçin.');
+  const captionOn=$('#walletCaptionToggle')?.checked, caption=captionOn?($('#walletCaptionText')?.value.trim()||''):'';
+  if(captionOn&&!caption)return alert('Fotoğrafla birlikte istediğiniz yazıyı girin.');
+  const regularOn=$('#walletRegularWriteToggle')?.checked, regularText=regularOn?($('#walletRegularText')?.value.trim()||''):'';
+  if(regularOn&&!regularText)return alert('Cüzdana yazdırmak istediğiniz normal yazıyı girin.');
+  const old=button?.textContent||'';if(button){button.disabled=true;button.textContent='Fotoğraf yükleniyor…'}
+  try{
+    const up=await uploadCustomerPhoto(file), photoFee=walletPhotoFee(), writeFee=regularOn?Number(catalog.personalizationPricing?.first||75):0;
+    const writes=regularOn?[{item:p.name,position:document.querySelector('input[name=walletRegularPos]:checked')?.value,text:regularText,fee:writeFee}]:[];
+    const photo={item:p.name,imageUrl:up.url,originalName:up.name||file.name,caption,captionPosition:$('#walletCaptionPosition')?.value||'below',fee:photoFee};
+    cart.push({product:{...p,price:Number(p.price||0)+photoFee+writeFee},basePrice:p.price,qty:1,personalized:true,writes,photoCustomizations:[photo]});
+    updateCart();closeDrawer();toast('✓ Fotoğraflı cüzdan sepete eklendi');
+  }catch(e){alert(e.message||'Fotoğraf yüklenemedi.');if(button){button.disabled=false;button.textContent=old}}
+}
+
 
 /* SET WIZARD */
 let wiz=null;
 function startSetWizard(p){
-  wiz={product:p, keptIds:p.setItems.map(x=>x.id), writes:[], step:1, history:[]};
+  wiz={product:p, keptIds:p.setItems.map(x=>x.id), writes:[], photoCustomizations:[], step:1, history:[]};
   renderRemoveQuestion();
 }
 function head(title,canBack=true){return `<div class=wizardHead>${canBack?'<button class="pill backPill" onclick=setWizardBack()>← Geri</button>':''}<div><div class=wizardProgress>Adım ${wiz?.step||1}</div><h2>${title}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>`}
 function setWizardSnapshot(screen){
   if(!wiz)return;
   wiz.history=wiz.history||[];
-  wiz.history.push({screen,step:wiz.step,keptIds:[...(wiz.keptIds||[])],writes:JSON.parse(JSON.stringify(wiz.writes||[]))});
+  wiz.history.push({screen,step:wiz.step,keptIds:[...(wiz.keptIds||[])],writes:JSON.parse(JSON.stringify(wiz.writes||[])),photoCustomizations:JSON.parse(JSON.stringify(wiz.photoCustomizations||[]))});
   if(wiz.history.length>20)wiz.history.shift();
 }
 function setWizardNext(screen){setWizardSnapshot(screen);wiz.step=(wiz.step||1)+1}
 function setWizardBack(){
   if(!wiz?.history?.length)return;
   const prev=wiz.history.pop();
-  wiz.step=prev.step;wiz.keptIds=prev.keptIds;wiz.writes=prev.writes;
+  wiz.step=prev.step;wiz.keptIds=prev.keptIds;wiz.writes=prev.writes;wiz.photoCustomizations=prev.photoCustomizations||[];
   if(prev.screen==='removeQuestion')renderRemoveQuestion(true);
   else if(prev.screen==='removalSelection')renderRemovalSelection(true);
   else if(prev.screen==='writeQuestion')renderWriteQuestion(true);
   else if(prev.screen==='writeSelection')renderWriteSelection(true);
   else if(prev.screen==='writeDetails')renderWriteDetails(true);
+  else if(prev.screen==='walletPhotoQuestion')renderWalletPhotoQuestion(true);
+  else if(prev.screen==='walletPhotoDetails')renderWalletPhotoDetails(true);
   else if(prev.screen==='summary')renderSetSummary(true);
 }
 
@@ -509,7 +568,7 @@ function renderWriteQuestion(restoring=false){
   <div class=priceInfo><b>Yazı ücretlendirmesi:</b><br>İlk ürün yazısı +${money(catalog.personalizationPricing?.first||75)}<br>İkinci ürün yazısı +${money(catalog.personalizationPricing?.second||50)}<br>3. ve sonraki her ürün +${money(catalog.personalizationPricing?.thirdPlus||25)}</div>
   <div class=choiceStack><button class=choiceBtn onclick=finishSetWithoutWrite()>Hayır, yazı istemiyorum</button><button class="choiceBtn primary" onclick=renderWriteSelection()>Evet, yazı yazdırmak istiyorum</button></div></div>`);
 }
-function finishSetWithoutWrite(){wiz.writes=[];renderSetSummary()}
+function finishSetWithoutWrite(){wiz.writes=[];maybeWalletPhotoStep()}
 function renderWriteSelection(restoring=false){
   if(!restoring)setWizardNext('writeQuestion');
   const kept=wiz.product.setItems.filter(x=>wiz.keptIds.includes(x.id));
@@ -531,7 +590,7 @@ function renderWriteDetails(restoring=false){
   const items=ids.map(id=>wiz.product.setItems.find(x=>x.id===id));
   if(!restoring)setWizardNext('writeSelection');
   openDrawer(head('Yazı detayları')+`<div class=wizardCard><h3>Her ürün için konumu seçin ve yazıyı girin.</h3><p>Bütün alanlar açık halde gösterilir; tek tek pencere açılmaz.</p>
-  ${items.map((x,i)=>`<div class=writeItem data-write-id="${x.id}" data-fee="${feeForIndex(i)}" data-set-preview-stage="write" data-set-preview-item="${escapeAttr(x.id)}"><div class=writeItemTop><b>${x.name}</b><span>+${money(feeForIndex(i))}</span></div><div class=writeDetails><div class=muted>${x.name} yazısı nereye işlensin?</div><div class=positionChoices>${(x.writePositions||[]).map((pos,j)=>`<label class=positionChoice><input type=radio name="pos-${x.id}" value="${pos}" ${j===0?'checked':''}> ${pos}</label>`).join('')||'<span class=muted>Bu ürün için henüz yazı konumu tanımlı değil.</span>'}</div><input class=writeInput id="text-${x.id}" placeholder="${x.name} üzerine yazdırmak istediğiniz yazı"></div></div>`).join('')}</div>
+  ${items.map((x,i)=>`<div class=writeItem data-write-id="${x.id}" data-fee="${feeForIndex(i)}" data-set-preview-stage="write" data-set-preview-item="${escapeAttr(x.id)}"><div class=writeItemTop><b>${x.name}</b><span>+${money(feeForIndex(i))}</span></div><div class=writeDetails><div class=muted>${x.name} yazısı nereye işlensin?</div><div class=positionChoices>${(x.writePositions||[]).map((pos,j)=>positionOptionHtml('pos-'+x.id,pos,j,preferredForSetItem(x))).join('')||'<span class=muted>Bu ürün için henüz yazı konumu tanımlı değil.</span>'}</div><input class=writeInput id="text-${x.id}" placeholder="${x.name} üzerine yazdırmak istediğiniz yazı"></div></div>`).join('')}</div>
   <button class=btn onclick=confirmWriteDetails()>Özeti Gör</button>`);
 }
 function confirmWriteDetails(){
@@ -541,28 +600,53 @@ function confirmWriteDetails(){
     if(!text)return alert(item.name+' için yazıyı girin.');
     writes.push({itemId:id,item:item.name,position,text,fee:Number(c.dataset.fee)});
   }
-  wiz.writes=writes; renderSetSummary();
+  wiz.writes=writes; maybeWalletPhotoStep();
+}
+function keptWalletItems(){return (wiz?.product?.setItems||[]).filter(x=>wiz.keptIds.includes(x.id)&&isWalletSetItem(x));}
+function maybeWalletPhotoStep(){
+  if(keptWalletItems().length)renderWalletPhotoQuestion(); else renderSetSummary();
+}
+function renderWalletPhotoQuestion(restoring=false){
+  if(!restoring)setWizardNext((wiz.writes||[]).length?'writeDetails':'writeQuestion');
+  const wallets=keptWalletItems();
+  openDrawer(head('Cüzdan fotoğrafı')+`<div class=wizardCard><h3>Cüzdanınıza fotoğraf işlemek ister misiniz?</h3><p>Normal yazı seçimleriniz aynen korunur. Fotoğraf işlemesi isteğe bağlıdır ve yazı ücretlerinden bağımsız olarak <b>+${money(walletPhotoFee())}</b> eklenir.</p><div class=choiceStack><button class=choiceBtn onclick="wiz.photoCustomizations=[];renderSetSummary()">Hayır, fotoğraf istemiyorum</button><button class="choiceBtn primary" onclick=renderWalletPhotoDetails()>Evet, fotoğraf işlemek istiyorum</button></div></div>`);
+}
+function renderWalletPhotoDetails(restoring=false){
+  if(!restoring)setWizardNext('walletPhotoQuestion');
+  const item=keptWalletItems()[0];if(!item)return renderSetSummary();
+  openDrawer(head('Cüzdana fotoğraf işleme')+`<div class=priceInfo><b>Fotoğraf işleme: +${money(walletPhotoFee())}</b><br>Bu ücret diğer yazı ücretlerinden bağımsızdır.</div><div class="wizardCard walletPhotoCard" data-set-preview-stage="write" data-set-preview-item="${escapeAttr(item.id)}"><h3>${escapeHtml(item.name)} için fotoğraf yükleyin</h3><input id=setWalletPhotoFile class=formControl type=file accept="image/*"><label class=walletToggle><input id=setWalletCaptionToggle type=checkbox onchange="document.querySelector('#setWalletCaptionFields').classList.toggle('hidden',!this.checked)"> Fotoğrafla birlikte özel bir yazı da istiyorum</label><div id=setWalletCaptionFields class="walletCaptionFields hidden"><input id=setWalletCaptionText class=writeInput placeholder="Fotoğrafla birlikte işlenecek yazı"><select id=setWalletCaptionPosition class=formControl><option value=below>Fotoğrafın altında</option><option value=above>Fotoğrafın üstünde</option></select></div></div><button class=btn onclick=finishSetWalletPhoto(this)>Fotoğrafı Yükle ve Özeti Gör</button>`);
+}
+async function finishSetWalletPhoto(button){
+  const item=keptWalletItems()[0],file=$('#setWalletPhotoFile')?.files?.[0];if(!item||!file)return alert('Lütfen işlenecek fotoğrafı seçin.');
+  const captionOn=$('#setWalletCaptionToggle')?.checked,caption=captionOn?($('#setWalletCaptionText')?.value.trim()||''):'';if(captionOn&&!caption)return alert('Fotoğrafla birlikte istediğiniz yazıyı girin.');
+  const old=button?.textContent||'';if(button){button.disabled=true;button.textContent='Fotoğraf yükleniyor…'}
+  try{const up=await uploadCustomerPhoto(file);wiz.photoCustomizations=[{itemId:item.id,item:item.name,imageUrl:up.url,originalName:up.name||file.name,caption,captionPosition:$('#setWalletCaptionPosition')?.value||'below',fee:walletPhotoFee()}];renderSetSummary();}
+  catch(e){alert(e.message||'Fotoğraf yüklenemedi.');if(button){button.disabled=false;button.textContent=old}}
 }
 function calcSetPrice(){
   const removed=wiz.product.setItems.filter(x=>!wiz.keptIds.includes(x.id)).reduce((s,x)=>s+Number(x.removeDiscount||0),0);
   const writeFee=wiz.writes.reduce((s,x)=>s+Number(x.fee||0),0);
-  return {base:Number(wiz.product.price),removed,writeFee,total:Math.max(0,Number(wiz.product.price)-removed+writeFee)};
+  const photoFee=(wiz.photoCustomizations||[]).reduce((s,x)=>s+Number(x.fee||0),0);
+  return {base:Number(wiz.product.price),removed,writeFee,photoFee,total:Math.max(0,Number(wiz.product.price)-removed+writeFee+photoFee)};
 }
 function renderSetSummary(restoring=false){
   if(!restoring){
     const last=wiz.history?.[wiz.history.length-1]?.screen;
-    setWizardNext(last==='writeDetails'?'writeDetails':'writeQuestion');
+    if((wiz.photoCustomizations||[]).length)setWizardNext('walletPhotoDetails');
+    else if(keptWalletItems().length)setWizardNext('walletPhotoQuestion');
+    else setWizardNext(last==='writeDetails'?'writeDetails':'writeQuestion');
   }
   const pr=calcSetPrice(), kept=wiz.product.setItems.filter(x=>wiz.keptIds.includes(x.id)), removed=wiz.product.setItems.filter(x=>!wiz.keptIds.includes(x.id));
   openDrawer(head('Sipariş özeti')+`<div class=wizardCard><h3>Size gönderilecek ürünler</h3>${kept.map(x=>`<div class=summaryLine><span>✓ ${x.name}</span><span></span></div>`).join('')}</div>
   ${removed.length?`<div class=wizardCard><h3>Setten çıkardığınız ürünler</h3>${removed.map(x=>`<div class=summaryLine><span>✕ ${x.name}</span><span>-${money(x.removeDiscount)}</span></div>`).join('')}</div>`:''}
   ${wiz.writes.length?`<div class=wizardCard><h3>Kişiye özel yazılar</h3>${wiz.writes.map(x=>`<div class=summaryLine><span><b>${x.item}</b><br><span class=muted>${x.position}: “${x.text}”</span></span><span>+${money(x.fee)}</span></div>`).join('')}</div>`:''}
-  <div class=wizardCard><div class=summaryLine><span>Set fiyatı</span><span>${money(pr.base)}</span></div>${pr.removed?`<div class=summaryLine><span>Çıkarılan ürünler</span><span>-${money(pr.removed)}</span></div>`:''}${pr.writeFee?`<div class=summaryLine><span>Yazı işlemleri</span><span>+${money(pr.writeFee)}</span></div>`:''}<div class="summaryLine summaryTotal"><span>Toplam</span><span>${money(pr.total)}</span></div></div>
+  ${(wiz.photoCustomizations||[]).length?`<div class=wizardCard><h3>Cüzdan fotoğrafı</h3>${wiz.photoCustomizations.map(x=>`<div class=summaryLine><span><b>${x.item}</b>${x.caption?`<br><span class=muted>${x.captionPosition==='above'?'Fotoğrafın üstünde':'Fotoğrafın altında'}: “${escapeHtml(x.caption)}”</span>`:''}</span><span>+${money(x.fee)}</span></div>`).join('')}</div>`:''}
+  <div class=wizardCard><div class=summaryLine><span>Set fiyatı</span><span>${money(pr.base)}</span></div>${pr.removed?`<div class=summaryLine><span>Çıkarılan ürünler</span><span>-${money(pr.removed)}</span></div>`:''}${pr.writeFee?`<div class=summaryLine><span>Yazı işlemleri</span><span>+${money(pr.writeFee)}</span></div>`:''}${pr.photoFee?`<div class=summaryLine><span>Fotoğraf işlemesi</span><span>+${money(pr.photoFee)}</span></div>`:''}<div class="summaryLine summaryTotal"><span>Toplam</span><span>${money(pr.total)}</span></div></div>
   <button class=btn onclick=addSetToCart()>Sepete Ekle</button>`);
 }
 function addSetToCart(){
   const pr=calcSetPrice();
-  cart.push({product:{...wiz.product,price:pr.total},basePrice:wiz.product.price,qty:1,personalized:wiz.writes.length>0,setCustomization:{keptIds:wiz.keptIds,removedIds:wiz.product.setItems.filter(x=>!wiz.keptIds.includes(x.id)).map(x=>x.id),writes:wiz.writes}});
+  cart.push({product:{...wiz.product,price:pr.total},basePrice:wiz.product.price,qty:1,personalized:wiz.writes.length>0||(wiz.photoCustomizations||[]).length>0,setCustomization:{keptIds:wiz.keptIds,removedIds:wiz.product.setItems.filter(x=>!wiz.keptIds.includes(x.id)).map(x=>x.id),writes:wiz.writes,photoCustomizations:wiz.photoCustomizations||[]}});
   updateCart(); closeDrawer(); toast('✓ Ürün sepete eklendi');
 }
 
@@ -602,6 +686,8 @@ function cartItemSummary(x,i){
   if(x.builderItems?.length) lines.push(`<div class=muted>Set içeriği: ${x.builderItems.map(p=>escapeHtml(p.name)).join(', ')}</div>`);
   const writes=x.writes||x.setCustomization?.writes||[];
   if(!x.setCustomization && writes.length) lines.push(`<div class=muted>Yazı: ${writes.map(w=>`${escapeHtml(w.item)} — ${escapeHtml(w.position)}: “${escapeHtml(w.text)}”`).join('<br>')}</div>`);
+  const photos=x.photoCustomizations||x.setCustomization?.photoCustomizations||[];
+  if(photos.length)lines.push(`<div class=muted>Fotoğraf işlemesi: ${photos.map(ph=>`${escapeHtml(ph.item||'Cüzdan')} (+${money(ph.fee||walletPhotoFee())})${ph.caption?` · ${ph.captionPosition==='above'?'üstünde':'altında'} “${escapeHtml(ph.caption)}”`:''}`).join('<br>')}</div>`);
   return `<div class="orderCartItem"><div class="cartItemMain"><div><b>${escapeHtml(x.product.name)}</b>${lines.join('')}</div><div class="cartItemRight"><strong>${money(x.product.price)}</strong><button type="button" class="cartRemoveBtn" onclick="removeCartItem(${i})">Kaldır</button></div></div></div>`;
 }
 
@@ -767,7 +853,7 @@ function openBuilder(){
   if(!cats.length){
     return openDrawer(`<div class=wizardHead><h2>Kendi Setini Oluştur</h2><button class=pill onclick=closeDrawer()>Kapat</button></div><div class=builderEmptyCategory>Şu anda set oluşturma için açık kategori bulunmuyor.</div>`);
   }
-  customBuilder={categories:cats,index:0,selections:{},writes:[]};
+  customBuilder={categories:cats,index:0,selections:{},writes:[],photoCustomizations:[]};
   renderBuilderCategoryStep();
 }
 function renderBuilderCategoryStep(){
@@ -869,7 +955,7 @@ function builderAskWrite(){
     <div class=wizardCard><p>${selected.length} ürünlük setiniz hazır. İsterseniz seçtiğiniz ürünlerden bazılarına kişiye özel yazı ekleyebilirsiniz.</p>
     <div class=choiceStack><button class=choiceBtn onclick=builderFinishNoWrite()>Hayır, yazı istemiyorum</button><button class="choiceBtn primary" onclick=builderWriteSelection()>Evet, yazı eklemek istiyorum</button></div></div>`);
 }
-function builderFinishNoWrite(){customBuilder.writes=[];renderBuilderFinalSummary()}
+function builderFinishNoWrite(){customBuilder.writes=[];builderMaybeWalletPhoto()}
 function builderWriteSelection(){
   const selected=getBuilderSelectedProducts();
   openDrawer(`<div class=wizardHead><div><div class=wizardProgress>Yazı Seçimi</div><h2>Hangi ürünlere yazı yazılsın?</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
@@ -889,7 +975,7 @@ function builderWriteDetails(){
         <div class=builderWriteTop><b>${escapeHtml(p.name)}</b><span>+${money(builderFeeForIndex(i))}</span></div>
         <div class=builderWriteDetails>
           <div class=muted>Yazı konumu</div>
-          <div class=positionChoices>${positions.map((pos,j)=>`<label class=positionChoice><input type=radio name="builder-pos-${escapeAttr(p.id)}" value="${escapeAttr(pos)}" ${j===0?'checked':''}> ${escapeHtml(pos)}</label>`).join('')}</div>
+          <div class=positionChoices>${positions.map((pos,j)=>positionOptionHtml('builder-pos-'+p.id,pos,j,p.preferredWritePosition)).join('')}</div>
           <input class=writeInput id="builder-text-${escapeAttr(p.id)}" placeholder="${escapeAttr(p.name)} için yazı">
         </div>
       </div>`;
@@ -903,27 +989,49 @@ function builderConfirmWrites(){
     if(!text)return alert((p?.name||'Ürün')+' için yazıyı girin.');
     writes.push({productId:id,item:p?.name||id,position:pos,text,fee:Number(c.dataset.fee||0)});
   }
-  customBuilder.writes=writes;renderBuilderFinalSummary();
+  customBuilder.writes=writes;builderMaybeWalletPhoto();
+}
+function builderWalletProducts(){return getBuilderSelectedProducts().filter(isWalletProduct);}
+function builderMaybeWalletPhoto(){
+  if(builderWalletProducts().length)builderWalletPhotoQuestion(); else renderBuilderFinalSummary();
+}
+function builderWalletPhotoQuestion(){
+  const wallets=builderWalletProducts();
+  openDrawer(`<div class=wizardHead><div><div class=wizardProgress>Cüzdan Fotoğrafı</div><h2>Fotoğraf işleme ister misiniz?</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div><div class=wizardCard><p>Setinizde ${wallets.length} cüzdan bulunuyor. İsterseniz cüzdana fotoğraf işletebilirsiniz. Bu işlem normal yazı ücretlerinden bağımsız <b>+${money(walletPhotoFee())}</b>.</p><div class=choiceStack><button class=choiceBtn onclick="customBuilder.photoCustomizations=[];renderBuilderFinalSummary()">Hayır, fotoğraf istemiyorum</button><button class="choiceBtn primary" onclick=builderWalletPhotoDetails()>Evet, fotoğraf işlemek istiyorum</button></div></div>`);
+}
+function builderWalletPhotoDetails(){
+  const p=builderWalletProducts()[0];if(!p)return renderBuilderFinalSummary();
+  openDrawer(`<div class=wizardHead><div><div class=wizardProgress>Cüzdan Fotoğrafı</div><h2>${escapeHtml(p.name)}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div><div class=priceInfo><b>Fotoğraf işleme: +${money(walletPhotoFee())}</b><br>Normal yazı seçiminiz varsa korunur; bu ücret ayrıca eklenir.</div><div class="wizardCard walletPhotoCard"><input id=builderWalletPhotoFile class=formControl type=file accept="image/*"><label class=walletToggle><input id=builderWalletCaptionToggle type=checkbox onchange="document.querySelector('#builderWalletCaptionFields').classList.toggle('hidden',!this.checked)"> Fotoğrafla birlikte özel bir yazı da istiyorum</label><div id=builderWalletCaptionFields class="walletCaptionFields hidden"><input id=builderWalletCaptionText class=writeInput placeholder="Fotoğrafla birlikte işlenecek yazı"><select id=builderWalletCaptionPosition class=formControl><option value=below>Fotoğrafın altında</option><option value=above>Fotoğrafın üstünde</option></select></div></div><button class=btn onclick=finishBuilderWalletPhoto(this)>Fotoğrafı Yükle ve Özeti Gör</button>`);
+}
+async function finishBuilderWalletPhoto(button){
+  const p=builderWalletProducts()[0],file=$('#builderWalletPhotoFile')?.files?.[0];if(!p||!file)return alert('Lütfen işlenecek fotoğrafı seçin.');
+  const captionOn=$('#builderWalletCaptionToggle')?.checked,caption=captionOn?($('#builderWalletCaptionText')?.value.trim()||''):'';if(captionOn&&!caption)return alert('Fotoğrafla birlikte istediğiniz yazıyı girin.');
+  const old=button?.textContent||'';if(button){button.disabled=true;button.textContent='Fotoğraf yükleniyor…'}
+  try{const up=await uploadCustomerPhoto(file);customBuilder.photoCustomizations=[{productId:p.id,item:p.name,imageUrl:up.url,originalName:up.name||file.name,caption,captionPosition:$('#builderWalletCaptionPosition')?.value||'below',fee:walletPhotoFee()}];renderBuilderFinalSummary();}
+  catch(e){alert(e.message||'Fotoğraf yüklenemedi.');if(button){button.disabled=false;button.textContent=old}}
 }
 function renderBuilderFinalSummary(){
   const selected=getBuilderSelectedProducts(),rule=getBuilderRule(selected.length);
   const base=builderTotalFor(selected.length);
   const writeFee=(customBuilder.writes||[]).reduce((s,w)=>s+Number(w.fee||0),0);
-  const total=base+writeFee;
+  const photoFee=(customBuilder.photoCustomizations||[]).reduce((s,w)=>s+Number(w.fee||0),0);
+  const total=base+writeFee+photoFee;
   openDrawer(`<div class=wizardHead><div><div class=wizardProgress>Son Kontrol</div><h2>Kendi Setiniz Hazır</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
     <div class=wizardCard><h3>Setin içindekiler</h3><div class=builderSummaryItems>${selected.map(p=>`<div class=builderSummaryItem><div class=builderSummaryThumb>${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}">`:'⌚'}</div><div class=builderSummaryInfo><b>${escapeHtml(p.name)}</b><small>${escapeHtml((catalog.categories.find(c=>c.id===p.category)||{}).name||'')}</small></div></div>`).join('')}</div></div>
     ${customBuilder.writes?.length?`<div class=wizardCard><h3>Kişiye özel yazılar</h3>${customBuilder.writes.map(w=>`<div class=summaryLine><span><b>${escapeHtml(w.item)}</b><br><span class=muted>${escapeHtml(w.position)}: “${escapeHtml(w.text)}”</span></span><span>+${money(w.fee)}</span></div>`).join('')}</div>`:''}
+    ${customBuilder.photoCustomizations?.length?`<div class=wizardCard><h3>Cüzdan fotoğrafı</h3>${customBuilder.photoCustomizations.map(ph=>`<div class=summaryLine><span><b>${escapeHtml(ph.item)}</b>${ph.caption?`<br><span class=muted>${ph.captionPosition==='above'?'Fotoğrafın üstünde':'Fotoğrafın altında'}: “${escapeHtml(ph.caption)}”</span>`:''}</span><span>+${money(ph.fee)}</span></div>`).join('')}</div>`:''}
     <div class=wizardCard>
       <div class=summaryLine><span>${selected.length} ürün özel set</span><span>${money(base)}</span></div>
       ${writeFee?`<div class=summaryLine><span>Yazı işlemleri</span><span>+${money(writeFee)}</span></div>`:''}
+      ${photoFee?`<div class=summaryLine><span>Fotoğraf işlemesi</span><span>+${money(photoFee)}</span></div>`:''}
       <div class="summaryLine summaryTotal"><span>Toplam</span><span>${money(total)}</span></div>
     </div>
     <button class=btn onclick=builderAddToCart()>Setimi Sepete Ekle</button>`);
 }
 function builderAddToCart(){
-  const selected=getBuilderSelectedProducts(),base=builderTotalFor(selected.length),writeFee=(customBuilder.writes||[]).reduce((s,w)=>s+Number(w.fee||0),0),total=base+writeFee;
+  const selected=getBuilderSelectedProducts(),base=builderTotalFor(selected.length),writeFee=(customBuilder.writes||[]).reduce((s,w)=>s+Number(w.fee||0),0),photoFee=(customBuilder.photoCustomizations||[]).reduce((s,w)=>s+Number(w.fee||0),0),total=base+writeFee+photoFee;
   const customProduct={id:'custom-'+Date.now(),name:`Kendi Setim (${selected.length} ürün)`,price:total,stock:999,isSet:true};
-  cart.push({product:customProduct,basePrice:base,qty:1,personalized:(customBuilder.writes||[]).length>0,builderItems:selected.map(p=>({id:p.id,name:p.name,category:p.category,image:mainProductImage(p)})),writes:customBuilder.writes||[]});
+  cart.push({product:customProduct,basePrice:base,qty:1,personalized:(customBuilder.writes||[]).length>0||(customBuilder.photoCustomizations||[]).length>0,builderItems:selected.map(p=>({id:p.id,name:p.name,category:p.category,image:mainProductImage(p)})),writes:customBuilder.writes||[],photoCustomizations:customBuilder.photoCustomizations||[]});
   updateCart();closeDrawer();toast('✓ Kendi setiniz sepete eklendi');
 }
 

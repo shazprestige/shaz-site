@@ -27,6 +27,7 @@ async function logoutAdmin(){
 async function load(){
   settings=await fetch('/api/settings').then(r=>r.json());
   catalog=await fetch('/api/catalog').then(r=>r.json());
+  catalog.walletPhotoFee=Number(catalog.walletPhotoFee??25);
   settings.campaignCards=settings.campaignCards||[];
   settings.siteAnnouncement=settings.siteAnnouncement||{enabled:false,eyebrow:'DUYURU',title:'',text:'',buttonText:'Kapat'};
   settings.campaignCards.forEach((c,i)=>{
@@ -97,6 +98,10 @@ function input(label,key,val,help,target='header',type='text'){
 }
 function textarea(label,key,val,help,target){
   return `<div class=field><label><b>${label}</b></label><textarea class=formControl data-preview-target="${attr(target)}" rows=4 oninput="${key}=this.value;changed(this.dataset.previewTarget)">${esc(val)}</textarea><div class=help>${help}</div></div>`;
+}
+function preferredPositionOptions(positions,selected=''){
+  const vals=[...new Set((positions||[]).filter(Boolean))];
+  return `<option value="">Tercih işareti yok</option>`+vals.map(x=>`<option value="${attr(x)}" ${String(selected||'')===String(x)?'selected':''}>${esc(x)}</option>`).join('');
 }
 
 function show(tab){
@@ -245,6 +250,7 @@ function catalogGlobalTools(){
         ${input('İlk ürün yazısı','catalog.personalizationPricing.first',pricing.first,'Müşteri ilk ürüne yazı eklerse uygulanacak ücret.','.drawer','number')}
         ${input('İkinci ürün yazısı','catalog.personalizationPricing.second',pricing.second,'Müşteri ikinci ürüne yazı eklerse uygulanacak ücret.','.drawer','number')}
         ${input('3. ve sonrası','catalog.personalizationPricing.thirdPlus',pricing.thirdPlus,'Üçüncü ve sonraki her yazılı ürün için ücret.','.drawer','number')}
+        ${input('Cüzdana fotoğraf işleme','catalog.walletPhotoFee',catalog.walletPhotoFee??25,'Fotoğraf işlemesi normal yazı ücretlerinden bağımsız ek ücrettir.','.drawer','number')}
       </div>
       <details class=nestedAdminDetails><summary>Kendi Setini Oluştur kategorileri</summary><div class=setItemList>${allowed}</div><div class=help>Burada seçtiklerin yalnızca müşterinin “Kendi Setini Oluştur” akışında görünür.</div></details>
     </div></details>
@@ -272,7 +278,7 @@ async function bulkCreateProductsFromPhotos(){
     const start=catalog.products.filter(p=>p.category===categoryId).length;
     (r.files||[]).forEach((f,n)=>{
       const id='urun-'+Date.now()+'-'+n+'-'+Math.random().toString(36).slice(2,6);
-      catalog.products.push({id,name:`Yeni Ürün ${start+n+1}`,description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:f.url,images:[f.url],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[]});
+      catalog.products.push({id,name:`Yeni Ürün ${start+n+1}`,description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:f.url,images:[f.url],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[],preferredWritePosition:''});
       if(status)status.textContent=`${n+1} / ${(r.files||[]).length} ürün hazırlandı.`;
     });
     const saved=await fetch('/api/admin/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({settings,catalog})}).then(x=>x.json());
@@ -448,6 +454,12 @@ Paslanmaz çelik kasa"
         oninput="catalog.products[${i}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);changed(this.dataset.previewTarget)">
       <div class=help>Örn. saatte “Arka kapak, Kordon”. Ön yüz / arka yüz zorunlu değil; burayı istediğin gibi değiştir.</div>
     </div>
+    <div class=field><label><b>Genelde tercih edilen konum</b></label>
+      <select class=formControl data-preview-target=".drawer" onfocus="changed(this.dataset.previewTarget)" onchange="catalog.products[${i}].preferredWritePosition=this.value;changed(this.dataset.previewTarget)">
+        ${preferredPositionOptions(p.writePositions||[],p.preferredWritePosition||'')}
+      </select>
+      <div class=help>Müşteri kararsız kaldığında yardımcı olmak için seçtiğin konumun yanında “Genelde tercih edilen” ibaresi görünür. Seçim zorunlu değildir.</div>
+    </div>
 
     <div class=twoMini>
       <div class=field><label>Fiyat</label>
@@ -510,6 +522,7 @@ function renderInlineSetEditor(p,pi){
       <div class=field><label><b>Ürün / içerik adı</b></label><input class=formControl value="${attr(it.name||linked?.name||'')}" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','remove')" oninput="catalog.products[${pi}].setItems[${ii}].name=this.value;changedSetStage('${attr(p.id)}','${attr(it.id)}','remove')"><div class=help>Bu isim müşterinin setten ürün çıkarma ekranında aynen görünür.</div></div>
       <div class=field><label><b>Çıkarılırsa düşecek TL</b></label><input class=formControl type=number value="${Number(it.removeDiscount||0)}" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','remove')" oninput="catalog.products[${pi}].setItems[${ii}].removeDiscount=Number(this.value);changedSetStage('${attr(p.id)}','${attr(it.id)}','remove')"><div class=help>Müşteri bu ürünü setten çıkarırsa set toplamından tam bu tutar düşer.</div></div>
       <div class=field><label><b>Yazı konumları</b></label><input class=formControl value="${attr((it.writePositions||linked?.writePositions||[]).join(', '))}" placeholder="Arka kapak, Kordon" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','write')" oninput="catalog.products[${pi}].setItems[${ii}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);changedSetStage('${attr(p.id)}','${attr(it.id)}','write')"><div class=help>Virgülle ayırdığın her ifade müşteriye ayrı seçim olur: “Arka kapak, Kordon” → 2 seçenek.</div></div>
+      <div class=field><label><b>Genelde tercih edilen konum</b></label><select class=formControl onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','write')" onchange="catalog.products[${pi}].setItems[${ii}].preferredWritePosition=this.value;changedSetStage('${attr(p.id)}','${attr(it.id)}','write')">${preferredPositionOptions(it.writePositions||linked?.writePositions||[],it.preferredWritePosition||linked?.preferredWritePosition||'')}</select><div class=help>Müşteride bu konumun yanında “Genelde tercih edilen” görünür; diğer seçenekler aynen kalır.</div></div>
       <button class=dangerBtn onclick="removeSetItem(${pi},${ii});renderCatalog()">Bu İçeriği Setten Çıkar</button>
     </div>`;
   }).join('');
@@ -524,13 +537,13 @@ function addExistingProductToInlineSet(setId){
   if(!set||!sel?.value)return alert('Önce bir ürün seç.');
   const p=catalog.products.find(x=>x.id===sel.value);if(!p)return;
   set.setItems=set.setItems||[];
-  set.setItems.push({id:'setitem-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),productId:p.id,name:p.name,type:(catalog.categories.find(c=>c.id===p.category)||{}).name||p.category,removeDiscount:Number(p.price||0),writePositions:[...(p.writePositions||[])]});
+  set.setItems.push({id:'setitem-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),productId:p.id,name:p.name,type:(catalog.categories.find(c=>c.id===p.category)||{}).name||p.category,removeDiscount:Number(p.price||0),writePositions:[...(p.writePositions||[])],preferredWritePosition:p.preferredWritePosition||''});
   changed('.drawer');renderCatalog();
 }
 function addBlankInlineSetItem(setId){
   const set=catalog.products.find(x=>x.id===setId);if(!set)return;
   set.setItems=set.setItems||[];
-  set.setItems.push({id:'setitem-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),productId:'',name:'Yeni içerik',type:'',removeDiscount:0,writePositions:[]});
+  set.setItems.push({id:'setitem-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),productId:'',name:'Yeni içerik',type:'',removeDiscount:0,writePositions:[],preferredWritePosition:''});
   changed('.drawer');renderCatalog();
 }
 function renderCopyProductSettingsPanel(p,i){
@@ -575,7 +588,7 @@ function applyProductInfoToSelected(sourceId){
     fields.forEach(f=>{
       if(f==='description')t.description=src.description||'';
       else if(f==='features')t.features=[...(src.features||[])];
-      else if(f==='writePositions')t.writePositions=[...(src.writePositions||[])];
+      else if(f==='writePositions'){t.writePositions=[...(src.writePositions||[])];t.preferredWritePosition=src.preferredWritePosition||'';}
       else if(f==='price')t.price=Number(src.price||0);
       else if(f==='oldPrice')t.oldPrice=Number(src.oldPrice||0);
       else if(f==='badge'){t.badge=src.badge||'';t.badgeColor=src.badgeColor||'orange';}
@@ -600,7 +613,7 @@ function isSetCategory(categoryId){
 function addProduct(categoryId){
   const id='urun-'+Date.now();
   const readySet=isSetCategory(categoryId);
-  catalog.products.push({id,name:'Yeni Ürün',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:'',images:[],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[]});
+  catalog.products.push({id,name:'Yeni Ürün',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:'',images:[],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[],preferredWritePosition:''});
   adminOpenCategory=categoryId;adminProductSearch='';adminOpenProduct=id;
   changed('#products');renderCatalog();
   setTimeout(()=>document.getElementById('admin-product-'+id)?.scrollIntoView({behavior:'smooth',block:'nearest'}),80);
@@ -671,6 +684,7 @@ function renderCustom(){
     ${input('İlk ürün yazısı','catalog.personalizationPricing.first',pricing.first,'İlk seçilen yazılı ürün.','.drawer','number')}
     ${input('İkinci ürün yazısı','catalog.personalizationPricing.second',pricing.second,'İkinci seçilen yazılı ürün.','.drawer','number')}
     ${input('3. ve sonrası','catalog.personalizationPricing.thirdPlus',pricing.thirdPlus,'Üçüncü ve sonraki her ürün.','.drawer','number')}
+    ${input('Cüzdana fotoğraf işleme','catalog.walletPhotoFee',catalog.walletPhotoFee??25,'Fotoğraf işlemesi yazı ücretlerinden bağımsızdır; her fotoğraf için bu tutar ayrıca eklenir.','.drawer','number')}
   </div></details>
   <details class="panel simpleAdminDetails"><summary>Kendi Setini Oluştur <small>Kullanılacak kategoriler</small></summary><div class=simpleDetailsBody><div class=help>Müşteri set oluştururken hangi kategori adımlarını göreceğini seç.</div><div class=setItemList>${allowed}</div></div></details>
   ${renderBulkSetSettings(readySets)}
@@ -690,7 +704,7 @@ function getBulkSetGroups(sets){
   const groups=new Map();
   sets.forEach(set=>(set.setItems||[]).forEach(it=>{
     const info=setItemGroupInfo(it);if(!info.key)return;
-    if(!groups.has(info.key))groups.set(info.key,{key:info.key,label:info.label,count:0,removeDiscount:Number(it.removeDiscount||0),writePositions:[...(it.writePositions||info.linked?.writePositions||[])],sampleSetId:set.id,sampleItemId:it.id});
+    if(!groups.has(info.key))groups.set(info.key,{key:info.key,label:info.label,count:0,removeDiscount:Number(it.removeDiscount||0),writePositions:[...(it.writePositions||info.linked?.writePositions||[])],preferredWritePosition:it.preferredWritePosition||info.linked?.preferredWritePosition||'',sampleSetId:set.id,sampleItemId:it.id});
     groups.get(info.key).count++;
   }));
   return [...groups.values()].map(g=>{
@@ -708,6 +722,7 @@ function renderBulkSetSettings(sets){
         <div class=bulkSetName><b>${esc(g.label)}</b><small>${g.count} sette/kalemde kullanılıyor</small></div>
         <div class=field><label>Setten çıkarılırsa düşecek fiyat</label><input class=formControl type=number value="${Number(g.removeDiscount||0)}" onfocus="previewSetStage('${attr(g.sampleSetId)}','${attr(g.sampleItemId)}','remove')" oninput='setBulkDraft[${JSON.stringify(g.key)}]={...(setBulkDraft[${JSON.stringify(g.key)}]||{}),removeDiscount:Number(this.value)}'><div class=help>Müşteri “bu ürünü istemiyorum” derse set toplamından bu tutar düşer. Sağdaki telefon çıkarma adımını gösterir.</div></div>
         <div class=field><label>Yazı konumları</label><input class=formControl value="${attr((g.writePositions||[]).join(', '))}" placeholder="Örn: Arka kapak, Kordon" onfocus="previewSetStage('${attr(g.sampleSetId)}','${attr(g.sampleItemId)}','write')" oninput='setBulkDraft[${JSON.stringify(g.key)}]={...(setBulkDraft[${JSON.stringify(g.key)}]||{}),writePositions:this.value.split(",").map(x=>x.trim()).filter(Boolean)}'><div class=help>Virgülle ayırdığın her ifade müşteriye ayrı seçim olur. Örn. “Arka kapak, Kordon” → iki seçenek çıkar.</div></div>
+        <div class=field><label>Genelde tercih edilen konum</label><select class=formControl onfocus="previewSetStage('${attr(g.sampleSetId)}','${attr(g.sampleItemId)}','write')" onchange='setBulkDraft[${JSON.stringify(g.key)}]={...(setBulkDraft[${JSON.stringify(g.key)}]||{}),preferredWritePosition:this.value}'>${preferredPositionOptions(g.writePositions||[],g.preferredWritePosition||'')}</select><div class=help>Bu ortak gruptaki setlerde müşteriye hangi konumu tavsiye edeceğini seçer.</div></div>
       </div>`).join('')||'<div class=emptyAdmin>Hazır setlerin içinde henüz ürün yok.</div>'}</div>
       ${groups.length?'<button class="btn bulkApplyBtn" onclick="applyBulkSetSettings()">Bu Ortak Ayarları Tüm Hazır Setlere Uygula</button>':''}
     </div>
@@ -718,11 +733,12 @@ function applyBulkSetSettings(){
   const groups=getBulkSetGroups(sets);
   let changedCount=0;
   groups.forEach(g=>{
-    const draft=setBulkDraft[g.key]||{removeDiscount:g.removeDiscount,writePositions:g.writePositions};
+    const draft=setBulkDraft[g.key]||{removeDiscount:g.removeDiscount,writePositions:g.writePositions,preferredWritePosition:g.preferredWritePosition};
     sets.forEach(set=>(set.setItems||[]).forEach(it=>{
       if(setItemGroupInfo(it).key!==g.key)return;
       it.removeDiscount=Number(draft.removeDiscount??g.removeDiscount??0);
       it.writePositions=[...(draft.writePositions??g.writePositions??[])];
+      it.preferredWritePosition=draft.preferredWritePosition??g.preferredWritePosition??'';
       changedCount++;
     }));
   });
@@ -742,6 +758,7 @@ function renderSetAdminPanel(p){
       <div class=field><label><b>Ürün / içerik adı</b></label><input class=formControl value="${attr(it.name||linked?.name||'')}" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','remove')" oninput="catalog.products[${pi}].setItems[${ii}].name=this.value;changedSetStage('${attr(p.id)}','${attr(it.id)}','remove')"><div class=help>${linked?'Katalogdan bağlı: '+esc(linked.name):'Elle tanımlı içerik.'} Bu isim müşterinin “setten ürün çıkarma” ekranında aynen görünür.</div></div>
       <div class=field><label><b>Setten çıkarılırsa düşecek fiyat</b></label><input class=formControl type=number value="${Number(it.removeDiscount||0)}" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','remove')" oninput="catalog.products[${pi}].setItems[${ii}].removeDiscount=Number(this.value);changedSetStage('${attr(p.id)}','${attr(it.id)}','remove')"><div class=help>Müşteri bu içeriğin tikini kaldırırsa set fiyatından tam olarak bu tutar düşer.</div></div>
       <div class=field><label><b>Yazı konumları</b></label><input class=formControl value="${attr((it.writePositions||linked?.writePositions||[]).join(', '))}" placeholder="Arka kapak, Kordon" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','write')" oninput="catalog.products[${pi}].setItems[${ii}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);changedSetStage('${attr(p.id)}','${attr(it.id)}','write')"><div class=help>Virgülden önce/sonra yazdığın her ifade müşteriye ayrı konum seçeneği olur. Örn. “Arka kapak, Kordon”.</div></div>
+      <div class=field><label><b>Genelde tercih edilen konum</b></label><select class=formControl onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','write')" onchange="catalog.products[${pi}].setItems[${ii}].preferredWritePosition=this.value;changedSetStage('${attr(p.id)}','${attr(it.id)}','write')">${preferredPositionOptions(it.writePositions||linked?.writePositions||[],it.preferredWritePosition||linked?.preferredWritePosition||'')}</select><div class=help>Seçtiğin konum müşteride tavsiye ibaresiyle gösterilir.</div></div>
       <button class=dangerBtn onclick="removeSetItem(${pi},${ii})">Bu İçeriği Setten Çıkar</button>
     </div>`;
   }).join('');
@@ -763,12 +780,12 @@ function addExistingProductToSet(setId){
   if(!set||!sel?.value)return alert('Önce bir ürün seç.');
   const p=catalog.products.find(x=>x.id===sel.value); if(!p)return;
   set.setItems=set.setItems||[];
-  set.setItems.push({id:'setitem-'+Date.now(),productId:p.id,name:p.name,type:(catalog.categories.find(c=>c.id===p.category)||{}).name||p.category,removeDiscount:Number(p.price||0),writePositions:[...(p.writePositions||[])]});
+  set.setItems.push({id:'setitem-'+Date.now(),productId:p.id,name:p.name,type:(catalog.categories.find(c=>c.id===p.category)||{}).name||p.category,removeDiscount:Number(p.price||0),writePositions:[...(p.writePositions||[])],preferredWritePosition:p.preferredWritePosition||''});
   changed('.drawer');renderCustom();
 }
 function addBlankSetItem(setId){
   const set=catalog.products.find(x=>x.id===setId); if(!set)return;
-  set.setItems=set.setItems||[];set.setItems.push({id:'setitem-'+Date.now(),name:'Yeni içerik',type:'',removeDiscount:0,writePositions:[]});
+  set.setItems=set.setItems||[];set.setItems.push({id:'setitem-'+Date.now(),name:'Yeni içerik',type:'',removeDiscount:0,writePositions:[],preferredWritePosition:''});
   changed('.drawer');renderCustom();
 }
 function removeSetItem(pi,ii){
@@ -904,6 +921,8 @@ function orderItemDetails(x){
   // Sadece gerçekten seçilmiş kişiselleştirmeleri göster.
   const writes=x.writes||x.setCustomization?.writes||[];
   if(writes.length)d+=`<div class=orderWrites><b>Yazdırılacaklar:</b>${writes.map(w=>`<div>✍️ ${esc(w.item||name)} — ${esc(w.position||'')} → <b>“${esc(w.text||'')}”</b>${Number(w.fee||0)?` (+₺${Number(w.fee).toLocaleString('tr-TR')})`:''}</div>`).join('')}</div>`;
+  const photos=x.photoCustomizations||x.setCustomization?.photoCustomizations||[];
+  if(photos.length)d+=`<div class=orderWrites><b>Fotoğraf işlemesi:</b>${photos.map(ph=>`<div class=orderPhotoCustomization>🖼️ ${esc(ph.item||'Cüzdan')} · +₺${Number(ph.fee||catalog.walletPhotoFee||25).toLocaleString('tr-TR')}${ph.imageUrl?` · <a href="${attr(ph.imageUrl)}" target="_blank" rel="noopener">Fotoğrafı aç</a>`:''}${ph.caption?`<br>Yazı: <b>“${esc(ph.caption)}”</b> · ${ph.captionPosition==='above'?'Fotoğrafın üstünde':'Fotoğrafın altında'}`:''}</div>`).join('')}</div>`;
 
   return d+'</div>';
 }
