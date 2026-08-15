@@ -340,8 +340,7 @@
       "badgeColor": "orange",
       "image": "/uploads/1786817507308-mh5ma4.jpeg",
       "images": [
-        "/uploads/1786817507308-mh5ma4.jpeg",
-        "/uploads/1786821271204-teuv3p.jpeg"
+        "/uploads/1786817507308-mh5ma4.jpeg"
       ],
       "hidden": false,
       "setEligible": true,
@@ -350,7 +349,11 @@
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
-      "walletPhotoEnabled": true
+      "walletPhotoEnabled": true,
+      "descriptionEditorWidth": 420,
+      "descriptionWrapCh": 53,
+      "featuresEditorWidth": 420,
+      "featuresWrapCh": 53
     },
     {
       "id": "urun-1786817515929-6-sr2c",
