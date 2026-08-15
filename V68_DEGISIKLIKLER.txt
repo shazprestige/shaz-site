@@ -1,0 +1,9 @@
+SHAZ V68
+
+- V67 dosyalarındaki cache sürüm numarasının v66 kaldığı tespit edildi; index/admin kaynakları v68'e yükseltildi.
+- Cüzdan ürününde yönetim paneline açık/kapalı 'Cüzdana fotoğraf işleme' ayarı eklendi.
+- Fotoğraf işleme ücreti aynı ürün ekranında görünür hale getirildi.
+- Hazır set içindeki cüzdan için de fotoğraf seçeneğini ayrı kapatma/açma kontrolü eklendi.
+- 'Genelde tercih edilen' alanı daha görünür hale getirildi ve yazı konumları değişirken seçenek listesi anında yenileniyor.
+- Bu iki ayarı düzenlerken sağdaki müşteri telefon önizlemesi ilgili müşteri adımını otomatik açıp kırmızı çerçeveyle gösteriyor.
+- Sipariş, Google E-Tablo, kampanya, ürün verileri ve diğer ayarlara dokunulmadı.

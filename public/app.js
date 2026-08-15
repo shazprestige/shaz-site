@@ -292,6 +292,22 @@ window.addEventListener('message',e=>{
     },40);
     return;
   }
+  if(e.data.type==='shaz-preview-product-stage'){
+    $('#siteAnnouncement')?.classList.add('hidden');
+    const p=catalog.products.find(x=>x.id===e.data.productId); if(!p)return;
+    if(e.data.stage==='write') singleWriteStep(p.id);
+    else if(e.data.stage==='wallet'){
+      if(walletPhotoAvailable(p)) singleWalletPhotoStep(p.id); else startSingleWizard(p);
+    } else {
+      startSingleWizard(p);
+    }
+    setTimeout(()=>{
+      document.querySelectorAll('.adminPreviewHighlight').forEach(x=>x.classList.remove('adminPreviewHighlight'));
+      let el=e.data.stage==='write'?document.querySelector('.recommendedHint'):(document.querySelector('.walletPhotoChoice')||document.querySelector('.walletPhotoCard')||document.querySelector('.wizardCard'));
+      if(el){el.classList.add('adminPreviewHighlight');el.scrollIntoView({behavior:'auto',block:'center'});}
+    },40);
+    return;
+  }
   if(e.data.type==='shaz-preview-focus'){
     const target=e.data.target;
     const shouldScroll=e.data.scroll!==false;
@@ -437,9 +453,11 @@ function startProduct(id){
 function normalizedTR(v){return String(v||'').toLocaleLowerCase('tr-TR');}
 function productCategoryName(p){return (catalog.categories.find(c=>c.id===p?.category)||{}).name||p?.category||'';}
 function isWalletProduct(p){return normalizedTR(productCategoryName(p)+' '+(p?.name||'')).includes('cüzdan');}
+function walletPhotoAvailable(p){return isWalletProduct(p)&&p?.walletPhotoEnabled!==false;}
 function isWalletSetItem(item){
   const linked=item?.productId?catalog.products.find(p=>p.id===item.productId):null;
-  return normalizedTR((item?.type||'')+' '+(item?.name||'')+' '+productCategoryName(linked)+' '+(linked?.name||'')).includes('cüzdan');
+  const looksWallet=normalizedTR((item?.type||'')+' '+(item?.name||'')+' '+productCategoryName(linked)+' '+(linked?.name||'')).includes('cüzdan');
+  return looksWallet && item?.walletPhotoEnabled!==false && linked?.walletPhotoEnabled!==false;
 }
 function preferredForSetItem(item){const linked=item?.productId?catalog.products.find(p=>p.id===item.productId):null;return item?.preferredWritePosition||linked?.preferredWritePosition||'';}
 function positionOptionHtml(name,pos,index,preferred){
@@ -458,7 +476,7 @@ async function uploadCustomerPhoto(file){
 
 /* SINGLE PRODUCT FLOW */
 function startSingleWizard(p){
-  const wallet=isWalletProduct(p);
+  const wallet=walletPhotoAvailable(p);
   openDrawer(`<div class=wizardHead><div><div class=wizardProgress>1 / 2</div><h2>${p.name}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
   ${p.description?`<div class="productDetailIntro"><b>Ürün açıklaması</b><p>${escapeHtml(p.description)}</p></div>`:''}<div class=wizardCard><h3>Ürününüzü kişiselleştirmek ister misiniz?</h3>
   <div class=choiceStack><button class="choiceBtn" onclick='addSingleNoText(${JSON.stringify(p.id)})'>Hayır, birebir bu şekilde istiyorum</button><button class="choiceBtn primary" onclick='singleWriteStep(${JSON.stringify(p.id)})'>Evet, yazı yazdırmak istiyorum</button>${wallet?`<button class="choiceBtn walletPhotoChoice" onclick='singleWalletPhotoStep(${JSON.stringify(p.id)})'>📷 Cüzdana fotoğraf işleme istiyorum</button>`:''}</div>${wallet?`<p class=muted>Fotoğraf işlemesini seçseniz bile isterseniz ayrıca ön/arka yüze normal yazı da ekleyebilirsiniz.</p>`:''}</div>`);
@@ -991,7 +1009,7 @@ function builderConfirmWrites(){
   }
   customBuilder.writes=writes;builderMaybeWalletPhoto();
 }
-function builderWalletProducts(){return getBuilderSelectedProducts().filter(isWalletProduct);}
+function builderWalletProducts(){return getBuilderSelectedProducts().filter(walletPhotoAvailable);}
 function builderMaybeWalletPhoto(){
   if(builderWalletProducts().length)builderWalletPhotoQuestion(); else renderBuilderFinalSummary();
 }

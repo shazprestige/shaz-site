@@ -28,6 +28,7 @@ async function load(){
   settings=await fetch('/api/settings').then(r=>r.json());
   catalog=await fetch('/api/catalog').then(r=>r.json());
   catalog.walletPhotoFee=Number(catalog.walletPhotoFee??25);
+  (catalog.products||[]).forEach(p=>{if(adminIsWalletProduct(p)&&p.walletPhotoEnabled===undefined)p.walletPhotoEnabled=true});
   settings.campaignCards=settings.campaignCards||[];
   settings.siteAnnouncement=settings.siteAnnouncement||{enabled:false,eyebrow:'DUYURU',title:'',text:'',buttonText:'Kapat'};
   settings.campaignCards.forEach((c,i)=>{
@@ -102,6 +103,27 @@ function textarea(label,key,val,help,target){
 function preferredPositionOptions(positions,selected=''){
   const vals=[...new Set((positions||[]).filter(Boolean))];
   return `<option value="">Tercih işareti yok</option>`+vals.map(x=>`<option value="${attr(x)}" ${String(selected||'')===String(x)?'selected':''}>${esc(x)}</option>`).join('');
+}
+
+function adminNormalizedTR(v){return String(v||'').toLocaleLowerCase('tr-TR')}
+function adminCategoryName(p){return (catalog.categories||[]).find(c=>c.id===p?.category)?.name||p?.category||''}
+function adminIsWalletProduct(p){return adminNormalizedTR(adminCategoryName(p)+' '+(p?.name||'')).includes('cüzdan')}
+function adminIsWalletSetItem(it){
+  const linked=it?.productId?(catalog.products||[]).find(p=>p.id===it.productId):null;
+  return adminNormalizedTR((it?.type||'')+' '+(it?.name||'')+' '+adminCategoryName(linked)+' '+(linked?.name||'')).includes('cüzdan');
+}
+function previewProductStage(productId,stage='write'){
+  const f=$('#previewFrame'); if(!f?.contentWindow)return;
+  sendPreview();
+  setTimeout(()=>f.contentWindow.postMessage({type:'shaz-preview-product-stage',productId,stage},'*'),70);
+}
+function syncPreferredSelect(input,selectId,productIndex){
+  const sel=document.getElementById(selectId); if(!sel)return;
+  const current=catalog.products[productIndex].preferredWritePosition||'';
+  sel.innerHTML=preferredPositionOptions(catalog.products[productIndex].writePositions||[],current);
+  if(current && !(catalog.products[productIndex].writePositions||[]).includes(current)){
+    catalog.products[productIndex].preferredWritePosition=''; sel.value='';
+  }
 }
 
 function show(tab){
@@ -278,7 +300,7 @@ async function bulkCreateProductsFromPhotos(){
     const start=catalog.products.filter(p=>p.category===categoryId).length;
     (r.files||[]).forEach((f,n)=>{
       const id='urun-'+Date.now()+'-'+n+'-'+Math.random().toString(36).slice(2,6);
-      catalog.products.push({id,name:`Yeni Ürün ${start+n+1}`,description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:f.url,images:[f.url],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[],preferredWritePosition:''});
+      catalog.products.push({id,name:`Yeni Ürün ${start+n+1}`,description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:f.url,images:[f.url],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[],preferredWritePosition:'',walletPhotoEnabled:true});
       if(status)status.textContent=`${n+1} / ${(r.files||[]).length} ürün hazırlandı.`;
     });
     const saved=await fetch('/api/admin/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({settings,catalog})}).then(x=>x.json());
@@ -451,15 +473,20 @@ Paslanmaz çelik kasa"
 
     <div class=field><label><b>Yazı / kişiselleştirme konumları</b></label>
       <input class=formControl data-preview-target=".drawer" value="${attr((p.writePositions||[]).join(', '))}" placeholder="Örn: Arka kapak, Kordon"
-        oninput="catalog.products[${i}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);changed(this.dataset.previewTarget)">
-      <div class=help>Örn. saatte “Arka kapak, Kordon”. Ön yüz / arka yüz zorunlu değil; burayı istediğin gibi değiştir.</div>
+        onfocus="previewProductStage('${attr(p.id)}','write')" oninput="catalog.products[${i}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);syncPreferredSelect(this,'preferred-${attr(p.id)}',${i});changed(this.dataset.previewTarget);previewProductStage('${attr(p.id)}','write')">
+      <div class=help>Örn. saatte “Arka kapak, Kordon”. Virgülle ayırdığın her ifade müşteride ayrı seçenek olur.</div>
     </div>
-    <div class=field><label><b>Genelde tercih edilen konum</b></label>
-      <select class=formControl data-preview-target=".drawer" onfocus="changed(this.dataset.previewTarget)" onchange="catalog.products[${i}].preferredWritePosition=this.value;changed(this.dataset.previewTarget)">
+    <div class=field><label><b>⭐ Genelde tercih edilen</b></label>
+      <select id="preferred-${attr(p.id)}" class=formControl onfocus="previewProductStage('${attr(p.id)}','write')" onchange="catalog.products[${i}].preferredWritePosition=this.value;changed('.drawer');previewProductStage('${attr(p.id)}','write')">
         ${preferredPositionOptions(p.writePositions||[],p.preferredWritePosition||'')}
       </select>
-      <div class=help>Müşteri kararsız kaldığında yardımcı olmak için seçtiğin konumun yanında “Genelde tercih edilen” ibaresi görünür. Seçim zorunlu değildir.</div>
+      <div class=help>Buradan bir konum seçersen müşteride o seçeneğin yanında <b>“Genelde tercih edilen”</b> yazar. Sağdaki telefon ekranında anında görebilirsin.</div>
     </div>
+    ${adminIsWalletProduct(p)?`<div class=walletAdminBox>
+      <label class=setItemToggle><span><b>📷 Cüzdana fotoğraf işleme</b><small class=muted>Müşteriye “Cüzdana fotoğraf işleme istiyorum” seçeneğini gösterir.</small></span><input type=checkbox ${p.walletPhotoEnabled!==false?'checked':''} onchange="catalog.products[${i}].walletPhotoEnabled=this.checked;changed('.drawer');previewProductStage('${attr(p.id)}','wallet-toggle')"></label>
+      <div class=twoMini><div class=field><label><b>Fotoğraf işleme ücreti</b></label><input class=formControl type=number value="${Number(catalog.walletPhotoFee??25)}" onfocus="previewProductStage('${attr(p.id)}','wallet')" oninput="catalog.walletPhotoFee=Number(this.value);changed('.drawer');previewProductStage('${attr(p.id)}','wallet')"><div class=help>Normal yazı ücretlerinden bağımsız eklenir.</div></div></div>
+      <div class=help>Bu kutunun tikini kaldırırsan fotoğraf seçeneği yalnızca bu cüzdanda müşteriye gösterilmez. Normal yazı seçenekleri etkilenmez.</div>
+    </div>`:''}
 
     <div class=twoMini>
       <div class=field><label>Fiyat</label>
@@ -523,6 +550,7 @@ function renderInlineSetEditor(p,pi){
       <div class=field><label><b>Çıkarılırsa düşecek TL</b></label><input class=formControl type=number value="${Number(it.removeDiscount||0)}" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','remove')" oninput="catalog.products[${pi}].setItems[${ii}].removeDiscount=Number(this.value);changedSetStage('${attr(p.id)}','${attr(it.id)}','remove')"><div class=help>Müşteri bu ürünü setten çıkarırsa set toplamından tam bu tutar düşer.</div></div>
       <div class=field><label><b>Yazı konumları</b></label><input class=formControl value="${attr((it.writePositions||linked?.writePositions||[]).join(', '))}" placeholder="Arka kapak, Kordon" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','write')" oninput="catalog.products[${pi}].setItems[${ii}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);changedSetStage('${attr(p.id)}','${attr(it.id)}','write')"><div class=help>Virgülle ayırdığın her ifade müşteriye ayrı seçim olur: “Arka kapak, Kordon” → 2 seçenek.</div></div>
       <div class=field><label><b>Genelde tercih edilen konum</b></label><select class=formControl onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','write')" onchange="catalog.products[${pi}].setItems[${ii}].preferredWritePosition=this.value;changedSetStage('${attr(p.id)}','${attr(it.id)}','write')">${preferredPositionOptions(it.writePositions||linked?.writePositions||[],it.preferredWritePosition||linked?.preferredWritePosition||'')}</select><div class=help>Müşteride bu konumun yanında “Genelde tercih edilen” görünür; diğer seçenekler aynen kalır.</div></div>
+      ${adminIsWalletSetItem(it)?`<label class=setItemToggle><span><b>📷 Bu sette cüzdan fotoğrafı göster</b><small class=muted>Kapatırsan müşteriye bu set içindeki cüzdan için fotoğraf seçeneği sunulmaz.</small></span><input type=checkbox ${it.walletPhotoEnabled!==false && linked?.walletPhotoEnabled!==false?'checked':''} onchange="catalog.products[${pi}].setItems[${ii}].walletPhotoEnabled=this.checked;changedSetStage('${attr(p.id)}','${attr(it.id)}','write')"></label>`:''}
       <button class=dangerBtn onclick="removeSetItem(${pi},${ii});renderCatalog()">Bu İçeriği Setten Çıkar</button>
     </div>`;
   }).join('');
@@ -537,13 +565,13 @@ function addExistingProductToInlineSet(setId){
   if(!set||!sel?.value)return alert('Önce bir ürün seç.');
   const p=catalog.products.find(x=>x.id===sel.value);if(!p)return;
   set.setItems=set.setItems||[];
-  set.setItems.push({id:'setitem-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),productId:p.id,name:p.name,type:(catalog.categories.find(c=>c.id===p.category)||{}).name||p.category,removeDiscount:Number(p.price||0),writePositions:[...(p.writePositions||[])],preferredWritePosition:p.preferredWritePosition||''});
+  set.setItems.push({id:'setitem-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),productId:p.id,name:p.name,type:(catalog.categories.find(c=>c.id===p.category)||{}).name||p.category,removeDiscount:Number(p.price||0),writePositions:[...(p.writePositions||[])],preferredWritePosition:p.preferredWritePosition||'',walletPhotoEnabled:p.walletPhotoEnabled!==false});
   changed('.drawer');renderCatalog();
 }
 function addBlankInlineSetItem(setId){
   const set=catalog.products.find(x=>x.id===setId);if(!set)return;
   set.setItems=set.setItems||[];
-  set.setItems.push({id:'setitem-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),productId:'',name:'Yeni içerik',type:'',removeDiscount:0,writePositions:[],preferredWritePosition:''});
+  set.setItems.push({id:'setitem-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),productId:'',name:'Yeni içerik',type:'',removeDiscount:0,writePositions:[],preferredWritePosition:'',walletPhotoEnabled:true});
   changed('.drawer');renderCatalog();
 }
 function renderCopyProductSettingsPanel(p,i){
@@ -613,7 +641,7 @@ function isSetCategory(categoryId){
 function addProduct(categoryId){
   const id='urun-'+Date.now();
   const readySet=isSetCategory(categoryId);
-  catalog.products.push({id,name:'Yeni Ürün',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:'',images:[],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[],preferredWritePosition:''});
+  catalog.products.push({id,name:'Yeni Ürün',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:'',images:[],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[],preferredWritePosition:'',walletPhotoEnabled:true});
   adminOpenCategory=categoryId;adminProductSearch='';adminOpenProduct=id;
   changed('#products');renderCatalog();
   setTimeout(()=>document.getElementById('admin-product-'+id)?.scrollIntoView({behavior:'smooth',block:'nearest'}),80);
@@ -780,12 +808,12 @@ function addExistingProductToSet(setId){
   if(!set||!sel?.value)return alert('Önce bir ürün seç.');
   const p=catalog.products.find(x=>x.id===sel.value); if(!p)return;
   set.setItems=set.setItems||[];
-  set.setItems.push({id:'setitem-'+Date.now(),productId:p.id,name:p.name,type:(catalog.categories.find(c=>c.id===p.category)||{}).name||p.category,removeDiscount:Number(p.price||0),writePositions:[...(p.writePositions||[])],preferredWritePosition:p.preferredWritePosition||''});
+  set.setItems.push({id:'setitem-'+Date.now(),productId:p.id,name:p.name,type:(catalog.categories.find(c=>c.id===p.category)||{}).name||p.category,removeDiscount:Number(p.price||0),writePositions:[...(p.writePositions||[])],preferredWritePosition:p.preferredWritePosition||'',walletPhotoEnabled:p.walletPhotoEnabled!==false});
   changed('.drawer');renderCustom();
 }
 function addBlankSetItem(setId){
   const set=catalog.products.find(x=>x.id===setId); if(!set)return;
-  set.setItems=set.setItems||[];set.setItems.push({id:'setitem-'+Date.now(),name:'Yeni içerik',type:'',removeDiscount:0,writePositions:[],preferredWritePosition:''});
+  set.setItems=set.setItems||[];set.setItems.push({id:'setitem-'+Date.now(),name:'Yeni içerik',type:'',removeDiscount:0,writePositions:[],preferredWritePosition:'',walletPhotoEnabled:true});
   changed('.drawer');renderCustom();
 }
 function removeSetItem(pi,ii){
