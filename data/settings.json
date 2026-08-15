@@ -58,7 +58,7 @@
   "campaignMarqueeText": "• YENİ ÜRÜNLERİMİZİ KEŞFEDİN •",
   "campaignMarqueePosition": "middle",
   "siteAnnouncement": {
-    "enabled": false,
+    "enabled": true,
     "eyebrow": "",
     "title": "BÜYÜK KAMPANYA!",
     "text": "YAPACAĞINIZ 3000 TL VE ÜSTÜ ALIŞVERİŞTE 1 SAAT HEDİYE BİZDEN. KAMPANYA 15.08.2026 TARİHİ 00:00'A KADAR GEÇERLİDİR",
