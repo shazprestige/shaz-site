@@ -131,7 +131,9 @@
           "name": "Tesbih",
           "type": "",
           "removeDiscount": 10,
-          "writePositions": []
+          "writePositions": [
+            "SFGFGDFGSFG"
+          ]
         }
       ],
       "description": "CAM VE KAUÇUK KARIŞIMIDIR",
