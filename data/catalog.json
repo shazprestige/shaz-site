@@ -10,7 +10,7 @@
     },
     {
       "id": "setler",
-      "name": "Set",
+      "name": "SETLER",
       "order": 1,
       "hidden": false,
       "cover": "/uploads/1786724063083-3uyv87.jpeg",
@@ -19,7 +19,7 @@
     },
     {
       "id": "saatler",
-      "name": "Saat",
+      "name": "SAATLER",
       "order": 2,
       "hidden": false,
       "cover": "/uploads/1786820184795-tmbau5.jpeg",
@@ -37,40 +37,45 @@
     },
     {
       "id": "gozlukler",
-      "name": "Gözlük",
+      "name": "GÖZLÜKLER",
       "order": 7,
       "hidden": false,
       "cover": "",
-      "size": "small"
+      "size": "small",
+      "subcategories": []
     },
     {
       "id": "cuzdanlar",
-      "name": "Cüzdan",
+      "name": "CÜZDANLAR",
       "order": 3,
       "hidden": false,
       "cover": "",
-      "size": "small"
+      "size": "small",
+      "subcategories": []
     },
     {
       "id": "kategori-1786740581832",
-      "name": "Çakmak",
+      "name": "ÇAKMAKLAR",
       "order": 4,
       "hidden": false,
-      "cover": "/uploads/1786749319709-ofaslc.jpeg"
+      "cover": "/uploads/1786749319709-ofaslc.jpeg",
+      "subcategories": []
     },
     {
       "id": "kategori-1786740619033",
-      "name": "Kemer",
+      "name": "KEMERLER",
       "order": 6,
       "hidden": false,
-      "cover": ""
+      "cover": "",
+      "subcategories": []
     },
     {
       "id": "kategori-1786798033844",
-      "name": "Tesbih",
+      "name": "TESBİHLER",
       "order": 5,
       "hidden": false,
-      "cover": ""
+      "cover": "",
+      "subcategories": []
     }
   ],
   "products": [
