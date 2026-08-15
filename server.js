@@ -308,6 +308,14 @@ const upload=multer({
    cb(ok?null:new Error('Sadece görsel dosyaları yüklenebilir.'),ok);
  }
 });
+const customerUpload=multer({
+ storage,
+ limits:{fileSize:8*1024*1024,files:1},
+ fileFilter:(req,file,cb)=>{
+   const ok=['image/jpeg','image/png','image/webp'].includes(file.mimetype);
+   cb(ok?null:new Error('Lütfen JPG, PNG veya WEBP fotoğraf yükleyin.'),ok);
+ }
+});
 
 app.get('/api/settings',(req,res)=>res.json(readJson('settings.json',{})));
 app.get('/api/catalog',(req,res)=>res.json(readJson('catalog.json',{categories:[],products:[],builder:{}})));
@@ -570,6 +578,23 @@ app.post('/api/orders/sheets-test',requireAdmin,async(req,res)=>{
     }
     res.status(500).json({ok:false,message});
   }
+});
+
+app.post('/api/customer-upload',customerUpload.array('files',1),async(req,res)=>{
+ try{
+   const files=(req.files||[]).map(f=>({name:f.originalname,filename:f.filename,url:'/uploads/'+f.filename,path:f.path}));
+   if(!files.length)return res.status(400).json({ok:false,message:'Fotoğraf seçilmedi.'});
+   // Müşterinin sipariş fotoğrafı Render yeniden başlasa da kaybolmasın diye mevcut GitHub kalıcılığı varsa aynı sisteme yazılır.
+   let github={ok:false,skipped:true};
+   if(githubEnabled()){
+     const f=files[0];
+     github=await githubCommitFiles([{path:`uploads/${f.filename}`,content:fs.readFileSync(f.path).toString('base64'),encoding:'base64'}],`SHAZ sipariş: kişiye özel fotoğraf eklendi`);
+   }
+   res.json({ok:true,files:files.map(({name,url,filename})=>({name,url,filename})),github});
+ }catch(e){
+   console.error('Müşteri fotoğraf yükleme:',e);
+   res.status(500).json({ok:false,message:e.message||'Fotoğraf yüklenemedi.'});
+ }
 });
 
 app.post('/api/upload',requireAdmin, upload.array('files',250),async(req,res)=>{

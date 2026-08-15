@@ -1,0 +1,2029 @@
+
+*{box-sizing:border-box}
+:root{--ink:#10131a;--gold:#c39a59;--paper:#f6f7f8;--card:#fff;--line:#e6e8eb;--green:#25a85a}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+button,a{font:inherit}
+.announce{background:#0f0f10;color:#fff;overflow:hidden;white-space:nowrap;font-size:11px}
+.track{display:inline-block;padding:7px 0;animation:marquee 18s linear infinite}
+@keyframes marquee{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+
+/* Dar, sabit üst panel */
+header{position:sticky;top:0;z-index:20;background:rgba(246,247,248,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:5px 12px 0}
+.headrow{display:flex;align-items:center;justify-content:center;position:relative;min-height:64px}
+.logo{width:92px;height:auto;display:block}
+.headActions{position:absolute;right:2px;top:50%;transform:translateY(-50%);display:flex;gap:11px;align-items:flex-start}
+.headerAction{position:relative;border:0;background:transparent;min-width:49px;padding:3px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;color:#14171d;cursor:pointer}
+.headerActionIcon{font-size:25px;line-height:1}
+.bagIcon{font-size:24px;transform:rotate(0deg)}
+.headerActionText{font-size:8px;line-height:1.1;font-weight:700;white-space:nowrap}
+.cartBadge{position:absolute;top:-4px;right:1px;background:#111;color:#fff;border:2px solid var(--paper);min-width:19px;height:19px;border-radius:999px;display:grid;place-items:center;font-size:10px;font-weight:800}
+.tabs{display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;padding:2px 4px 0;justify-content:flex-start}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;border:0;background:transparent;padding:8px 2px 9px;font-size:11px;letter-spacing:.25px;font-weight:750;color:#262a31;border-bottom:2px solid transparent}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* Fotoğraflı kampanya alanları */
+.campaignCard{position:relative;width:100%;overflow:hidden;background:#18191c;background-size:cover;background-position:center;display:flex;align-items:flex-end;justify-content:center;color:#fff}
+.campaignCard:before{content:"";position:absolute;inset:0;background:rgba(0,0,0,var(--campaign-overlay,.28))}
+.campaignMarquee{position:absolute;left:0;right:0;top:10px;overflow:hidden;white-space:nowrap;z-index:2;font-size:30px;font-weight:850;letter-spacing:-1px}
+.campaignMarqueeTrack{display:inline-block;animation:campaignMove 14s linear infinite}
+@keyframes campaignMove{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+.campaignContent{position:relative;z-index:2;text-align:center;padding:45px 18px 28px;width:100%}
+.campaignContent h2{font-size:27px;line-height:1.05;margin:0 0 8px}
+.campaignContent p{font-size:13px;margin:0 auto 18px;max-width:430px}
+.campaignBtn{display:inline-flex;align-items:center;justify-content:center;min-width:190px;border:1px solid #fff;border-radius:18px;padding:13px 20px;color:#fff;background:rgba(0,0,0,.12);text-decoration:none;font-weight:650}
+
+.hero{padding:28px 18px 18px;text-align:center}
+.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:29px;line-height:1.12;font-weight:400;margin:7px auto 10px;max-width:520px}
+.hero .rule{width:100px;height:1px;background:var(--gold);margin:13px auto;position:relative}
+.hero .rule:after{content:"";width:8px;height:8px;background:var(--gold);position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(45deg)}
+.hero p{font-size:13px;line-height:1.5;color:#5c6168;max-width:460px;margin:0 auto 19px}
+.actions{display:grid;gap:9px;max-width:340px;margin:0 auto}
+.btn{border:0;border-radius:13px;padding:13px 15px;font-size:14px;font-weight:800;background:#111;color:#fff;cursor:pointer}
+.btn.secondary{background:#fff;color:#111;border:1px solid #d9dce0}
+.builderCard{margin:25px auto 0;max-width:560px;min-height:180px;border-radius:24px;padding:22px;display:flex;align-items:center;justify-content:space-between;text-align:left;color:#fff;background:linear-gradient(125deg,#12161d,#202a35);overflow:hidden}
+.builderCard h3{font-family:Georgia,"Times New Roman",serif;font-size:27px;font-weight:400;margin:7px 0}
+.builderCard p{font-size:13px;line-height:1.45;color:#e1e4e7;margin:0;max-width:220px}
+.gold{color:var(--gold);font-size:11px;letter-spacing:2px;font-weight:800}
+.arrow{width:52px;height:52px;border-radius:50%;border:1px solid #ffffff4a;background:#ffffff12;color:#fff;font-size:27px}
+.section{padding:32px 14px 110px}
+.sectionHead{text-align:center;margin-bottom:16px}
+.sectionHead .gold{display:block;margin-bottom:6px}
+.section h2{font-family:Georgia,"Times New Roman",serif;font-size:31px;font-weight:400;margin:0}
+.tools{display:flex;justify-content:center;gap:10px;margin:0 auto 18px;max-width:420px}
+.tool{flex:1;border:1px solid #dce0e3;background:#fff;border-radius:12px;padding:11px;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.photo{height:180px;background:#eef0f2;display:grid;place-items:center;font-size:54px;position:relative}
+.photo img{width:100%;height:100%;object-fit:cover}
+.badge{position:absolute;left:8px;top:8px;background:#111;color:#fff;font-size:8px;font-weight:800;padding:6px 7px;border-radius:6px}
+.fav{position:absolute;right:8px;top:8px;width:32px;height:32px;border:0;border-radius:50%;background:#fff;font-size:17px}
+.info{padding:11px}
+.info h3{font-size:14px;line-height:1.25;margin:0 0 8px}
+.price{font-weight:850;font-size:17px}
+.old{font-size:11px;color:#9ba0a6;text-decoration:line-through}
+.info .btn{width:100%;font-size:12px;padding:11px 8px;margin-top:9px}
+.floating{position:fixed;right:10px;bottom:10px;z-index:24;display:grid;gap:5px}
+.contact{display:flex;align-items:center;gap:7px;width:176px;padding:7px 9px;border-radius:11px;color:#fff;box-shadow:0 4px 14px #00000013;text-decoration:none}
+.contact.green{background:var(--green)} .contact.black{background:#161616}
+.contactIcon{font-size:15px;line-height:1}
+.contact b{display:block;font-size:9px;line-height:1.15}
+.contact small{display:block;font-size:8px;line-height:1.2;opacity:.9;margin-top:2px}
+
+/* Sepet / wizard */
+.overlay{position:fixed;inset:0;background:#0008;z-index:30}
+.drawer{position:fixed;right:0;top:0;height:100%;width:min(520px,100%);background:#fff;z-index:31;padding:20px;overflow:auto}
+.hidden{display:none!important}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(10px);opacity:0;background:#111;color:#fff;padding:11px 15px;border-radius:999px;z-index:50;font-weight:800;font-size:12px;transition:.2s}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.wizardHead{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}
+.wizardProgress{font-size:12px;color:#777;font-weight:700}
+.wizardCard{border:1px solid #e8e3dc;border-radius:18px;padding:16px;margin:12px 0;background:#fff}
+.choiceStack{display:grid;gap:10px;margin-top:14px}
+.choiceBtn{padding:14px;border:1px solid #ddd;border-radius:13px;background:#fff;font-weight:700;text-align:left;cursor:pointer}
+.choiceBtn.primary{background:#111;color:#fff;border-color:#111}
+.setItemList{display:grid;gap:9px;margin-top:12px}
+.setItemToggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;border:1px solid #e6e0d7;border-radius:13px;background:#fff}
+.setItemToggle input{width:20px;height:20px}
+.muted{color:#777;font-size:12px}
+.removedList{margin-top:12px;padding:12px;border-radius:13px;background:#fff8f2;border:1px solid #f0dfcf}
+.remainingList{margin-top:12px;padding:12px;border-radius:13px;background:#f6fbf7;border:1px solid #dbeadf}
+.priceInfo{padding:14px;border-radius:14px;background:#fffaf1;border:1px solid #eadcc8;line-height:1.5}
+.writeSelectGrid{display:grid;gap:10px;margin-top:12px}
+.writeItem{border:1px solid #e6e0d7;border-radius:14px;padding:14px;background:#fff}
+.writeItemTop{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.writeDetails{margin-top:12px;border-top:1px solid #eee;padding-top:12px}
+.positionChoices{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px}
+.positionChoice{display:flex;align-items:center;gap:6px;padding:9px 11px;border:1px solid #ddd;border-radius:999px;background:#fff}
+.writeInput{width:100%;padding:12px;border:1px solid #d9d2c8;border-radius:10px}
+.summaryLine{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed #e4ddd4}
+.summaryLine:last-child{border-bottom:0}.summaryTotal{font-size:21px;font-weight:800}
+.notice{white-space:pre-wrap;background:#fffaf1;border:1px solid #eadcc8;border-radius:14px;padding:13px;line-height:1.5;font-size:13px}
+.pill{border:1px solid #ddd;background:#fff;border-radius:999px;padding:9px 12px}
+.search{width:100%;padding:12px;border:1px solid #ddd;border-radius:12px}
+
+/* Yönetim paneli + canlı mobil önizleme */
+.admin{display:grid;grid-template-columns:220px minmax(470px,1fr) 430px;min-height:100vh;background:#f3f4f6}
+.sidebar{background:#111;color:#fff;padding:20px 14px;position:sticky;top:0;height:100vh;overflow:auto}
+.sidebar h2{margin:0 0 8px}.sidebar p{font-size:12px;color:#bbb;line-height:1.4}
+.sidebar button{width:100%;margin:4px 0;padding:10px;border:0;border-radius:9px;text-align:left;font-size:12px;cursor:pointer}
+.content{padding:22px;min-width:0}
+.panel{border:1px solid #ddd;border-radius:16px;padding:18px;margin-bottom:16px;background:#fff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.field label{font-size:13px}
+.field input,.field textarea,.field select{padding:10px;border:1px solid #ccc;border-radius:9px;background:#fff}
+.help{font-size:11px;color:#667085;line-height:1.45}
+.previewPane{position:sticky;top:0;height:100vh;padding:16px 16px 16px 0;display:flex;flex-direction:column}
+.previewPane h3{font-size:13px;margin:0 0 8px}
+.previewNote{font-size:11px;color:#667085;margin-bottom:9px;line-height:1.4}
+.phoneShell{background:#111;border-radius:32px;padding:10px;box-shadow:0 20px 50px #0002;flex:1;min-height:0}
+.phoneScreen{width:100%;height:100%;border:0;border-radius:23px;background:#fff}
+.previewToolbar{display:flex;gap:8px;margin-top:9px}
+.previewToolbar button{flex:1;border:1px solid #d7dbe0;background:#fff;border-radius:9px;padding:8px;font-size:11px}
+.sectionTip{background:#f8fafc;border-left:3px solid #c39a59;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.45;margin-bottom:14px}
+.campaignAdmin{border:1px solid #e2e4e8;border-radius:15px;padding:14px;margin:12px 0;background:#fafafa}
+.campaignAdminHead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.dangerBtn{border:1px solid #efb2b2;background:#fff5f5;color:#a11;padding:7px 9px;border-radius:8px}
+.smallBtn{border:1px solid #ddd;background:#fff;padding:8px 10px;border-radius:8px}
+.saveBar{position:sticky;bottom:10px;background:#ffffffea;backdrop-filter:blur(8px);border:1px solid #ddd;border-radius:14px;padding:10px;display:flex;gap:9px;box-shadow:0 12px 30px #0001}
+.saveBar .btn{flex:1}
+
+@media(max-width:1100px){
+ .admin{grid-template-columns:200px 1fr}
+ .previewPane{position:relative;grid-column:2;padding:0 22px 22px;height:760px}
+}
+@media(max-width:800px){
+ .admin{display:block}
+ .sidebar{height:auto;position:relative}
+ .content{padding:14px}
+ .previewPane{height:740px;padding:0 14px 14px}
+ .grid2{grid-template-columns:1fr}
+}
+@media(max-width:390px){
+ .logo{width:84px}
+ .hero h1{font-size:27px}
+ .contact{width:164px}
+ .headerActionText{font-size:7.5px}
+}
+
+/* v13 header commerce icons */
+.headerIconWrap{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:28px;min-height:28px}
+.headerCountBadge{position:absolute;right:-8px;top:-8px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#111;color:#fff;font:700 10px/17px Arial,sans-serif;text-align:center;z-index:2}
+.bagIcon{width:20px;height:18px;border:2px solid currentColor;border-radius:3px;box-sizing:border-box;position:relative;display:inline-block}
+.bagIcon:before{content:"";position:absolute;left:4px;right:4px;top:-8px;height:8px;border:2px solid currentColor;border-bottom:0;border-radius:8px 8px 0 0;box-sizing:border-box}
+
+/* v14 marka konumlandırma başlığı */
+.hero #heroTitle{max-width:560px}
+.hero #heroSubtitle{
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size:15px;
+  line-height:1.45;
+  letter-spacing:.15px;
+  color:#34383e;
+  max-width:520px;
+}
+
+/* v15 üst menü */
+.headActions{gap:7px}
+.headerAction{min-width:47px;text-decoration:none}
+.cargoAction{min-width:62px}
+.headerIconWrap{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:27px;min-height:27px}
+.headerCountBadge{position:absolute;right:-8px;top:-8px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#111;color:#fff;border:2px solid var(--paper);font:700 9px/13px Arial,sans-serif;text-align:center;z-index:2}
+.cargoIcon{font-size:22px}
+.bagIcon{width:20px;height:18px;border:2px solid currentColor;border-radius:3px;box-sizing:border-box;position:relative;display:inline-block}
+.bagIcon:before{content:"";position:absolute;left:4px;right:4px;top:-8px;height:8px;border:2px solid currentColor;border-bottom:0;border-radius:8px 8px 0 0;box-sizing:border-box}
+
+/* v15 kategori adımlı kendi setini oluştur */
+.builderStepMeta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 14px}
+.builderStepName{font-size:12px;font-weight:800;color:var(--gold)}
+.builderChosen{font-size:11px;color:#65707c}
+.builderProductGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.builderProductCard{border:1px solid #e3e5e8;border-radius:15px;overflow:hidden;background:#fff;cursor:pointer;position:relative}
+.builderProductCard.selected{outline:2px solid #111;outline-offset:-2px}
+.builderProductPhoto{height:135px;background:#eef0f2;display:grid;place-items:center;font-size:42px;position:relative}
+.builderProductPhoto img{width:100%;height:100%;object-fit:cover}
+.builderProductBody{padding:10px}
+.builderProductBody b{display:block;font-size:12px;line-height:1.25}
+.builderProductBody small{display:block;margin-top:5px;color:#667085}
+.builderSelectMark{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:#fff;border:1px solid #d8dce1;display:grid;place-items:center;font-weight:900}
+.builderProductCard.selected .builderSelectMark{background:#111;color:#fff}
+.builderSkip{width:100%;padding:12px;border:1px dashed #bbc1c8;border-radius:12px;background:#fafbfc;color:#444;font-weight:750;cursor:pointer}
+.builderNav{display:flex;gap:9px;margin-top:12px}
+.builderNav .btn{flex:1}
+.builderSummaryItems{display:grid;gap:9px}
+.builderSummaryItem{display:flex;align-items:center;gap:10px;padding:9px;border:1px solid #e5e7ea;border-radius:12px}
+.builderSummaryThumb{width:48px;height:48px;border-radius:10px;background:#eef0f2;display:grid;place-items:center;overflow:hidden;flex:0 0 auto}
+.builderSummaryThumb img{width:100%;height:100%;object-fit:cover}
+.builderSummaryInfo{min-width:0;flex:1}
+.builderSummaryInfo b{font-size:12px}
+.builderSummaryInfo small{display:block;color:#667085;font-size:10px;margin-top:3px}
+.builderEmptyCategory{padding:16px;border:1px dashed #ccd1d7;border-radius:14px;text-align:center;color:#667085;background:#fafafa}
+.builderProgressBar{height:5px;background:#eceff2;border-radius:999px;overflow:hidden;margin:6px 0 16px}
+.builderProgressFill{height:100%;background:#111;transition:.2s}
+.builderWriteCard{border:1px solid #e5e7ea;border-radius:14px;padding:12px;margin:9px 0}
+.builderWriteTop{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.builderWriteDetails{margin-top:10px;padding-top:10px;border-top:1px solid #eee}
+@media(max-width:390px){
+  .headActions{gap:3px;right:-3px}
+  .headerAction{min-width:43px}
+  .cargoAction{min-width:56px}
+  .headerActionText{font-size:6.8px}
+  .headerActionIcon{font-size:22px}
+  .builderProductPhoto{height:125px}
+}
+
+/* v16 üst panel hizalama ve kargo paketi ikonu */
+.headrow{min-height:58px}
+.logo{width:88px}
+.headActions{right:4px;top:50%;transform:translateY(-50%);align-items:center}
+.cargoAction{min-width:50px}
+.cargoText{display:flex;flex-direction:column;align-items:center;line-height:1.02}
+.packageIcon{
+  width:22px;height:18px;display:inline-block;position:relative;
+  border:2px solid currentColor;border-radius:2px;
+  box-sizing:border-box;
+}
+.packageIcon:before{
+  content:"";position:absolute;left:3px;right:3px;top:-6px;height:7px;
+  border:2px solid currentColor;border-bottom:0;
+  transform:skewX(-18deg);
+  background:transparent;
+}
+.packageIcon:after{
+  content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;
+  background:currentColor;transform:translateX(-50%);
+}
+.headerActionText{margin-top:1px}
+@media(max-width:390px){
+  .headrow{min-height:54px}
+  .logo{width:82px}
+  .headActions{right:0;gap:1px}
+  .headerAction{min-width:39px}
+  .cargoAction{min-width:44px}
+  .headerActionText{font-size:6.4px}
+}
+
+/* v18 checkout adres */
+.formControl{width:100%;padding:11px;border:1px solid #d0d5dd;border-radius:10px;background:#fff}
+.addressGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.orderCartItem{padding:6px 0}
+
+/* v18 sade yönetim */
+.simpleAdmin{grid-template-columns:205px minmax(560px,1fr) 400px}
+.simpleSidebar button{font-size:13px;padding:12px}
+.categoryAdminBlock{background:#fff;border:1px solid #dfe3e8;border-radius:18px;padding:16px;margin-bottom:18px}
+.categoryAdminHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.compactCategorySettings{border-bottom:1px solid #eee;padding-bottom:8px;margin-bottom:14px}
+.adminProductGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.adminProductCard{border:1px solid #e1e4e8;border-radius:15px;padding:11px;background:#fafbfc}
+.adminProductImage{height:140px;border-radius:11px;background:#eef0f2;display:grid;place-items:center;overflow:hidden;margin-bottom:10px;color:#777;font-size:12px}
+.adminProductImage img{width:100%;height:100%;object-fit:cover}
+.twoMini{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.productToggles{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;margin:8px 0 10px}
+.emptyAdmin{padding:24px;border:1px dashed #ccd2d9;border-radius:12px;color:#667085}
+.setAdminRow{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px;border-top:1px solid #eee;padding-top:12px;margin-top:12px}
+
+/* sipariş yönetimi */
+.orderAdminCard{background:#fff;border:1px solid #dfe3e8;border-radius:17px;padding:16px;margin-bottom:13px}
+.orderAdminTop{display:flex;justify-content:space-between;gap:15px;border-bottom:1px solid #eee;padding-bottom:10px;margin-bottom:10px}
+.orderTime{font-size:12px;color:#667085;margin-top:4px}.orderTotal{font-size:21px;font-weight:850}
+.orderColumns{display:grid;grid-template-columns:.85fr 1.4fr;gap:18px}
+.orderColumns h4{margin:0 0 6px}
+.orderLine{padding:8px 0;border-bottom:1px dashed #e3e6e8}.orderLine:last-child{border-bottom:0}
+.orderSub{font-size:12px;color:#475467;margin-top:4px}
+.orderWrites{font-size:12px;margin-top:6px;background:#fff9ee;border:1px solid #eedcbc;border-radius:9px;padding:8px}
+.orderMeta{font-size:11px;color:#667085;border-top:1px solid #eee;margin-top:10px;padding-top:9px}
+
+@media(max-width:1150px){
+ .simpleAdmin{grid-template-columns:190px 1fr}
+ .simpleAdmin .previewPane{grid-column:2;height:720px}
+}
+@media(max-width:800px){
+ .addressGrid{grid-template-columns:1fr}
+ .simpleAdmin{display:block}
+ .setAdminRow{grid-template-columns:1fr}
+ .orderColumns{grid-template-columns:1fr}
+}
+
+.orderToolbar{display:grid;grid-template-columns:180px 180px auto auto auto;gap:10px;align-items:end}.bulkStatus{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid #eee}.bulkStatus button,.orderActions button{border:1px solid #d8dde3;background:#fff;border-radius:9px;padding:8px 11px;font-weight:700;cursor:pointer}.orderIdentity{display:flex;gap:11px;align-items:flex-start}.orderSelect{width:20px;height:20px}.orderId{font-size:18px}.statusBadge{display:inline-block;padding:6px 9px;border-radius:999px;font-size:11px;font-weight:850}.statusBadge.new{background:#f0f2f4}.statusBadge.prepared{background:#fff2cf}.statusBadge.shipped{background:#dff5e7}.orderActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}.orderAdminCard.status-prepared{border-left:5px solid #d4a62a}.orderAdminCard.status-shipped{border-left:5px solid #2f9b5b}@media(max-width:1000px){.orderToolbar{grid-template-columns:1fr 1fr}.orderToolbar>a{grid-column:1/-1}}
+
+/* v21 geri dönüş kolaylığı */
+.backPill{margin-right:6px;flex:0 0 auto}
+.wizardHead{gap:8px}
+@media(max-width:520px){
+  .backPill{padding:8px 10px;font-size:12px}
+}
+/* v22 — karar değiştirme ve adım göstergesi */
+.wizardHead .backPill{order:-1;white-space:nowrap}
+.wizardProgress{font-weight:800;letter-spacing:.02em}
+
+/* v24 Excel aktarım takibi */
+.excelExported{font-size:11px;color:#18794e;font-weight:750;margin-top:4px}
+.excelNotExported{font-size:11px;color:#b42318;font-weight:750;margin-top:4px}
+
+/* v25: Siparişler ekranında canlı önizleme gereksiz; kaldır ve alanı genişlet */
+.simpleAdmin.ordersMode{grid-template-columns:205px minmax(0,1fr)}
+.simpleAdmin.ordersMode .content{max-width:none;width:auto}
+.simpleAdmin.ordersMode .previewPane{display:none!important}
+@media(max-width:1150px){
+  .simpleAdmin.ordersMode{grid-template-columns:190px minmax(0,1fr)}
+}
+
+/* v26: Canlı mobil önizlemeyi tekrar büyük ve kullanışlı yap */
+.simpleAdmin:not(.ordersMode){
+  grid-template-columns:205px minmax(560px,1fr) 470px;
+}
+.simpleAdmin:not(.ordersMode) .previewPane{
+  width:470px;
+  min-width:470px;
+  padding-right:14px;
+}
+.simpleAdmin:not(.ordersMode) .phoneShell{
+  width:390px;
+  height:780px;
+  margin:0 auto;
+  border-radius:34px;
+}
+.simpleAdmin:not(.ordersMode) .phoneScreen{
+  width:100%;
+  height:100%;
+}
+@media(max-width:1350px){
+  .simpleAdmin:not(.ordersMode){
+    grid-template-columns:190px minmax(520px,1fr) 420px;
+  }
+  .simpleAdmin:not(.ordersMode) .previewPane{
+    width:420px;
+    min-width:420px;
+  }
+  .simpleAdmin:not(.ordersMode) .phoneShell{
+    width:360px;
+    height:720px;
+  }
+}
+@media(max-width:1150px){
+  .simpleAdmin:not(.ordersMode){
+    grid-template-columns:190px minmax(0,1fr);
+  }
+  .simpleAdmin:not(.ordersMode) .previewPane{
+    grid-column:2;
+    width:auto;
+    min-width:0;
+    height:auto;
+    padding:16px 0 30px;
+  }
+  .simpleAdmin:not(.ordersMode) .phoneShell{
+    width:390px;
+    height:780px;
+  }
+}
+
+/* v27: Canlı önizleme artık soldaki sayfadan bağımsız sabit kalır */
+.simpleAdmin:not(.ordersMode) .previewPane{
+  position:sticky;
+  top:10px;
+  align-self:start;
+  height:calc(100vh - 20px);
+  overflow:hidden;
+}
+.simpleAdmin:not(.ordersMode) .phoneShell{
+  height:calc(100vh - 105px);
+  max-height:800px;
+  min-height:620px;
+}
+.simpleAdmin:not(.ordersMode) .phoneScreen{
+  width:100%;
+  height:100%;
+}
+
+/* Yönetimde seçilen gerçek müşteri alanını kırmızı vurgula */
+.adminPreviewHighlight{
+  position:relative!important;
+  z-index:999!important;
+  outline:3px solid #e00000!important;
+  outline-offset:3px!important;
+  border-radius:10px!important;
+  box-shadow:0 0 0 5px rgba(224,0,0,.13)!important;
+  transition:outline .15s ease,box-shadow .15s ease!important;
+}
+.tab.adminPreviewHighlight,
+.headerAction.adminPreviewHighlight,
+.contactBtn.adminPreviewHighlight{
+  border-radius:999px!important;
+}
+.announce.adminPreviewHighlight{
+  border-radius:0!important;
+  outline-offset:-3px!important;
+}
+
+@media(max-width:1150px){
+  .simpleAdmin:not(.ordersMode) .previewPane{
+    position:relative;
+    top:auto;
+    height:auto;
+    overflow:visible;
+  }
+  .simpleAdmin:not(.ordersMode) .phoneShell{
+    height:780px;
+  }
+}
+
+/* v28: sıfır zıplama / milimetrik canlı önizleme */
+html{scroll-behavior:auto!important}
+.simpleAdmin:not(.ordersMode) .previewPane{
+  position:sticky!important;
+  top:8px!important;
+  align-self:start!important;
+  height:calc(100vh - 16px)!important;
+  overflow:hidden!important;
+}
+.simpleAdmin:not(.ordersMode) .phoneShell{
+  height:calc(100vh - 100px)!important;
+  min-height:620px!important;
+  max-height:820px!important;
+}
+
+/* kırmızı vurgu yalnızca hedef elemanın kendi ölçüsünü sarar */
+.adminPreviewHighlight{
+  outline:2px solid #e00000!important;
+  outline-offset:2px!important;
+  box-shadow:0 0 0 2px rgba(224,0,0,.12)!important;
+  border-radius:5px!important;
+  position:relative!important;
+  z-index:50!important;
+}
+.price .adminPreviewHighlight,
+.info h3.adminPreviewHighlight,
+.muted.adminPreviewHighlight,
+.badge.adminPreviewHighlight{
+  display:inline-block!important;
+  width:max-content!important;
+  max-width:100%!important;
+}
+.photo.adminPreviewHighlight{
+  border-radius:12px!important;
+}
+.tab.adminPreviewHighlight,
+.headerAction.adminPreviewHighlight,
+.contactBtn.adminPreviewHighlight{
+  border-radius:999px!important;
+}
+.announce.adminPreviewHighlight{
+  border-radius:0!important;
+  outline-offset:-2px!important;
+}
+
+/* v29 kontrollü canlı önizleme */
+
+/* Yönetici sağdaki telefonu elle oynatmaz. */
+.simpleAdmin:not(.ordersMode) .phoneScreen{
+  pointer-events:none!important;
+}
+
+/* Uzun kategori isimleri üst menüyü bozmaz. */
+.tabs{
+  flex-wrap:nowrap!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  white-space:nowrap!important;
+  scroll-behavior:auto!important;
+}
+.tab{
+  flex:0 0 auto!important;
+  max-width:145px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+
+/* Sağ telefon sol panelden bağımsız sabit kalır. */
+.simpleAdmin:not(.ordersMode) .previewPane{
+  position:sticky!important;
+  top:8px!important;
+  align-self:start!important;
+  height:calc(100vh - 16px)!important;
+  overflow:hidden!important;
+}
+
+/* Hedefler sticky header altında kalmasın. */
+.card,.hero,.campaignCard,.sectionHead,[data-preview-field]{
+  scroll-margin-top:115px!important;
+}
+
+/* Kırmızı vurgu tam hedefin ölçüsünde. */
+.price [data-preview-field].adminPreviewHighlight,
+.info h3.adminPreviewHighlight,
+.muted.adminPreviewHighlight,
+.badge.adminPreviewHighlight{
+  display:inline-block!important;
+  width:max-content!important;
+  max-width:100%!important;
+}
+.photo.adminPreviewHighlight{
+  width:auto!important;
+  max-width:none!important;
+}
+
+
+/* v33 — mobil mağaza düzeni */
+body, header, .hero, .section{background:var(--paper)}
+.hero{padding-top:30px}
+.hero .actions{max-width:560px;margin:18px auto 0}
+.hero .actions .secondary{width:100%;background:var(--paper)}
+.builderCard{margin-top:24px}
+.sortTools{display:flex;align-items:center;gap:10px;max-width:420px}
+.sortLabel{font-size:12px;font-weight:800;color:#475467;white-space:nowrap}
+.sortSelect{appearance:auto;text-align:left;background:#fff;cursor:pointer}
+.productDescription{font-size:11px;line-height:1.4;color:#667085;margin:0 0 9px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:30px}
+.productDetailIntro{background:#f6f7f8;border:1px solid #e1e5ea;border-radius:16px;padding:15px;margin:12px 0}
+.productDetailIntro p{margin:6px 0 0;line-height:1.55;color:#475467}
+
+/* Daha profesyonel sipariş akışı */
+.drawer{background:#f6f7f8;padding:0}
+.checkoutShell{padding:22px;min-height:100%;background:#f6f7f8}
+.checkoutTop{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px}
+.checkoutTop h2{font-family:Georgia,"Times New Roman",serif;font-size:29px;line-height:1.1;margin:5px 0 6px}
+.checkoutTop p{font-size:13px;line-height:1.5;color:#667085;margin:0;max-width:340px}
+.checkoutEyebrow{font-size:10px;letter-spacing:1.8px;color:var(--gold);font-weight:900}
+.checkoutSteps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:14px 0 18px}
+.checkoutSteps span{font-size:10px;text-align:center;padding:8px 5px;border-radius:999px;background:#e7e9ec;color:#7a8088;font-weight:800}
+.checkoutSteps span.active{background:#111;color:#fff}
+.checkoutProductPanel,.checkoutPayment,.checkoutTotal{background:#fff;border:1px solid #e0e4e8;border-radius:16px;padding:14px;margin-bottom:12px}
+.checkoutProductPanel .orderCartItem+.orderCartItem{border-top:1px solid #eceff2;margin-top:8px;padding-top:12px}
+.checkoutTotal{display:flex;justify-content:space-between;align-items:center}
+.checkoutTotal span{font-size:13px;color:#667085}.checkoutTotal strong{font-size:23px}
+.checkoutPayment{display:grid;grid-template-columns:1fr 170px;gap:14px;align-items:center}
+.checkoutPayment label small{display:block;color:#667085;font-size:11px;margin-top:3px}
+.checkoutPrimary{width:100%;margin-top:6px;padding:14px}
+.addressSectionTitle{display:flex;justify-content:space-between;gap:10px;align-items:end;margin:8px 0 10px}
+.addressSectionTitle small{font-size:10px;color:#667085}
+.checkoutEmpty{padding:30px 22px;text-align:center}
+.checkoutEmpty h2{font-family:Georgia,"Times New Roman",serif;font-size:30px}
+
+@media(max-width:520px){
+  .drawer{width:100%;}
+  .checkoutShell{padding:18px 15px 28px}
+  .checkoutTop h2{font-size:26px}
+  .checkoutPayment{grid-template-columns:1fr}
+  .checkoutSteps span{font-size:9px}
+  .tools.sortTools{padding:0 2px}
+  .sortLabel{display:none}
+  .sortSelect{width:100%;font-size:13px;padding:12px}
+  .hero{padding-left:20px;padding-right:20px}
+  .builderCard{border-radius:22px}
+  .section{padding-left:18px;padding-right:18px}
+  .grid{gap:14px}
+  .card{border-radius:20px}
+  .info h3{font-size:15px}
+}
+
+/* v34 — kampanya, ürün detayı, esnek setler ve daha kompakt mobil görünüm */
+body,header,.hero,.section{background:var(--paper)!important}
+.campaignCards{width:100%;background:var(--paper)}
+.campaignCards:empty{display:none}
+.campaignCard{max-height:360px}
+.campaignMarquee{font-size:clamp(16px,4vw,28px)}
+.campaignContent h2{font-size:clamp(21px,5vw,27px)}
+.campaignContent p{font-size:12px}
+.campaignBtn{border-radius:8px;padding:11px 18px}
+
+/* Fazla yuvarlak köşeleri azalt */
+.btn{border-radius:8px}
+.card{border-radius:10px}
+.builderCard{border-radius:12px}
+.wizardCard,.priceInfo,.writeItem,.remainingList,.removedList,.notice{border-radius:10px}
+.productDetailIntro,.checkoutProductPanel,.checkoutPayment,.checkoutTotal{border-radius:10px}
+.tool,.search,.formControl,.field input,.field textarea,.field select{border-radius:7px}
+.choiceBtn,.setItemToggle,.builderProductCard,.builderSummaryItem,.builderWriteCard{border-radius:9px}
+.contact{border-radius:8px}
+
+/* Ürün detay ekranı */
+.productDetailShell{padding:18px;min-height:100%;background:var(--paper)}
+.productDetailMedia{height:260px;background:#eef0f2;border:1px solid #e1e5ea;border-radius:10px;overflow:hidden;display:grid;place-items:center;margin:10px 0 13px}
+.productDetailMedia img{width:100%;height:100%;object-fit:cover}
+.productDetailPlaceholder{font-size:64px}
+.productDetailPrice{font-size:22px;font-weight:850;margin:5px 0 12px}
+.productDetailSection{background:#fff;border:1px solid #e1e5ea;border-radius:10px;padding:13px;margin:10px 0}
+.productDetailSection h3{font-size:14px;margin:0 0 7px}
+.productDetailSection p{font-size:12px;line-height:1.55;color:#475467;margin:0;white-space:pre-wrap}
+.detailFeatureList{display:grid;gap:7px;font-size:12px;line-height:1.35;color:#344054}
+.productDetailStock{font-size:11px;color:#667085;margin:9px 0}
+.detailAddBtn{width:100%;margin-top:12px}
+.inspectBtn{margin-top:9px}
+
+/* Yazı alanında Sepete Ekle butonu çerçevenin üstüne binmesin */
+.writeItem + .btn,.wizardCard + .btn{margin-top:14px}
+
+/* Yönetim — kampanya ve hazır set */
+.campaignQuickSettings{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:10px 0 12px;padding:10px;background:#fff;border:1px solid #e1e4e8;border-radius:8px}
+.campaignQuickSettings label{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700}
+.campaignQuickSettings input[type=number]{width:80px;padding:7px}
+.setAddBar{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;gap:8px;align-items:center;margin:12px 0}
+.setAdminRow{border-top:1px solid #e4e7ec;padding-top:13px;margin-top:13px}
+
+@media(max-width:520px){
+  .hero{padding:22px 16px 14px}
+  .hero h1{font-size:24px}
+  .hero p{font-size:11.5px}
+  .builderCard{min-height:138px;padding:16px;margin-top:18px}
+  .builderCard h3{font-size:21px;margin:5px 0}
+  .builderCard p{font-size:11px}
+  .gold{font-size:9px;letter-spacing:1.5px}
+  .arrow{width:42px;height:42px;font-size:22px}
+  .section{padding:25px 12px 95px}
+  .section h2{font-size:25px}
+  .grid{gap:10px}
+  .photo{height:150px}
+  .info{padding:9px}
+  .info h3{font-size:13px!important;margin-bottom:6px}
+  .productDescription{font-size:10px;min-height:27px;margin-bottom:7px}
+  .price{font-size:15px}
+  .muted{font-size:10px}
+  .info .btn{font-size:11px;padding:10px 7px}
+  .drawer{font-size:13px}
+  .wizardHead{padding:16px 15px 8px}
+  .wizardHead h2{font-size:22px;line-height:1.15}
+  .wizardProgress{font-size:11px}
+  .wizardCard{padding:13px;margin:10px 0}
+  .wizardCard h3,.writeItem h3{font-size:16px}
+  .wizardCard p{font-size:12px;line-height:1.45}
+  .priceInfo{font-size:12px;padding:12px}
+  .choiceBtn{font-size:12px;padding:12px}
+  .positionChoice{font-size:12px;padding:8px 10px}
+  .writeInput{font-size:13px;padding:11px}
+  .productDetailShell{padding:15px}
+  .productDetailMedia{height:225px}
+  .productDetailPrice{font-size:20px}
+  .campaignCard{height:240px!important}
+  .campaignContent{padding:38px 15px 20px}
+  .campaignContent h2{font-size:21px}
+  .campaignContent p{font-size:11px}
+  .campaignBtn{min-width:150px;font-size:11px;padding:10px 14px}
+  .campaignMarquee{font-size:17px;top:8px}
+  .checkoutTop h2{font-size:23px!important}
+  .checkoutProductPanel,.checkoutPayment,.checkoutTotal{padding:12px}
+}
+
+@media(max-width:800px){.setAddBar{grid-template-columns:1fr}.setAddBar button{width:100%}}
+
+
+/* v35 kategori merkezi */
+.menuBtn{position:absolute;left:2px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;background:transparent;display:grid;align-content:center;gap:4px;padding:8px;cursor:pointer}
+.menuBtn span{display:block;height:2px;background:#17191d;border-radius:2px;width:22px}
+.categoryHub{position:fixed;inset:0;z-index:100;background:var(--paper);overflow:auto;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.categoryHub.hidden{display:none}
+.categoryHubOpen{overflow:hidden}
+.categoryHubTop{position:sticky;top:0;z-index:2;background:rgba(246,247,248,.96);backdrop-filter:blur(10px);display:flex;align-items:center;gap:10px;padding:15px 16px;border-bottom:1px solid var(--line)}
+.categoryHubTop b{display:block;font-size:18px}.categoryHubTop small{display:block;color:#70757d;font-size:11px;margin-top:2px}
+.categoryBack{width:38px;height:38px;border:0;background:transparent;font-size:28px;line-height:1;cursor:pointer}
+.categoryHubGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:18px 14px 32px;max-width:760px;margin:auto}
+.categoryTile{min-height:128px;border:1px solid #e1e3e6;background:#f0f1f2;border-radius:10px;overflow:hidden;position:relative;text-align:left;padding:0;display:flex;align-items:stretch;cursor:pointer}
+.categoryTileText{padding:18px 8px 14px 16px;position:relative;z-index:1;flex:1;min-width:0}
+.categoryTileText b{display:block;font-size:17px;line-height:1.15;font-weight:650}.categoryTileText span{display:block;font-size:10px;color:#6c7076;margin-top:8px}
+.categoryTileMedia{width:48%;min-width:95px;display:flex;align-items:flex-end;justify-content:flex-end;overflow:hidden}
+.categoryTileMedia img{width:100%;height:100%;object-fit:cover}
+.categoryPlaceholder{width:70px;height:70px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:30px;font-family:Georgia,serif;margin:0 10px 12px 0}
+@media(min-width:700px){.categoryHubGrid{grid-template-columns:repeat(3,minmax(0,1fr))}.categoryTile{min-height:150px}}
+@media(max-width:390px){.menuBtn{left:-3px}.headrow{padding-left:34px}.categoryHubGrid{gap:9px;padding:14px 10px 28px}.categoryTile{min-height:112px}.categoryTileText{padding:15px 6px 12px 12px}.categoryTileText b{font-size:15px}}
+
+
+/* v36: beyaz zemin, tam ortalı logo, yumuşak kategori kapak geçişi */
+:root{--paper:#fff}
+body,.hero,.section,.campaignCards,.categoryHub{background:#fff!important}
+header{background:rgba(255,255,255,.97)!important}
+.categoryHubTop{background:rgba(255,255,255,.97)!important}
+
+/* Logo, sağdaki ikonların genişliğinden etkilenmeden ekranın geometrik merkezinde kalır. */
+.headrow{position:relative}
+#brandLogo.logo{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;margin:0!important;z-index:1}
+.menuBtn,.headActions{z-index:2}
+
+/* v37: kategori görseli kendi renklerinden türeyerek sola doğru erir.
+   Beyaz/gri bir katman bindirmiyoruz. Aynı fotoğrafın büyütülmüş + blur uygulanmış
+   kopyası yazının altına uzanıyor; sağdaki asıl fotoğraf da bunun içine yumuşakça birleşiyor. */
+.categoryTile{background:#f1f2f3;isolation:isolate}
+.categoryTileText{z-index:4;flex:0 0 55%;padding-right:2px}
+.categoryTile.hasCover{background:#e9eaec}
+.categoryTile.hasCover:before{
+  content:"";position:absolute;inset:-18px;z-index:0;pointer-events:none;
+  background-image:var(--cat-cover);background-size:cover;background-position:center;
+  filter:blur(22px) saturate(.78) brightness(1.18) contrast(.88);
+  transform:scale(1.10);
+  opacity:.82;
+  -webkit-mask-image:linear-gradient(to right,rgba(0,0,0,.74) 0%,rgba(0,0,0,.68) 24%,rgba(0,0,0,.48) 43%,rgba(0,0,0,.16) 61%,transparent 76%);
+  mask-image:linear-gradient(to right,rgba(0,0,0,.74) 0%,rgba(0,0,0,.68) 24%,rgba(0,0,0,.48) 43%,rgba(0,0,0,.16) 61%,transparent 76%);
+}
+.categoryTileMedia{position:absolute;inset:0 0 0 auto;width:62%;min-width:0;height:100%;z-index:2;overflow:hidden;display:block}
+.categoryTileMedia img{
+  width:100%;height:100%;object-fit:cover;object-position:center;transform:scale(1.025);
+  filter:saturate(.98) contrast(.99);
+  -webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.10) 12%,rgba(0,0,0,.32) 28%,rgba(0,0,0,.70) 48%,#000 67%);
+  mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.10) 12%,rgba(0,0,0,.32) 28%,rgba(0,0,0,.70) 48%,#000 67%);
+}
+/* Önceki beyaz/gri geçiş katmanı tamamen kaldırıldı. */
+.categoryTile.hasCover:after{display:none!important}
+.categoryTile.hasCover .categoryTileText b,
+.categoryTile.hasCover .categoryTileText span{
+  text-shadow:0 1px 10px rgba(255,255,255,.48),0 1px 2px rgba(255,255,255,.70);
+}
+.categoryTile:not(.hasCover) .categoryTileMedia{position:relative;inset:auto;width:45%;margin-left:auto;display:flex}
+
+@media(max-width:390px){
+  #brandLogo.logo{left:50%!important}
+  .categoryTileText{flex-basis:57%}
+  .categoryTileMedia{width:64%}
+}
+
+/* v38: kategori görseli referanstaki gibi doğal şekilde beyaza erir.
+   Fotoğraf sağ tarafta mümkün olduğunca korunur; yalnızca sol kenarında yumuşak opacity geçişi vardır. */
+.categoryTile.hasCover{
+  background:#f1f2f3!important;
+  isolation:isolate;
+}
+.categoryTile.hasCover:before,
+.categoryTile.hasCover:after{display:none!important}
+.categoryTile.hasCover .categoryTileText{
+  position:relative;z-index:4;flex:0 0 54%;padding-right:0;
+}
+.categoryTile.hasCover .categoryTileMedia{
+  position:absolute;inset:0 0 0 auto!important;
+  width:68%!important;height:100%;min-width:0!important;
+  z-index:2;overflow:hidden;display:block!important;
+}
+.categoryTile.hasCover .categoryTileMedia img{
+  position:absolute;inset:0;
+  width:100%;height:100%;object-fit:cover;object-position:center right;
+  filter:none!important;transform:none!important;opacity:1!important;
+  -webkit-mask-image:linear-gradient(to right,
+    transparent 0%,
+    rgba(0,0,0,.08) 8%,
+    rgba(0,0,0,.28) 17%,
+    rgba(0,0,0,.62) 28%,
+    rgba(0,0,0,.88) 39%,
+    #000 50%,
+    #000 100%);
+  mask-image:linear-gradient(to right,
+    transparent 0%,
+    rgba(0,0,0,.08) 8%,
+    rgba(0,0,0,.28) 17%,
+    rgba(0,0,0,.62) 28%,
+    rgba(0,0,0,.88) 39%,
+    #000 50%,
+    #000 100%);
+}
+.categoryTile.hasCover .categoryTileText b,
+.categoryTile.hasCover .categoryTileText span{
+  text-shadow:0 1px 1px rgba(255,255,255,.45);
+}
+@media(max-width:390px){
+  .categoryTile.hasCover .categoryTileMedia{width:70%!important}
+  .categoryTile.hasCover .categoryTileText{flex-basis:55%}
+}
+
+
+/* ===== V39 — çoklu ürün fotoğrafı galerisi ===== */
+.adminGallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.adminGalleryItem{border:1px solid #dfe3e8;border-radius:8px;overflow:hidden;background:#fff}
+.adminGalleryItem.main{outline:2px solid var(--gold,#c39a59)}
+.adminGalleryItem>img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+.adminGalleryActions{display:flex;gap:4px;flex-wrap:wrap;padding:5px}
+.adminGalleryActions button,.adminGalleryActions span{font-size:9px;border:0;border-radius:5px;padding:5px 6px;background:#eef0f2}
+.adminGalleryActions button{cursor:pointer}
+.productDetailGallery{margin:10px 0 13px}
+.productDetailGallery .productDetailMedia{margin:0}
+.productDetailThumbs{display:flex;gap:7px;overflow-x:auto;padding:8px 1px 2px}
+.productDetailThumbs button{flex:0 0 58px;width:58px;height:58px;border:1px solid #dfe3e8;border-radius:7px;padding:2px;background:#fff;overflow:hidden}
+.productDetailThumbs button.active{outline:2px solid var(--gold)}
+.productDetailThumbs img{width:100%;height:100%;object-fit:cover;border-radius:4px}
+@media(max-width:520px){
+  .adminGallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .productDetailThumbs button{flex-basis:52px;width:52px;height:52px}
+}
+
+/* v40 — 4:3 görseller, ürün detay düzeni ve iletişim kutularının alt konumu */
+.photo{
+  height:auto!important;
+  aspect-ratio:4 / 3;
+}
+.photo img{
+  object-fit:cover;
+}
+.info{
+  background:#fff;
+  border-top:1px solid #edf0f2;
+}
+.price{margin-top:4px}
+
+.productDetailHead{
+  position:relative;
+  align-items:flex-start;
+  min-height:72px;
+  padding-right:0;
+}
+.productDetailTitle{
+  min-width:0;
+  width:100%;
+  padding-right:66px;
+}
+.productDetailTitle h2{
+  margin:8px 0 0;
+  line-height:1.15;
+  font-size:clamp(22px,6vw,30px);
+  overflow-wrap:anywhere;
+}
+.productDetailClose{
+  position:absolute;
+  top:-7px;
+  right:0;
+  z-index:2;
+  white-space:nowrap;
+  padding:8px 11px;
+  font-size:12px;
+}
+.productDetailHead .productDetailClose:first-of-type{
+  max-width:126px;
+}
+.productDetailMedia{
+  width:100%;
+  height:auto!important;
+  aspect-ratio:4 / 3;
+  padding:0;
+  border:1px solid #e1e5ea;
+  background:#eef0f2;
+  border-radius:10px;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  margin:8px 0 10px;
+  position:relative;
+  cursor:zoom-in;
+}
+.productDetailMedia img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.imageZoomHint{
+  position:absolute;
+  right:8px;
+  bottom:8px;
+  padding:5px 8px;
+  border-radius:6px;
+  background:#0009;
+  color:#fff;
+  font-size:9px;
+  font-weight:750;
+  opacity:.82;
+}
+.productDetailThumbs{display:flex;gap:7px;overflow-x:auto;padding:1px 0 4px}
+.productDetailThumbs button{
+  width:52px;
+  height:39px;
+  aspect-ratio:4 / 3;
+  flex:0 0 auto;
+  padding:2px;
+  border:1px solid #d9dde2;
+  border-radius:7px;
+  background:#fff;
+  overflow:hidden;
+}
+.productDetailThumbs button.active{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.productDetailThumbs img{width:100%;height:100%;object-fit:cover;border-radius:4px}
+.productDetailPrice{margin-top:12px!important}
+.productDetailInfoBox{
+  background:#fff;
+  border:1px solid #e1e5ea;
+  border-radius:10px;
+  padding:0 13px;
+  margin:10px 0;
+}
+.productInfoPart{padding:13px 0}
+.productInfoPart + .productInfoPart{border-top:1px solid #eceff2}
+.productInfoPart h3{font-size:14px;margin:0 0 7px}
+.productInfoPart p{font-size:12px;line-height:1.55;color:#475467;margin:0;white-space:pre-wrap}
+.productDetailSection{display:none!important}
+
+.productImageViewer{
+  position:fixed;
+  inset:0;
+  z-index:80;
+  background:rgba(0,0,0,.94);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  cursor:zoom-out;
+}
+.productImageViewer img{
+  max-width:100%;
+  max-height:calc(100vh - 36px);
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  border-radius:6px;
+  box-shadow:0 12px 50px #0008;
+}
+.imageViewerClose{
+  position:fixed;
+  top:max(12px,env(safe-area-inset-top));
+  right:14px;
+  width:42px;
+  height:42px;
+  border:0;
+  border-radius:50%;
+  background:#fff;
+  color:#111;
+  font-size:27px;
+  line-height:1;
+  z-index:81;
+}
+
+.floating{
+  transition:transform .08s linear,bottom .25s ease;
+  will-change:transform;
+}
+/* Son ürünün altında iletişim kutularına temiz bir alan bırak. */
+.section{padding-bottom:180px!important}
+
+@media(max-width:520px){
+  .productDetailShell{padding:15px}
+  .productDetailHead{min-height:70px;margin-bottom:7px}
+  .productDetailTitle{padding-right:62px}
+  .productDetailClose{top:-6px;right:-1px;font-size:11px;padding:7px 9px}
+  .productDetailHead .productDetailClose:first-of-type{max-width:116px}
+  .productDetailMedia{margin-top:6px}
+  .imageZoomHint{font-size:8px;padding:4px 6px}
+  .productDetailThumbs button{width:48px;height:36px}
+  .grid{gap:9px}
+  .info{padding:9px 9px 10px}
+}
+
+/* ===== V41 — tam ürün görseli, sabit sepet barı, tıklanabilir ürün kartı ===== */
+.productCardLink{cursor:pointer}
+.productCardLink:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.productCardLink .info{padding-bottom:11px}
+.inspectBtn{display:none!important}
+
+/* 4:3 alan korunur; fotoğraf kırpılmaz, tamamı görünür. */
+.productDetailMedia{
+  background:#fff!important;
+  cursor:zoom-in;
+}
+.productDetailMedia img{
+  object-fit:contain!important;
+  background:#fff;
+}
+.imageZoomHint{display:none!important}
+.productDetailStock{display:none!important}
+
+/* Trendyol benzeri, ürün detayında ekranın altında sürekli görünen satın alma alanı. */
+.productDetailShell{
+  padding-bottom:104px!important;
+}
+.productDetailBottomBar{
+  position:fixed;
+  right:0;
+  bottom:0;
+  z-index:45;
+  width:min(520px,100%);
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px 14px max(10px,env(safe-area-inset-bottom));
+  background:rgba(255,255,255,.98);
+  border-top:1px solid #e4e7eb;
+  box-shadow:0 -10px 28px rgba(0,0,0,.08);
+  backdrop-filter:blur(10px);
+}
+.productDetailBottomPrice{
+  flex:0 0 auto;
+  min-width:112px;
+  font-size:18px;
+  line-height:1.05;
+  font-weight:850;
+  color:#111;
+  white-space:nowrap;
+}
+.productDetailBottomPrice .old{
+  font-size:11px;
+  color:#98a2b3;
+  font-weight:650;
+}
+.productDetailBottomBar .detailAddBtn{
+  flex:1;
+  width:auto!important;
+  margin:0!important;
+  min-height:50px;
+  font-size:15px;
+  border-radius:8px;
+}
+
+@media(max-width:520px){
+  .productDetailBottomBar{gap:9px;padding-left:12px;padding-right:12px}
+  .productDetailBottomPrice{min-width:102px;font-size:17px}
+  .productDetailBottomBar .detailAddBtn{min-height:48px;font-size:14px}
+}
+
+/* ===== V42 — masaüstünde ürün kartlarını normal ölçüde tut ===== */
+/* Geniş ekranlarda iki dev kart yerine daha zarif, sınırlı genişlikte kartlar. */
+@media (min-width: 801px){
+  #products.section{
+    max-width:1180px;
+    margin-left:auto;
+    margin-right:auto;
+    padding-left:24px;
+    padding-right:24px;
+  }
+  #products .products{
+    grid-template-columns:repeat(auto-fit,minmax(220px,260px));
+    justify-content:center;
+    align-items:start;
+    gap:18px;
+  }
+  #products .card{
+    width:100%;
+    max-width:260px;
+  }
+  #products .photo{
+    width:100%;
+    aspect-ratio:4 / 3;
+    max-height:195px;
+  }
+  #products .info{
+    padding:11px 12px 13px;
+  }
+  #products .info h3{
+    font-size:14px;
+    line-height:1.28;
+    margin-bottom:6px;
+  }
+  #products .price{
+    font-size:17px;
+  }
+}
+
+/* Tablet/mobil düzeni mevcut iki sütunlu yapıda kalır. */
+@media (max-width: 800px){
+  #products .products{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  #products .card{
+    max-width:none;
+  }
+}
+
+
+/* ===== V43 — ürün detayında gerçek fotoğraf oranı + tek fiyat + renkli ürün etiketi ===== */
+/* Ürün detayında fotoğraf artık 4:3 kutuya zorlanmaz. Yüklenen görselin gerçek oranı neyse tamamı doğrudan görünür. */
+.productDetailGallery .productDetailMedia{
+  aspect-ratio:auto!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  display:block!important;
+  overflow:hidden;
+  background:#fff!important;
+}
+.productDetailGallery .productDetailMedia img{
+  display:block!important;
+  width:100%!important;
+  height:auto!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  background:#fff!important;
+}
+/* Detay gövdesindeki tekrar fiyat kaldırıldı; yalnızca alttaki sabit satın alma barındaki fiyat kullanılır. */
+.productDetailPrice{display:none!important}
+
+/* Yönetim panelinden seçilebilen Trendyol tipi ürün etiketleri. */
+.badge{
+  left:9px!important;
+  top:9px!important;
+  max-width:calc(100% - 58px);
+  padding:6px 10px!important;
+  border-radius:999px!important;
+  font-size:9px!important;
+  line-height:1.1;
+  letter-spacing:.15px;
+  font-weight:850!important;
+  color:#fff!important;
+  box-shadow:0 3px 10px rgba(0,0,0,.16);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.badge-orange{background:#f97316!important}
+.badge-purple{background:#7c3aed!important}
+.badge-red{background:#dc2626!important}
+
+@media(max-width:520px){
+  .productDetailGallery .productDetailMedia{margin-top:6px!important}
+  .badge{font-size:8px!important;padding:5px 8px!important;left:7px!important;top:7px!important}
+}
+
+/* ===== V44 — tek alanda otomatik slider + sade kampanya yönetimi ===== */
+.campaignCards{position:relative;overflow:hidden;background:#fff!important}
+.campaignSlider{position:relative;width:100%;height:330px;overflow:hidden;background:#101216;color:#fff;touch-action:pan-y}
+.campaignSlides{position:absolute;inset:0}
+.campaignSlide{position:absolute;inset:0;opacity:0;transform:translateX(2.5%);transition:opacity .48s ease,transform .48s ease;pointer-events:none;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+.campaignSlide.isActive{opacity:1;transform:translateX(0);pointer-events:auto;z-index:2}
+.campaignSlideImage{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:0}
+.campaignSlideShade{position:absolute;inset:0;background:rgba(0,0,0,var(--campaign-overlay,.28));z-index:1}
+.campaignSlider .campaignContent{position:relative;z-index:3;text-align:center;padding:52px 54px 38px;width:100%}
+.campaignSlider .campaignContent h2{font-size:clamp(22px,4vw,36px);line-height:1.08;margin:0 0 9px}
+.campaignSlider .campaignContent p{font-size:13px;line-height:1.45;margin:0 auto 18px;max-width:520px}
+.campaignSlider .campaignBtn{cursor:pointer;border:1px solid rgba(255,255,255,.95);border-radius:8px;color:#fff;background:rgba(0,0,0,.2);min-width:180px;padding:12px 18px;font-weight:750}
+.campaignArrow{position:absolute;z-index:5;top:50%;transform:translateY(-50%);width:42px;height:42px;border:1px solid #ffffff80;border-radius:50%;background:#0005;color:#fff;font-size:30px;line-height:1;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(4px)}
+.campaignPrev{left:14px}.campaignNext{right:14px}
+.campaignDots{position:absolute;z-index:5;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:7px}
+.campaignDot{width:8px;height:8px;border:0;border-radius:999px;background:#ffffff80;padding:0;transition:.2s;cursor:pointer}
+.campaignDot.isActive{width:24px;background:#fff}
+.campaignSlider .campaignMarquee{z-index:4}
+
+/* Yönetimde teknik alanlar yerine kısa, düzenli slider kartları */
+.campaignSliderAdminIntro{display:grid;gap:12px}
+.campaignBulkUpload{display:grid;grid-template-columns:minmax(220px,1fr) minmax(220px,360px);gap:10px;align-items:center}
+.campaignBulkUpload input{width:100%;padding:10px;border:1px solid #d8dde3;border-radius:7px;background:#fff}
+.campaignSlideAdmin{padding:14px!important;border-radius:10px!important;background:#fff!important}
+.campaignAdminActions{display:flex;gap:6px;align-items:center}
+.campaignAdminActions button:disabled{opacity:.35;cursor:not-allowed}
+.campaignAdminPreview{display:block;width:100%;max-height:190px;object-fit:cover;border-radius:8px;border:1px solid #e1e5ea;margin:8px 0 12px}
+.campaignSimpleRow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;padding:9px 0;border-bottom:1px solid #eef0f2}
+.campaignShowToggle{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:750;white-space:nowrap}
+.campaignFileRow{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0}
+.campaignFileRow input{max-width:230px;font-size:11px}
+.campaignOptional{border-top:1px solid #eef0f2;padding-top:9px;margin-top:2px}
+.campaignOptional summary{font-size:11px;font-weight:750;color:#667085;cursor:pointer}
+.campaignOptional .field{margin-top:10px}
+
+@media(max-width:680px){
+  .campaignSlider{height:240px}
+  .campaignSlider .campaignContent{padding:38px 16px 28px}
+  .campaignSlider .campaignContent h2{font-size:22px}
+  .campaignSlider .campaignContent p{font-size:11px;margin-bottom:15px}
+  .campaignSlider .campaignBtn{min-width:150px;padding:10px 14px;font-size:11px}
+  .campaignArrow{display:none}
+  .campaignDots{bottom:9px}
+}
+@media(max-width:780px){
+  .campaignBulkUpload{grid-template-columns:1fr}
+  .campaignSimpleRow{align-items:flex-start;flex-direction:column}
+  .campaignFileRow{width:100%;justify-content:flex-start;flex-wrap:wrap}
+}
+
+
+/* ===== V45 — slider stabilitesi, tam reklam görseli, kategori 50/50, mobil tam-kenar ürün ===== */
+
+/* Slider: yüklenen reklam görselini kesme. Aynı görselin flu kopyası boşlukları zarifçe doldurur. */
+.campaignSlider{
+  height:auto!important;
+  aspect-ratio:16 / 5.2;
+  min-height:250px;
+  max-height:430px;
+  background:#111!important;
+}
+.campaignSlide{align-items:flex-end!important}
+.campaignSlideBackdrop{
+  position:absolute;inset:-22px;z-index:0;
+  background-size:cover;background-position:center;
+  filter:blur(22px) brightness(.62) saturate(.9);
+  transform:scale(1.08);
+  opacity:.82;
+}
+.campaignSlideImage{
+  position:absolute!important;inset:0!important;
+  width:100%!important;height:100%!important;
+  object-fit:contain!important;object-position:center!important;
+  z-index:1!important;
+}
+.campaignSlideShade{z-index:2!important;background:rgba(0,0,0,var(--campaign-overlay,.20))!important}
+.campaignSlider .campaignContent{z-index:3!important}
+
+/* Üst kayan yazı artık bütün slider için tek katmandır; slayttan bağımsız akar. */
+.campaignGlobalMarquee{
+  position:absolute;top:9px;z-index:6;overflow:hidden;white-space:nowrap;
+  pointer-events:none;color:#fff;font-size:clamp(15px,2.3vw,28px);font-weight:850;
+  text-shadow:0 2px 10px rgba(0,0,0,.65);
+}
+.campaignGlobalMarquee--full{left:0;right:0}
+.campaignGlobalMarquee--center{left:50%;width:min(72%,680px);transform:translateX(-50%);border-radius:8px}
+.campaignGlobalMarquee .campaignMarqueeTrack{display:inline-block;animation:campaignMove 14s linear infinite;padding-inline:12px}
+.campaignGlobalSettings{display:grid;grid-template-columns:1fr 260px;gap:12px;align-items:start;border-top:1px solid #eef0f2;padding-top:12px}
+
+/* Ürün listesi: gerçek fotoğraf eklendiğinde de kart yüksekliği bozulmaz; bilgi bölümü mutlaka görünür. */
+#productsList .card{display:flex!important;flex-direction:column!important;overflow:hidden!important}
+#productsList .card .photo{
+  position:relative!important;width:100%!important;height:auto!important;
+  aspect-ratio:4 / 3!important;max-height:none!important;min-height:0!important;
+  overflow:hidden!important;flex:0 0 auto!important;background:#eef0f2!important;
+}
+#productsList .card .photo>img{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  object-fit:cover!important;object-position:center!important;display:block!important;
+}
+#productsList .card .info{display:block!important;position:relative!important;z-index:1!important;flex:0 0 auto!important;background:#fff!important}
+
+/* Kategori merkezi: önceki blur/maske geçişi yok. Sol yarı metin, sağ yarı fotoğraf. */
+.categoryTile,.categoryTile.hasCover{background:#f1f2f3!important;isolation:auto!important}
+.categoryTile:before,.categoryTile:after,.categoryTile.hasCover:before,.categoryTile.hasCover:after{display:none!important}
+.categoryTile .categoryTileText,.categoryTile.hasCover .categoryTileText{
+  position:relative!important;z-index:2!important;flex:0 0 50%!important;width:50%!important;
+  padding:18px 12px 14px 16px!important;background:#f1f2f3!important;
+}
+.categoryTile .categoryTileMedia,.categoryTile.hasCover .categoryTileMedia{
+  position:absolute!important;inset:0 0 0 auto!important;width:50%!important;height:100%!important;
+  min-width:0!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  overflow:hidden!important;border-left:1px solid #e1e3e6!important;background:#eef0f2!important;
+}
+.categoryTile .categoryTileMedia img,.categoryTile.hasCover .categoryTileMedia img{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  object-fit:cover!important;object-position:center!important;filter:none!important;transform:none!important;opacity:1!important;
+  -webkit-mask-image:none!important;mask-image:none!important;
+}
+.categoryTile.hasCover .categoryTileText b,.categoryTile.hasCover .categoryTileText span{text-shadow:none!important}
+.categoryTile:not(.hasCover) .categoryTileMedia{margin:0!important}
+.categoryTile .categoryPlaceholder{margin:0!important}
+
+/* Mobil ürün detayı: Trendyol benzeri şekilde ana görsel ekranın iki kenarına tam oturur.
+   Sabit fiyat + Sepete Ekle barının kendi kenar boşluğu aynen korunur. */
+@media(max-width:520px){
+  .drawer .productDetailShell{padding:14px 0 108px!important;background:#fff!important}
+  .productDetailHead{margin-left:16px!important;margin-right:16px!important}
+  .productDetailGallery{margin:6px 0 13px!important;width:100%!important}
+  .productDetailGallery .productDetailMedia{
+    width:100%!important;margin:0!important;border-left:0!important;border-right:0!important;
+    border-radius:0!important;background:#fff!important;
+  }
+  .productDetailGallery .productDetailMedia img{width:100%!important;height:auto!important;display:block!important}
+  .productDetailThumbs{padding:8px 16px 2px!important}
+  .productDetailInfoBox{margin-left:16px!important;margin-right:16px!important}
+  .campaignSlider{aspect-ratio:16 / 7.2;min-height:220px;max-height:300px}
+  .campaignGlobalMarquee{top:7px;font-size:16px}
+  .campaignGlobalMarquee--center{width:78%}
+  .campaignGlobalSettings{grid-template-columns:1fr}
+  .categoryTile .categoryTileText,.categoryTile.hasCover .categoryTileText{padding:15px 8px 12px 12px!important}
+}
+
+/* Canlı önizleme: aktif düzenlenen slider parçası kırmızı çerçevede net görünür. */
+.campaignSlide.adminPreviewHighlight,
+.campaignContent.adminPreviewHighlight,
+.campaignBtn.adminPreviewHighlight,
+.campaignGlobalMarquee.adminPreviewHighlight{
+  outline:2px solid #e00000!important;
+  outline-offset:-2px!important;
+  box-shadow:inset 0 0 0 2px rgba(224,0,0,.10)!important;
+}
+
+
+/* V46 — sade sepet, kompakt teslimat, Aras Kargo şube teslim */
+.cartToolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-4px 0 10px;font-size:12px;color:#667085}
+.cartClearBtn,.cartRemoveBtn,.checkoutBackBtn{border:0;background:transparent;cursor:pointer;font:inherit}
+.cartClearBtn{color:#b42318;font-weight:800;text-decoration:underline;text-underline-offset:3px}
+.cartItemMain{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.cartItemRight{display:flex;flex-direction:column;align-items:flex-end;gap:8px;white-space:nowrap}
+.cartItemRight strong{font-size:15px}
+.cartRemoveBtn{color:#b42318;font-size:11px;font-weight:800;padding:0}
+.checkoutBackRow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-3px 0 8px}
+.checkoutBackRow small{font-size:10px;color:#7a8088}
+.checkoutBackBtn{font-weight:800;color:#344054;padding:5px 0}
+.addressCompact{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.addressCompact .field{display:flex;flex-direction:column;gap:6px}
+.fieldWide{grid-column:1/-1}
+.fieldHelp{display:block;font-weight:400;color:#667085;font-size:10px;line-height:1.35;margin-top:3px}
+.branchChoice{display:flex;align-items:flex-start;gap:11px;padding:13px;border:1px solid #d0d5dd;border-radius:10px;background:#fff;cursor:pointer}
+.branchChoice input{width:19px;height:19px;margin:1px 0 0;accent-color:#111;flex:0 0 auto}
+.branchChoice span{display:flex;flex-direction:column;gap:3px}
+.branchChoice small{color:#667085;font-size:10px;line-height:1.4}
+.addressModeFields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.branchInfo{grid-column:1/-1;background:#fff9ed;border:1px solid #ead7ad;border-radius:10px;padding:12px;font-size:11px;line-height:1.5;color:#5f4b22}
+.branchInfo span{color:#7a6232}
+.addressCheckModal{position:fixed;inset:0;z-index:999999;background:rgba(15,17,20,.48);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
+.addressCheckCard{position:relative;width:min(430px,100%);background:#fff;border-radius:16px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.22)}
+.addressCheckCard h3{font-size:23px;margin:7px 0 6px}.addressCheckHint{color:#667085;font-size:12px;line-height:1.45;margin:0 0 14px}
+.addressCheckX{position:absolute;right:13px;top:11px;width:35px;height:35px;border:0;border-radius:50%;background:#f2f4f7;font-size:24px;cursor:pointer}
+.addressCheckData{display:flex;flex-direction:column;gap:5px;background:#f8f9fa;border:1px solid #e4e7ec;border-radius:10px;padding:13px;font-size:12px;line-height:1.45}
+.addressCheckData strong{margin-top:5px}.addressCheckData small{color:#8a6519}
+.addressCheckActions{display:grid;grid-template-columns:110px 1fr;gap:9px;margin-top:14px}.addressCheckActions .btn{margin:0;padding:12px}
+@media(max-width:700px){
+  .addressCompact{grid-template-columns:1fr;gap:10px}
+  .fieldWide{grid-column:1}
+  .addressModeFields{grid-template-columns:1fr;gap:10px}
+  .branchInfo{grid-column:1}
+  .checkoutShell{padding-top:15px}
+  .checkoutTop{margin-bottom:10px}
+  .checkoutTop h2{margin-top:3px}
+  .cartItemMain{gap:10px}
+  .addressCheckActions{grid-template-columns:100px 1fr}
+}
+
+
+/* ===== V47 — tam reklam pano, sabit üst şerit, kesintisiz kayan yazılar ===== */
+:root{--announce-h:25px}
+.announce{
+  position:sticky!important;top:0!important;z-index:28!important;
+  height:25px;display:block;background:#0f0f10;color:#fff;
+  overflow:hidden!important;white-space:nowrap!important;
+}
+header{top:var(--announce-h,25px)!important;z-index:27!important}
+/* Kayan yazı bir nüshanın tamamen bitmesini beklemez: iki aynı kopya kesintisiz döner. */
+.announce .track{
+  display:flex!important;width:max-content!important;min-width:max-content!important;
+  padding:0!important;height:25px;align-items:center;
+  animation:shazMarqueeLoop 17s linear infinite!important;will-change:transform;
+}
+.announce .marqueeCopy{display:block;flex:none;padding-right:72px;line-height:25px}
+@keyframes shazMarqueeLoop{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+.campaignGlobalMarquee{overflow:hidden!important}
+.campaignGlobalMarquee .campaignMarqueeTrack{
+  display:flex!important;width:max-content!important;min-width:max-content!important;
+  animation:shazCampaignMarqueeLoop 12s linear infinite!important;will-change:transform;padding:0!important;
+}
+.campaignGlobalMarquee .campaignMarqueeCopy{display:block;flex:none;padding-right:64px}
+@keyframes shazCampaignMarqueeLoop{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* Reklam fotoğrafı paneli tamamen doldurur; yanlarda flu/siyah sütun kalmaz. */
+.campaignSlideBackdrop{display:none!important}
+.campaignSlideImage{
+  inset:0!important;width:100%!important;height:100%!important;
+  object-fit:cover!important;object-position:center!important;
+}
+.campaignSlider{background:#111!important}
+
+@media(max-width:520px){
+  .campaignSlider{
+    width:100%!important;height:255px!important;min-height:255px!important;max-height:255px!important;
+    aspect-ratio:auto!important;
+  }
+  .campaignSlideImage{object-fit:cover!important;object-position:center!important}
+  .campaignSlider .campaignContent{padding:38px 16px 27px!important}
+}
+
+/* ===== V48 — yalnızca masaüstü reklam panosu oranı =====
+   Mobil düzen V47 ile aynen korunur. Geniş ekranda pano artık aşırı ince kalmaz. */
+@media(min-width:701px){
+  .campaignSlider{
+    width:100%!important;
+    height:clamp(360px,30vw,520px)!important;
+    min-height:360px!important;
+    max-height:520px!important;
+    aspect-ratio:auto!important;
+  }
+  .campaignSlideImage{
+    width:100%!important;
+    height:100%!important;
+    object-fit:cover!important;
+    object-position:center!important;
+  }
+  .campaignSlider .campaignContent{
+    padding:58px 70px 42px!important;
+  }
+}
+
+/* V49 — gerçek marka ikonları */
+.brandIcon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 20px;width:20px;height:20px}
+.brandIcon svg{display:block;width:20px;height:20px}
+.waIcon{color:#fff}
+.igIcon{color:#fff}
+.contact.black .igIcon{background:radial-gradient(circle at 30% 110%,#ffd600 0 18%,#ff7a00 35%,#ff0169 58%,#d300c5 76%,#7638fa 100%);border-radius:6px;padding:2px;box-sizing:border-box}
+.contactBtn .brandIcon{margin-right:6px}
+
+
+/* ===== V50 — kayan üst şerit, Instagram gradyanı, masaüstü detay fotoğrafı ===== */
+/* Şerit ekranda sabit kalır; sadece içindeki metin sürekli akar. */
+.announce{
+  position:sticky!important;
+  top:0!important;
+  z-index:50!important;
+  overflow:hidden!important;
+}
+.announce .track{
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  width:max-content!important;
+  min-width:max-content!important;
+  height:25px!important;
+  align-items:center!important;
+  padding:0!important;
+  gap:0!important;
+  transform:translate3d(0,0,0);
+  animation:shazTopTickerV50 11s linear infinite!important;
+  will-change:transform!important;
+}
+.announce .marqueeCopy{
+  display:block!important;
+  flex:0 0 auto!important;
+  padding-right:42px!important;
+  line-height:25px!important;
+  white-space:nowrap!important;
+}
+@keyframes shazTopTickerV50{
+  from{transform:translate3d(0,0,0)}
+  to{transform:translate3d(-50%,0,0)}
+}
+
+/* WhatsApp mevcut yeşil görünümünü korur. Instagram tek parça turuncu -> mor geçişlidir. */
+.contact.ig{
+  background:linear-gradient(105deg,#f97316 0%,#f43f5e 43%,#a855f7 72%,#7c3aed 100%)!important;
+}
+.contact.ig .igIcon,
+.contact.black .igIcon{
+  background:none!important;
+  border-radius:0!important;
+  padding:0!important;
+  color:#fff!important;
+}
+
+/* PC ürün detayında görsel ekran yüksekliğine sığar; mobil görünüm V49 gibi kalır. */
+@media(min-width:701px){
+  .drawer{width:min(620px,46vw)!important;padding:18px 20px!important;}
+  .productDetailGallery .productDetailMedia{
+    width:100%!important;
+    height:min(66vh,620px)!important;
+    max-height:calc(100vh - 210px)!important;
+    min-height:320px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    background:#fff!important;
+  }
+  .productDetailGallery .productDetailMedia img{
+    width:100%!important;
+    height:100%!important;
+    max-width:100%!important;
+    max-height:100%!important;
+    object-fit:contain!important;
+    object-position:center!important;
+  }
+  .productDetailThumbs{margin-top:8px!important;}
+  .productDetailBottomBar{width:min(620px,46vw)!important;}
+}
+
+
+/* ===== V51 — slider kayan yazı konumu + sağdan doğal giriş ===== */
+/* Yönetim panelinde üçüncü konum: reklam görselinin tam ortası. */
+.campaignGlobalMarquee--middle{
+  left:0!important;
+  right:0!important;
+  top:50%!important;
+  width:100%!important;
+  transform:translateY(-50%)!important;
+  border-radius:0!important;
+}
+
+/* Metin artık ekranın sağ kenarının DIŞINDAN girer.
+   İki eş kopya sayesinde döngü yenilenirken yazı kenarda aniden belirmez. */
+.campaignGlobalMarquee .campaignMarqueeTrack{
+  position:relative!important;
+  left:100%!important;
+  display:flex!important;
+  width:max-content!important;
+  min-width:max-content!important;
+  padding:0!important;
+  gap:0!important;
+  animation:shazCampaignTickerV51 13s linear infinite!important;
+  will-change:transform!important;
+}
+.campaignGlobalMarquee .campaignMarqueeCopy{
+  display:block!important;
+  flex:0 0 auto!important;
+  padding-right:72px!important;
+  white-space:nowrap!important;
+}
+@keyframes shazCampaignTickerV51{
+  from{transform:translate3d(0,0,0)}
+  to{transform:translate3d(-50%,0,0)}
+}
+
+/* ===== V52 — kesintisiz kampanya yazısı + ürün detay yerleşimi ===== */
+/* 12 aynı kopya bir kopya genişliği kadar kayar. Döngü sıfırlansa bile ekrandaki
+   görüntü aynıdır; yazı yarıda geri atlamaz ve yeni kopya sağdan doğal şekilde girer. */
+.campaignGlobalMarquee .campaignMarqueeTrack{
+  position:static!important;
+  left:auto!important;
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  width:max-content!important;
+  min-width:max-content!important;
+  gap:0!important;
+  padding:0!important;
+  transform:translate3d(0,0,0)!important;
+  animation:shazCampaignTickerV52 18s linear infinite!important;
+  will-change:transform!important;
+}
+.campaignGlobalMarquee .campaignMarqueeCopy{
+  display:block!important;
+  flex:0 0 auto!important;
+  padding-right:72px!important;
+  white-space:nowrap!important;
+}
+@keyframes shazCampaignTickerV52{
+  from{transform:translate3d(0,0,0)}
+  to{transform:translate3d(-8.3333333333%,0,0)}
+}
+
+/* Drawer üstteki sabit siyah şeridin altından başlar; Kapat artık şeridin arkasında kalmaz. */
+.drawer{
+  top:var(--announce-h,25px)!important;
+  height:calc(100% - var(--announce-h,25px))!important;
+}
+
+/* Ürün detay başlığı: Kapat sadece üst satırda yer kaplar, ürün adı alt satırda tüm genişliği kullanır. */
+.productDetailHead{
+  display:block!important;
+  position:relative!important;
+  min-height:0!important;
+  padding:0 0 8px!important;
+  margin-bottom:4px!important;
+}
+.productDetailTitle{
+  width:100%!important;
+  min-width:0!important;
+  padding-right:0!important;
+}
+.productDetailTitle .wizardProgress{
+  min-height:30px!important;
+  padding-right:96px!important;
+  display:flex!important;
+  align-items:center!important;
+}
+.productDetailTitle h2{
+  width:100%!important;
+  max-width:none!important;
+  padding-right:0!important;
+  margin:5px 0 0!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+  hyphens:none!important;
+  line-height:1.12!important;
+}
+.productDetailClose{
+  top:0!important;
+  right:0!important;
+  z-index:3!important;
+}
+
+@media(max-width:520px){
+  .productDetailHead{margin-left:16px!important;margin-right:16px!important;}
+  .productDetailTitle .wizardProgress{padding-right:88px!important;}
+  .productDetailTitle h2{font-size:clamp(24px,6.2vw,29px)!important;letter-spacing:-.02em!important;}
+}
+
+/* ===== V54 — kayan yazılar gerçekten canlı =====
+   CSS keyframe yerine app.js requestAnimationFrame kullanır. Safari/iOS'ta
+   animation override çakışması yüzünden sabit kalma sorunu böyle kaldırıldı. */
+.announce .track,
+.campaignGlobalMarquee .campaignMarqueeTrack{
+  animation:none!important;
+  transform:translate3d(0,0,0);
+  will-change:transform!important;
+}
+.announce .track{display:flex!important;width:max-content!important;min-width:max-content!important}
+.campaignGlobalMarquee .campaignMarqueeTrack{display:flex!important;width:max-content!important;min-width:max-content!important}
+
+/* V55 - yönetim paneli: hızlı kategori gezintisi + çoğalt */
+.catalogControlPanel{position:sticky;top:0;z-index:25;padding-bottom:12px;box-shadow:0 8px 22px rgba(20,24,32,.06)}
+.catalogToolbar{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:12px;align-items:center;margin-top:14px}
+.categoryQuickNav{display:flex;gap:7px;overflow-x:auto;padding:3px 2px 7px;scrollbar-width:thin}
+.categoryJumpBtn{white-space:nowrap;border:1px solid #d9dde3;background:#fff;border-radius:9px;padding:9px 12px;font-weight:700;cursor:pointer;color:#252a31}
+.categoryJumpBtn span{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;margin-left:5px;border-radius:10px;background:#eef0f3;font-size:10px;color:#666}
+.categoryJumpBtn.active{background:#111;color:#fff;border-color:#111}.categoryJumpBtn.active span{background:#fff;color:#111}
+.adminProductSearch .formControl{margin:0}
+.categoryAdminBlock{scroll-margin-top:155px;padding:0!important;overflow:hidden}
+.categoryAdminHeader{margin:0!important;padding:13px 15px;background:#fff;position:relative}
+.categoryHeaderMain{flex:1;min-width:0;border:0;background:transparent;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0;cursor:pointer}
+.categoryHeaderMain h2{margin:0 0 3px}.categoryChevron{width:32px;height:32px;border-radius:8px;background:#f1f3f5;display:grid;place-items:center;font-size:22px;font-weight:400}
+.categoryAdminBlock.collapsed .categoryAdminHeader{border-bottom:0}.categoryAdminBody{padding:0 15px 15px;border-top:1px solid #edf0f3}
+.categoryAdminBody .compactCategorySettings{padding-top:14px}
+.productAdminActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.duplicateBtn{border:1px solid #b9c2cc;background:#fff;color:#111;border-radius:8px;padding:10px 8px;font-weight:750;cursor:pointer}
+.duplicateBtn:hover{background:#f3f5f7}
+@media(max-width:900px){.catalogControlPanel{position:relative;top:auto}.catalogToolbar{grid-template-columns:1fr}.categoryAdminBlock{scroll-margin-top:20px}}
+
+
+/* ===== V56 — PC ürün detayı: beyaz yan boşluk yok; mobil kurallara dokunulmaz ===== */
+@media(min-width:701px){
+  .drawer{width:min(680px,50vw)!important;padding:18px 0 0!important;}
+  .productDetailShell{padding-left:20px!important;padding-right:20px!important;}
+  .productDetailGallery{margin-left:-20px!important;margin-right:-20px!important;}
+  .productDetailGallery .productDetailMedia{
+    width:100%!important;height:auto!important;max-height:none!important;min-height:0!important;
+    display:block!important;background:transparent!important;border-radius:0!important;border-left:0!important;border-right:0!important;
+    overflow:hidden!important;
+  }
+  .productDetailGallery .productDetailMedia img{
+    display:block!important;width:100%!important;height:auto!important;max-width:none!important;max-height:none!important;
+    object-fit:fill!important;background:transparent!important;border-radius:0!important;
+  }
+  .productDetailThumbs{padding:8px 20px 0!important;}
+  .productDetailBottomBar{width:min(680px,50vw)!important;}
+}
+
+/* V56 — yönetim paneli: tek kategori, kompakt ürün listesi, aç-kapa düzenleyici */
+.categoryAdminBlock.open{overflow:visible!important}
+.categorySettingsDetails{margin:12px 0;border:1px solid #e4e7eb;border-radius:10px;background:#fafbfc}
+.categorySettingsDetails summary{cursor:pointer;padding:11px 13px;font-weight:800;list-style:none}
+.categorySettingsDetails summary::-webkit-details-marker{display:none}
+.categorySettingsDetails summary:after{content:'＋';float:right;font-size:17px;font-weight:400}.categorySettingsDetails[open] summary:after{content:'−'}
+.addProductPrimary{background:#111!important;color:#fff!important;border-color:#111!important;font-weight:800!important}
+.adminProductCompactList{display:grid;gap:9px;margin-top:12px}
+.adminProductCompact{border:1px solid #e0e4e9;border-radius:11px;background:#fff;overflow:hidden}
+.adminProductCompactHead{display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:8px;align-items:center;padding:8px}
+.adminProductCompactMain{border:0;background:transparent;display:flex;align-items:center;gap:11px;text-align:left;min-width:0;padding:0;cursor:pointer}
+.compactThumb{width:58px;height:48px;flex:0 0 58px;border-radius:7px;background:#f0f2f4;overflow:hidden;display:grid;place-items:center;font-size:8px;color:#8a9099}
+.compactThumb img{width:100%;height:100%;object-fit:cover}
+.compactMeta{min-width:0;flex:1}.compactMeta b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}.compactMeta small{display:block;color:#69717c;font-size:10px;margin-top:3px}
+.compactEdit{font-size:10px;font-weight:800;color:#555;white-space:nowrap}
+.adminProductCompact.editing{border-color:#b9c1ca;box-shadow:0 5px 16px #0000000d}.compactEditor{border-top:1px solid #e6e9ed;padding:10px;background:#fafbfc}
+.compactEditor .adminProductCard{margin:0!important;border:0!important;box-shadow:none!important;background:transparent!important}
+.compactEditor .adminProductImage{max-height:190px}.compactEditor .adminProductImage img{object-fit:contain}
+.compactEditor .productAdminActions{grid-template-columns:1fr!important}
+@media(max-width:900px){.adminProductCompactHead{grid-template-columns:minmax(0,1fr) 92px}.compactThumb{width:48px;flex-basis:48px}}
+
+/* V57 — kategori başlıkları bütün sekmelerde aynı referans noktasında */
+#products .sectionHead{margin-top:0!important;margin-bottom:22px!important}
+#products .sectionHead h2{margin-top:0!important}
+
+/* ===== V58 — mobil başlık her ekran genişliğinde çakışmasın =====
+   Logo genişliği panelden büyük verilse bile dar telefonda ikonların üstüne binmez. */
+@media(max-width:430px){
+  header{padding-left:8px!important;padding-right:8px!important}
+  .headrow{min-height:56px!important;padding-left:38px!important;padding-right:124px!important}
+  #brandLogo.logo{
+    width:clamp(72px,21vw,82px)!important;
+    max-width:82px!important;
+    height:auto!important;
+    left:50%!important;
+  }
+  .menuBtn{left:0!important;width:36px!important;height:36px!important;padding:7px!important}
+  .menuBtn span{width:21px!important}
+  .headActions{right:0!important;gap:0!important;max-width:124px!important;align-items:center!important}
+  .headerAction{min-width:38px!important;width:38px!important;padding-left:0!important;padding-right:0!important}
+  .cargoAction{min-width:46px!important;width:46px!important}
+  .headerActionText{font-size:6.2px!important;line-height:1.02!important;letter-spacing:-.08px!important}
+  .headerActionIcon{font-size:21px!important}
+  .headerIconWrap{min-width:24px!important;min-height:24px!important}
+  .packageIcon{width:19px!important;height:16px!important}
+  .bagIcon{width:18px!important;height:16px!important}
+  .headerCountBadge{right:-6px!important;top:-7px!important;transform:scale(.9)}
+}
+@media(max-width:365px){
+  .headrow{padding-right:116px!important}
+  #brandLogo.logo{width:70px!important;max-width:70px!important}
+  .headActions{max-width:116px!important}
+  .headerAction{min-width:35px!important;width:35px!important}
+  .cargoAction{min-width:43px!important;width:43px!important}
+  .headerActionText{font-size:5.8px!important}
+  .headerActionIcon{font-size:20px!important}
+}
+
+/* Sipariş gönderilirken butonun durumu net olsun. */
+.checkoutPrimary[disabled]{opacity:.62!important;cursor:wait!important;pointer-events:none!important}
+.checkoutSubmitStatus{display:block;margin-top:9px;text-align:center;font-size:11px;color:#667085;min-height:16px}
+
+.checkoutSubmitStatus.submitError{display:block;margin-top:12px;padding:12px 14px;border:1px solid #e5c9c9;border-radius:14px;background:#fff7f7;color:#8b1f1f;line-height:1.45;text-align:left}
+
+
+/* ===== V61 — sipariş başarı ekranı ortalama + görünür iletişim butonları ===== */
+.successCentered{max-width:560px;margin:0 auto;text-align:center;padding:28px 10px 70px}
+.successCentered .check{font-size:34px;line-height:1;margin-bottom:18px}
+.successCentered h2{margin:0 0 14px;font-size:clamp(30px,6vw,42px);line-height:1.08}
+.successCentered>p{margin:10px auto;max-width:520px;line-height:1.5}
+.successCentered .successTagline{font-size:clamp(20px,4.8vw,30px);line-height:1.35;margin:18px auto 12px;color:#111}
+.successCentered .successOrderNo{font-size:18px;margin-bottom:20px}
+.successCentered .actions{width:min(100%,420px);max-width:420px;margin:18px auto 0;display:grid;gap:10px}
+.contactBtn{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;width:100%!important;padding:12px 14px!important;border-radius:14px!important;color:#fff!important;text-decoration:none!important;text-align:left!important;font-weight:700!important;box-shadow:0 5px 16px rgba(0,0,0,.10)!important}
+.contactBtn.wa{background:#20b35b!important}
+.contactBtn.ig{background:linear-gradient(110deg,#ff7a00 0%,#ff3e5f 48%,#8a3ffc 100%)!important}
+.contactBtn .brandIcon{flex:0 0 28px!important;width:28px!important;height:28px!important;margin:0!important;color:#fff!important}
+.contactBtn .brandIcon svg{width:28px!important;height:28px!important}
+.contactBtn b{display:block;font-size:14px;line-height:1.2;color:#fff!important}
+.contactBtn small{display:block;margin-top:3px;font-size:12px;line-height:1.25;color:#fff!important;opacity:.96}
+@media(max-width:600px){.successCentered{padding:18px 6px 50px}.successCentered .actions{width:100%}.contactBtn{padding:12px!important}.contactBtn b{font-size:13px}.contactBtn small{font-size:11px}}
+
+/* V61 — E-Tablo tanı ekranı */
+.sheetSyncStatus{margin:10px 0 12px;padding:11px 13px;border-radius:10px;font-size:12px;line-height:1.45;border:1px solid #dfe3e8;background:#f7f8fa;color:#333}
+.sheetSyncStatus.ok{border-color:#b7dfc3;background:#f0fbf3;color:#185b2c}
+.sheetSyncStatus.warn{border-color:#f0cf9c;background:#fff8ec;color:#765019}
+.sheetSynced{margin-top:3px;color:#198754;font-size:11px;font-weight:700}
+.sheetPending{margin-top:3px;color:#b36b00;font-size:11px;font-weight:700;max-width:540px;overflow-wrap:anywhere}
+
+/* ===== V62 — yalnızca istenen düzeltmeler ===== */
+/* Mobil iletişim kutuları: yalnızca sayfanın en son bölümünde sağdan alt ortaya geçer. */
+@media(max-width:700px){
+  .floating{transition:transform .14s linear!important;}
+}
+
+/* PC ürün detayı: fotoğraf ilk açılışta tamamen görünür; mobil görünüm değiştirilmez. */
+@media(min-width:701px){
+  .drawer .productDetailShell{
+    padding:14px 20px 104px!important;
+  }
+  .productDetailHead{
+    margin:0 0 8px!important;
+    padding:0 20px 8px!important;
+  }
+  .productDetailTitle .wizardProgress{
+    justify-content:center!important;
+    text-align:center!important;
+    padding:0 92px!important;
+  }
+  .productDetailTitle h2{
+    text-align:center!important;
+    padding:0 92px!important;
+    margin-top:5px!important;
+  }
+  .productDetailClose{
+    right:20px!important;
+  }
+  .productDetailGallery{
+    margin:0 -20px 13px!important;
+    width:auto!important;
+  }
+  .productDetailGallery .productDetailMedia{
+    position:relative!important;
+    width:100%!important;
+    height:clamp(360px,calc(100dvh - 230px),620px)!important;
+    min-height:0!important;
+    max-height:none!important;
+    aspect-ratio:auto!important;
+    margin:0!important;
+    border-left:0!important;
+    border-right:0!important;
+    border-radius:0!important;
+    background:#151515!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    overflow:hidden!important;
+  }
+  .productDetailGallery .productDetailMedia::before{
+    content:"";
+    position:absolute;
+    inset:-24px;
+    z-index:0;
+    pointer-events:none;
+    background-image:var(--detail-bg);
+    background-size:cover;
+    background-position:center;
+    filter:blur(18px);
+    opacity:.34;
+    transform:scale(1.08);
+  }
+  .productDetailGallery .productDetailMedia::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    background:rgba(0,0,0,.08);
+  }
+  .productDetailGallery .productDetailMedia img{
+    position:relative!important;
+    z-index:2!important;
+    display:block!important;
+    width:100%!important;
+    height:100%!important;
+    max-width:100%!important;
+    max-height:100%!important;
+    object-fit:contain!important;
+    object-position:center!important;
+    background:transparent!important;
+    border-radius:0!important;
+  }
+  .productDetailThumbs{
+    padding:8px 20px 0!important;
+    margin-top:0!important;
+  }
+
+  /* PC'deki set/kişiselleştirme adımları kenara yapışmasın; başlık gerçek orta hatta dursun. */
+  .drawer > .wizardHead:not(.productDetailHead){
+    padding:14px 20px 0!important;
+    margin-bottom:14px!important;
+  }
+  .drawer > .wizardHead:not(.productDetailHead) > div{
+    flex:1 1 auto!important;
+    min-width:0!important;
+    text-align:center!important;
+  }
+  .drawer > .wizardHead:not(.productDetailHead) .wizardProgress{
+    text-align:center!important;
+    margin:0 auto 4px!important;
+  }
+  .drawer > .wizardHead:not(.productDetailHead) h2{
+    text-align:center!important;
+    margin:0!important;
+    line-height:1.15!important;
+  }
+}
+
+/* ===== V64 — yalnızca istenen yönetim/etiket/kategori iyileştirmeleri ===== */
+
+/* Yönetim: kategori başlıkları sürükle-bırak ile sıralanır. */
+.categoryQuickNav{align-items:center}
+.categoryJumpBtn{display:inline-flex;align-items:center;gap:5px;user-select:none}
+.categoryJumpBtn .categoryDragGrip{font-size:16px;line-height:1;color:#9aa1aa;margin-right:1px;cursor:grab}
+.categoryJumpBtn.dragging{opacity:.45;cursor:grabbing}
+.categoryJumpBtn.dragOver{outline:2px solid #111;outline-offset:2px}
+.categoryJumpBtn.active .categoryDragGrip{color:#fff}
+.categoryOrderHint{min-height:39px;display:flex;align-items:center;padding:9px 10px;border:1px dashed #cfd4da;border-radius:9px;background:#f8f9fa;color:#667085;font-size:11px;line-height:1.35}
+
+/* Setler ekranı: uzun formlar yerine sade açılır bölümler. */
+.simpleAdminDetails{padding:0!important;overflow:hidden}
+.simpleAdminDetails>summary,.setAdminDetails>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 17px;font-weight:800}
+.simpleAdminDetails>summary::-webkit-details-marker,.setAdminDetails>summary::-webkit-details-marker{display:none}
+.simpleAdminDetails>summary:after,.setAdminDetails>summary:after{content:'＋';font-size:19px;font-weight:400;color:#555;flex:0 0 auto}
+.simpleAdminDetails[open]>summary:after,.setAdminDetails[open]>summary:after{content:'−'}
+.simpleAdminDetails>summary small{font-size:10px;font-weight:500;color:#7b8490;margin-left:auto}
+.simpleDetailsBody{padding:0 17px 16px;border-top:1px solid #eceff2}
+.simpleDetailsBody.grid2{padding-top:14px}
+.readySetsIntro{padding:14px 17px!important;margin-bottom:10px!important}
+.readySetsIntro h2{margin:0 0 4px;font-size:18px}
+.setAdminDetails{padding:0!important;overflow:hidden}
+.setAdminDetails>summary span:first-child{display:flex;flex-direction:column;gap:2px;min-width:0}
+.setAdminDetails>summary b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.setAdminDetails>summary small{font-size:10px;color:#7b8490;font-weight:500}
+.setDetailsOpenText{margin-left:auto;font-size:10px;color:#667085;font-weight:650}
+.setAdminDetailsBody{padding:0 17px 16px;border-top:1px solid #eceff2}
+.bulkSetSettings>summary{background:#fbfaf7}
+.bulkSetNote{margin:14px 0 10px;padding:10px 12px;border-radius:10px;background:#fff9ee;border:1px solid #ead8b8;font-size:11px;line-height:1.45;color:#5d4a28}
+.bulkSetRows{display:grid;gap:8px}
+.bulkSetRow{display:grid;grid-template-columns:minmax(150px,.75fr) minmax(130px,.6fr) minmax(220px,1.2fr);gap:10px;align-items:end;padding:10px;border:1px solid #e5e8ec;border-radius:10px;background:#fff}
+.bulkSetRow .field{margin:0}
+.bulkSetRow .field label{font-size:10px;color:#667085}
+.bulkSetName{align-self:center;min-width:0}
+.bulkSetName b{display:block;font-size:13px}
+.bulkSetName small{display:block;font-size:9px;color:#87909b;margin-top:3px}
+.bulkApplyBtn{width:100%;margin-top:12px}
+@media(max-width:900px){
+  .bulkSetRow{grid-template-columns:1fr}
+  .setDetailsOpenText{display:none}
+}
+
+/* Hamburger > Kategoriler ekranında "Tüm Ürünler" ilk kart olarak görünür. */
+.categoryTile.allProductsTile .categoryPlaceholder{font-size:23px!important;font-weight:800!important;letter-spacing:-1px!important}
+
+/* Ürün etiketleri: düz hap yerine Trendyol benzeri yuvarlak/çapraz rozet. */
+.badge{
+  position:absolute!important;
+  left:8px!important;
+  top:8px!important;
+  width:68px!important;
+  height:68px!important;
+  max-width:68px!important;
+  padding:8px!important;
+  border-radius:50%!important;
+  display:grid!important;
+  place-items:center!important;
+  text-align:center!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:anywhere!important;
+  font-size:8px!important;
+  line-height:1.02!important;
+  letter-spacing:.15px!important;
+  font-weight:900!important;
+  color:#fff!important;
+  box-shadow:0 4px 12px rgba(0,0,0,.2), inset 0 0 0 2px rgba(255,255,255,.3)!important;
+  transform:rotate(-8deg)!important;
+  transform-origin:center!important;
+  z-index:6!important;
+  pointer-events:none!important;
+}
+.badge:after{content:'';position:absolute;inset:5px;border:1px solid rgba(255,255,255,.42);border-radius:50%;pointer-events:none}
+.badge-orange{background:linear-gradient(145deg,#ff8b16,#f05c00)!important}
+.badge-purple{background:linear-gradient(145deg,#9a56ff,#6f2bcf)!important}
+.badge-red{background:linear-gradient(145deg,#f04c4c,#bd1f2d)!important}
+.detailProductBadge{left:14px!important;top:14px!important;width:76px!important;height:76px!important;max-width:76px!important;font-size:9px!important;z-index:7!important}
+@media(max-width:520px){
+  .badge{left:7px!important;top:7px!important;width:58px!important;height:58px!important;max-width:58px!important;padding:7px!important;font-size:7px!important}
+  .detailProductBadge{left:10px!important;top:10px!important;width:66px!important;height:66px!important;max-width:66px!important;font-size:8px!important}
+}
+
+/* ===== V65 — yalnızca set yönetimi açıklığı + daha kompakt rozet ===== */
+
+/* Trendyol örneğine daha yakın: daha küçük rozet, yatayda metne daha fazla alan. */
+.badge{
+  width:58px!important;
+  height:58px!important;
+  max-width:58px!important;
+  padding:5px 2px!important;
+  font-size:7.6px!important;
+  line-height:1!important;
+  letter-spacing:.22px!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+  hyphens:none!important;
+  box-sizing:border-box!important;
+}
+.badge:after{inset:4px!important}
+.detailProductBadge{
+  width:64px!important;
+  height:64px!important;
+  max-width:64px!important;
+  padding:6px 2px!important;
+  font-size:8.2px!important;
+}
+@media(max-width:520px){
+  .badge{
+    left:7px!important;
+    top:7px!important;
+    width:50px!important;
+    height:50px!important;
+    max-width:50px!important;
+    padding:4px 1px!important;
+    font-size:6.7px!important;
+    line-height:.98!important;
+  }
+  .badge:after{inset:3px!important}
+  .detailProductBadge{
+    left:9px!important;
+    top:9px!important;
+    width:56px!important;
+    height:56px!important;
+    max-width:56px!important;
+    padding:5px 2px!important;
+    font-size:7.4px!important;
+  }
+}
+
+/* Ürün kartındaki hazır set kısayolu: aynı veriyi iki ayrı formda çoğaltmadan doğru set ekranına götürür. */
+.setContentShortcut{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:10px 0 2px;
+  padding:11px 12px;
+  border:1px solid #dedfe2;
+  border-radius:11px;
+  background:#fffdf8;
+}
+.setContentShortcut>div{min-width:0;display:grid;gap:2px}
+.setContentShortcut b{font-size:12px}
+.setContentShortcut span{font-size:10px;font-weight:750;color:#7b5b22}
+.setContentShortcut small{font-size:9px;line-height:1.35;color:#667085;max-width:480px}
+.setContentShortcut .smallBtn{flex:0 0 auto;white-space:nowrap}
+
+/* Set ekranı sade: ortak ayar ve set ayrıntıları kullanıcı açana kadar kapalı kalır. */
+.bulkSetSettings>summary{background:#fbfaf7}
+.setFlowExplain{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  margin:13px 0 10px;
+  padding:10px 11px;
+  border:1px solid #e7dfcf;
+  border-radius:10px;
+  background:#fffaf1;
+  font-size:10px;
+  line-height:1.42;
+  color:#51452f;
+}
+.setFlowExplain b{font-size:11px;color:#222}
+.setAdminRow{
+  position:relative;
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  align-items:start!important;
+  gap:9px!important;
+  padding:12px 0 0!important;
+  margin-top:12px!important;
+}
+.setAdminRowTitle{grid-column:1/-1!important;display:grid;gap:2px;min-width:0}
+.setAdminRowTitle b{font-size:11px}
+.setAdminRowTitle small{font-size:9px;line-height:1.3;color:#7c8591}
+.setAdminRow>.field{margin:0!important}
+.setAdminRow>.field label{font-size:10px!important}
+.setAdminRow>.field .help{font-size:9px!important;line-height:1.35!important;margin-top:4px!important}
+.setAdminRow>.dangerBtn{grid-column:3!important;justify-self:end!important;min-width:170px;min-height:40px;white-space:nowrap}
+.setAddBar{margin-top:10px!important}
+.bulkSetRows{gap:9px!important}
+.bulkSetRow .help{font-size:9px!important;line-height:1.35!important}
+.bulkSetNote{margin-top:12px!important}
+
+/* Sağdaki canlı önizlemede hangi müşteri adımının değiştiği kırmızı çerçeveyle görünür. */
+.setItemToggle.adminPreviewHighlight,
+.writeItem.adminPreviewHighlight{
+  outline:2px solid #e00000!important;
+  outline-offset:2px!important;
+  box-shadow:0 0 0 3px rgba(224,0,0,.12)!important;
+  border-radius:10px!important;
+}
+
+@media(max-width:1200px){
+  .setAdminRow{grid-template-columns:1fr 1fr!important}
+  .setAdminRow>.dangerBtn{grid-column:1/-1!important;justify-self:stretch!important;width:100%}
+}
+@media(max-width:760px){
+  .setAdminRow{grid-template-columns:1fr!important}
+  .setAdminRow>.dangerBtn{grid-column:1!important}
+  .setContentShortcut{align-items:flex-start;flex-direction:column}
+  .setContentShortcut .smallBtn{width:100%}
+}
+
+
+/* V66 — yalnızca yönetim sadeleştirme, toplu işlem ve duyuru panosu */
+.unifiedCatalogSettings{padding:0!important;overflow:hidden}.unifiedCatalogSettings>.simpleAdminDetails{margin:0!important;border:0!important;border-bottom:1px solid #e9ecef;border-radius:0!important}.unifiedCatalogSettings>.simpleAdminDetails:last-child{border-bottom:0}.nestedAdminDetails{margin-top:10px;border:1px solid #e3e6ea;border-radius:10px;padding:0;overflow:hidden}.nestedAdminDetails>summary{padding:11px 12px;font-weight:800;cursor:pointer}.nestedAdminDetails>.setItemList{padding:0 12px 12px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.bulkUploadStatus{margin-top:9px;font-size:11px;font-weight:700;color:#596270;min-height:16px}
+.inlineSetEditor,.copySettingsPanel{margin-top:12px!important;border:1px solid #dfe4e9!important;border-radius:12px!important;background:#fff!important;overflow:hidden}.inlineSetEditor>.simpleDetailsBody,.copySettingsPanel>.simpleDetailsBody{border-top:1px solid #edf0f2}.copySettingsExplain{font-size:11px;line-height:1.5;background:#f6f8fa;border:1px solid #e3e7eb;padding:10px;border-radius:9px;margin-bottom:10px}.copyFieldChoices{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}.copyFieldChoices label{border:1px solid #dfe4e8;background:#fff;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:700;display:flex;align-items:center;gap:6px}.copyCategoryGroups{display:grid;gap:7px;margin:10px 0}.copyCategoryGroup{border:1px solid #e0e5e9;border-radius:9px;overflow:hidden}.copyCategoryGroup>summary{padding:9px 11px;font-weight:800;font-size:11px;cursor:pointer;background:#fafbfc}.copyCategoryGroup>summary small{font-weight:500;color:#7a838d}.copyProductList{padding:9px 11px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.copyProductList label{font-size:10px;display:flex;align-items:center;gap:6px}.copySelectAll{grid-column:1/-1;font-weight:800!important;border-bottom:1px solid #eee;padding-bottom:7px;margin-bottom:2px}.announcementAdmin .simpleDetailsBody{padding-top:12px}
+.siteAnnouncement{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.56);display:grid;place-items:center;padding:20px}.siteAnnouncement.hidden{display:none!important}.siteAnnouncementCard{width:min(440px,calc(100vw - 32px));background:#fff;border-radius:18px;padding:26px 22px 20px;box-shadow:0 24px 70px rgba(0,0,0,.28);position:relative;text-align:center}.siteAnnouncementClose{position:absolute;right:12px;top:10px;width:36px;height:36px;border-radius:50%;border:1px solid #ddd;background:#fff;font-size:25px;line-height:1;cursor:pointer}.siteAnnouncementEyebrow{font-size:11px;letter-spacing:.22em;font-weight:900;color:var(--gold);margin-bottom:8px}.siteAnnouncementCard h2{font-family:Georgia,serif;font-size:30px;line-height:1.08;margin:0 26px 10px}.siteAnnouncementCard p{font-size:14px;line-height:1.55;color:#596170;white-space:pre-line;margin:0 0 18px}.siteAnnouncementButton{width:100%;border:0;border-radius:11px;background:#111;color:#fff;padding:13px;font-size:14px;font-weight:900;cursor:pointer}.siteAnnouncement.adminPreviewHighlight .siteAnnouncementCard{outline:3px solid #e53935;outline-offset:-3px}
+@media(max-width:900px){.grid3{grid-template-columns:1fr}.copyProductList{grid-template-columns:1fr}.siteAnnouncementCard h2{font-size:26px}}
+
+
+/* V67 — tercih edilen konum + cüzdan fotoğraf kişiselleştirmesi */
+.positionChoice{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.recommendedHint{display:inline-flex;align-items:center;border-radius:999px;background:#f4ead8;color:#7d5b22;padding:3px 7px;font-size:10px;font-weight:800;line-height:1.1;white-space:nowrap}
+.walletPhotoChoice{border-style:dashed}
+.walletPhotoCard .formControl[type=file]{padding:12px;background:#fff}
+.walletToggle{display:flex;align-items:flex-start;gap:9px;margin-top:14px;font-weight:750;line-height:1.35}
+.walletToggle input{margin-top:2px}
+.walletCaptionFields{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:10px;margin-top:12px}
+.walletCaptionFields.hidden,#walletRegularWriteFields.hidden{display:none!important}
+.orderPhotoCustomization a{font-weight:800;text-decoration:underline}
+@media(max-width:560px){.walletCaptionFields{grid-template-columns:1fr}.recommendedHint{font-size:9px;padding:3px 6px}}

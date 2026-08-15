@@ -1,0 +1,23 @@
+SHAZ V67 — TERCİH EDİLEN KONUM + CÜZDAN FOTOĞRAFI + CANLI ÖNİZLEME
+
+1) Yazı konumlarında yönetici artık “Genelde tercih edilen konum” seçebilir.
+   - Müşteri ekranında yalnızca seçilen konumun yanında “Genelde tercih edilen” ibaresi çıkar.
+   - Diğer seçenekler kaldırılmaz veya otomatik seçime zorlanmaz.
+
+2) Cüzdan için fotoğraf işleme eklendi.
+   - Müşteri JPG/PNG/WEBP fotoğraf yükleyebilir.
+   - Fotoğraf işlemesi normal yazı ücretlerinden bağımsız +25 TL (panelde fiyat değiştirilebilir).
+   - Fotoğrafla birlikte isteğe bağlı kısa yazı ve “fotoğrafın üstünde / altında” seçimi vardır.
+   - Normal ön/arka yüz yazısı seçeneği kaldırılmadı; fotoğrafla birlikte ayrıca kullanılabilir.
+   - Hazır set içindeki cüzdanlarda da aynı fotoğraf adımı çalışır.
+
+3) Sipariş panelinde fotoğraflı kişiselleştirme görünür ve yüklenen fotoğraf bağlantısı açılabilir.
+
+4) Yönetim canlı önizlemesi: Duyuru panosu yalnızca duyuru ayarı düzenlenirken görünür.
+   Başka ürün/set ayarı düzenlenirken duyuru önizlemenin üstünü kapatmaz; ilgili müşteri adımı kırmızı çerçeveyle gösterilebilir.
+
+5) KORUNAN ALANLAR:
+   - Google Apps Script dosyasına dokunulmadı.
+   - Excel / Google E-Tablo sipariş senkron mantığına dokunulmadı.
+   - Mevcut kategori, ürün, kampanya, sipariş ve fiyat verileri değiştirilmedi.
+   - Mevcut müşteri sipariş akışı yalnızca cüzdan fotoğraf seçeneği için genişletildi.
