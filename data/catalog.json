@@ -14,7 +14,8 @@
       "order": 1,
       "hidden": false,
       "cover": "/uploads/1786724063083-3uyv87.jpeg",
-      "size": "small"
+      "size": "small",
+      "subcategories": []
     },
     {
       "id": "saatler",
@@ -22,7 +23,16 @@
       "order": 2,
       "hidden": false,
       "cover": "/uploads/1786820184795-tmbau5.jpeg",
-      "size": "small"
+      "size": "small",
+      "subcategories": [
+        {
+          "id": "alt-1786824992077-ro14",
+          "name": "Çift saatleri",
+          "cover": "/uploads/1786825020135-3zgxz6.jpeg",
+          "hidden": false,
+          "order": 1
+        }
+      ]
     },
     {
       "id": "gozlukler",
