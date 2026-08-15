@@ -1,5 +1,169 @@
 [
   {
+    "id": "SHZ5",
+    "createdAt": "2026-08-15T16:16:12.816Z",
+    "createdAtTR": "15.08.2026 19:16:12",
+    "status": "new",
+    "statusUpdatedAt": "2026-08-15T16:16:12.816Z",
+    "requestId": "770fb665-80bd-4632-b11b-3e1e82e6bdc4",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "p1",
+          "name": "gözlüklü erkek aksesuar seti",
+          "category": "setler",
+          "price": 250,
+          "oldPrice": 0,
+          "stock": 3,
+          "hidden": false,
+          "badge": "EN ÇOK SATAN",
+          "image": "/uploads/1786724306426-vrpxf0.jpeg",
+          "setEligible": false,
+          "isSet": true,
+          "setItems": [
+            {
+              "id": "watch",
+              "name": "Saat",
+              "type": "Saat",
+              "removeDiscount": 250,
+              "writePositions": [
+                "Arka kapak",
+                "Kordon",
+                "cam"
+              ],
+              "preferredWritePosition": "Arka kapak"
+            },
+            {
+              "id": "lighter",
+              "name": "Çakmak",
+              "type": "Çakmak",
+              "removeDiscount": 120,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ],
+              "preferredWritePosition": "Ön yüz"
+            },
+            {
+              "id": "wallet",
+              "name": "Cüzdan",
+              "type": "Cüzdan",
+              "removeDiscount": 180,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "İç yüz"
+            },
+            {
+              "id": "belt",
+              "name": "Kemer",
+              "type": "Kemer",
+              "removeDiscount": 140,
+              "writePositions": [
+                "Toka arkası",
+                "Toka önü"
+              ],
+              "preferredWritePosition": "Toka arkası"
+            },
+            {
+              "id": "bracelet",
+              "name": "Bileklik",
+              "type": "Bileklik",
+              "removeDiscount": 90,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ],
+              "preferredWritePosition": "Arka yüz"
+            },
+            {
+              "id": "setitem-1786749598298",
+              "name": "Tesbih",
+              "type": "",
+              "removeDiscount": 10,
+              "writePositions": [
+                "j"
+              ],
+              "preferredWritePosition": "SFGFGDFGSFG"
+            }
+          ],
+          "description": "CAM VE KAUÇUK KARIŞIMIDIR",
+          "features": [],
+          "writePositions": [],
+          "images": [
+            "/uploads/1786724306426-vrpxf0.jpeg",
+            "/uploads/1786724306713-eorq5p.jpeg"
+          ],
+          "badgeColor": "orange"
+        },
+        "basePrice": 150,
+        "qty": 1,
+        "personalized": true,
+        "setCustomization": {
+          "keptIds": [
+            "watch",
+            "lighter",
+            "wallet",
+            "belt",
+            "bracelet",
+            "setitem-1786749598298"
+          ],
+          "removedIds": [],
+          "writes": [
+            {
+              "itemId": "wallet",
+              "item": "Cüzdan",
+              "position": "Ön yüz",
+              "text": "gg",
+              "fee": 75
+            }
+          ],
+          "photoCustomizations": [
+            {
+              "itemId": "wallet",
+              "item": "Cüzdan",
+              "imageUrl": "/uploads/1786810481533-b8nfmt.jpeg",
+              "originalName": "IMG_0111.jpeg",
+              "caption": "",
+              "captionPosition": "below",
+              "fee": 25
+            }
+          ]
+        }
+      }
+    ],
+    "customer": {
+      "fullName": "hh",
+      "phone": "55",
+      "extraPhone": "22",
+      "province": "gggg",
+      "district": "gg",
+      "deliveryMode": "branch",
+      "branchName": "gg",
+      "neighborhood": "Aras Kargo Şube Teslim",
+      "fullAddress": "",
+      "avenue": "gg",
+      "street": "",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": ""
+    },
+    "payment": "cod",
+    "personalApproval": {
+      "approved": true,
+      "method": "button",
+      "at": "2026-08-15T16:16:12.681Z"
+    },
+    "shippingNoticeAccepted": true,
+    "total": 250
+  },
+  {
     "id": "SHZ4",
     "createdAt": "2026-08-14T23:04:27.756Z",
     "createdAtTR": "15.08.2026 02:04:27",
