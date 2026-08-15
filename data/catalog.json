@@ -84,7 +84,8 @@
           "writePositions": [
             "Arka kapak",
             "Kordon",
-            "cam"
+            "cam",
+            "kan"
           ],
           "preferredWritePosition": "Arka kapak"
         },
@@ -150,7 +151,8 @@
         "/uploads/1786724306426-vrpxf0.jpeg",
         "/uploads/1786724306713-eorq5p.jpeg"
       ],
-      "badgeColor": "orange"
+      "badgeColor": "orange",
+      "writeEnabled": true
     },
     {
       "id": "urun-1786798357237-gijni",
@@ -227,7 +229,8 @@
       "features": [],
       "writePositions": [],
       "images": [],
-      "badgeColor": "orange"
+      "badgeColor": "orange",
+      "writeEnabled": true
     },
     {
       "id": "p3",
@@ -245,7 +248,8 @@
       "writePositions": [],
       "description": "CAM VE KAUÇUK KARIŞIMIDIR",
       "features": [],
-      "badgeColor": "orange"
+      "badgeColor": "orange",
+      "writeEnabled": true
     },
     {
       "id": "urun-1786741075329",
@@ -267,7 +271,8 @@
       "isSet": false,
       "setItems": [],
       "writePositions": [],
-      "walletPhotoEnabled": true
+      "walletPhotoEnabled": true,
+      "writeEnabled": true
     },
     {
       "id": "urun-1786749082450",
@@ -288,7 +293,8 @@
       "setEligible": true,
       "isSet": false,
       "setItems": [],
-      "writePositions": []
+      "writePositions": [],
+      "writeEnabled": true
     },
     {
       "id": "urun-1786751615679",
@@ -307,7 +313,8 @@
       "setEligible": false,
       "isSet": true,
       "setItems": [],
-      "writePositions": []
+      "writePositions": [],
+      "writeEnabled": true
     },
     {
       "id": "urun-1786800474541",
@@ -326,7 +333,8 @@
       "setEligible": true,
       "isSet": false,
       "setItems": [],
-      "writePositions": []
+      "writePositions": [],
+      "writeEnabled": false
     }
   ],
   "builder": {
