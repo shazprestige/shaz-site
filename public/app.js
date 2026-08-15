@@ -1,6 +1,7 @@
 
 let settings={},catalog={},cart=[],favorites=new Set(JSON.parse(localStorage.getItem('shazFavs')||'[]'));
 let activeCategory='tum';
+let activeSubcategory='';
 let productSort='priceAsc';
 let campaignSliderTimer=0,campaignSliderIndex=0,campaignTouchStartX=null;
 let checkoutState={payment:'cod',customer:null,requestId:null};
@@ -180,6 +181,27 @@ function productImages(p){
   return [...new Set(list)];
 }
 function mainProductImage(p){return p?.image||productImages(p)[0]||''}
+function visibleSubcategories(category){
+  return (Array.isArray(category?.subcategories)?category.subcategories:[]).filter(s=>!s.hidden).sort((a,b)=>(a.order||0)-(b.order||0));
+}
+function categoryDefaultGroupName(category){
+  return String(category?.defaultSubcategoryName||'Ana ürünler');
+}
+function subcategoryById(category,id){return visibleSubcategories(category).find(s=>s.id===id)||null}
+function subcategoryChooserHtml(category){
+  const subs=visibleSubcategories(category);if(!subs.length)return '';
+  const hasMain=(catalog.products||[]).some(p=>!p.hidden&&p.category===category.id&&!p.subcategoryId);
+  const cards=[];
+  if(hasMain)cards.push({id:'',name:categoryDefaultGroupName(category),cover:category.cover||'',main:true});
+  subs.forEach(s=>cards.push(s));
+  if(!cards.length)return '';
+  if(activeSubcategory && !cards.some(s=>s.id===activeSubcategory))activeSubcategory=cards[0].id||'';
+  const tabs=cards.map(s=>`<button class="subcategoryTab ${activeSubcategory===(s.id||'')?'active':''}" onclick="selectSubcategory('${escapeAttr(s.id||'')}')">${escapeHtml(s.name||'Alt kategori')}</button>`).join('');
+  const tiles=cards.map(s=>`<button class="subcategoryTile ${activeSubcategory===(s.id||'')?'active':''}" onclick="selectSubcategory('${escapeAttr(s.id||'')}')"><div class=subcategoryTileText><b>${escapeHtml(s.name||'Alt kategori')}</b><span>Ürünleri gör →</span></div><div class=subcategoryTileMedia>${s.cover?`<img src="${escapeAttr(s.cover)}" alt="${escapeAttr(s.name||'Alt kategori')}">`:`<span>${escapeHtml((s.name||'?').slice(0,1))}</span>`}</div></button>`).join('');
+  return `<div class=subcategoryChooser><div class=subcategoryTabs>${tabs}</div><div class=subcategoryTiles>${tiles}</div></div>`;
+}
+function selectSubcategory(id){activeSubcategory=id||'';renderProducts($('#search')?.value||'');requestAnimationFrame(()=>document.querySelector('.subcategoryChooser')?.scrollIntoView({behavior:'smooth',block:'nearest'}))}
+
 function renderCategories(){
   const cats=[{id:'tum',name:'Tüm Ürünler',order:-1},...catalog.categories.filter(c=>!c.hidden&&c.id!=='tum')].sort((a,b)=>(a.order??0)-(b.order??0));
   const nav=$('#catalogNav');
@@ -223,6 +245,7 @@ function chooseCategoryFromHub(id,name){
 
 function setCategory(id,name,opts={}){
   activeCategory=id;
+  activeSubcategory='';
   if($('#catalogTitle')) $('#catalogTitle').textContent=name;
   renderCategories(); renderProducts($('#search')?.value||'');
   // Üst kategori sekmesinden seçim yapıldığında ürün alanına gerçekten götür.
@@ -246,16 +269,29 @@ function setCategory(id,name,opts={}){
 }
 function renderProducts(filter=''){
   const q=(filter||'').toLocaleLowerCase('tr-TR');
+  const category=activeCategory==='tum'?null:(catalog.categories||[]).find(c=>c.id===activeCategory&&!c.hidden);
+  const subs=visibleSubcategories(category);
+  if(category&&subs.length){
+    const hasMain=(catalog.products||[]).some(p=>!p.hidden&&p.category===activeCategory&&!p.subcategoryId);
+    const validIds=subs.map(s=>s.id);
+    if(activeSubcategory && !validIds.includes(activeSubcategory))activeSubcategory=hasMain?'':(validIds[0]||'');
+    if(!activeSubcategory && !hasMain)activeSubcategory=validIds[0]||'';
+  }else activeSubcategory='';
   let list=catalog.products.filter(x=>!x.hidden&&(activeCategory==='tum'||x.category===activeCategory)&&((x.name||'')+' '+(x.description||'')).toLocaleLowerCase('tr-TR').includes(q));
+  if(category&&subs.length){
+    list=list.filter(x=>activeSubcategory?x.subcategoryId===activeSubcategory:!x.subcategoryId);
+  }
   if(productSort==='priceAsc') list=[...list].sort((a,b)=>Number(a.price||0)-Number(b.price||0));
   if(productSort==='priceDesc') list=[...list].sort((a,b)=>Number(b.price||0)-Number(a.price||0));
   if(!$('#productsList')) return;
-  $('#productsList').innerHTML=list.length?list.map(p=>{
+  const chooser=category?subcategoryChooserHtml(category):'';
+  const cards=list.length?list.map(p=>{
     const name=p.name||'SHAZ Ürün';
     const desc=p.description?`<p class="productDescription" data-preview-field="description" style="--product-text-wrap:${Math.max(18,Number(p.descriptionWrapCh||52))}ch">${escapeHtml(p.description)}</p>`:'';
     const badgeColor=['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange';
     return `<div class="card productCardLink" data-product-id="${escapeAttr(p.id)}" role="button" tabindex="0" onclick="openProductDetail('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProductDetail('${p.id}')}"><div class="photo" data-preview-field="photo">${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge badge-${badgeColor}" data-preview-field="badge">${escapeHtml(p.badge)}</span>`:''}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}</div></div>`;
-  }).join(''):`<div class="panel"><b>Bu kategoride henüz ürün yok.</b></div>`;
+  }).join(''):`<div class="panel subcategoryEmpty"><b>Bu bölümde henüz ürün yok.</b></div>`;
+  $('#productsList').innerHTML=chooser+cards;
 }
 function updateFavoriteBadge(){if($('#favBadge'))$('#favBadge').textContent=favorites.size}
 function toggleFav(id,e){e?.stopPropagation();favorites.has(id)?favorites.delete(id):favorites.add(id);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));updateFavoriteBadge();renderProducts($('#search')?.value||'')}

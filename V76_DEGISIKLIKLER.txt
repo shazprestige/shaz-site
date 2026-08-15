@@ -1,0 +1,27 @@
+SHAZ V76 — YALNIZCA İSTENEN DÜZENLEMELER
+
+1) Kendi Setini Oluştur ürün görselleri
+- PC ve mobilde kart/görsel boyutları küçültüldü.
+- Görseller artık kırpılmadan (contain) tam görünür.
+
+2) Kendi Setini Oluştur kategori sırası
+- Mevcut kategori seçme ayarına müşteri adım sırası eklendi.
+- Yukarı / aşağı butonlarıyla Saat, Cüzdan, Gözlük vb. adımların sırası değiştirilebilir.
+
+3) Alt kategori sistemi
+- Her ana kategoriye sınırsız alt kategori eklenebilir.
+- Alt kategori adı, kapak fotoğrafı, gizleme ve sıralama ayarı vardır.
+- Mevcut ürün grubunun adı ayrıca düzenlenebilir (örn. Erkek Kol Saatleri).
+- Ürün düzenleme ekranında ürünün hangi alt kategoriye ait olduğu seçilebilir.
+- Müşteride ana kategoriye girildiğinde alt kategoriler üstte sekme + kapaklı kart şeklinde görünür.
+- Alt kategori olmayan kategoriler eski davranışını aynen sürdürür.
+
+4) Slider
+- Slider koduna müdahale edilmedi. Mevcut 3 saniyelik otomatik geçiş aynen bırakıldı.
+
+KORUMA KONTROLÜ
+- server.js değiştirilmedi.
+- google-apps-script.gs değiştirilmedi.
+- package.json değiştirilmedi.
+- public/index.html değiştirilmedi.
+- Sipariş, telefon, kampanya, cüzdan fotoğrafı, fiyatlandırma, Excel/E-Tablo ve diğer mevcut akışlara dokunulmadı.
