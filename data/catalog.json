@@ -10,7 +10,7 @@
     },
     {
       "id": "setler",
-      "name": "SETLER",
+      "name": "Setler",
       "order": 1,
       "hidden": false,
       "cover": "/uploads/1786724063083-3uyv87.jpeg",
@@ -19,7 +19,7 @@
     },
     {
       "id": "saatler",
-      "name": "SAATLER",
+      "name": "Saatler",
       "order": 2,
       "hidden": false,
       "cover": "/uploads/1786820184795-tmbau5.jpeg",
@@ -37,7 +37,7 @@
     },
     {
       "id": "gozlukler",
-      "name": "GÖZLÜKLER",
+      "name": "Gözlükler",
       "order": 7,
       "hidden": false,
       "cover": "",
@@ -46,7 +46,7 @@
     },
     {
       "id": "cuzdanlar",
-      "name": "CÜZDANLAR",
+      "name": "Cüzdanlar",
       "order": 3,
       "hidden": false,
       "cover": "",
@@ -55,7 +55,7 @@
     },
     {
       "id": "kategori-1786740581832",
-      "name": "ÇAKMAKLAR",
+      "name": "Çakmaklar",
       "order": 4,
       "hidden": false,
       "cover": "/uploads/1786749319709-ofaslc.jpeg",
@@ -63,7 +63,7 @@
     },
     {
       "id": "kategori-1786740619033",
-      "name": "KEMERLER",
+      "name": "Kemerler",
       "order": 6,
       "hidden": false,
       "cover": "",
@@ -71,7 +71,7 @@
     },
     {
       "id": "kategori-1786798033844",
-      "name": "TESBİHLER",
+      "name": "Tesbihler",
       "order": 5,
       "hidden": false,
       "cover": "",
