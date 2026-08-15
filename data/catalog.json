@@ -167,26 +167,6 @@
       "features": []
     },
     {
-      "id": "p4",
-      "name": "Minimal Gold Saat",
-      "category": "saatler",
-      "price": 899,
-      "oldPrice": 0,
-      "stock": 12,
-      "hidden": false,
-      "badge": "YENİ",
-      "image": "",
-      "setEligible": true,
-      "isSet": false,
-      "setItems": [],
-      "writePositions": [
-        "Arka kapak",
-        "Kordon"
-      ],
-      "description": "",
-      "features": []
-    },
-    {
       "id": "urun-1786741075329",
       "name": "Yeni Ürün",
       "description": "",
