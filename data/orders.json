@@ -6,7 +6,7 @@
     "status": "new",
     "statusUpdatedAt": "2026-08-15T16:16:12.816Z",
     "requestId": "770fb665-80bd-4632-b11b-3e1e82e6bdc4",
-    "sheetSyncStatus": "pending",
+    "sheetSyncStatus": "synced",
     "sheetSyncError": "",
     "items": [
       {
@@ -161,7 +161,9 @@
       "at": "2026-08-15T16:16:12.681Z"
     },
     "shippingNoticeAccepted": true,
-    "total": 250
+    "total": 250,
+    "sheetSyncedAt": "2026-08-15T16:16:17.913Z",
+    "sheetId": "SHZ5"
   },
   {
     "id": "SHZ4",
