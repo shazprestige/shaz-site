@@ -1,0 +1,14 @@
+V72 — Yalnızca istenen iki alan güncellendi:
+
+1) Mobil kişiselleştirme/seçim ekranları
+- Büyük oval/radyo seçim kapsülleri daha küçük, simetrik, köşeleri yumuşak kutulara dönüştürüldü.
+- Set, tek ürün, Kendi Setini Oluştur, yazı konumu ve cüzdan fotoğraf seçeneklerinin mobil aralıkları/paddingleri düzenlendi.
+- PC görünümüne dokunulmadı.
+
+2) Geri adımı
+- Tek ürün kişiselleştirme adımlarına geri düğmesi eklendi.
+- Hazır setin ilk adımı dahil tüm set adımlarında geri erişimi sağlandı; ilk adımda geri, pencereyi kapatarak ürünlere döner.
+- Kendi Setini Oluştur kategori, özet, kişiselleştirme, yazı, fotoğraf ve son kontrol ekranlarına geri düğmesi eklendi.
+- Sepetin ilk ekranına da Alışverişe dön geri düğmesi eklendi.
+
+Bunun dışında fiyat, kampanya, sipariş, Excel/E-Tablo, ürün verisi, yönetim ayarları ve diğer işlevler değiştirilmedi.
