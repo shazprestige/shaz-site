@@ -118,7 +118,7 @@
             "Toka arkası",
             "Toka önü"
           ],
-          "preferredWritePosition": "Kemer ucuna"
+          "preferredWritePosition": "Toka arkası"
         },
         {
           "id": "bracelet",
@@ -128,7 +128,8 @@
           "writePositions": [
             "Ön yüz",
             "Arka yüz"
-          ]
+          ],
+          "preferredWritePosition": "Arka yüz"
         },
         {
           "id": "setitem-1786749598298",
@@ -136,7 +137,7 @@
           "type": "",
           "removeDiscount": 10,
           "writePositions": [
-            "SFGFGDFGSFG"
+            "j"
           ]
         }
       ],
