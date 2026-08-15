@@ -83,7 +83,8 @@
           "removeDiscount": 250,
           "writePositions": [
             "Arka kapak",
-            "Kordon"
+            "Kordon",
+            "cam"
           ],
           "preferredWritePosition": "Arka kapak"
         },
@@ -265,7 +266,8 @@
       "setEligible": true,
       "isSet": false,
       "setItems": [],
-      "writePositions": []
+      "writePositions": [],
+      "walletPhotoEnabled": true
     },
     {
       "id": "urun-1786749082450",
