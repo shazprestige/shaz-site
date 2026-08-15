@@ -54,6 +54,7 @@ async function load(){
   setTimeout(()=>{sendPreview();previewTo('header')},600);
 }
 async function saveAll(){
+  syncVisibleProductFeatures();
   const r=await fetch('/api/admin/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({settings,catalog})}).then(r=>r.json());
   if(!r.ok)return alert(r.message||'Kaydedilemedi.');
   sendPreview();
@@ -478,7 +479,12 @@ function productCompactRow(p){
         <span class=compactMeta><b>${esc(p.name||'Yeni Ürün')}</b><small>₺${Number(p.price||0).toLocaleString('tr-TR')} · Stok ${Number(p.stock||0)}${p.isSet?' · Hazır set':''}</small></span>
         <span class=compactEdit>${open?'Düzenlemeyi kapat':'Düzenle'}</span>
       </button>
-      <button class=duplicateBtn onclick="duplicateProduct(${i})">⧉ Çoğalt</button>
+      <div class=compactQuickActions>
+        <button class=duplicateBtn type=button title="Yukarı taşı" onclick="moveProductWithinCategory('${attr(p.id)}',-1)">↑</button>
+        <button class=duplicateBtn type=button title="Aşağı taşı" onclick="moveProductWithinCategory('${attr(p.id)}',1)">↓</button>
+        <button class=duplicateBtn type=button onclick="quickToggleProductHidden('${attr(p.id)}')">${p.hidden?'Göster':'Gizle'}</button>
+        <button class=duplicateBtn onclick="duplicateProduct(${i})">⧉ Çoğalt</button>
+      </div>
     </div>
     ${open?`<div class=compactEditor>${productCard(p,true)}</div>`:''}
   </div>`;
@@ -507,6 +513,37 @@ function productGalleryAdmin(p,i){
     </div>
   </div>`).join('')}</div>`;
 }
+function updateProductFeatures(productId,value){
+  const p=(catalog.products||[]).find(x=>x.id===productId);
+  if(!p)return;
+  p.features=String(value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  changed(`[data-product-id=\"${productId}\"]`);
+}
+function syncVisibleProductFeatures(){
+  document.querySelectorAll('[data-product-features-id]').forEach(el=>{
+    const p=(catalog.products||[]).find(x=>x.id===el.dataset.productFeaturesId);
+    if(p)p.features=String(el.value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  });
+}
+function moveProductWithinCategory(productId,direction){
+  const i=(catalog.products||[]).findIndex(x=>x.id===productId);
+  if(i<0)return;
+  const p=catalog.products[i];
+  const same=(catalog.products||[]).map((x,idx)=>({x,idx})).filter(o=>o.x.category===p.category);
+  const pos=same.findIndex(o=>o.idx===i);
+  const other=same[pos+(direction<0?-1:1)];
+  if(!other)return;
+  [catalog.products[i],catalog.products[other.idx]]=[catalog.products[other.idx],catalog.products[i]];
+  changed('#products');
+  renderCatalog();
+}
+function quickToggleProductHidden(productId){
+  const p=(catalog.products||[]).find(x=>x.id===productId);
+  if(!p)return;
+  p.hidden=!p.hidden;
+  changed('#products');
+  renderCatalog();
+}
 function productCard(p,embedded=false){
   const i=catalog.products.findIndex(x=>x.id===p.id);
   const root=`[data-product-id="${p.id}"]`;
@@ -527,10 +564,10 @@ function productCard(p,embedded=false){
     </div>
 
     <div class=field><label><b>Özellikler / tikli maddeler</b></label>
-      <textarea class=formControl data-preview-target="${attr(root)}" rows=3 placeholder="Her satıra bir özellik yaz
+      <textarea class=formControl data-product-features-id="${attr(p.id)}" data-preview-target="${attr(root)}" rows=3 placeholder="Her satıra bir özellik yaz
 UV400 koruma
 Paslanmaz çelik kasa"
-        oninput="catalog.products[${i}].features=this.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);changed(this.dataset.previewTarget)">${esc((p.features||[]).join('\n'))}</textarea>
+        oninput="updateProductFeatures('${attr(p.id)}',this.value)" onchange="updateProductFeatures('${attr(p.id)}',this.value)">${esc((Array.isArray(p.features)?p.features:String(p.features||'').split(/\r?\n/)).filter(Boolean).join('\n'))}</textarea>
       <div class=help>Ürünü İncele ekranında ✓ işaretli maddeler halinde görünür. Hazır sette set içeriği de ayrıca otomatik görünür.</div>
     </div>
 
