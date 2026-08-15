@@ -393,7 +393,9 @@
       "id": "urun-1786817515929-0-8z49",
       "name": "SHAZ - NOVA",
       "description": "Erkek kol saati",
-      "features": [],
+      "features": [
+        "Paslanma ve solmaya dayanıklı"
+      ],
       "category": "saatler",
       "price": 600,
       "oldPrice": 0,
