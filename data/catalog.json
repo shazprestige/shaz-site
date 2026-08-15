@@ -670,6 +670,81 @@
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true
+    },
+    {
+      "id": "urun-1786825421633-0-33da",
+      "name": "Yeni Ürün 11",
+      "description": "",
+      "features": [],
+      "category": "saatler",
+      "price": 0,
+      "oldPrice": 0,
+      "stock": 0,
+      "badge": "",
+      "badgeColor": "orange",
+      "image": "/uploads/1786825417042-pxm14k.jpeg",
+      "images": [
+        "/uploads/1786825417042-pxm14k.jpeg"
+      ],
+      "hidden": false,
+      "setEligible": true,
+      "isSet": false,
+      "setItems": [],
+      "writePositions": [],
+      "preferredWritePosition": "",
+      "writeEnabled": true,
+      "walletPhotoEnabled": true,
+      "subcategoryId": ""
+    },
+    {
+      "id": "urun-1786825421633-1-qpgw",
+      "name": "Yeni Ürün 12",
+      "description": "",
+      "features": [],
+      "category": "saatler",
+      "price": 0,
+      "oldPrice": 0,
+      "stock": 0,
+      "badge": "",
+      "badgeColor": "orange",
+      "image": "/uploads/1786825417439-b8ex0d.jpeg",
+      "images": [
+        "/uploads/1786825417439-b8ex0d.jpeg"
+      ],
+      "hidden": false,
+      "setEligible": true,
+      "isSet": false,
+      "setItems": [],
+      "writePositions": [],
+      "preferredWritePosition": "",
+      "writeEnabled": true,
+      "walletPhotoEnabled": true,
+      "subcategoryId": ""
+    },
+    {
+      "id": "urun-1786825421633-2-a94y",
+      "name": "Yeni Ürün 13",
+      "description": "",
+      "features": [],
+      "category": "saatler",
+      "price": 0,
+      "oldPrice": 0,
+      "stock": 0,
+      "badge": "",
+      "badgeColor": "orange",
+      "image": "/uploads/1786825417547-px2pyr.jpeg",
+      "images": [
+        "/uploads/1786825417547-px2pyr.jpeg"
+      ],
+      "hidden": false,
+      "setEligible": true,
+      "isSet": false,
+      "setItems": [],
+      "writePositions": [],
+      "preferredWritePosition": "",
+      "writeEnabled": true,
+      "walletPhotoEnabled": true,
+      "subcategoryId": ""
     }
   ],
   "builder": {
