@@ -1,0 +1,6 @@
+V77
+- Kategori sayfasinda alt kategori fotoğraf kartlari kaldırıldı; yalnızca küçük metin sekmeleri bırakıldı.
+- Sol ust kategori menüsünde alt kategorisi olan ana kategoriye tıklanınca fotoğraflı alt kategori ekranı açılır.
+- Alt kategori kartına tıklanınca ilgili ürün listesindeki alt kategori doğrudan açılır.
+- Yönetim ürün kartına, ürünü açmadan alt kategori seçebilmek için hızlı Alt kategori seçici eklendi.
+- Bunların dışında çalışan mantığa dokunulmadı.

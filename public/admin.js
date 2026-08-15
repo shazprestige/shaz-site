@@ -479,6 +479,7 @@ function productCompactRow(p){
   const i=catalog.products.findIndex(x=>x.id===p.id);
   const img=p.image||productImages(p)[0]||'';
   const open=adminOpenProduct===p.id;
+  const quickSub=productCompactSubcategorySelect(p,i);
   return `<div class="adminProductCompact ${open?'editing':''}" data-product-sort-id="${attr(p.id)}" ondragover="productDragOver(event,'${attr(p.id)}')" ondrop="productDrop(event,'${attr(p.id)}')">
     <div class=adminProductCompactHead>
       <span class=productDragHandle draggable="true" title="Tut ve sürükle" ondragstart="productDragStart(event,'${attr(p.id)}')" ondragend="productDragEnd(event)">⠿</span>
@@ -488,12 +489,18 @@ function productCompactRow(p){
         <span class=compactEdit>${open?'Kapat':'Düzenle'}</span>
       </button>
       <div class=compactQuickActions>
+        ${quickSub}
         <button class=duplicateBtn type=button onclick="quickToggleProductHidden('${attr(p.id)}')">${p.hidden?'Göster':'Gizle'}</button>
         <button class=duplicateBtn onclick="duplicateProduct(${i})">⧉</button>
       </div>
     </div>
     ${open?`<div class=compactEditor>${productCard(p,true)}</div>`:''}
   </div>`;
+}
+function productCompactSubcategorySelect(p,i){
+  const c=catalog.categories.find(x=>x.id===p.category),subs=categorySubcategories(c);if(!subs.length)return '';
+  const options=[`<option value="" ${!p.subcategoryId?'selected':''}>${esc(c.defaultSubcategoryName||'Ana ürünler')}</option>`,...subs.map(s=>`<option value="${attr(s.id)}" ${p.subcategoryId===s.id?'selected':''}>${esc(s.name||'Alt kategori')}${s.hidden?' (gizli)':''}</option>`)].join('');
+  return `<label class=compactSubcategoryQuick title="Alt kategori seç"><span>Alt kategori</span><select onchange="catalog.products[${i}].subcategoryId=this.value;changed('#products')">${options}</select></label>`;
 }
 function categorySubcategories(category){
   if(!category)return [];

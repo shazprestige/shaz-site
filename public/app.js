@@ -191,14 +191,12 @@ function subcategoryById(category,id){return visibleSubcategories(category).find
 function subcategoryChooserHtml(category){
   const subs=visibleSubcategories(category);if(!subs.length)return '';
   const hasMain=(catalog.products||[]).some(p=>!p.hidden&&p.category===category.id&&!p.subcategoryId);
-  const cards=[];
-  if(hasMain)cards.push({id:'',name:categoryDefaultGroupName(category),cover:category.cover||'',main:true});
-  subs.forEach(s=>cards.push(s));
-  if(!cards.length)return '';
-  if(activeSubcategory && !cards.some(s=>s.id===activeSubcategory))activeSubcategory=cards[0].id||'';
-  const tabs=cards.map(s=>`<button class="subcategoryTab ${activeSubcategory===(s.id||'')?'active':''}" onclick="selectSubcategory('${escapeAttr(s.id||'')}')">${escapeHtml(s.name||'Alt kategori')}</button>`).join('');
-  const tiles=cards.map(s=>`<button class="subcategoryTile ${activeSubcategory===(s.id||'')?'active':''}" onclick="selectSubcategory('${escapeAttr(s.id||'')}')"><div class=subcategoryTileText><b>${escapeHtml(s.name||'Alt kategori')}</b><span>Ürünleri gör →</span></div><div class=subcategoryTileMedia>${s.cover?`<img src="${escapeAttr(s.cover)}" alt="${escapeAttr(s.name||'Alt kategori')}">`:`<span>${escapeHtml((s.name||'?').slice(0,1))}</span>`}</div></button>`).join('');
-  return `<div class=subcategoryChooser><div class=subcategoryTabs>${tabs}</div><div class=subcategoryTiles>${tiles}</div></div>`;
+  const tabs=[];
+  if(hasMain)tabs.push({id:'',name:categoryDefaultGroupName(category)});
+  subs.forEach(s=>tabs.push(s));
+  if(!tabs.length)return '';
+  if(activeSubcategory && !tabs.some(s=>s.id===activeSubcategory))activeSubcategory=tabs[0].id||'';
+  return `<div class=subcategoryChooser><div class=subcategoryTabs>${tabs.map(s=>`<button class="subcategoryTab ${activeSubcategory===(s.id||'')?'active':''}" onclick="selectSubcategory('${escapeAttr(s.id||'')}')">${escapeHtml(s.name||'Alt kategori')}</button>`).join('')}</div></div>`;
 }
 function selectSubcategory(id){activeSubcategory=id||'';renderProducts($('#search')?.value||'');requestAnimationFrame(()=>document.querySelector('.subcategoryChooser')?.scrollIntoView({behavior:'smooth',block:'nearest'}))}
 
@@ -212,27 +210,56 @@ function renderCategories(){
   });
 }
 
+let categoryHubParentId='';
 function openCategoryHub(){
+  categoryHubParentId='';
   renderCategoryHub();
   $('#categoryHub')?.classList.remove('hidden');
   document.body.classList.add('categoryHubOpen');
 }
 function closeCategoryHub(){
+  categoryHubParentId='';
   $('#categoryHub')?.classList.add('hidden');
   document.body.classList.remove('categoryHubOpen');
 }
+function categoryHubHead(title,subtitle){
+  const top=$('#categoryHub .categoryHubTop');if(!top)return;
+  top.innerHTML=`<button class="categoryBack" id="categoryHubClose">←</button><div><b>${escapeHtml(title)}</b><small>${escapeHtml(subtitle)}</small></div>`;
+  $('#categoryHubClose').onclick=()=>{if(categoryHubParentId){categoryHubParentId='';renderCategoryHub()}else closeCategoryHub()};
+}
 function renderCategoryHub(){
   const wrap=$('#categoryHubGrid'); if(!wrap)return;
+  if(categoryHubParentId){
+    const c=(catalog.categories||[]).find(x=>x.id===categoryHubParentId&&!x.hidden);
+    if(!c){categoryHubParentId='';return renderCategoryHub()}
+    categoryHubHead(c.name,'Alt kategoriler');
+    const subs=visibleSubcategories(c);
+    const hasMain=(catalog.products||[]).some(p=>!p.hidden&&p.category===c.id&&!p.subcategoryId);
+    const cards=[];
+    if(hasMain)cards.push({id:'',name:categoryDefaultGroupName(c),cover:c.cover||''});
+    subs.forEach(x=>cards.push(x));
+    wrap.innerHTML=cards.map(sc=>`<button class="categoryTile ${sc.cover?'hasCover':''}" ${sc.cover?`style="--cat-cover:url('${escapeAttr(sc.cover)}')"`:''} onclick="chooseSubcategoryFromHub('${escapeAttr(c.id)}','${escapeAttr(sc.id||'')}','${escapeAttr(c.name)}')"><div class="categoryTileText"><b>${escapeHtml(sc.name||'Alt kategori')}</b><span>Ürünleri gör →</span></div><div class="categoryTileMedia">${sc.cover?`<img src="${escapeAttr(sc.cover)}" alt="${escapeAttr(sc.name||'Alt kategori')}">`:`<span class="categoryPlaceholder">${escapeHtml((sc.name||'?').slice(0,1))}</span>`}</div></button>`).join('');
+    return;
+  }
+  categoryHubHead('Kategoriler','Tüm kategoriler');
   const cats=[{id:'tum',name:'Tüm Ürünler',cover:'',allProducts:true},...catalog.categories.filter(c=>!c.hidden&&c.id!=='tum').sort((a,b)=>(a.order??0)-(b.order??0))];
-  wrap.innerHTML=cats.map(c=>`<button class="categoryTile ${c.cover?'hasCover':''} ${c.allProducts?'allProductsTile':''}" ${c.cover?`style="--cat-cover:url('${escapeAttr(c.cover)}')"`:''} onclick="chooseCategoryFromHub('${escapeAttr(c.id)}','${escapeAttr(c.name)}')">
-    <div class="categoryTileText"><b>${escapeHtml(c.name)}</b><span>${c.allProducts?'Tümünü gör →':'Ürünleri gör →'}</span></div>
-    <div class="categoryTileMedia">${c.cover?`<img src="${escapeAttr(c.cover)}" alt="${escapeAttr(c.name)}">`:`<span class="categoryPlaceholder">${c.allProducts?'TÜ':escapeHtml((c.name||'?').slice(0,1))}</span>`}</div>
-  </button>`).join('');
+  wrap.innerHTML=cats.map(c=>`<button class="categoryTile ${c.cover?'hasCover':''} ${c.allProducts?'allProductsTile':''}" ${c.cover?`style="--cat-cover:url('${escapeAttr(c.cover)}')"`:''} onclick="chooseCategoryFromHub('${escapeAttr(c.id)}','${escapeAttr(c.name)}')"><div class="categoryTileText"><b>${escapeHtml(c.name)}</b><span>${c.allProducts?'Tümünü gör →':'Ürünleri gör →'}</span></div><div class="categoryTileMedia">${c.cover?`<img src="${escapeAttr(c.cover)}" alt="${escapeAttr(c.name)}">`:`<span class="categoryPlaceholder">${c.allProducts?'TÜ':escapeHtml((c.name||'?').slice(0,1))}</span>`}</div></button>`).join('');
 }
 function chooseCategoryFromHub(id,name){
-  // Hub kapanırken body overflow açıldıktan sonra scroll yap.
+  const c=(catalog.categories||[]).find(x=>x.id===id&&!x.hidden);
+  if(c&&visibleSubcategories(c).length){categoryHubParentId=id;renderCategoryHub();return}
   setCategory(id,name,{scroll:false});
   closeCategoryHub();
+  scrollCategoryHubToProducts();
+}
+function chooseSubcategoryFromHub(categoryId,subId,name){
+  setCategory(categoryId,name,{scroll:false});
+  activeSubcategory=subId||'';
+  renderProducts($('#search')?.value||'');
+  closeCategoryHub();
+  scrollCategoryHubToProducts();
+}
+function scrollCategoryHubToProducts(){
   setTimeout(()=>{
     const target=document.getElementById('products');
     if(!target)return;
@@ -242,6 +269,7 @@ function chooseCategoryFromHub(id,name){
     window.scrollTo({top:y,left:0,behavior:'smooth'});
   },60);
 }
+
 
 function setCategory(id,name,opts={}){
   activeCategory=id;
