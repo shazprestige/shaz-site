@@ -112,6 +112,14 @@ const registerLoginFailure=key=>{
 const readJson=(name,fallback)=>{try{return JSON.parse(fs.readFileSync(path.join(dataDir,name),'utf8'))}catch(e){return fallback}};
 const writeJson=(name,data)=>fs.writeFileSync(path.join(dataDir,name),JSON.stringify(data,null,2),'utf8');
 
+const normalizeTRMobile=value=>{
+  const digits=String(value||'').replace(/\D/g,'');
+  if(/^5\d{9}$/.test(digits))return digits;
+  if(/^05\d{9}$/.test(digits))return digits.slice(1);
+  return '';
+};
+
+
 const GOOGLE_SHEETS_WEBHOOK_URL=process.env.GOOGLE_SHEETS_WEBHOOK_URL||'';
 const GOOGLE_SHEETS_SECRET=process.env.GOOGLE_SHEETS_SECRET||'';
 
@@ -441,7 +449,7 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
 
    const left=[
     c.fullName||'',
-    c.phone||'',
+    Number(normalizeTRMobile(c.phone)||0)||'',
     fullAddress(c),
     [c.province,c.district].filter(Boolean).join(' '),
     `${Number(o.total||0).toLocaleString('tr-TR')} TL`,
@@ -521,10 +529,18 @@ app.post('/api/orders',async(req,res)=>{
    const createdAtTR=new Intl.DateTimeFormat('tr-TR',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now);
    const body={...(req.body||{})};
    delete body.requestId;
+   body.customer={...(body.customer||{})};
+   const normalizedPhone=normalizeTRMobile(body.customer.phone);
+   const normalizedExtra=body.customer.extraPhone?normalizeTRMobile(body.customer.extraPhone):'';
 
-   if(!Array.isArray(body.items)||!body.items.length||!body.customer?.fullName||!body.customer?.phone){
-     return res.status(400).json({ok:false,message:'Sipariş bilgileri eksik. Lütfen sepet ve teslimat bilgilerini kontrol edin.'});
+   if(!Array.isArray(body.items)||!body.items.length||!body.customer?.fullName||!normalizedPhone){
+     return res.status(400).json({ok:false,message:'Sipariş bilgileri eksik veya telefon numarası geçersiz. Telefon 05 ile başlıyorsa 11, 5 ile başlıyorsa 10 hane olmalıdır.'});
    }
+   if(body.customer.extraPhone&&!normalizedExtra){
+     return res.status(400).json({ok:false,message:'2. telefon numarası geçersiz. Numara 05 ile başlıyorsa 11, 5 ile başlıyorsa 10 hane olmalıdır.'});
+   }
+   body.customer.phone=normalizedPhone;
+   body.customer.extraPhone=normalizedExtra;
 
    // Siparişin ana kaydı önce sunucu/panele yapılır. Google E-Tablo geçici olarak cevap vermese bile
    // müşteri siparişi kaybolmaz ve tekrar adres girmek zorunda kalmaz.

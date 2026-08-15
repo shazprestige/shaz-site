@@ -1,0 +1,11 @@
+SHAZ V70 — Yalnızca istenen düzenlemeler
+
+1) Google E-Tabloya düşen fotoğraf URL parçaları RichText bağlantı olarak yazılır; doğrudan mavi/tıklanabilir olur.
+2) Telefon doğrulaması: 05 ile başlayan numara 11 hane, 5 ile başlayan numara 10 hane kabul edilir. Sunucuya ve sipariş datasına her zaman baştaki 0 kaldırılmış 10 haneli biçim kaydedilir. Aynı kural 2. telefon için de geçerlidir.
+3) Yönetim paneline ayrı “Kampanyalar” bölümü eklendi. Birden fazla kampanya eklenebilir, tek tek aç/kapatılabilir ve silinebilir.
+4) Kampanya kapsamı tüm ürünler, kategori veya tek tek ürünler olarak seçilebilir. Sepette başka ürünlerin bulunması eşik sayımını bozmaz.
+5) İndirim türleri: sabit TL indirim, yüzdelik indirim, belirli adette kampanyalı toplam fiyat.
+6) Sepette kampanya uygulanınca indirim -TL olarak görünür; şart tamamlanmadıysa kaç ürün daha eklenmesi gerektiği küçük teşvik metniyle gösterilir.
+7) Sipariş toplamı kampanya indirimi uygulanmış net toplam olarak kaydedilir.
+
+Bunların dışında mevcut ayar ve akışlara dokunulmadı.

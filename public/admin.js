@@ -28,6 +28,7 @@ async function load(){
   settings=await fetch('/api/settings').then(r=>r.json());
   catalog=await fetch('/api/catalog').then(r=>r.json());
   catalog.walletPhotoFee=Number(catalog.walletPhotoFee??25);
+  catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
   (catalog.products||[]).forEach(p=>{
     if(adminIsWalletProduct(p)&&p.walletPhotoEnabled===undefined)p.walletPhotoEnabled=true;
     if(p.writeEnabled===undefined){
@@ -154,6 +155,7 @@ function show(tab){
   if(tab==='site')return renderSite();
   if(tab==='catalog')return renderCatalog();
   if(tab==='custom')return renderCatalog();
+  if(tab==='discounts')return renderDiscountCampaigns();
   if(tab==='orders')return renderOrders();
 }
 function campaignCategoryOptions(selected='tum'){
@@ -329,6 +331,49 @@ async function bulkCreateProductsFromPhotos(){
   }catch(e){if(status)status.textContent='Hata: '+(e.message||'Yükleme başarısız.');alert(e.message||'Yükleme başarısız.');}
   finally{if(btn){btn.disabled=false;btn.textContent='Seçili Fotoğrafları Ayrı Ürünler Olarak Yükle'}}
 }
+
+function discountCampaignScopeProducts(rule,index){
+  const scope=rule.scopeType||'category';
+  if(scope==='all')return '<div class=help>Bu kampanya sepetteki tüm ürünleri sayar.</div>';
+  if(scope==='products'){
+    const groups=(catalog.categories||[]).filter(c=>c.id!=='tum').map(c=>{
+      const ps=(catalog.products||[]).filter(p=>p.category===c.id);
+      if(!ps.length)return '';
+      return `<details class="campaignScopeGroup"><summary>${esc(c.name||c.id)} <small>${ps.length} ürün</small></summary><div class="campaignScopeChoices">${ps.map(p=>`<label><input type=checkbox ${(rule.productIds||[]).includes(p.id)?'checked':''} onchange="toggleDiscountCampaignProduct(${index},'${attr(p.id)}',this.checked)"> ${esc(p.name)}</label>`).join('')}</div></details>`;
+    }).join('');
+    return `<div class=campaignScopeBox><b>Uygulanacak ürünler</b>${groups||'<div class=help>Ürün bulunamadı.</div>'}</div>`;
+  }
+  return `<div class=campaignScopeBox><b>Uygulanacak kategoriler</b><div class=campaignScopeChoices>${(catalog.categories||[]).filter(c=>c.id!=='tum').map(c=>`<label><input type=checkbox ${(rule.categoryIds||[]).includes(c.id)?'checked':''} onchange="toggleDiscountCampaignCategory(${index},'${attr(c.id)}',this.checked)"> ${esc(c.name||c.id)}</label>`).join('')}</div></div>`;
+}
+function discountTypeHelp(rule){
+  if(rule.discountType==='percent')return 'Eşiğe ulaşınca kampanyaya dahil ürünlerin toplamından bu yüzde düşer.';
+  if(rule.discountType==='bundlePrice')return 'Örn. minimum 3 ve değer 1300 ise, kampanyaya uyan ilk 3 ürünün kampanya toplamı 1300 TL olur.';
+  return 'Eşiğe ulaşınca sepet toplamından bu TL tutarı bir kez düşer.';
+}
+function renderDiscountCampaigns(){
+  catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
+  const cards=catalog.checkoutCampaigns.map((r,i)=>`<details class="panel simpleAdminDetails discountCampaignAdmin" ${i===catalog.checkoutCampaigns.length-1?'open':''}><summary><span>${esc(r.name||('Kampanya '+(i+1)))}</span><small>${r.enabled!==false?'Aktif':'Kapalı'} · En az ${Math.max(1,Number(r.minQty||1))} ürün</small></summary><div class=simpleDetailsBody>
+    <div class=campaignRuleHead><label class=setItemToggle><span><b>Kampanya aktif</b><small class=muted>İstediğinde kapatabilirsin; silmek zorunda değilsin.</small></span><input type=checkbox ${r.enabled!==false?'checked':''} onchange="catalog.checkoutCampaigns[${i}].enabled=this.checked;changed('.drawer')"></label><button class=dangerBtn onclick="removeDiscountCampaign(${i})">Kampanyayı Sil</button></div>
+    <div class=grid2>
+      ${input('Kampanya adı',`catalog.checkoutCampaigns[${i}].name`,r.name||'Yeni Kampanya','Müşteri sepette bu adı görür.','.drawer')}
+      ${input('Kampanya için gerekli adet',`catalog.checkoutCampaigns[${i}].minQty`,Math.max(1,Number(r.minQty||1)),'Yalnızca seçtiğin ürün/kategoriler bu adede sayılır. Sepette başka ürün bulunması kampanyayı bozmaz.','.drawer','number')}
+      <div class=field><label><b>Kampanya hangi ürünlerde?</b></label><select class=formControl onchange="catalog.checkoutCampaigns[${i}].scopeType=this.value;renderDiscountCampaigns()"><option value=category ${(r.scopeType||'category')==='category'?'selected':''}>Kategori seç</option><option value=products ${r.scopeType==='products'?'selected':''}>Tek tek ürün seç</option><option value=all ${r.scopeType==='all'?'selected':''}>Tüm ürünler</option></select><div class=help>Örn. sadece Saat kategorisi veya istediğin tek tek ürünler.</div></div>
+      <div class=field><label><b>İndirim türü</b></label><select class=formControl onchange="catalog.checkoutCampaigns[${i}].discountType=this.value;renderDiscountCampaigns()"><option value=fixed ${(r.discountType||'fixed')==='fixed'?'selected':''}>Sabit TL indirim</option><option value=percent ${r.discountType==='percent'?'selected':''}>Yüzdelik indirim</option><option value=bundlePrice ${r.discountType==='bundlePrice'?'selected':''}>Kampanyalı toplam fiyat</option></select><div class=help>${discountTypeHelp(r)}</div></div>
+      ${input(r.discountType==='percent'?'İndirim yüzdesi':r.discountType==='bundlePrice'?'Kampanyalı toplam fiyat':'İndirim tutarı',`catalog.checkoutCampaigns[${i}].discountValue`,Number(r.discountValue||0),r.discountType==='percent'?'Örn: 15 = %15 indirim.':r.discountType==='bundlePrice'?'Örn: 1300 = seçilen adet kampanyada toplam 1300 TL.':'Örn: 400 = toplamdan 400 TL düşer.','.drawer','number')}
+    </div>
+    ${discountCampaignScopeProducts(r,i)}
+    <div class=campaignRuleNote>Sepette kampanya şartı henüz tamamlanmadıysa müşteri, kaç ürün daha eklerse kampanyaya ulaşacağını küçük bir bilgilendirme olarak görür. Sepette başka ürünler olması bu kampanyanın sayımını bozmaz.</div>
+  </div></details>`).join('');
+  shell('Kampanyalar','Sepet indirimi kuralları burada. Her kampanya kapalı kutu halinde durur; açıp yalnızca o kampanyayı düzenlersin.',`<div class=panel><div class=campaignCreateRow><div><h2>Sepet Kampanyaları</h2><div class=help>TL indirim, yüzdelik indirim veya belirli adette kampanyalı toplam fiyat oluşturabilirsin.</div></div><button class=btn onclick=addDiscountCampaign()>+ Kampanya Ekle</button></div><div class=campaignRuleNote>Aynı ürün birden fazla aktif kampanyanın şartını aynı anda karşılarsa kampanyalar birlikte uygulanır.</div></div>${cards||'<div class=panel><b>Henüz sepet kampanyası yok.</b><div class=help>“Kampanya Ekle” ile ilk kampanyanı oluştur.</div></div>'}`);
+}
+function addDiscountCampaign(){
+  catalog.checkoutCampaigns=catalog.checkoutCampaigns||[];
+  catalog.checkoutCampaigns.push({id:'sepet-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),name:'Yeni Kampanya',enabled:true,scopeType:'category',categoryIds:[],productIds:[],minQty:3,discountType:'fixed',discountValue:0});
+  renderDiscountCampaigns();
+}
+function removeDiscountCampaign(i){if(confirm('Bu kampanya silinsin mi?')){catalog.checkoutCampaigns.splice(i,1);renderDiscountCampaigns()}}
+function toggleDiscountCampaignCategory(i,id,on){const r=catalog.checkoutCampaigns[i];r.categoryIds=r.categoryIds||[];if(on&&!r.categoryIds.includes(id))r.categoryIds.push(id);if(!on)r.categoryIds=r.categoryIds.filter(x=>x!==id);changed('.drawer')}
+function toggleDiscountCampaignProduct(i,id,on){const r=catalog.checkoutCampaigns[i];r.productIds=r.productIds||[];if(on&&!r.productIds.includes(id))r.productIds.push(id);if(!on)r.productIds=r.productIds.filter(x=>x!==id);changed('.drawer')}
 
 function renderCatalog(){
   const cats=catalog.categories.filter(c=>c.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0));

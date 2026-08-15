@@ -12,6 +12,7 @@ const money=n=>'₺'+Number(n||0).toLocaleString('tr-TR');
 async function init(){
   settings=await fetch('/api/settings').then(r=>r.json());
   catalog=await fetch('/api/catalog').then(r=>r.json());
+  catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
   (catalog.products||[]).forEach(p=>{
     if(p.writeEnabled===undefined){
       const n=String(((catalog.categories||[]).find(c=>c.id===p.category)||{}).name||p.category||'').toLocaleLowerCase('tr-TR')+' '+String(p.name||'').toLocaleLowerCase('tr-TR');
@@ -681,14 +682,64 @@ function addSetToCart(){
 
 /* CART + CHECKOUT */
 
+function campaignProductMatches(rule,p){
+  if(!p)return false;
+  const scope=rule.scopeType||'category';
+  if(scope==='all')return true;
+  if(scope==='products')return (rule.productIds||[]).includes(p.id);
+  return (rule.categoryIds||[]).includes(p.category);
+}
+function cartUnitsForCampaign(rule){
+  const units=[];
+  cart.forEach((x,cartIndex)=>{
+    if(!campaignProductMatches(rule,x.product))return;
+    const qty=Math.max(1,Number(x.qty||1));
+    for(let n=0;n<qty;n++)units.push({price:Number(x.product?.price||0),cartIndex});
+  });
+  return units;
+}
+function campaignBenefitText(rule){
+  const v=Number(rule.discountValue||0);
+  if(rule.discountType==='percent')return `%${v} indirim`;
+  if(rule.discountType==='bundlePrice')return `${money(v)} kampanya fiyatı`;
+  return `${money(v)} indirim`;
+}
+function calculateCartCampaigns(){
+  const subtotal=cart.reduce((a,x)=>a+Number(x.product?.price||0)*Math.max(1,Number(x.qty||1)),0);
+  const applied=[],prompts=[];
+  (catalog.checkoutCampaigns||[]).filter(r=>r&&r.enabled!==false).forEach(rule=>{
+    const minQty=Math.max(1,Number(rule.minQty||1));
+    const units=cartUnitsForCampaign(rule);
+    if(units.length<minQty){
+      if(units.length>0)prompts.push({id:rule.id,name:rule.name||'Kampanya',remaining:minQty-units.length,benefit:campaignBenefitText(rule)});
+      return;
+    }
+    let discount=0;
+    if(rule.discountType==='percent'){
+      const matchedSubtotal=units.reduce((s,u)=>s+u.price,0);
+      discount=matchedSubtotal*Math.max(0,Math.min(100,Number(rule.discountValue||0)))/100;
+    }else if(rule.discountType==='bundlePrice'){
+      const campaignGroup=units.slice(0,minQty);
+      const groupSubtotal=campaignGroup.reduce((s,u)=>s+u.price,0);
+      discount=Math.max(0,groupSubtotal-Math.max(0,Number(rule.discountValue||0)));
+    }else{
+      discount=Math.max(0,Number(rule.discountValue||0));
+    }
+    discount=Math.min(discount,Math.max(0,subtotal-applied.reduce((s,a)=>s+a.discount,0)));
+    if(discount>0)applied.push({id:rule.id,name:rule.name||'Kampanya',discount:Number(discount.toFixed(2))});
+  });
+  const discount=Number(applied.reduce((s,a)=>s+a.discount,0).toFixed(2));
+  return {subtotal,discount,total:Math.max(0,Number((subtotal-discount).toFixed(2))),applied,prompts};
+}
 function checkout(){
   if(!cart.length)return openDrawer('<div class="checkoutEmpty"><h2>Sepetiniz boş</h2><p>Beğendiğiniz ürünleri sepete ekleyerek siparişe başlayabilirsiniz.</p><button class="btn" onclick="closeDrawer()">Ürünlere Dön</button></div>');
-  const total=cart.reduce((a,x)=>a+Number(x.product.price||0),0);
+  const campaign=calculateCartCampaigns();
   openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><h2>Sepetiniz</h2><p>Ürünlerinizi kontrol edin, ardından teslimat bilgilerinize geçin.</p></div><button class="pill" onclick=closeDrawer()>Kapat</button></div>
     <div class="checkoutSteps"><span class="active">1 Sepet</span><span>2 Teslimat</span><span>3 Onay</span></div>
     <div class="cartToolbar"><span>${cart.reduce((n,x)=>n+Number(x.qty||1),0)} ürün</span><button type="button" class="cartClearBtn" onclick="clearCartFromCheckout()">Sepeti boşalt</button></div>
     <div class="checkoutProductPanel">${cart.map((x,i)=>cartItemSummary(x,i)).join('')}</div>
-    <div class="checkoutTotal"><span>Toplam</span><strong>${money(total)}</strong></div>
+    ${campaign.prompts.length?`<div class="campaignPromptBox">${campaign.prompts.map(x=>`<div><b>${escapeHtml(x.name)}</b> için <strong>${x.remaining} ürün daha ekle</strong> — ${escapeHtml(x.benefit)}</div>`).join('')}</div>`:''}
+    <div class="checkoutPriceBreakdown"><div><span>Ara toplam</span><strong>${money(campaign.subtotal)}</strong></div>${campaign.applied.map(x=>`<div class="checkoutDiscountLine"><span>${escapeHtml(x.name)}</span><strong>-${money(x.discount)}</strong></div>`).join('')}<div class="checkoutTotal"><span>Toplam</span><strong>${money(campaign.total)}</strong></div></div>
     <div class="checkoutPayment"><label for="pay"><b>Ödeme yöntemi</b><small>Ödeme tercihinizi seçin.</small></label><select id="pay" class="formControl"><option value="cod">Kapıda ödeme</option><option value="online">Online ödeme</option></select></div>
     <button class="btn checkoutPrimary" onclick="addressStep()">Teslimat Bilgilerine Geç →</button></div>`);
 }
@@ -720,6 +771,15 @@ function cartItemSummary(x,i){
   return `<div class="orderCartItem"><div class="cartItemMain"><div><b>${escapeHtml(x.product.name)}</b>${lines.join('')}</div><div class="cartItemRight"><strong>${money(x.product.price)}</strong><button type="button" class="cartRemoveBtn" onclick="removeCartItem(${i})">Kaldır</button></div></div></div>`;
 }
 
+function normalizeTRMobile(raw){
+  const digits=String(raw||'').replace(/\D/g,'');
+  if(/^5\d{9}$/.test(digits))return {ok:true,value:digits};
+  if(/^05\d{9}$/.test(digits))return {ok:true,value:digits.slice(1)};
+  return {ok:false,value:digits};
+}
+function phoneValidationMessage(label='Telefon numarası'){
+  return `${label} 0 ile başlıyorsa 11 hane (05xxxxxxxxx), 5 ile başlıyorsa 10 hane (5xxxxxxxxx) olmalıdır.`;
+}
 function addressStep(){
   checkoutState.payment=$('#pay')?.value||checkoutState.payment||'cod';
   const c=checkoutState.customer||{};
@@ -729,8 +789,8 @@ function addressStep(){
     <div class="checkoutSteps"><span>1 Sepet</span><span class="active">2 Teslimat</span><span>3 Onay</span></div>
     <div class="addressCompact">
       ${addrInput('Ad Soyad *','fullName',c.fullName)}
-      ${addrInput('Telefon *','phone',c.phone,'tel')}
-      <div class="field fieldWide"><label><b>2. Telefon Numarası</b><small class="fieldHelp">Teslimatın sorunsuz gerçekleşmesi için ulaşılabilecek ikinci bir numara yazın; anne, baba, arkadaş vb. olabilir.</small></label><input class=formControl id=addr-extraPhone type=tel value="${escapeAttr(c.extraPhone||'')}" placeholder="Örn: 05xx xxx xx xx"></div>
+      <div class="field"><label><b>Telefon *</b><small class="fieldHelp">05xx xxx xx xx veya 5xx xxx xx xx</small></label><input class=formControl id=addr-phone type=tel inputmode=numeric autocomplete=tel value="${escapeAttr(c.phone||'')}" placeholder="05xx xxx xx xx"></div>
+      <div class="field fieldWide"><label><b>2. Telefon Numarası</b><small class="fieldHelp">Teslimatın sorunsuz gerçekleşmesi için ulaşılabilecek ikinci bir numara yazın; anne, baba, arkadaş vb. olabilir.</small></label><input class=formControl id=addr-extraPhone type=tel inputmode=numeric autocomplete=tel value="${escapeAttr(c.extraPhone||'')}" placeholder="Örn: 05xx xxx xx xx veya 5xx xxx xx xx"></div>
 
       <label class="branchChoice fieldWide"><input id="addr-branchToggle" type="checkbox" ${branch?'checked':''} onchange="toggleBranchDelivery()"><span><b>Kargom Aras Kargo şubesine gelsin</b><small>Adrese değil, seçtiğiniz Aras Kargo şubesinden teslim alırsınız.</small></span></label>
 
@@ -763,8 +823,13 @@ function toggleBranchDelivery(){
 function saveAddressAndContinue(){
   const g=id=>($('#addr-'+id)?.value||'').trim();
   const branch=!!$('#addr-branchToggle')?.checked;
+  const primaryPhone=normalizeTRMobile(g('phone'));
+  const extraRaw=g('extraPhone');
+  const extraPhone=extraRaw?normalizeTRMobile(extraRaw):{ok:true,value:''};
+  if(!primaryPhone.ok)return alert(phoneValidationMessage('Telefon numarası'));
+  if(!extraPhone.ok)return alert(phoneValidationMessage('2. telefon numarası'));
   const customer={
-    fullName:g('fullName'),phone:g('phone'),extraPhone:g('extraPhone'),province:g('province'),district:g('district'),
+    fullName:g('fullName'),phone:primaryPhone.value,extraPhone:extraPhone.value,province:g('province'),district:g('district'),
     deliveryMode:branch?'branch':'address', branchName:branch?g('branchName'):'',
     neighborhood:branch?'Aras Kargo Şube Teslim':g('neighborhood'), fullAddress:branch?'':g('fullAddress'),
     avenue:branch?g('branchName'):g('fullAddress'), street:'',buildingNo:'',floor:'',doorNo:'',placeType:'home',businessName:'',note:g('note')
@@ -811,6 +876,7 @@ async function finalizeOrder(personalApproved,button){
   }
   if(!cart.length){alert('Sepetiniz boş.');return}
   if(!checkoutState.requestId)checkoutState.requestId=newOrderRequestId();
+  const campaign=calculateCartCampaigns();
   const order={
     requestId:checkoutState.requestId,
     items:cart,
@@ -818,7 +884,10 @@ async function finalizeOrder(personalApproved,button){
     payment:checkoutState.payment,
     personalApproval:personalApproved?{approved:true,method:'button',at:new Date().toISOString()}:null,
     shippingNoticeAccepted:true,
-    total:cart.reduce((a,x)=>a+Number(x.product.price||0),0)
+    subtotal:campaign.subtotal,
+    discountTotal:campaign.discount,
+    appliedCampaigns:campaign.applied,
+    total:campaign.total
   };
   // Ağ/önbellek kaynaklı geçici bir sorunda sipariş taslağı müşterinin cihazında da korunsun.
   try{localStorage.setItem('shaz_pending_order_v63',JSON.stringify(order))}catch{}

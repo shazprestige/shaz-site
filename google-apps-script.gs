@@ -27,7 +27,7 @@ function doPost(e) {
       return json_({ok:false, message:'Yetkisiz istek.'});
     }
 
-    if (data.action === 'ping') return json_({ok:true, version:'V69', sheet:SHEET_NAME});
+    if (data.action === 'ping') return json_({ok:true, version:'V70', sheet:SHEET_NAME});
     if (data.action === 'create') return createOrder_(data);
     if (data.action === 'status') return updateStatus_(data);
 
@@ -109,7 +109,7 @@ function createOrder_(data) {
 
     const left = [
       String(c.fullName || ''),
-      String(c.phone || ''), // ikinci telefon kasıtlı olarak yazılmaz
+      phoneNumber_(c.phone), // ikinci telefon kasıtlı olarak yazılmaz
       fullAddress_(c),
       [c.province, c.district].filter(Boolean).join(' '),
       Number(order.total || 0).toLocaleString('tr-TR') + ' TL',
@@ -153,6 +153,11 @@ function createOrder_(data) {
 
     sh.getRange(start,1,8,5)
       .setBorder(true,true,true,true,true,true,'#6b6b6b',SpreadsheetApp.BorderStyle.SOLID);
+
+    // Fotoğraf bağlantıları setValues ile düz metin kalabildiği için URL parçalarını
+    // gerçek tıklanabilir RichText bağlantısına dönüştürüyoruz.
+    setRichTextLinks_(sh.getRange(start,2), details);
+    setRichTextLinks_(sh.getRange(start+7,1), details);
 
     sh.setRowHeights(start,7,22);
     sh.setRowHeight(start+7,38);
@@ -204,6 +209,30 @@ function prepareOrderBlock_(sh, headerRow, separatorRow) {
   block.clearContent();
   block.clearNote();
   sh.getRange(headerRow, 4, rowCount, 2).clearDataValidations();
+}
+
+function phoneNumber_(value) {
+  const digits = String(value || '').replace(/\D/g, '');
+  const normalized = /^05\d{9}$/.test(digits) ? digits.slice(1) : digits;
+  return /^5\d{9}$/.test(normalized) ? Number(normalized) : String(value || '');
+}
+
+function setRichTextLinks_(range, text) {
+  const value = String(text || '');
+  if (!value) return;
+  const builder = SpreadsheetApp.newRichTextValue().setText(value);
+  const regex = /https?:\/\/[^\s|]+/g;
+  let match;
+  while ((match = regex.exec(value)) !== null) {
+    let url = match[0].replace(/[),.;]+$/g, '');
+    const start = match.index;
+    const end = start + url.length;
+    if (end > start) {
+      const linkStyle = SpreadsheetApp.newTextStyle().setForegroundColor('#1155cc').setUnderline(true).build();
+      builder.setLinkUrl(start, end, url).setTextStyle(start, end, linkStyle);
+    }
+  }
+  range.setRichTextValue(builder.build());
 }
 
 function updateStatus_(data) {

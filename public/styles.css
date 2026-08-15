@@ -2034,3 +2034,28 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
 .walletAdminBox .setItemToggle{margin:0 0 10px}
 .recommendedHint{display:inline-flex;align-items:center;margin-left:7px;padding:3px 7px;border-radius:999px;background:#fff4df;color:#8b5d16;font-size:11px;font-weight:800;line-height:1.1;white-space:nowrap}
 .positionChoice{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+
+/* V70 — yalnızca sepet kampanyaları ve kampanya teşvik satırları */
+.campaignPromptBox{display:grid;gap:6px;margin:10px 0;padding:10px 12px;border:1px solid #ead9b9;border-radius:11px;background:#fffaf0;color:#5e4a27;font-size:11px;line-height:1.4}
+.campaignPromptBox strong{color:#8a5b12}
+.checkoutPriceBreakdown{margin-top:10px;border:1px solid #e4e6e8;border-radius:12px;overflow:hidden;background:#fff}
+.checkoutPriceBreakdown>div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid #eef0f2;font-size:12px}
+.checkoutPriceBreakdown>div:last-child{border-bottom:0}
+.checkoutDiscountLine{color:#157347;background:#f4fbf6}
+.checkoutDiscountLine strong{font-weight:900}
+.checkoutPriceBreakdown .checkoutTotal{font-size:15px;background:#fafafa;margin:0;border-radius:0}
+.campaignCreateRow,.campaignRuleHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.discountCampaignAdmin>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer}
+.discountCampaignAdmin>summary small{color:#737b86;font-weight:600}
+.discountCampaignAdmin .simpleDetailsBody{padding-top:12px}
+.campaignScopeBox{margin-top:12px;padding:11px;border:1px solid #e1e5e9;border-radius:10px;background:#fafbfc}
+.campaignScopeBox>b{display:block;margin-bottom:8px;font-size:11px}
+.campaignScopeChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:190px;overflow:auto}
+.campaignScopeChoices label{display:flex;align-items:center;gap:6px;padding:7px 8px;border:1px solid #e6e8eb;border-radius:8px;background:#fff;font-size:10px}
+.campaignScopeGroup{border:1px solid #e4e7ea;border-radius:8px;background:#fff;margin:6px 0;overflow:hidden}
+.campaignScopeGroup>summary{padding:8px 9px;cursor:pointer;font-size:10px;font-weight:800}
+.campaignScopeGroup>summary small{color:#7d8590;font-weight:500}
+.campaignScopeGroup .campaignScopeChoices{padding:8px;border-top:1px solid #eef0f2}
+.campaignRuleNote{margin-top:10px;padding:9px 10px;border-radius:8px;background:#f3f5f7;color:#596270;font-size:10px;line-height:1.45}
+@media(max-width:760px){.campaignCreateRow,.campaignRuleHead{align-items:stretch;flex-direction:column}.campaignCreateRow .btn,.campaignRuleHead .dangerBtn{width:100%}.campaignScopeChoices{grid-template-columns:1fr}}
