@@ -147,6 +147,86 @@
       "badgeColor": "orange"
     },
     {
+      "id": "urun-1786798357237-gijni",
+      "name": "gözlüklü erkek aksesuar seti Kopya",
+      "category": "setler",
+      "price": 1399,
+      "oldPrice": 1199,
+      "stock": 3,
+      "hidden": false,
+      "badge": "SINIRLI STOK",
+      "image": "",
+      "setEligible": false,
+      "isSet": true,
+      "setItems": [
+        {
+          "id": "setitem-1786798357237-0-kji",
+          "name": "Saat",
+          "type": "Saat",
+          "removeDiscount": 250,
+          "writePositions": [
+            "Arka kapak",
+            "Kordon"
+          ]
+        },
+        {
+          "id": "setitem-1786798357237-1-d1o",
+          "name": "Çakmak",
+          "type": "Çakmak",
+          "removeDiscount": 120,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ]
+        },
+        {
+          "id": "setitem-1786798357237-2-mw9",
+          "name": "Cüzdan",
+          "type": "Cüzdan",
+          "removeDiscount": 180,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ]
+        },
+        {
+          "id": "setitem-1786798357237-3-pm2",
+          "name": "Kemer",
+          "type": "Kemer",
+          "removeDiscount": 140,
+          "writePositions": [
+            "Tokaya",
+            "Kemer ucuna"
+          ]
+        },
+        {
+          "id": "setitem-1786798357237-4-0ph",
+          "name": "Bileklik",
+          "type": "Bileklik",
+          "removeDiscount": 90,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ]
+        },
+        {
+          "id": "setitem-1786798357237-5-5ng",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 10,
+          "writePositions": []
+        }
+      ],
+      "description": "su geçirmez\nçelik\nsafir çizilmez cam",
+      "features": [],
+      "writePositions": [
+        "arka kapak",
+        "kordon"
+      ],
+      "images": [],
+      "badgeColor": "orange"
+    },
+    {
       "id": "p3",
       "name": "Prestige Klasik Saat",
       "category": "saatler",
