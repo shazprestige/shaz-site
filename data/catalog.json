@@ -83,8 +83,9 @@
           "removeDiscount": 250,
           "writePositions": [
             "Arka kapak",
-            "KordON"
-          ]
+            "Kordon"
+          ],
+          "preferredWritePosition": "Arka kapak"
         },
         {
           "id": "lighter",
@@ -94,7 +95,8 @@
           "writePositions": [
             "Ön yüz",
             "Arka yüz"
-          ]
+          ],
+          "preferredWritePosition": "Ön yüz"
         },
         {
           "id": "wallet",
@@ -104,7 +106,8 @@
           "writePositions": [
             "Ön yüz",
             "İç yüz"
-          ]
+          ],
+          "preferredWritePosition": "İç yüz"
         },
         {
           "id": "belt",
@@ -112,9 +115,10 @@
           "type": "Kemer",
           "removeDiscount": 140,
           "writePositions": [
-            "Tokaya",
-            "Kemer ucuna"
-          ]
+            "Toka arkası",
+            "Toka önü"
+          ],
+          "preferredWritePosition": "Kemer ucuna"
         },
         {
           "id": "bracelet",
@@ -366,5 +370,6 @@
     "first": 75,
     "second": 50,
     "thirdPlus": 25
-  }
+  },
+  "walletPhotoFee": 25
 }
