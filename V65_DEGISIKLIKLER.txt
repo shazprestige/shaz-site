@@ -1,0 +1,18 @@
+SHAZ V65
+
+Bu sürüm V64 baz alınarak yalnızca istenen alanlarda güncellendi.
+
+- Ürün rozetleri mobil ve PC'de küçültüldü; yazının dairenin yatay alanını daha iyi kullanması sağlandı.
+- Hazır set ürün düzenleme ekranına "Ürün İçeriği Ekle / Düzenle" kısayolu eklendi.
+- Set kategorisine yeni eklenen ürünler hazır set olarak başlar ve içerik tanımlamaya hazırdır.
+- Set içeriği yönetimi sadeleştirildi: ürün/içerik, çıkarılırsa düşecek fiyat, yazı konumları.
+- Virgülle ayrılan yazı konumlarının müşteride ayrı seçenek olacağı açıkça anlatıldı.
+- Tüm hazır setlere ortak fiyat/yazı konumu uygulama alanı korundu ve sadeleştirildi.
+- Sağdaki canlı önizleme, setten ürün çıkarma ve yazı konumu aşamasını açıp ilgili alanı kırmızı çerçeveyle gösterir.
+
+KORUNANLAR:
+- server.js değişmedi.
+- google-apps-script.gs değişmedi.
+- package.json değişmedi.
+- Excel / E-Tablo / sipariş kayıt sistemi değiştirilmedi.
+- Mevcut katalog veya müşteri verisi paketin içine yazılmadı/değiştirilmedi.

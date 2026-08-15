@@ -253,6 +253,22 @@ window.addEventListener('message',e=>{
     updateFavoriteBadge();updateCart();
     return;
   }
+  if(e.data.type==='shaz-preview-set-stage'){
+    const p=catalog.products.find(x=>x.id===e.data.setId);
+    if(!p||!p.isSet||!Array.isArray(p.setItems)||!p.setItems.length)return;
+    const itemId=e.data.itemId||p.setItems[0].id;
+    wiz={product:p,keptIds:p.setItems.map(x=>x.id),writes:[],pendingWriteIds:[itemId],step:1,history:[]};
+    if(e.data.stage==='write')renderWriteDetails(true);else renderRemovalSelection(true);
+    setTimeout(()=>{
+      document.querySelectorAll('.adminPreviewHighlight').forEach(x=>x.classList.remove('adminPreviewHighlight'));
+      const stage=e.data.stage==='write'?'write':'remove';
+      const el=[...document.querySelectorAll(`[data-set-preview-stage="${stage}"]`)].find(x=>x.dataset.setPreviewItem===itemId);
+      if(!el)return;
+      el.classList.add('adminPreviewHighlight');
+      if(e.data.scroll!==false)el.scrollIntoView({behavior:'auto',block:'center'});
+    },40);
+    return;
+  }
   if(e.data.type==='shaz-preview-focus'){
     const target=e.data.target;
     const shouldScroll=e.data.scroll!==false;
@@ -451,7 +467,7 @@ function keepAllSetItems(){wiz.keptIds=wiz.product.setItems.map(x=>x.id);renderW
 function renderRemovalSelection(restoring=false){
   if(!restoring)setWizardNext('removeQuestion');
   openDrawer(head('Set içeriğini düzenle')+`<div class=wizardCard><h3>Size gönderilmesini istediğiniz ürünler işaretli kalsın.</h3><p>Çıkarmak istediğiniz ürünün tikini kaldırın. Çıkardığınız ürünün tanımlı tutarı toplamdan düşer.</p>
-  <div class=setItemList>${wiz.product.setItems.map(x=>`<label class=setItemToggle><span><b>${x.name}</b><div class=muted>Çıkarılırsa -${money(x.removeDiscount)}</div></span><input type=checkbox class=keepItem data-id="${x.id}" ${wiz.keptIds.includes(x.id)?'checked':''} onchange=refreshRemovalSummary()></label>`).join('')}</div>
+  <div class=setItemList>${wiz.product.setItems.map(x=>`<label class=setItemToggle data-set-preview-stage="remove" data-set-preview-item="${escapeAttr(x.id)}"><span><b>${x.name}</b><div class=muted>Çıkarılırsa -${money(x.removeDiscount)}</div></span><input type=checkbox class=keepItem data-id="${x.id}" ${wiz.keptIds.includes(x.id)?'checked':''} onchange=refreshRemovalSummary()></label>`).join('')}</div>
   <div id=removeSummary></div></div><button class=btn onclick=confirmRemoval()>Devam Et</button>`);
   refreshRemovalSummary();
 }
@@ -494,7 +510,7 @@ function renderWriteDetails(restoring=false){
   const items=ids.map(id=>wiz.product.setItems.find(x=>x.id===id));
   if(!restoring)setWizardNext('writeSelection');
   openDrawer(head('Yazı detayları')+`<div class=wizardCard><h3>Her ürün için konumu seçin ve yazıyı girin.</h3><p>Bütün alanlar açık halde gösterilir; tek tek pencere açılmaz.</p>
-  ${items.map((x,i)=>`<div class=writeItem data-write-id="${x.id}" data-fee="${feeForIndex(i)}"><div class=writeItemTop><b>${x.name}</b><span>+${money(feeForIndex(i))}</span></div><div class=writeDetails><div class=muted>${x.name} yazısı nereye işlensin?</div><div class=positionChoices>${x.writePositions.map((pos,j)=>`<label class=positionChoice><input type=radio name="pos-${x.id}" value="${pos}" ${j===0?'checked':''}> ${pos}</label>`).join('')}</div><input class=writeInput id="text-${x.id}" placeholder="${x.name} üzerine yazdırmak istediğiniz yazı"></div></div>`).join('')}</div>
+  ${items.map((x,i)=>`<div class=writeItem data-write-id="${x.id}" data-fee="${feeForIndex(i)}" data-set-preview-stage="write" data-set-preview-item="${escapeAttr(x.id)}"><div class=writeItemTop><b>${x.name}</b><span>+${money(feeForIndex(i))}</span></div><div class=writeDetails><div class=muted>${x.name} yazısı nereye işlensin?</div><div class=positionChoices>${(x.writePositions||[]).map((pos,j)=>`<label class=positionChoice><input type=radio name="pos-${x.id}" value="${pos}" ${j===0?'checked':''}> ${pos}</label>`).join('')||'<span class=muted>Bu ürün için henüz yazı konumu tanımlı değil.</span>'}</div><input class=writeInput id="text-${x.id}" placeholder="${x.name} üzerine yazdırmak istediğiniz yazı"></div></div>`).join('')}</div>
   <button class=btn onclick=confirmWriteDetails()>Özeti Gör</button>`);
 }
 function confirmWriteDetails(){

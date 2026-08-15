@@ -1885,3 +1885,125 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
   .badge{left:7px!important;top:7px!important;width:58px!important;height:58px!important;max-width:58px!important;padding:7px!important;font-size:7px!important}
   .detailProductBadge{left:10px!important;top:10px!important;width:66px!important;height:66px!important;max-width:66px!important;font-size:8px!important}
 }
+
+/* ===== V65 — yalnızca set yönetimi açıklığı + daha kompakt rozet ===== */
+
+/* Trendyol örneğine daha yakın: daha küçük rozet, yatayda metne daha fazla alan. */
+.badge{
+  width:58px!important;
+  height:58px!important;
+  max-width:58px!important;
+  padding:5px 2px!important;
+  font-size:7.6px!important;
+  line-height:1!important;
+  letter-spacing:.22px!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+  hyphens:none!important;
+  box-sizing:border-box!important;
+}
+.badge:after{inset:4px!important}
+.detailProductBadge{
+  width:64px!important;
+  height:64px!important;
+  max-width:64px!important;
+  padding:6px 2px!important;
+  font-size:8.2px!important;
+}
+@media(max-width:520px){
+  .badge{
+    left:7px!important;
+    top:7px!important;
+    width:50px!important;
+    height:50px!important;
+    max-width:50px!important;
+    padding:4px 1px!important;
+    font-size:6.7px!important;
+    line-height:.98!important;
+  }
+  .badge:after{inset:3px!important}
+  .detailProductBadge{
+    left:9px!important;
+    top:9px!important;
+    width:56px!important;
+    height:56px!important;
+    max-width:56px!important;
+    padding:5px 2px!important;
+    font-size:7.4px!important;
+  }
+}
+
+/* Ürün kartındaki hazır set kısayolu: aynı veriyi iki ayrı formda çoğaltmadan doğru set ekranına götürür. */
+.setContentShortcut{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:10px 0 2px;
+  padding:11px 12px;
+  border:1px solid #dedfe2;
+  border-radius:11px;
+  background:#fffdf8;
+}
+.setContentShortcut>div{min-width:0;display:grid;gap:2px}
+.setContentShortcut b{font-size:12px}
+.setContentShortcut span{font-size:10px;font-weight:750;color:#7b5b22}
+.setContentShortcut small{font-size:9px;line-height:1.35;color:#667085;max-width:480px}
+.setContentShortcut .smallBtn{flex:0 0 auto;white-space:nowrap}
+
+/* Set ekranı sade: ortak ayar ve set ayrıntıları kullanıcı açana kadar kapalı kalır. */
+.bulkSetSettings>summary{background:#fbfaf7}
+.setFlowExplain{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  margin:13px 0 10px;
+  padding:10px 11px;
+  border:1px solid #e7dfcf;
+  border-radius:10px;
+  background:#fffaf1;
+  font-size:10px;
+  line-height:1.42;
+  color:#51452f;
+}
+.setFlowExplain b{font-size:11px;color:#222}
+.setAdminRow{
+  position:relative;
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  align-items:start!important;
+  gap:9px!important;
+  padding:12px 0 0!important;
+  margin-top:12px!important;
+}
+.setAdminRowTitle{grid-column:1/-1!important;display:grid;gap:2px;min-width:0}
+.setAdminRowTitle b{font-size:11px}
+.setAdminRowTitle small{font-size:9px;line-height:1.3;color:#7c8591}
+.setAdminRow>.field{margin:0!important}
+.setAdminRow>.field label{font-size:10px!important}
+.setAdminRow>.field .help{font-size:9px!important;line-height:1.35!important;margin-top:4px!important}
+.setAdminRow>.dangerBtn{grid-column:3!important;justify-self:end!important;min-width:170px;min-height:40px;white-space:nowrap}
+.setAddBar{margin-top:10px!important}
+.bulkSetRows{gap:9px!important}
+.bulkSetRow .help{font-size:9px!important;line-height:1.35!important}
+.bulkSetNote{margin-top:12px!important}
+
+/* Sağdaki canlı önizlemede hangi müşteri adımının değiştiği kırmızı çerçeveyle görünür. */
+.setItemToggle.adminPreviewHighlight,
+.writeItem.adminPreviewHighlight{
+  outline:2px solid #e00000!important;
+  outline-offset:2px!important;
+  box-shadow:0 0 0 3px rgba(224,0,0,.12)!important;
+  border-radius:10px!important;
+}
+
+@media(max-width:1200px){
+  .setAdminRow{grid-template-columns:1fr 1fr!important}
+  .setAdminRow>.dangerBtn{grid-column:1/-1!important;justify-self:stretch!important;width:100%}
+}
+@media(max-width:760px){
+  .setAdminRow{grid-template-columns:1fr!important}
+  .setAdminRow>.dangerBtn{grid-column:1!important}
+  .setContentShortcut{align-items:flex-start;flex-direction:column}
+  .setContentShortcut .smallBtn{width:100%}
+}

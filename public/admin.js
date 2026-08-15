@@ -75,6 +75,19 @@ function changed(target){
     setTimeout(()=>f.contentWindow.postMessage({type:'shaz-preview-focus',target:currentPreviewTarget,scroll:false},'*'),60);
   });
 }
+function previewSetStage(setId,itemId,stage='remove',scroll=true){
+  const f=$('#previewFrame');
+  if(!f?.contentWindow||!setId)return;
+  const token=++previewFocusToken;
+  f.contentWindow.postMessage({type:'shaz-preview',settings,catalog},'*');
+  setTimeout(()=>{
+    if(token!==previewFocusToken)return;
+    f.contentWindow.postMessage({type:'shaz-preview-set-stage',setId,itemId,stage,scroll},'*');
+  },80);
+}
+function changedSetStage(setId,itemId,stage='remove'){
+  preserveAdminViewport(()=>previewSetStage(setId,itemId,stage,false));
+}
 function shell(title,desc,html){
   $('#view').innerHTML=`<h1>${title}</h1><div class=sectionTip>${desc}</div>${html}<div class=saveBar><button class=btn onclick=saveAll()>Değişiklikleri Kaydet</button></div>`;
 }
@@ -342,6 +355,7 @@ function productCard(p,embedded=false){
   const i=catalog.products.findIndex(x=>x.id===p.id);
   const root=`[data-product-id="${p.id}"]`;
   const t=field=>`${root} [data-preview-field="${field}"]`;
+  const setContentShortcut=p.isSet?`<div class=setContentShortcut><div><b>Ürün İçeriği Ekle / Düzenle</b><span>${(p.setItems||[]).length} içerik tanımlı</span><small>Sette hangi ürünlerin bulunduğunu, çıkarılınca düşecek fiyatı ve yazı konumlarını burada yönetirsin.</small></div><button type=button class=smallBtn onclick="openSetEditor('${attr(p.id)}')">İçeriği Aç / Düzenle</button></div>`:'';
   return `<article class=adminProductCard id="admin-product-${attr(p.id)}">
     <div class=adminProductImage>${(p.image||productImages(p)[0])?`<img src="${attr(p.image||productImages(p)[0])}">`:'<span>Fotoğraf yok</span>'}</div>
 
@@ -412,6 +426,7 @@ Paslanmaz çelik kasa"
       <label><input data-preview-target="${attr(root)}" type=checkbox ${p.setEligible?'checked':''} ${p.isSet?'disabled':''}
         onchange="catalog.products[${i}].setEligible=this.checked;changed(this.dataset.previewTarget)"> Kendi sette kullanılabilir</label>
     </div>
+    ${setContentShortcut}
 
     <div class=productAdminActions>
       ${embedded?'':`<button class=duplicateBtn onclick="duplicateProduct(${i})">⧉ Aynısını Çoğalt</button>`}
@@ -424,9 +439,15 @@ function addCategory(){
   catalog.categories.push({id,name:'Yeni Kategori',order:catalog.categories.length+1,hidden:false,cover:''});
   changed('#products');renderCatalog();
 }
+function isSetCategory(categoryId){
+  const c=catalog.categories.find(x=>x.id===categoryId);
+  const n=String(c?.name||'').trim().toLocaleLowerCase('tr-TR');
+  return categoryId==='setler'||n==='set'||n==='setler';
+}
 function addProduct(categoryId){
   const id='urun-'+Date.now();
-  catalog.products.push({id,name:'Yeni Ürün',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:'',images:[],hidden:false,setEligible:categoryId!=='setler',isSet:false,setItems:[],writePositions:[]});
+  const readySet=isSetCategory(categoryId);
+  catalog.products.push({id,name:'Yeni Ürün',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:'',images:[],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[]});
   adminOpenCategory=categoryId;adminProductSearch='';adminOpenProduct=id;
   changed('#products');renderCatalog();
   setTimeout(()=>document.getElementById('admin-product-'+id)?.scrollIntoView({behavior:'smooth',block:'nearest'}),80);
@@ -492,7 +513,7 @@ function renderCustom(){
     const checked=(catalog.builder.allowedCategories||[]).includes(c.id);
     return `<label class=setItemToggle><span><b>${esc(c.name)}</b><small class=muted>Set oluşturma ekranında kategori adımı</small></span><input type=checkbox ${checked?'checked':''} onchange="toggleBuilderCategory('${attr(c.id)}',this.checked)"></label>`;
   }).join('');
-  shell('Setler & Kişiselleştirme','En sık kullandığın hazır set ayarlarını tek yerden topluca uygulayabilir, gerektiğinde yalnızca ilgili seti açıp ayrıntısını değiştirebilirsin.',
+  shell('Setler & Kişiselleştirme','Hazır set içeriğini, ürünü çıkarınca düşecek fiyatı ve yazı konumlarını burada yönetirsin. Her alanın altında müşteride neyi değiştirdiği yazıyor; alana dokununca sağdaki telefon ilgili adımı kırmızı çerçeveyle gösterir.',
   `<details class="panel simpleAdminDetails"><summary>Yazı ücretleri <small>Kişiselleştirme fiyatları</small></summary><div class="grid2 simpleDetailsBody">
     ${input('İlk ürün yazısı','catalog.personalizationPricing.first',pricing.first,'İlk seçilen yazılı ürün.','.drawer','number')}
     ${input('İkinci ürün yazısı','catalog.personalizationPricing.second',pricing.second,'İkinci seçilen yazılı ürün.','.drawer','number')}
@@ -516,7 +537,7 @@ function getBulkSetGroups(sets){
   const groups=new Map();
   sets.forEach(set=>(set.setItems||[]).forEach(it=>{
     const info=setItemGroupInfo(it);if(!info.key)return;
-    if(!groups.has(info.key))groups.set(info.key,{key:info.key,label:info.label,count:0,removeDiscount:Number(it.removeDiscount||0),writePositions:[...(it.writePositions||info.linked?.writePositions||[])]});
+    if(!groups.has(info.key))groups.set(info.key,{key:info.key,label:info.label,count:0,removeDiscount:Number(it.removeDiscount||0),writePositions:[...(it.writePositions||info.linked?.writePositions||[])],sampleSetId:set.id,sampleItemId:it.id});
     groups.get(info.key).count++;
   }));
   return [...groups.values()].map(g=>{
@@ -527,15 +548,15 @@ function getBulkSetGroups(sets){
 function renderBulkSetSettings(sets){
   const groups=getBulkSetGroups(sets);
   if(!sets.length)return '';
-  return `<details class="panel simpleAdminDetails bulkSetSettings" open><summary>Tüm hazır setlere ortak ayar <small>${sets.length} sete tek seferde uygula</small></summary>
+  return `<details class="panel simpleAdminDetails bulkSetSettings"><summary>Ortak set ayarları <small>${sets.length} hazır sete tek tuşla uygula</small></summary>
     <div class=simpleDetailsBody>
-      <div class=bulkSetNote>Buradaki değerleri değiştirip <b>“Tüm Hazır Setlere Uygula”</b> dediğinde aynı türdeki mevcut ürünler bütün hazır setlerde güncellenir. Setlere ürün eklenmez veya setten ürün silinmez.</div>
+      <div class=bulkSetNote><b>Ne işe yarar?</b> Örneğin bütün setlerde “Cüzdan çıkarılırsa 180 TL düşsün” veya “Saat yazısı Arka kapak / Kordon olsun” diyorsan tek tek set açma. Değeri burada yazıp alttaki butona bas. <b>Set içeriğine ürün eklemez, ürün silmez.</b></div>
       <div class=bulkSetRows>${groups.map(g=>`<div class=bulkSetRow>
-        <div class=bulkSetName><b>${esc(g.label)}</b><small>${g.count} set içi satırda kullanılıyor</small></div>
-        <div class=field><label>Çıkarılırsa düşecek TL</label><input class=formControl type=number value="${Number(g.removeDiscount||0)}" oninput='setBulkDraft[${JSON.stringify(g.key)}]={...(setBulkDraft[${JSON.stringify(g.key)}]||{}),removeDiscount:Number(this.value)}'></div>
-        <div class=field><label>Yazı konumları</label><input class=formControl value="${attr((g.writePositions||[]).join(', '))}" placeholder="Örn: Ön yüz, İç yüz" oninput='setBulkDraft[${JSON.stringify(g.key)}]={...(setBulkDraft[${JSON.stringify(g.key)}]||{}),writePositions:this.value.split(",").map(x=>x.trim()).filter(Boolean)}'></div>
+        <div class=bulkSetName><b>${esc(g.label)}</b><small>${g.count} sette/kalemde kullanılıyor</small></div>
+        <div class=field><label>Setten çıkarılırsa düşecek fiyat</label><input class=formControl type=number value="${Number(g.removeDiscount||0)}" onfocus="previewSetStage('${attr(g.sampleSetId)}','${attr(g.sampleItemId)}','remove')" oninput='setBulkDraft[${JSON.stringify(g.key)}]={...(setBulkDraft[${JSON.stringify(g.key)}]||{}),removeDiscount:Number(this.value)}'><div class=help>Müşteri “bu ürünü istemiyorum” derse set toplamından bu tutar düşer. Sağdaki telefon çıkarma adımını gösterir.</div></div>
+        <div class=field><label>Yazı konumları</label><input class=formControl value="${attr((g.writePositions||[]).join(', '))}" placeholder="Örn: Arka kapak, Kordon" onfocus="previewSetStage('${attr(g.sampleSetId)}','${attr(g.sampleItemId)}','write')" oninput='setBulkDraft[${JSON.stringify(g.key)}]={...(setBulkDraft[${JSON.stringify(g.key)}]||{}),writePositions:this.value.split(",").map(x=>x.trim()).filter(Boolean)}'><div class=help>Virgülle ayırdığın her ifade müşteriye ayrı seçim olur. Örn. “Arka kapak, Kordon” → iki seçenek çıkar.</div></div>
       </div>`).join('')||'<div class=emptyAdmin>Hazır setlerin içinde henüz ürün yok.</div>'}</div>
-      ${groups.length?'<button class="btn bulkApplyBtn" onclick="applyBulkSetSettings()">Tüm Hazır Setlere Uygula</button>':''}
+      ${groups.length?'<button class="btn bulkApplyBtn" onclick="applyBulkSetSettings()">Bu Ortak Ayarları Tüm Hazır Setlere Uygula</button>':''}
     </div>
   </details>`;
 }
@@ -563,18 +584,31 @@ function renderSetAdminPanel(p){
   const options=candidates.map(x=>`<option value="${attr(x.id)}">${esc(x.name)} — ${esc((catalog.categories.find(c=>c.id===x.category)||{}).name||'')}</option>`).join('');
   const rows=(p.setItems||[]).map((it,ii)=>{
     const linked=it.productId?catalog.products.find(x=>x.id===it.productId):null;
-    return `<div class=setAdminRow>
-      <div class=field><label><b>Set içi ürün</b></label><input class=formControl value="${attr(it.name||linked?.name||'')}" oninput="catalog.products[${pi}].setItems[${ii}].name=this.value;changed('.drawer')"><div class=help>${linked?'Katalogdaki ürün: '+esc(linked.name):'Elle tanımlı set ürünü'}</div></div>
-      ${input('Çıkarılırsa düşecek TL',`catalog.products[${pi}].setItems[${ii}].removeDiscount`,Number(it.removeDiscount||0),'Müşteri bu ürünün tikini kaldırırsa toplamdan düşer.','.drawer','number')}
-      <div class=field><label><b>Yazı konumları</b></label><input class=formControl value="${attr((it.writePositions||linked?.writePositions||[]).join(', '))}" placeholder="Arka kapak, Kordon" oninput="catalog.products[${pi}].setItems[${ii}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);changed('.drawer')"><div class=help>Bu set içindeki bu ürüne özel konumlar.</div></div>
-      <button class=dangerBtn onclick="removeSetItem(${pi},${ii})">Bu Ürünü Setten Çıkar</button>
+    return `<div class=setAdminRow data-set-admin-item="${attr(it.id)}">
+      <div class=setAdminRowTitle><b>${ii+1}. İçerik</b><small>Müşterinin sette göreceği ürün/parça</small></div>
+      <div class=field><label><b>Ürün / içerik adı</b></label><input class=formControl value="${attr(it.name||linked?.name||'')}" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','remove')" oninput="catalog.products[${pi}].setItems[${ii}].name=this.value;changedSetStage('${attr(p.id)}','${attr(it.id)}','remove')"><div class=help>${linked?'Katalogdan bağlı: '+esc(linked.name):'Elle tanımlı içerik.'} Bu isim müşterinin “setten ürün çıkarma” ekranında aynen görünür.</div></div>
+      <div class=field><label><b>Setten çıkarılırsa düşecek fiyat</b></label><input class=formControl type=number value="${Number(it.removeDiscount||0)}" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','remove')" oninput="catalog.products[${pi}].setItems[${ii}].removeDiscount=Number(this.value);changedSetStage('${attr(p.id)}','${attr(it.id)}','remove')"><div class=help>Müşteri bu içeriğin tikini kaldırırsa set fiyatından tam olarak bu tutar düşer.</div></div>
+      <div class=field><label><b>Yazı konumları</b></label><input class=formControl value="${attr((it.writePositions||linked?.writePositions||[]).join(', '))}" placeholder="Arka kapak, Kordon" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','write')" oninput="catalog.products[${pi}].setItems[${ii}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);changedSetStage('${attr(p.id)}','${attr(it.id)}','write')"><div class=help>Virgülden önce/sonra yazdığın her ifade müşteriye ayrı konum seçeneği olur. Örn. “Arka kapak, Kordon”.</div></div>
+      <button class=dangerBtn onclick="removeSetItem(${pi},${ii})">Bu İçeriği Setten Çıkar</button>
     </div>`;
   }).join('');
-  return `<details class="panel setAdminDetails" data-set-admin="${attr(p.id)}"><summary><span><b>${esc(p.name)}</b><small>${(p.setItems||[]).length} ürün</small></span><span class=setDetailsOpenText>Aç / Düzenle</span></summary><div class=setAdminDetailsBody>
-    <div class=setAddBar><select id="setAdd-${attr(p.id)}" class=formControl><option value="">Katalogdan ürün seç...</option>${options}</select><button class=smallBtn onclick="addExistingProductToSet('${attr(p.id)}')">＋ Seçili Ürünü Ekle</button><button class=smallBtn onclick="addBlankSetItem('${attr(p.id)}')">＋ Elle İçerik Ekle</button></div>
-    <div class=help>Bu sette gerçekten farklı bir değer gerekiyorsa aşağıdan değiştir. Ortak fiyatları yukarıdaki toplu ayardan yönetebilirsin.</div>
-    ${rows||'<div class=emptyAdmin>Bu setin içeriği boş. Yukarıdan ürün ekle.</div>'}
+  return `<details class="panel setAdminDetails" data-set-admin="${attr(p.id)}"><summary><span><b>${esc(p.name)}</b><small>${(p.setItems||[]).length} içerik tanımlı</small></span><span class=setDetailsOpenText>Aç / Düzenle</span></summary><div class=setAdminDetailsBody>
+    <div class=setFlowExplain><b>Bu bölüm müşteride neyi belirler?</b><span>① Setin içinde hangi ürünler var → ② Müşteri hangisini çıkarabilir ve kaç TL düşer → ③ Yazı isterse hangi konumları seçebilir.</span></div>
+    <div class=setAddBar><select id="setAdd-${attr(p.id)}" class=formControl><option value="">Katalogdan ürün seç...</option>${options}</select><button class=smallBtn onclick="addExistingProductToSet('${attr(p.id)}')">＋ Seçili Ürünü Ekle</button><button class=smallBtn onclick="addBlankSetItem('${attr(p.id)}')">＋ Listede Yoksa Elle Ekle</button></div>
+    <div class=help>Sette olmayan ürünü ekleme. Örneğin sette Saat + Gözlük + Kemer varsa yalnızca onları ekle; Cüzdan yoksa ekleme. Künye gibi listede olmayan bir şey varsa “Elle Ekle” ile adını yaz.</div>
+    ${rows||'<div class=emptyAdmin>Bu setin içeriği henüz tanımlı değil. Yukarıdan katalogdan seç veya elle içerik ekle.</div>'}
   </div></details>`;
+}
+function openSetEditor(setId){
+  show('custom');
+  requestAnimationFrame(()=>{
+    const el=document.querySelector(`[data-set-admin="${CSS.escape(setId)}"]`);
+    if(!el)return;
+    el.open=true;
+    el.scrollIntoView({behavior:'smooth',block:'start'});
+    const set=catalog.products.find(x=>x.id===setId),first=set?.setItems?.[0];
+    if(first)setTimeout(()=>previewSetStage(setId,first.id,'remove'),120);
+  });
 }
 function addExistingProductToSet(setId){
   const set=catalog.products.find(x=>x.id===setId),sel=$('#setAdd-'+CSS.escape(setId));
@@ -586,7 +620,7 @@ function addExistingProductToSet(setId){
 }
 function addBlankSetItem(setId){
   const set=catalog.products.find(x=>x.id===setId); if(!set)return;
-  set.setItems=set.setItems||[];set.setItems.push({id:'setitem-'+Date.now(),name:'Yeni set ürünü',type:'',removeDiscount:0,writePositions:[]});
+  set.setItems=set.setItems||[];set.setItems.push({id:'setitem-'+Date.now(),name:'Yeni içerik',type:'',removeDiscount:0,writePositions:[]});
   changed('.drawer');renderCustom();
 }
 function removeSetItem(pi,ii){
