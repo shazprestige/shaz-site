@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>SHAZ</title>
-<link rel="stylesheet" href="/styles.css?v=65">
+<link rel="stylesheet" href="/styles.css?v=66">
 </head>
 <body>
 <div class="announce" id="announceWrap"><div class="track" id="campaign"></div></div>
@@ -60,9 +60,20 @@
   <a class="contact ig" id="ig"><span class="contactIcon brandIcon igIcon" aria-hidden="true"><svg viewBox="0 0 24 24" role="img"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5.2" ry="5.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.4" cy="6.9" r="1.2" fill="currentColor"/></svg></span><span><b>Aklınıza takılan bir şey mi var?</b><small>Buraya tıkla ve iletişime geç</small></span></a>
 </div>
 
+
+<div class="siteAnnouncement hidden" id="siteAnnouncement" role="dialog" aria-modal="true" aria-labelledby="siteAnnouncementTitle">
+  <div class="siteAnnouncementCard">
+    <button class="siteAnnouncementClose" id="siteAnnouncementClose" type="button" aria-label="Duyuruyu kapat">×</button>
+    <div class="siteAnnouncementEyebrow" id="siteAnnouncementEyebrow">DUYURU</div>
+    <h2 id="siteAnnouncementTitle"></h2>
+    <p id="siteAnnouncementText"></p>
+    <button class="siteAnnouncementButton" id="siteAnnouncementButton" type="button">Kapat</button>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 <div class="overlay hidden" id="overlay"></div>
 <div class="drawer hidden" id="drawer"></div>
-<script src="/app.js?v=65"></script>
+<script src="/app.js?v=66"></script>
 </body>
 </html>

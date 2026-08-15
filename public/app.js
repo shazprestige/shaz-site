@@ -11,7 +11,7 @@ const money=n=>'₺'+Number(n||0).toLocaleString('tr-TR');
 async function init(){
   settings=await fetch('/api/settings').then(r=>r.json());
   catalog=await fetch('/api/catalog').then(r=>r.json());
-  apply(); renderCampaignCards(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart(); bindFloatingContacts();
+  apply(); renderCampaignCards(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart(); bindFloatingContacts(); renderSiteAnnouncement();
 }
 function bindCore(){
   if($('#overlay')) $('#overlay').onclick=closeDrawer;
@@ -23,7 +23,10 @@ function bindCore(){
   if($('#sortProducts')) $('#sortProducts').onchange=e=>{productSort=e.target.value;renderProducts($('#search')?.value||'')};
   if($('#categoryMenuBtn')) $('#categoryMenuBtn').onclick=openCategoryHub;
   if($('#categoryHubClose')) $('#categoryHubClose').onclick=closeCategoryHub;
+  if($('#siteAnnouncementClose')) $('#siteAnnouncementClose').onclick=closeSiteAnnouncement;
+  if($('#siteAnnouncementButton')) $('#siteAnnouncementButton').onclick=closeSiteAnnouncement;
 }
+
 function apply(){
   document.documentElement.style.setProperty('--paper',settings.theme?.surface||'#f6f7f8');
   document.documentElement.style.setProperty('--gold',settings.theme?.accent||'#c39a59');
@@ -41,6 +44,23 @@ function apply(){
   if($('#ig')) $('#ig').href='https://ig.me/m/'+String(settings.instagram||'').replace(/^@/,'');
   if($('#cargoLink')) $('#cargoLink').href=settings.cargoTrackingUrl||'https://ebranch.araskargo.com.tr/';
 }
+function renderSiteAnnouncement(force=false){
+  const wrap=$('#siteAnnouncement'); if(!wrap)return;
+  const cfg=settings.siteAnnouncement||{};
+  if(cfg.enabled===false||(!cfg.title&&!cfg.text)){wrap.classList.add('hidden');return}
+  const isPreview=new URLSearchParams(location.search).get('adminpreview')==='1';
+  if(!force && !isPreview && sessionStorage.getItem('shazAnnouncementClosed')==='1'){wrap.classList.add('hidden');return}
+  if($('#siteAnnouncementEyebrow')) $('#siteAnnouncementEyebrow').textContent=cfg.eyebrow||'DUYURU';
+  if($('#siteAnnouncementTitle')) $('#siteAnnouncementTitle').textContent=cfg.title||'Duyuru';
+  if($('#siteAnnouncementText')) $('#siteAnnouncementText').textContent=cfg.text||'';
+  if($('#siteAnnouncementButton')) $('#siteAnnouncementButton').textContent=cfg.buttonText||'Kapat';
+  wrap.classList.remove('hidden');
+}
+function closeSiteAnnouncement(){
+  $('#siteAnnouncement')?.classList.add('hidden');
+  if(new URLSearchParams(location.search).get('adminpreview')!=='1')sessionStorage.setItem('shazAnnouncementClosed','1');
+}
+
 function renderLoopingMarquee(el,text){
   if(!el)return;
   const t=String(text||'').trim();
@@ -250,7 +270,7 @@ window.addEventListener('message',e=>{
     if(e.data.settings) settings=structuredClone(e.data.settings);
     if(e.data.catalog) catalog=structuredClone(e.data.catalog);
     apply();renderCampaignCards();renderCategories();renderProducts($('#search')?.value||'');
-    updateFavoriteBadge();updateCart();
+    updateFavoriteBadge();updateCart();renderSiteAnnouncement(false);
     return;
   }
   if(e.data.type==='shaz-preview-set-stage'){
@@ -275,6 +295,7 @@ window.addEventListener('message',e=>{
 
     document.querySelectorAll('.adminPreviewHighlight').forEach(x=>x.classList.remove('adminPreviewHighlight'));
 
+    if(target && target.includes('siteAnnouncement'))renderSiteAnnouncement(true);
     let el=target?document.querySelector(target):null;
 
     // Ürün görünür değilse önizlemeyi Tüm Ürünler'e al.

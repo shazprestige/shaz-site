@@ -28,6 +28,7 @@ async function load(){
   settings=await fetch('/api/settings').then(r=>r.json());
   catalog=await fetch('/api/catalog').then(r=>r.json());
   settings.campaignCards=settings.campaignCards||[];
+  settings.siteAnnouncement=settings.siteAnnouncement||{enabled:false,eyebrow:'DUYURU',title:'',text:'',buttonText:'Kapat'};
   settings.campaignCards.forEach((c,i)=>{
     if(c.enabled===undefined)c.enabled=true;
     if(!c.id)c.id='kampanya-'+Date.now()+'-'+i;
@@ -107,7 +108,7 @@ function show(tab){
 
   if(tab==='site')return renderSite();
   if(tab==='catalog')return renderCatalog();
-  if(tab==='custom')return renderCustom();
+  if(tab==='custom')return renderCatalog();
   if(tab==='orders')return renderOrders();
 }
 function campaignCategoryOptions(selected='tum'){
@@ -153,6 +154,16 @@ function renderSite(){
     ${input('Instagram kullanıcı adı','settings.instagram',settings.instagram||'','Siyah iletişim butonu.','.contactBtn.ig')}
     ${input('Kargom Nerede bağlantısı','settings.cargoTrackingUrl',settings.cargoTrackingUrl||'https://ebranch.araskargo.com.tr/','Üstteki paket ikonunun açacağı resmi Aras Kargo sayfası.','.cargoAction')}
   </div>
+  <details class="panel simpleAdminDetails announcementAdmin"><summary>Duyuru Panosu <small>Siteye girince müşterinin önüne çıkar</small></summary><div class="simpleDetailsBody">
+    <label class=setItemToggle data-preview-target=".siteAnnouncement"><span><b>Duyuruyu göster</b><small class=muted>Kapalıysa müşterinin karşısına çıkmaz.</small></span><input type=checkbox ${settings.siteAnnouncement?.enabled?'checked':''} onchange="settings.siteAnnouncement.enabled=this.checked;changed('.siteAnnouncement')"></label>
+    <div class=grid2>
+      ${input('Üst küçük başlık','settings.siteAnnouncement.eyebrow',settings.siteAnnouncement?.eyebrow||'DUYURU','Örn: KAMPANYA, BUGÜNE ÖZEL.','.siteAnnouncement')}
+      ${input('Ana duyuru başlığı','settings.siteAnnouncement.title',settings.siteAnnouncement?.title||'','Müşterinin ilk gördüğü büyük başlık.','.siteAnnouncement')}
+    </div>
+    ${textarea('Duyuru metni','settings.siteAnnouncement.text',settings.siteAnnouncement?.text||'','Kampanya veya bilgilendirme metnini buraya yaz.','.siteAnnouncement')}
+    ${input('Kapat butonu yazısı','settings.siteAnnouncement.buttonText',settings.siteAnnouncement?.buttonText||'Kapat','Örn: Kapat, Alışverişe Devam Et.','.siteAnnouncementButton')}
+    <div class=help><b>Müşteride nerede görünür?</b> Site ilk açıldığında ekranın ortasında çıkar. Müşteri kapattıktan sonra sitede normal şekilde devam eder.</div>
+  </div></details>
   <div class="panel grid2"><h2 style="grid-column:1/-1">Renkler</h2>
     ${input('Site arka planı','settings.theme.surface',settings.theme.surface||'#ffffff','Tüm sitenin ana zemin rengi.','body','color')}
     ${input('Altın vurgu','settings.theme.accent',settings.theme.accent||'#c39a59','Başlık ve küçük vurgu alanları.','.hero','color')}
@@ -219,6 +230,60 @@ async function uploadCampaignBulk(){
   }
 }
 
+function catalogGlobalTools(){
+  catalog.personalizationPricing=catalog.personalizationPricing||{first:75,second:50,thirdPlus:25};
+  catalog.builder=catalog.builder||{allowedCategories:[],categoryOrder:[],pricingRules:[]};
+  const pricing=catalog.personalizationPricing;
+  const allowed=catalog.categories.filter(c=>c.id!=='tum'&&!isSetCategory(c.id)).map(c=>{
+    const checked=(catalog.builder.allowedCategories||[]).includes(c.id);
+    return `<label class=setItemToggle><span><b>${esc(c.name)}</b><small class=muted>Müşterinin kendi setini oluştururken seçebileceği kategori</small></span><input type=checkbox ${checked?'checked':''} onchange="toggleBuilderCategory('${attr(c.id)}',this.checked)"></label>`;
+  }).join('');
+  const categoryOptions=catalog.categories.filter(c=>c.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0)).map(c=>`<option value="${attr(c.id)}">${esc(c.name)}</option>`).join('');
+  return `<div class="panel unifiedCatalogSettings">
+    <details class=simpleAdminDetails><summary>Genel ürün / set ayarları <small>Ürünlerle ilgili ortak ayarlar</small></summary><div class=simpleDetailsBody>
+      <div class=grid3>
+        ${input('İlk ürün yazısı','catalog.personalizationPricing.first',pricing.first,'Müşteri ilk ürüne yazı eklerse uygulanacak ücret.','.drawer','number')}
+        ${input('İkinci ürün yazısı','catalog.personalizationPricing.second',pricing.second,'Müşteri ikinci ürüne yazı eklerse uygulanacak ücret.','.drawer','number')}
+        ${input('3. ve sonrası','catalog.personalizationPricing.thirdPlus',pricing.thirdPlus,'Üçüncü ve sonraki her yazılı ürün için ücret.','.drawer','number')}
+      </div>
+      <details class=nestedAdminDetails><summary>Kendi Setini Oluştur kategorileri</summary><div class=setItemList>${allowed}</div><div class=help>Burada seçtiklerin yalnızca müşterinin “Kendi Setini Oluştur” akışında görünür.</div></details>
+    </div></details>
+    <details class=simpleAdminDetails><summary>Toplu ürün yükle <small>Birden fazla fotoğraf = ayrı ayrı ürün</small></summary><div class=simpleDetailsBody>
+      <div class=grid2><div class=field><label><b>Hangi kategoriye yüklensin?</b></label><select id=bulkUploadCategory class=formControl>${categoryOptions}</select><div class=help>Örn. Saat seçip 20 fotoğraf yüklersen 20 ayrı saat ürünü oluşur.</div></div>
+      <div class=field><label><b>Ürün fotoğraflarını seç</b></label><input id=bulkProductFiles type=file accept="image/*" multiple><div class=help>Her seçilen fotoğraf ayrı bir yeni ürünün ana fotoğrafı olur.</div></div></div>
+      <button class=btn id=bulkProductUploadBtn onclick=bulkCreateProductsFromPhotos()>Seçili Fotoğrafları Ayrı Ürünler Olarak Yükle</button>
+      <div class=bulkUploadStatus id=bulkUploadStatus></div>
+    </div></details>
+  </div>`;
+}
+async function bulkCreateProductsFromPhotos(){
+  const categoryId=$('#bulkUploadCategory')?.value;
+  const files=[...($('#bulkProductFiles')?.files||[])];
+  if(!categoryId)return alert('Önce kategori seç.');
+  if(!files.length)return alert('En az bir fotoğraf seç.');
+  const btn=$('#bulkProductUploadBtn'),status=$('#bulkUploadStatus');
+  if(btn){btn.disabled=true;btn.textContent=`${files.length} ürün yükleniyor...`}
+  if(status)status.textContent=`0 / ${files.length} fotoğraf yüklendi.`;
+  try{
+    const fd=new FormData(); files.forEach(f=>fd.append('files',f));
+    const r=await fetch('/api/upload',{method:'POST',body:fd}).then(x=>x.json());
+    if(!r.ok||!(r.files||[]).length)throw new Error(r.message||'Fotoğraflar yüklenemedi.');
+    const readySet=isSetCategory(categoryId);
+    const start=catalog.products.filter(p=>p.category===categoryId).length;
+    (r.files||[]).forEach((f,n)=>{
+      const id='urun-'+Date.now()+'-'+n+'-'+Math.random().toString(36).slice(2,6);
+      catalog.products.push({id,name:`Yeni Ürün ${start+n+1}`,description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:f.url,images:[f.url],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[]});
+      if(status)status.textContent=`${n+1} / ${(r.files||[]).length} ürün hazırlandı.`;
+    });
+    const saved=await fetch('/api/admin/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({settings,catalog})}).then(x=>x.json());
+    if(!saved.ok)throw new Error(saved.message||'Ürünler kaydedilemedi.');
+    adminOpenCategory=categoryId;adminProductSearch='';adminOpenProduct=null;
+    if(status)status.textContent=`Tamamlandı: ${(r.files||[]).length} ayrı ürün oluşturuldu.`;
+    changed('#products');renderCatalog();
+  }catch(e){if(status)status.textContent='Hata: '+(e.message||'Yükleme başarısız.');alert(e.message||'Yükleme başarısız.');}
+  finally{if(btn){btn.disabled=false;btn.textContent='Seçili Fotoğrafları Ayrı Ürünler Olarak Yükle'}}
+}
+
 function renderCatalog(){
   const cats=catalog.categories.filter(c=>c.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0));
   if(!adminOpenCategory||!cats.some(c=>c.id===adminOpenCategory))adminOpenCategory=cats[0]?.id||null;
@@ -227,7 +292,7 @@ function renderCatalog(){
     return `<button class="categoryJumpBtn ${adminOpenCategory===c.id?'active':''}" draggable="true" data-category-drag-id="${attr(c.id)}" onclick="jumpAdminCategory('${attr(c.id)}')" ondragstart="categoryDragStart(event,'${attr(c.id)}')" ondragover="categoryDragOver(event,'${attr(c.id)}')" ondrop="categoryDrop(event,'${attr(c.id)}')" ondragend="categoryDragEnd(event)"><span class=categoryDragGrip aria-hidden=true>⠿</span>${esc(c.name)} <span>${count}</span></button>`;
   }).join('');
   const active=cats.find(c=>c.id===adminOpenCategory);
-  let html=`<div class="panel catalogControlPanel">
+  let html=catalogGlobalTools()+`<div class="panel catalogControlPanel">
     <div class=campaignAdminHead><div><h2>Kategoriler & Ürünler</h2><div class=help>Kategori seç; yalnızca o kategorinin ürünleri açılır. Sıralamayı değiştirmek için kategori başlıklarını sürükleyip bırak.</div></div><button class=btn style="max-width:200px" onclick=addCategory()>＋ Kategori Ekle</button></div>
     <div class=catalogToolbar>
       <div class=categoryQuickNav>${nav}</div>
@@ -235,7 +300,7 @@ function renderCatalog(){
     </div>
   </div>`;
   html+=active?categoryBlock(active):'<div class=panel>Henüz kategori yok.</div>';
-  shell('Kategoriler & Ürünler','Ürün yönetimi artık kategori bazlıdır. Üstten kategori değiştir; ürünleri kompakt listeden açıp düzenle.',html);
+  shell('Kategoriler & Ürünler','Bir ürünün içine girdiğinde fotoğraf, açıklama, fiyat, stok, etiket, kişiselleştirme ve hazır set içeriği dahil tüm ayarlarını aynı yerde yönetirsin.',html);
 }
 function categoryDragStart(e,id){
   adminDraggedCategory=id;
@@ -355,7 +420,7 @@ function productCard(p,embedded=false){
   const i=catalog.products.findIndex(x=>x.id===p.id);
   const root=`[data-product-id="${p.id}"]`;
   const t=field=>`${root} [data-preview-field="${field}"]`;
-  const setContentShortcut=p.isSet?`<div class=setContentShortcut><div><b>Ürün İçeriği Ekle / Düzenle</b><span>${(p.setItems||[]).length} içerik tanımlı</span><small>Sette hangi ürünlerin bulunduğunu, çıkarılınca düşecek fiyatı ve yazı konumlarını burada yönetirsin.</small></div><button type=button class=smallBtn onclick="openSetEditor('${attr(p.id)}')">İçeriği Aç / Düzenle</button></div>`:'';
+  const setContentShortcut=p.isSet?renderInlineSetEditor(p,i):'';
   return `<article class=adminProductCard id="admin-product-${attr(p.id)}">
     <div class=adminProductImage>${(p.image||productImages(p)[0])?`<img src="${attr(p.image||productImages(p)[0])}">`:'<span>Fotoğraf yok</span>'}</div>
 
@@ -427,6 +492,7 @@ Paslanmaz çelik kasa"
         onchange="catalog.products[${i}].setEligible=this.checked;changed(this.dataset.previewTarget)"> Kendi sette kullanılabilir</label>
     </div>
     ${setContentShortcut}
+    ${renderCopyProductSettingsPanel(p,i)}
 
     <div class=productAdminActions>
       ${embedded?'':`<button class=duplicateBtn onclick="duplicateProduct(${i})">⧉ Aynısını Çoğalt</button>`}
@@ -434,6 +500,93 @@ Paslanmaz çelik kasa"
     </div>
   </article>`;
 }
+function renderInlineSetEditor(p,pi){
+  const candidates=catalog.products.filter(x=>!x.isSet&&x.id!==p.id);
+  const options=candidates.map(x=>`<option value="${attr(x.id)}">${esc(x.name)} — ${esc((catalog.categories.find(c=>c.id===x.category)||{}).name||'')}</option>`).join('');
+  const rows=(p.setItems||[]).map((it,ii)=>{
+    const linked=it.productId?catalog.products.find(x=>x.id===it.productId):null;
+    return `<div class=setAdminRow data-set-admin-item="${attr(it.id)}">
+      <div class=setAdminRowTitle><b>${ii+1}. ${esc(it.name||linked?.name||'İçerik')}</b><small>Müşterinin set içeriğinde ve “ürün çıkar” adımında göreceği kalem</small></div>
+      <div class=field><label><b>Ürün / içerik adı</b></label><input class=formControl value="${attr(it.name||linked?.name||'')}" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','remove')" oninput="catalog.products[${pi}].setItems[${ii}].name=this.value;changedSetStage('${attr(p.id)}','${attr(it.id)}','remove')"><div class=help>Bu isim müşterinin setten ürün çıkarma ekranında aynen görünür.</div></div>
+      <div class=field><label><b>Çıkarılırsa düşecek TL</b></label><input class=formControl type=number value="${Number(it.removeDiscount||0)}" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','remove')" oninput="catalog.products[${pi}].setItems[${ii}].removeDiscount=Number(this.value);changedSetStage('${attr(p.id)}','${attr(it.id)}','remove')"><div class=help>Müşteri bu ürünü setten çıkarırsa set toplamından tam bu tutar düşer.</div></div>
+      <div class=field><label><b>Yazı konumları</b></label><input class=formControl value="${attr((it.writePositions||linked?.writePositions||[]).join(', '))}" placeholder="Arka kapak, Kordon" onfocus="previewSetStage('${attr(p.id)}','${attr(it.id)}','write')" oninput="catalog.products[${pi}].setItems[${ii}].writePositions=this.value.split(',').map(x=>x.trim()).filter(Boolean);changedSetStage('${attr(p.id)}','${attr(it.id)}','write')"><div class=help>Virgülle ayırdığın her ifade müşteriye ayrı seçim olur: “Arka kapak, Kordon” → 2 seçenek.</div></div>
+      <button class=dangerBtn onclick="removeSetItem(${pi},${ii});renderCatalog()">Bu İçeriği Setten Çıkar</button>
+    </div>`;
+  }).join('');
+  return `<details class="inlineSetEditor simpleAdminDetails"><summary>Set içeriği <small>${(p.setItems||[]).length} ürün/parça tanımlı</small></summary><div class=simpleDetailsBody>
+    <div class=setFlowExplain><b>Bu alan müşteride neyi değiştirir?</b><span>Sette hangi ürünlerin bulunduğunu, müşterinin hangi ürünü çıkarabileceğini, çıkınca kaç TL düşeceğini ve yazı konumlarını belirler.</span></div>
+    <div class=setAddBar><select id="inlineSetAdd-${attr(p.id)}" class=formControl><option value="">Katalogdan ürün seç...</option>${options}</select><button class=smallBtn onclick="addExistingProductToInlineSet('${attr(p.id)}')">＋ Seçili Ürünü Ekle</button><button class=smallBtn onclick="addBlankInlineSetItem('${attr(p.id)}')">＋ Listede Yoksa Elle Ekle</button></div>
+    ${rows||'<div class=emptyAdmin>Henüz set içeriği yok. Yukarıdan katalog ürünü seç veya elle içerik ekle.</div>'}
+  </div></details>`;
+}
+function addExistingProductToInlineSet(setId){
+  const set=catalog.products.find(x=>x.id===setId),sel=$('#inlineSetAdd-'+CSS.escape(setId));
+  if(!set||!sel?.value)return alert('Önce bir ürün seç.');
+  const p=catalog.products.find(x=>x.id===sel.value);if(!p)return;
+  set.setItems=set.setItems||[];
+  set.setItems.push({id:'setitem-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),productId:p.id,name:p.name,type:(catalog.categories.find(c=>c.id===p.category)||{}).name||p.category,removeDiscount:Number(p.price||0),writePositions:[...(p.writePositions||[])]});
+  changed('.drawer');renderCatalog();
+}
+function addBlankInlineSetItem(setId){
+  const set=catalog.products.find(x=>x.id===setId);if(!set)return;
+  set.setItems=set.setItems||[];
+  set.setItems.push({id:'setitem-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),productId:'',name:'Yeni içerik',type:'',removeDiscount:0,writePositions:[]});
+  changed('.drawer');renderCatalog();
+}
+function renderCopyProductSettingsPanel(p,i){
+  const categories=catalog.categories.filter(c=>c.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0));
+  const groups=categories.map(c=>{
+    const products=catalog.products.filter(x=>x.category===c.id&&x.id!==p.id);
+    if(!products.length)return '';
+    return `<details class=copyCategoryGroup><summary>${esc(c.name)} <small>${products.length} ürün</small></summary><div class=copyProductList>
+      <label class=copySelectAll><input type=checkbox onchange="toggleCopyCategory('${attr(p.id)}','${attr(c.id)}',this.checked)"> Bu kategoridekilerin hepsini seç</label>
+      ${products.map(x=>`<label><input type=checkbox class="copyTarget-${attr(p.id)} copyCat-${attr(p.id)}-${attr(c.id)}" value="${attr(x.id)}"> ${esc(x.name||'Yeni Ürün')}</label>`).join('')}
+    </div></details>`;
+  }).join('');
+  return `<details class="copySettingsPanel simpleAdminDetails"><summary>Bu bilgileri diğer ürünlerde kullan <small>Tekrar yazmak yerine seçtiklerine kopyala</small></summary><div class=simpleDetailsBody>
+    <div class=copySettingsExplain><b>Nasıl çalışır?</b> Önce hangi bilgilerin kopyalanacağını seç, sonra aşağıdan kategori ve ürünleri işaretle. <b>Ürün adı, fotoğraflar ve stok hiçbir zaman otomatik kopyalanmaz.</b></div>
+    <div class=copyFieldChoices>
+      <label><input type=checkbox class="copyField-${attr(p.id)}" value=description checked> Açıklama</label>
+      <label><input type=checkbox class="copyField-${attr(p.id)}" value=features checked> Özellikler</label>
+      <label><input type=checkbox class="copyField-${attr(p.id)}" value=writePositions checked> Yazı konumları</label>
+      <label><input type=checkbox class="copyField-${attr(p.id)}" value=price> Fiyat</label>
+      <label><input type=checkbox class="copyField-${attr(p.id)}" value=oldPrice> Eski fiyat</label>
+      <label><input type=checkbox class="copyField-${attr(p.id)}" value=badge> Etiket + etiket rengi</label>
+      ${p.isSet?`<label><input type=checkbox class="copyField-${attr(p.id)}" value=setItems> Set içeriği + çıkarılınca düşecek TL + yazı konumları</label>`:''}
+    </div>
+    <div class=copyCategoryGroups>${groups||'<div class=emptyAdmin>Kopyalanabilecek başka ürün yok.</div>'}</div>
+    <button class=btn onclick="applyProductInfoToSelected('${attr(p.id)}')">Seçtiğim Bilgileri İşaretli Ürünlere Uygula</button>
+    <div class=help>Bu işlem fotoğrafları değiştirmez. Set içeriğini seçersen yalnızca hazır set olan hedeflere set içeriği kopyalanır.</div>
+  </div></details>`;
+}
+function toggleCopyCategory(sourceId,catId,checked){
+  document.querySelectorAll(`.copyCat-${CSS.escape(sourceId)}-${CSS.escape(catId)}`).forEach(x=>x.checked=checked);
+}
+function applyProductInfoToSelected(sourceId){
+  const src=catalog.products.find(x=>x.id===sourceId);if(!src)return;
+  const fields=[...document.querySelectorAll(`.copyField-${CSS.escape(sourceId)}:checked`)].map(x=>x.value);
+  const targetIds=[...document.querySelectorAll(`.copyTarget-${CSS.escape(sourceId)}:checked`)].map(x=>x.value);
+  if(!fields.length)return alert('Önce kopyalanacak en az bir bilgi seç.');
+  if(!targetIds.length)return alert('Önce en az bir hedef ürün seç.');
+  if(!confirm(`${targetIds.length} ürüne seçtiğin bilgiler uygulansın mı?`))return;
+  let count=0;
+  targetIds.forEach(id=>{
+    const t=catalog.products.find(x=>x.id===id);if(!t)return;
+    fields.forEach(f=>{
+      if(f==='description')t.description=src.description||'';
+      else if(f==='features')t.features=[...(src.features||[])];
+      else if(f==='writePositions')t.writePositions=[...(src.writePositions||[])];
+      else if(f==='price')t.price=Number(src.price||0);
+      else if(f==='oldPrice')t.oldPrice=Number(src.oldPrice||0);
+      else if(f==='badge'){t.badge=src.badge||'';t.badgeColor=src.badgeColor||'orange';}
+      else if(f==='setItems' && src.isSet && t.isSet){t.setItems=(src.setItems||[]).map((it,n)=>({...JSON.parse(JSON.stringify(it)),id:'setitem-'+Date.now()+'-'+n+'-'+Math.random().toString(36).slice(2,5)}));}
+    });
+    count++;
+  });
+  changed('#products');renderCatalog();
+  alert(`${count} ürüne seçtiğin bilgiler uygulandı. Kalıcı olması için “Değişiklikleri Kaydet”e bas.`);
+}
+
 function addCategory(){
   const id='kategori-'+Date.now();
   catalog.categories.push({id,name:'Yeni Kategori',order:catalog.categories.length+1,hidden:false,cover:''});
@@ -474,7 +627,7 @@ function deleteProduct(i){if(confirm('Ürün silinsin mi?')){catalog.products.sp
 async function uploadProductImages(i){
   const fsx=[...($('#prodFile'+i)?.files||[])];if(!fsx.length)return alert('En az bir fotoğraf seç.');
   const fd=new FormData();fsx.forEach(f=>fd.append('files',f));
-  const btn=event?.currentTarget;if(btn){btn.disabled=true;btn.textContent=`${fsx.length} fotoğraf yükleniyor...`;}
+  const btn=$('#prodFile'+i)?.parentElement?.querySelector('button');if(btn){btn.disabled=true;btn.textContent=`${fsx.length} fotoğraf yükleniyor...`;}
   try{
     const r=await fetch('/api/upload',{method:'POST',body:fd}).then(r=>r.json());
     if(!r.ok)throw new Error(r.message||'Yükleme başarısız.');
@@ -600,15 +753,10 @@ function renderSetAdminPanel(p){
   </div></details>`;
 }
 function openSetEditor(setId){
-  show('custom');
-  requestAnimationFrame(()=>{
-    const el=document.querySelector(`[data-set-admin="${CSS.escape(setId)}"]`);
-    if(!el)return;
-    el.open=true;
-    el.scrollIntoView({behavior:'smooth',block:'start'});
-    const set=catalog.products.find(x=>x.id===setId),first=set?.setItems?.[0];
-    if(first)setTimeout(()=>previewSetStage(setId,first.id,'remove'),120);
-  });
+  const p=catalog.products.find(x=>x.id===setId);if(!p)return;
+  adminOpenCategory=p.category;adminProductSearch='';adminOpenProduct=p.id;
+  show('catalog');
+  requestAnimationFrame(()=>document.getElementById('admin-product-'+p.id)?.scrollIntoView({behavior:'smooth',block:'center'}));
 }
 function addExistingProductToSet(setId){
   const set=catalog.products.find(x=>x.id===setId),sel=$('#setAdd-'+CSS.escape(setId));

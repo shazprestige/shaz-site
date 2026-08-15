@@ -1,0 +1,7 @@
+V66
+- Setler & Kişiselleştirme ayrı menüsü kaldırıldı; ürünle ilgili ayarlar Kategoriler & Ürünler içine toplandı.
+- Hazır set içeriği, çıkarılınca düşecek TL ve yazı konumları doğrudan ürün düzenleme ekranında.
+- Ürün bilgilerini seçili diğer ürünlere toplu uygulama eklendi. Fotoğraf, ürün adı ve stok bilinçli olarak toplu kopyalanmaz.
+- Toplu fotoğraf yükleyerek her fotoğraftan ayrı ürün oluşturma eklendi.
+- Siteye giriş duyuru panosu eklendi; yönetimden aç/kapat, başlık, metin ve buton yazısı değiştirilebilir.
+- Mevcut sipariş, Excel/E-Tablo, server.js ve Google Apps Script akışlarına dokunulmadı.
