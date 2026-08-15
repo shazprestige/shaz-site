@@ -32,7 +32,8 @@
           "hidden": false,
           "order": 1
         }
-      ]
+      ],
+      "defaultSubcategoryName": "Erkek kol saatleri"
     },
     {
       "id": "gozlukler",
@@ -694,7 +695,11 @@
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "alt-1786824992077-ro14",
+      "descriptionEditorWidth": 420,
+      "descriptionWrapCh": 53,
+      "featuresEditorWidth": 420,
+      "featuresWrapCh": 53
     },
     {
       "id": "urun-1786825421633-1-qpgw",
@@ -719,7 +724,11 @@
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "alt-1786824992077-ro14",
+      "descriptionEditorWidth": 420,
+      "descriptionWrapCh": 53,
+      "featuresEditorWidth": 420,
+      "featuresWrapCh": 53
     },
     {
       "id": "urun-1786825421633-2-a94y",
@@ -744,7 +753,11 @@
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "alt-1786824992077-ro14",
+      "descriptionEditorWidth": 420,
+      "descriptionWrapCh": 53,
+      "featuresEditorWidth": 420,
+      "featuresWrapCh": 53
     }
   ],
   "builder": {
