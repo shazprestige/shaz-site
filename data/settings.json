@@ -58,7 +58,7 @@
   "campaignMarqueeText": "• YENİ ÜRÜNLERİMİZİ KEŞFEDİN •",
   "campaignMarqueePosition": "middle",
   "siteAnnouncement": {
-    "enabled": true,
+    "enabled": false,
     "eyebrow": " ",
     "title": "İNDİRİM 🥳",
     "text": "3 ADET SAAT SADECE 1299 TL\n16.08.2026 GECESİ SAAT 00:00'A KADAR GEÇERLİDİR !",
