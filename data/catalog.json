@@ -383,5 +383,20 @@
     "second": 50,
     "thirdPlus": 25
   },
-  "walletPhotoFee": 25
+  "walletPhotoFee": 25,
+  "checkoutCampaigns": [
+    {
+      "id": "sepet-1786813845553-fakn",
+      "name": "3 adet saat kampanyası",
+      "enabled": true,
+      "scopeType": "category",
+      "categoryIds": [
+        "saatler"
+      ],
+      "productIds": [],
+      "minQty": 3,
+      "discountType": "fixed",
+      "discountValue": 500
+    }
+  ]
 }
