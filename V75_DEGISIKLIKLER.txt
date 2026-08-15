@@ -1,0 +1,8 @@
+V75
+- Yönetim panelindeki ürün listesi PC'de yan yana kompakt kartlara çevrildi.
+- Ürün sıralama okları kaldırıldı; soldaki tutma simgesinden sürükle-bırak sıralama eklendi.
+- Düzenleme içindeki üstteki tekrarlı/yarım ürün fotoğrafı kaldırıldı.
+- Ürün fotoğraf galerisi yukarı taşındı ve daha kompakt hale getirildi.
+- Ürün düzenleme alanları PC'de daha az yer kaplayacak şekilde sıkılaştırıldı.
+- Açıklama ve özellik kutuları PC'de elle yatay/dikey yeniden boyutlandırılabilir; seçilen genişlik katalog verisine kaydedilir ve müşteri tarafındaki satır kırılımına uygulanır.
+- Başka işlevsel sistemlere dokunulmadı.

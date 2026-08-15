@@ -252,7 +252,7 @@ function renderProducts(filter=''){
   if(!$('#productsList')) return;
   $('#productsList').innerHTML=list.length?list.map(p=>{
     const name=p.name||'SHAZ Ürün';
-    const desc=p.description?`<p class="productDescription" data-preview-field="description">${escapeHtml(p.description)}</p>`:'';
+    const desc=p.description?`<p class="productDescription" data-preview-field="description" style="--product-text-wrap:${Math.max(18,Number(p.descriptionWrapCh||52))}ch">${escapeHtml(p.description)}</p>`:'';
     const badgeColor=['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange';
     return `<div class="card productCardLink" data-product-id="${escapeAttr(p.id)}" role="button" tabindex="0" onclick="openProductDetail('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProductDetail('${p.id}')}"><div class="photo" data-preview-field="photo">${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge badge-${badgeColor}" data-preview-field="badge">${escapeHtml(p.badge)}</span>`:''}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}</div></div>`;
   }).join(''):`<div class="panel"><b>Bu kategoride henüz ürün yok.</b></div>`;
@@ -384,8 +384,8 @@ function openProductDetail(id,source='catalog'){
   const features=productFeatureList(p);
   const positions=Array.isArray(p.writePositions)?p.writePositions.filter(Boolean):[];
   const infoBlocks=[];
-  if(p.description) infoBlocks.push(`<div class="productInfoPart"><h3>Açıklama</h3><p>${escapeHtml(p.description)}</p></div>`);
-  if(features.length) infoBlocks.push(`<div class="productInfoPart"><h3>${p.isSet?'Setin içindekiler':'Özellikler'}</h3><div class=detailFeatureList>${features.map(x=>`<div>✓ ${escapeHtml(x)}</div>`).join('')}</div></div>`);
+  if(p.description) infoBlocks.push(`<div class="productInfoPart productTextSized" style="--product-text-wrap:${Math.max(18,Number(p.descriptionWrapCh||70))}ch"><h3>Açıklama</h3><p>${escapeHtml(p.description)}</p></div>`);
+  if(features.length) infoBlocks.push(`<div class="productInfoPart productTextSized" style="--product-text-wrap:${Math.max(18,Number(p.featuresWrapCh||70))}ch"><h3>${p.isSet?'Setin içindekiler':'Özellikler'}</h3><div class=detailFeatureList>${features.map(x=>`<div>✓ ${escapeHtml(x)}</div>`).join('')}</div></div>`);
   if(p.writeEnabled!==false&&positions.length&&!p.isSet) infoBlocks.push(`<div class="productInfoPart"><h3>Kişiselleştirme alanları</h3><p>${positions.map(escapeHtml).join(' · ')}</p></div>`);
   openDrawer(`<div class="productDetailShell">
     <div class="wizardHead productDetailHead"><div class="productDetailTitle"><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div>${source==='favorites'?`<button class="pill productDetailClose" onclick="showFavorites()">← Favorilere Dön</button>`:`<button class="pill productDetailClose" onclick="closeDrawer()">Kapat</button>`}</div>

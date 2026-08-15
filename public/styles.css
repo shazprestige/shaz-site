@@ -2149,3 +2149,47 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
   .writeDetails .positionChoices,.builderWriteDetails .positionChoices,#walletRegularWriteFields .positionChoices,[id^="builderWalletRegularFields-"] .positionChoices{grid-template-columns:1fr!important}
   .drawer > .wizardHead:not(.productDetailHead) h2{font-size:18px!important}
 }
+
+
+/* ===== V75 — yalnızca yönetim paneli kompakt ürün düzeni + kaydedilebilir metin genişliği ===== */
+@media(min-width:901px){
+  .adminProductCompactList{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;align-items:start}
+  .adminProductCompact.editing{grid-column:1/-1}
+}
+.adminProductCompactHead{grid-template-columns:18px minmax(0,1fr) auto!important;gap:6px!important;padding:6px!important}
+.productDragHandle{width:18px;height:38px;display:grid;place-items:center;cursor:grab;color:#8a9099;font-size:16px;user-select:none;border-radius:5px}
+.productDragHandle:active{cursor:grabbing;background:#f0f2f4}
+.adminProductCompact.dragging{opacity:.55}
+.adminProductCompact.dragOver{outline:2px dashed #8a9099;outline-offset:2px}
+.compactThumb{width:44px!important;height:38px!important;flex-basis:44px!important}
+.adminProductCompactMain{gap:7px!important}
+.compactMeta b{font-size:11px!important}.compactMeta small{font-size:9px!important;margin-top:1px!important}.compactEdit{font-size:9px!important}
+.compactQuickActions{display:flex!important;gap:4px!important;align-items:center!important}
+.compactQuickActions .duplicateBtn{padding:6px 7px!important;font-size:9px!important;min-width:0!important;border-radius:6px!important}
+.compactEditor{padding:8px!important}
+.compactEditor .field{gap:4px!important;margin-bottom:8px!important}
+.compactEditor .field label{font-size:11px!important}
+.compactEditor .help{font-size:9px!important;line-height:1.3!important;margin-top:2px!important}
+.compactEditor .formControl,.compactEditor .field input,.compactEditor .field textarea,.compactEditor .field select{padding:7px 8px!important;font-size:11px!important;border-radius:7px!important}
+.compactEditor .twoMini{grid-template-columns:repeat(3,minmax(120px,1fr))!important;gap:7px!important}
+.compactEditor .setItemToggle{padding:8px!important;border-radius:8px!important;font-size:11px!important}
+.compactEditor .setItemToggle input{width:16px!important;height:16px!important}
+.compactEditor .productToggles{font-size:10px!important;gap:7px!important;margin:6px 0 8px!important}
+.photoAdminCompact{max-width:560px}
+.photoUploadRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center}
+.photoUploadRow .smallBtn{padding:7px 9px!important;font-size:10px!important;white-space:nowrap}
+.photoAdminCompact .adminGallery{grid-template-columns:repeat(auto-fill,minmax(82px,105px))!important;gap:6px!important;margin-top:6px!important}
+.photoAdminCompact .adminGalleryItem>img{aspect-ratio:1/1!important}
+.photoAdminCompact .adminGalleryActions{padding:3px!important;gap:2px!important}
+.photoAdminCompact .adminGalleryActions button,.photoAdminCompact .adminGalleryActions span{font-size:8px!important;padding:3px 4px!important}
+.productLayoutTextarea{resize:both!important;min-width:240px!important;max-width:100%!important;min-height:60px!important;overflow:auto!important;box-sizing:border-box!important}
+@media(max-width:900px){
+  .adminProductCompactList{grid-template-columns:1fr!important}
+  .adminProductCompactHead{grid-template-columns:18px minmax(0,1fr) auto!important}
+  .compactEditor .twoMini{grid-template-columns:1fr 1fr!important}
+  .productLayoutTextarea{width:100%!important;min-width:0!important;resize:vertical!important}
+}
+
+/* Yönetimde seçilen genişlik, müşteri tarafında yalnızca metnin satır kırılımını belirler. */
+.productDescription{max-width:min(100%,var(--product-text-wrap,52ch))}
+.productTextSized>p,.productTextSized>.detailFeatureList{max-width:min(100%,var(--product-text-wrap,70ch))}

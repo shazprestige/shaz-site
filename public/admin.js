@@ -2,6 +2,7 @@
 let settings={},catalog={};
 let adminOpenCategory=null,adminProductSearch="",adminOpenProduct=null;
 let adminDraggedCategory=null;
+let adminDraggedProduct=null;
 let setBulkDraft={};
 let currentPreviewTarget=null;
 let previewFocusToken=0;
@@ -393,6 +394,7 @@ function renderCatalog(){
   </div>`;
   html+=active?categoryBlock(active):'<div class=panel>Henüz kategori yok.</div>';
   shell('Kategoriler & Ürünler','Bir ürünün içine girdiğinde fotoğraf, açıklama, fiyat, stok, etiket, kişiselleştirme ve hazır set içeriği dahil tüm ayarlarını aynı yerde yönetirsin.',html);
+  requestAnimationFrame(initProductTextLayoutEditors);
 }
 function categoryDragStart(e,id){
   adminDraggedCategory=id;
@@ -472,18 +474,17 @@ function productCompactRow(p){
   const i=catalog.products.findIndex(x=>x.id===p.id);
   const img=p.image||productImages(p)[0]||'';
   const open=adminOpenProduct===p.id;
-  return `<div class="adminProductCompact ${open?'editing':''}">
+  return `<div class="adminProductCompact ${open?'editing':''}" data-product-sort-id="${attr(p.id)}" ondragover="productDragOver(event,'${attr(p.id)}')" ondrop="productDrop(event,'${attr(p.id)}')">
     <div class=adminProductCompactHead>
+      <span class=productDragHandle draggable="true" title="Tut ve sürükle" ondragstart="productDragStart(event,'${attr(p.id)}')" ondragend="productDragEnd(event)">⠿</span>
       <button class=adminProductCompactMain onclick="toggleAdminProduct('${attr(p.id)}')">
         <span class=compactThumb>${img?`<img src="${attr(img)}">`:'Fotoğraf yok'}</span>
         <span class=compactMeta><b>${esc(p.name||'Yeni Ürün')}</b><small>₺${Number(p.price||0).toLocaleString('tr-TR')} · Stok ${Number(p.stock||0)}${p.isSet?' · Hazır set':''}</small></span>
-        <span class=compactEdit>${open?'Düzenlemeyi kapat':'Düzenle'}</span>
+        <span class=compactEdit>${open?'Kapat':'Düzenle'}</span>
       </button>
       <div class=compactQuickActions>
-        <button class=duplicateBtn type=button title="Yukarı taşı" onclick="moveProductWithinCategory('${attr(p.id)}',-1)">↑</button>
-        <button class=duplicateBtn type=button title="Aşağı taşı" onclick="moveProductWithinCategory('${attr(p.id)}',1)">↓</button>
         <button class=duplicateBtn type=button onclick="quickToggleProductHidden('${attr(p.id)}')">${p.hidden?'Göster':'Gizle'}</button>
-        <button class=duplicateBtn onclick="duplicateProduct(${i})">⧉ Çoğalt</button>
+        <button class=duplicateBtn onclick="duplicateProduct(${i})">⧉</button>
       </div>
     </div>
     ${open?`<div class=compactEditor>${productCard(p,true)}</div>`:''}
@@ -525,6 +526,28 @@ function syncVisibleProductFeatures(){
     if(p)p.features=String(el.value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
   });
 }
+function updateProductTextLayout(productId,kind,el){
+  const p=(catalog.products||[]).find(x=>x.id===productId);
+  if(!p||!el)return;
+  const width=Math.round(el.getBoundingClientRect().width||0);
+  if(width<180)return;
+  const key=kind==='description'?'descriptionEditorWidth':'featuresEditorWidth';
+  const wrapKey=kind==='description'?'descriptionWrapCh':'featuresWrapCh';
+  p[key]=width;
+  p[wrapKey]=Math.max(18,Math.min(120,Math.round(width/8)));
+  changed(`[data-product-id="${productId}"]`);
+}
+function initProductTextLayoutEditors(){
+  document.querySelectorAll('[data-product-layout-id]').forEach(el=>{
+    if(el.dataset.resizeBound)return;
+    el.dataset.resizeBound='1';
+    const id=el.dataset.productLayoutId,kind=el.dataset.productLayoutKind;
+    let timer=null;
+    const ro=new ResizeObserver(()=>{clearTimeout(timer);timer=setTimeout(()=>updateProductTextLayout(id,kind,el),120)});
+    ro.observe(el);
+  });
+}
+
 function moveProductWithinCategory(productId,direction){
   const i=(catalog.products||[]).findIndex(x=>x.id===productId);
   if(i<0)return;
@@ -537,6 +560,43 @@ function moveProductWithinCategory(productId,direction){
   changed('#products');
   renderCatalog();
 }
+function productDragStart(e,id){
+  adminDraggedProduct=id;
+  e.currentTarget?.closest('.adminProductCompact')?.classList.add('dragging');
+  if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id)}
+}
+function productDragOver(e,id){
+  if(!adminDraggedProduct||adminDraggedProduct===id)return;
+  e.preventDefault();
+  if(e.dataTransfer)e.dataTransfer.dropEffect='move';
+  document.querySelectorAll('.adminProductCompact.dragOver').forEach(x=>x.classList.remove('dragOver'));
+  e.currentTarget?.classList.add('dragOver');
+}
+function productDrop(e,targetId){
+  e.preventDefault();
+  const sourceId=adminDraggedProduct||(e.dataTransfer?.getData('text/plain')||'');
+  const source=(catalog.products||[]).find(p=>p.id===sourceId);
+  const target=(catalog.products||[]).find(p=>p.id===targetId);
+  if(!source||!target||sourceId===targetId||source.category!==target.category)return productDragEnd(e);
+  const targetEl=e.currentTarget;
+  const r=targetEl?.getBoundingClientRect();
+  const after=!!r && ((Math.abs(e.clientY-(r.top+r.height/2))>r.height*.28)?e.clientY>r.top+r.height/2:e.clientX>r.left+r.width/2);
+  const from=catalog.products.findIndex(p=>p.id===sourceId);
+  if(from<0)return productDragEnd(e);
+  const [moved]=catalog.products.splice(from,1);
+  let to=catalog.products.findIndex(p=>p.id===targetId);
+  if(to<0){catalog.products.splice(from,0,moved);return productDragEnd(e)}
+  if(after)to++;
+  catalog.products.splice(to,0,moved);
+  adminDraggedProduct=null;
+  changed('#products');
+  renderCatalog();
+}
+function productDragEnd(e){
+  adminDraggedProduct=null;
+  document.querySelectorAll('.adminProductCompact.dragging,.adminProductCompact.dragOver').forEach(x=>x.classList.remove('dragging','dragOver'));
+}
+
 function quickToggleProductHidden(productId){
   const p=(catalog.products||[]).find(x=>x.id===productId);
   if(!p)return;
@@ -550,25 +610,28 @@ function productCard(p,embedded=false){
   const t=field=>`${root} [data-preview-field="${field}"]`;
   const setContentShortcut=p.isSet?renderInlineSetEditor(p,i):'';
   return `<article class=adminProductCard id="admin-product-${attr(p.id)}">
-    <div class=adminProductImage>${(p.image||productImages(p)[0])?`<img src="${attr(p.image||productImages(p)[0])}">`:'<span>Fotoğraf yok</span>'}</div>
-
     <div class=field><label><b>Ürün adı</b></label>
       <input class=formControl data-preview-target="${attr(t('name'))}" value="${attr(p.name)}"
         oninput="catalog.products[${i}].name=this.value;changed(this.dataset.previewTarget)">
     </div>
 
+    <div class="field photoAdminCompact"><label><b>Ürün fotoğrafları</b></label>
+      <div class=photoUploadRow><input id="prodFile${i}" data-preview-target="${attr(t('photo'))}" type=file accept="image/*" multiple><button class=smallBtn onclick="uploadProductImages(${i})">Fotoğraf Yükle</button></div>
+      ${productGalleryAdmin(p,i)}
+    </div>
+
     <div class=field><label><b>Ürün açıklaması</b></label>
-      <textarea class=formControl data-preview-target="${attr(t('description'))}" rows=3 placeholder="Müşterinin ürün kartında okuyacağı kısa açıklama"
+      <textarea class="formControl productLayoutTextarea" data-product-layout-id="${attr(p.id)}" data-product-layout-kind="description" data-preview-target="${attr(t('description'))}" rows=3 style="width:${Math.max(240,Number(p.descriptionEditorWidth||420))}px" placeholder="Müşterinin ürün kartında okuyacağı kısa açıklama"
         oninput="catalog.products[${i}].description=this.value;changed(this.dataset.previewTarget)">${esc(p.description||'')}</textarea>
-      <div class=help>Örn: Paslanmaz çelik kasa, günlük kullanıma uygun, şık ve sade tasarım.</div>
+      <div class=help>Kutuyu sağ alt köşesinden genişletip daraltabilirsin; seçtiğin genişlik müşterideki satır kırılımına da yansır.</div>
     </div>
 
     <div class=field><label><b>Özellikler / tikli maddeler</b></label>
-      <textarea class=formControl data-product-features-id="${attr(p.id)}" data-preview-target="${attr(root)}" rows=3 placeholder="Her satıra bir özellik yaz
+      <textarea class="formControl productLayoutTextarea" data-product-layout-id="${attr(p.id)}" data-product-layout-kind="features" data-product-features-id="${attr(p.id)}" data-preview-target="${attr(root)}" rows=3 style="width:${Math.max(240,Number(p.featuresEditorWidth||420))}px" placeholder="Her satıra bir özellik yaz
 UV400 koruma
 Paslanmaz çelik kasa"
         oninput="updateProductFeatures('${attr(p.id)}',this.value)" onchange="updateProductFeatures('${attr(p.id)}',this.value)">${esc((Array.isArray(p.features)?p.features:String(p.features||'').split(/\r?\n/)).filter(Boolean).join('\n'))}</textarea>
-      <div class=help>Ürünü İncele ekranında ✓ işaretli maddeler halinde görünür. Hazır sette set içeriği de ayrıca otomatik görünür.</div>
+      <div class=help>Her satır ayrı özellik olur. Kutuyu genişletip daralttığında müşterideki satır kırılımı da buna göre korunur.</div>
     </div>
 
     ${!p.isSet?`<label class=setItemToggle><span><b>Yazı işlemini müşteriye kapat</b><small class=muted>Örn. tesbihte yazı yapılmıyorsa bunu işaretle. Müşteriye yazı seçeneği hiç gösterilmez.</small></span><input type=checkbox ${p.writeEnabled===false?'checked':''} onchange="catalog.products[${i}].writeEnabled=!this.checked;changed('.drawer');previewProductStage('${attr(p.id)}','write')"></label>
@@ -614,13 +677,6 @@ Paslanmaz çelik kasa"
           <option value="red" ${p.badgeColor==='red'?'selected':''}>Kırmızı</option>
         </select>
       </div>
-    </div>
-
-    <div class=field><label><b>Ürün fotoğrafları</b></label>
-      <input id="prodFile${i}" data-preview-target="${attr(t('photo'))}" type=file accept="image/*" multiple>
-      <button class=smallBtn onclick="uploadProductImages(${i})">Seçilen Fotoğrafları Yükle</button>
-      <div class=help>Aynı ürüne 1, 3, 10 veya 50 fotoğrafı tek seferde seçebilirsin. İlk fotoğraf ana kapak olur; aşağıdan ana fotoğrafı değiştirebilirsin.</div>
-      ${productGalleryAdmin(p,i)}
     </div>
 
     <div class=productToggles>
