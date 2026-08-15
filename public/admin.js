@@ -530,7 +530,7 @@ function productCard(p,embedded=false){
       <textarea class=formControl data-preview-target="${attr(root)}" rows=3 placeholder="Her satıra bir özellik yaz
 UV400 koruma
 Paslanmaz çelik kasa"
-        oninput="catalog.products[${i}].features=this.value.split('\n').map(x=>x.trim()).filter(Boolean);changed(this.dataset.previewTarget)">${esc((p.features||[]).join('\n'))}</textarea>
+        oninput="catalog.products[${i}].features=this.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);changed(this.dataset.previewTarget)">${esc((p.features||[]).join('\n'))}</textarea>
       <div class=help>Ürünü İncele ekranında ✓ işaretli maddeler halinde görünür. Hazır sette set içeriği de ayrıca otomatik görünür.</div>
     </div>
 
@@ -650,8 +650,9 @@ function renderCopyProductSettingsPanel(p,i){
     </div></details>`;
   }).join('');
   return `<details class="copySettingsPanel simpleAdminDetails"><summary>Bu bilgileri diğer ürünlerde kullan <small>Tekrar yazmak yerine seçtiklerine kopyala</small></summary><div class=simpleDetailsBody>
-    <div class=copySettingsExplain><b>Nasıl çalışır?</b> Önce hangi bilgilerin kopyalanacağını seç, sonra aşağıdan kategori ve ürünleri işaretle. <b>Ürün adı, fotoğraflar ve stok hiçbir zaman otomatik kopyalanmaz.</b></div>
+    <div class=copySettingsExplain><b>Nasıl çalışır?</b> Önce hangi bilgilerin kopyalanacağını seç, sonra aşağıdan kategori ve ürünleri işaretle. <b>Fotoğraflar ve stok hiçbir zaman otomatik kopyalanmaz.</b> Ürün adını istersen aşağıdaki kutudan ayrıca seçebilirsin.</div>
     <div class=copyFieldChoices>
+      <label><input type=checkbox class="copyField-${attr(p.id)}" value=name> Ürün adı</label>
       <label><input type=checkbox class="copyField-${attr(p.id)}" value=description checked> Açıklama</label>
       <label><input type=checkbox class="copyField-${attr(p.id)}" value=features checked> Özellikler</label>
       <label><input type=checkbox class="copyField-${attr(p.id)}" value=writePositions checked> Yazı konumları</label>
@@ -679,7 +680,8 @@ function applyProductInfoToSelected(sourceId){
   targetIds.forEach(id=>{
     const t=catalog.products.find(x=>x.id===id);if(!t)return;
     fields.forEach(f=>{
-      if(f==='description')t.description=src.description||'';
+      if(f==='name')t.name=src.name||'';
+      else if(f==='description')t.description=src.description||'';
       else if(f==='features')t.features=[...(src.features||[])];
       else if(f==='writePositions'){t.writePositions=[...(src.writePositions||[])];t.preferredWritePosition=src.preferredWritePosition||'';}
       else if(f==='price')t.price=Number(src.price||0);

@@ -1,0 +1,10 @@
+SHAZ v73 — yalnızca istenen iki yönetim paneli düzeltmesi
+
+1) Ürün Özellikleri / tikli maddeler alanındaki satır ayrıştırma hatası düzeltildi.
+   Her satır ayrı özellik olarak kayda girer ve "Değişiklikleri Kaydet" ile kalıcı olur.
+
+2) "Bu bilgileri diğer ürünlerde kullan" bölümüne isteğe bağlı "Ürün adı" seçeneği eklendi.
+   İşaretlenirse kaynak ürün adı seçilen hedef ürünlere kopyalanır.
+   Varsayılan olarak işaretli değildir. Fotoğraf ve stok yine toplu kopyalanmaz.
+
+"Yazı işlemini müşteriye kapat" ayarı dahil diğer tüm çalışma mantıkları değiştirilmedi.
