@@ -27,7 +27,7 @@ function doPost(e) {
       return json_({ok:false, message:'Yetkisiz istek.'});
     }
 
-    if (data.action === 'ping') return json_({ok:true, version:'V63', sheet:SHEET_NAME});
+    if (data.action === 'ping') return json_({ok:true, version:'V69', sheet:SHEET_NAME});
     if (data.action === 'create') return createOrder_(data);
     if (data.action === 'status') return updateStatus_(data);
 
@@ -308,6 +308,16 @@ function orderDetails_(o) {
         return item + ': ' + (a.text || '') + pos;
       });
       line += ' | Yazı: ' + w.join(' | ');
+    }
+
+    const photos = x.photoCustomizations || (x.setCustomization && x.setCustomization.photoCustomizations) || [];
+    if (photos.length) {
+      const p = photos.map(a => {
+        const item = a.item || name;
+        const caption = a.caption ? ' | Fotoğraf yazısı (' + (a.captionPosition === 'above' ? 'üstte' : 'altta') + '): ' + a.caption : '';
+        return item + ': ' + String(a.imageUrl || '') + caption;
+      });
+      line += ' | Fotoğraf: ' + p.join(' | ');
     }
 
     lines.push(line);

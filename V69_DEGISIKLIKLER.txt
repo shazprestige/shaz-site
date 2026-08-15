@@ -1,0 +1,10 @@
+SHAZ V69
+
+Yalnızca istenen noktalar değiştirildi:
+- Tekli ürün ve set içi ürünlerde “Yazı işlemini müşteriye kapat” kontrolü eklendi. Mevcut tesbih/tespih ürünleri ilk açılışta kapalı kabul edilir.
+- Hazır set ürününün üst kısmındaki tekrar eden genel yazı konumu / tercih alanları kaldırıldı; bu ayarlar sadece set içeriğindeki ürün satırlarında kaldı.
+- Set içeriğinde yazı konumu yazılırken “Genelde tercih edilen konum” seçenekleri kaydetmeye veya başka sayfaya geçmeye gerek kalmadan anında güncellenir.
+- Cüzdan fotoğraf akışı netleştirildi: sadece fotoğraf, fotoğraf + üst/alt yazı veya bunlara ek olarak cüzdan ön/iç yüz normal yazısı ayrı ayrı seçilebilir.
+- Cüzdan fotoğraf fiyatı mevcut sistemde 0 TL veya istenen ek ücret olarak kullanılmaya devam eder.
+- Sipariş fotoğrafının tam bağlantısı sipariş verisine kaydedilir; Google E-Tablo ve indirilen Excel sipariş açıklamasına “Fotoğraf:” bağlantısı ve varsa fotoğraf yazısı eklenir.
+- Katalog, kampanya, fiyat, kargo, sipariş numarası, ödeme, tasarım ve diğer ayarlara dokunulmadı.

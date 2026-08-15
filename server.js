@@ -387,6 +387,15 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
       }).filter(Boolean);
       if(writeText.length) line+=` | Yazı: ${writeText.join(' | ')}`;
     }
+    const photos=x.photoCustomizations||x.setCustomization?.photoCustomizations||[];
+    if(photos.length){
+      const photoText=photos.map(ph=>{
+        const item=ph.item||name;
+        const caption=ph.caption?` | Fotoğraf yazısı (${ph.captionPosition==='above'?'üstte':'altta'}): ${ph.caption}`:'';
+        return `${item}: ${ph.imageUrl||''}${caption}`;
+      }).filter(Boolean);
+      if(photoText.length) line+=` | Fotoğraf: ${photoText.join(' | ')}`;
+    }
     lines.push(line);
   });
   return lines.join(' + ')||'Ürün';
@@ -582,7 +591,9 @@ app.post('/api/orders/sheets-test',requireAdmin,async(req,res)=>{
 
 app.post('/api/customer-upload',customerUpload.array('files',1),async(req,res)=>{
  try{
-   const files=(req.files||[]).map(f=>({name:f.originalname,filename:f.filename,url:'/uploads/'+f.filename,path:f.path}));
+   const proto=String(req.headers['x-forwarded-proto']||req.protocol||'https').split(',')[0].trim();
+   const origin=proto+'://'+req.get('host');
+   const files=(req.files||[]).map(f=>({name:f.originalname,filename:f.filename,url:origin+'/uploads/'+f.filename,path:f.path}));
    if(!files.length)return res.status(400).json({ok:false,message:'Fotoğraf seçilmedi.'});
    // Müşterinin sipariş fotoğrafı Render yeniden başlasa da kaybolmasın diye mevcut GitHub kalıcılığı varsa aynı sisteme yazılır.
    let github={ok:false,skipped:true};
