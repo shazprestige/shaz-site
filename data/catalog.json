@@ -12,7 +12,7 @@
       "id": "setler",
       "name": "Setler",
       "order": 1,
-      "hidden": true,
+      "hidden": false,
       "cover": "/uploads/1786724063083-3uyv87.jpeg",
       "size": "small",
       "subcategories": []
