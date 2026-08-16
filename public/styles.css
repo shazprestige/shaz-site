@@ -3366,3 +3366,40 @@ body.productDetailOpen{overflow:hidden!important}
 .floating.atPageBottom{right:auto!important;left:18px!important;transform:none!important}
 @media(max-width:700px){.floating{right:10px!important;bottom:86px!important;max-width:calc(100vw - 20px)!important}.floating.atPageBottom{left:10px!important;right:auto!important}}
 .setPersonalizationInfo{display:grid;gap:10px}.personalizationIntro{margin:0!important}.personalizationGroup{display:grid;gap:5px}.personalizationLine{display:flex;align-items:center;gap:7px;line-height:1.35}.miniYes,.miniNo{font-size:15px;font-weight:800;line-height:1;background:none!important;border:0!important}.miniYes{color:#1f9d55}.miniNo{color:#b23a2c}.removalFriendlyNote{margin-top:12px;padding:12px 14px;border:1px solid #e5d6bf;border-radius:14px;background:#fffaf2;display:grid;gap:6px}.removalFriendlyNote span{color:#596274;line-height:1.35}.smallInlineBtn{justify-self:start;border:0;background:transparent;color:#111;font-weight:800;text-decoration:underline;cursor:pointer;padding:2px 0}.campaignPromptBox strong{font-weight:850}
+
+/* V110 targeted fixes */
+.floating{position:fixed!important;right:12px!important;bottom:12px!important;left:auto!important;transform:none!important;margin:0!important;width:max-content!important;max-width:min(360px,calc(100vw - 24px))!important;z-index:24!important;transition:left .38s ease,right .38s ease,transform .38s ease!important}
+.floating.atPageBottom{left:50%!important;right:auto!important;transform:translateX(-50%)!important}
+@media(max-width:700px){.floating{right:10px!important;bottom:86px!important;max-width:calc(100vw - 20px)!important}.floating.atPageBottom{left:50%!important;right:auto!important;transform:translateX(-50%)!important}}
+
+.checkoutShell--cart{display:grid;gap:0;padding:0 0 12px;background:#f6f7f8}
+.checkoutStickyTop{position:sticky;top:0;z-index:7;background:#f6f7f8;padding:18px 16px 10px;border-bottom:1px solid #e5e8ec}
+.checkoutTopActions{display:flex;align-items:flex-start;gap:10px}
+.checkoutMiniAction{display:grid;gap:2px;justify-items:center;border:0;background:transparent;color:#4b5565;font-weight:700;cursor:pointer;padding:0 2px}
+.checkoutMiniIcon{font-size:18px;line-height:1}
+.checkoutMiniAction small{font-size:11px;line-height:1.15}
+.checkoutScrollBody{padding:10px 16px 190px}
+.checkoutStickyBottom{position:sticky;bottom:0;z-index:7;background:#f6f7f8;padding:10px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #e5e8ec;display:grid;gap:10px}
+.checkoutPriceBreakdown{margin-top:0}
+.checkoutProductPanel{margin-bottom:0}
+.orderCartItem{padding:8px 0}
+.cartItemBreakdown{display:grid;gap:5px;margin-top:10px;padding:10px 11px;border:1px solid #eceff3;border-radius:12px;background:#fafbfc}
+.cartItemBreakdown>div{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;font-size:11px;line-height:1.35;color:#5b6472}
+.cartItemBreakdown>div strong{white-space:nowrap;color:#111}
+.cartItemBreakdown>div.isDiscount strong{color:#2c7a4b}
+.softNoticeOverlay{position:fixed;inset:0;background:rgba(17,24,39,.34);display:grid;place-items:center;z-index:60;padding:18px}
+.softNoticeCard{position:relative;width:min(420px,100%);background:#fff;border-radius:18px;padding:20px 18px 16px;box-shadow:0 20px 60px rgba(15,23,42,.22);display:grid;gap:10px}
+.softNoticeCard h3{margin:0;font-size:22px;line-height:1.1}
+.softNoticeCard p{margin:0;color:#5f6978;line-height:1.45}
+.softNoticeClose{position:absolute;right:12px;top:10px;border:0;background:transparent;font-size:28px;line-height:1;cursor:pointer;color:#667085}
+.softNoticeActions{display:flex;justify-content:flex-start}
+.checkoutPaymentField{display:grid!important;gap:6px}
+
+@media(max-width:700px){
+  .checkoutStickyTop{padding:14px 14px 10px}
+  .checkoutScrollBody{padding:10px 14px 176px}
+  .checkoutStickyBottom{padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+  .checkoutTopActions{gap:8px}
+  .checkoutMiniAction small{font-size:10px}
+  .cartItemBreakdown>div{font-size:10.5px}
+}
