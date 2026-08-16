@@ -2820,3 +2820,17 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
   .builderSummaryPrices{flex-direction:row!important;gap:5px!important}
   .builderSummaryPrices del,.builderSummaryPrices strong{font-size:9px!important}
 }
+
+
+/* V92 — yalnızca Kendi Setini Oluştur yatay sabitleme + fiyat okunurluğu */
+.builderScreen{width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:clip!important}
+.drawer:has(.builderScreen){overflow-x:hidden!important;overscroll-behavior-x:none!important;touch-action:pan-y!important}
+.builderScreen .builderTopSticky,.builderScreen .builderCategoryCard{max-width:100%!important;min-width:0!important}
+.builderSummaryPrices{font-size:11px!important}
+.builderSummaryPrices del{font-size:11px!important}
+.builderSummaryPrices strong{font-size:11.5px!important}
+@media(max-width:430px){
+  .builderSummaryPrices{gap:6px!important}
+  .builderSummaryPrices del{font-size:10px!important}
+  .builderSummaryPrices strong{font-size:10.5px!important}
+}

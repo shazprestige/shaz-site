@@ -1176,7 +1176,7 @@ function renderBuilderCategoryStep(){
   const progress=((customBuilder.index+1)/total)*100;
   const chosenCount=Object.values(customBuilder.selections).filter(Boolean).length;
 
-  openDrawer(`<div class=builderTopSticky><div class=wizardHead><button class="pill backPill" onclick=builderBackFromCategory()>← Geri</button><div><div class=wizardProgress>Kendi Setini Oluştur</div><h2>${escapeHtml(cat.name)}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+  openDrawer(`<div class=builderScreen><div class=builderTopSticky><div class=wizardHead><button class="pill backPill" onclick=builderBackFromCategory()>← Geri</button><div><div class=wizardProgress>Kendi Setini Oluştur</div><h2>${escapeHtml(cat.name)}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
     <div class=builderStepMeta><span class=builderStepName>${customBuilder.index+1}. ADIM / ${total}</span><span class=builderChosen>${chosenCount} ürün seçildi</span></div>
     <div class=builderProgressBar><div class=builderProgressFill style="width:${progress}%"></div></div>
     <div class="builderAllShown builderAllShownSticky">Tüm ${escapeHtml(cat.name)} gösteriliyor</div></div>
@@ -1189,7 +1189,7 @@ function renderBuilderCategoryStep(){
           <div class=builderProductBody><b>${escapeHtml(p.name)}</b><small>${money(p.price)} tekli satış fiyatı</small><button type="button" class="builderInspectBtn" onclick="event.stopPropagation();builderInspectProduct('${escapeAttr(p.id)}')">Ürünü İncele</button></div>
         </div>`).join('')}</div>`:`<div class=builderEmptyCategory>Bu kategoride set oluşturmaya açık tekli ürün bulunmuyor.</div>`}
     </div>
-    ${builderPriceDockHtml()}`);
+    ${builderPriceDockHtml()}</div>`);
 }
 function builderChoose(categoryId,productId){
   customBuilder.selections[categoryId]=customBuilder.selections[categoryId]===productId?null:productId;
@@ -1204,6 +1204,7 @@ function builderSkipCurrent(){
 function builderPrev(){if(customBuilder.index>0){customBuilder.index--;renderBuilderCategoryStep()}}
 function builderNext(){
   if(customBuilder.index<customBuilder.categories.length-1){customBuilder.index++;renderBuilderCategoryStep();return}
+  if(getBuilderSelectedProducts().length<2){alert('Kendi setinizi oluşturmak için en az 2 ürün seçmelisiniz.');return}
   renderBuilderSelectionSummary();
 }
 function getBuilderSelectedProducts(){
@@ -1235,9 +1236,8 @@ function builderPriceDockHtml(){
 }
 function renderBuilderSelectionSummary(){
   const selected=getBuilderSelectedProducts();
-  const min=Number(catalog.builder?.minItems||1);
-  const max=Number(catalog.builder?.maxItems||99);
-  const valid=selected.length>=min&&selected.length<=max;
+  const min=2;
+  const valid=selected.length>=min;
   const total=builderTotalFor(selected.length);
   const rule=getBuilderRule(selected.length);
 
@@ -1257,7 +1257,7 @@ function renderBuilderSelectionSummary(){
       ${rule&&selected.reduce((sum,p)=>sum+Number(p.price||0),0)>total?`<div class="summaryLine builderSavingsLine"><span>Set avantajı</span><span>-${money(selected.reduce((sum,p)=>sum+Number(p.price||0),0)-total)}</span></div>`:''}
       <div class="summaryLine summaryTotal"><span>Set toplamı</span><span>${rule?money(total):'Fiyat tanımlı değil'}</span></div>
     </div>
-    ${!valid?`<div class=notice>Bu seti tamamlamak için en az ${min}, en fazla ${max} ürün seçmelisiniz.</div>`:''}
+    ${!valid?`<div class=notice>Kendi setinizi oluşturmak için en az ${min} ürün seçmelisiniz.</div>`:''}
     ${valid&&!rule?`<div class=notice>${selected.length} ürün için yönetim panelinde özel set fiyatı tanımlanmamış.</div>`:''}
     <div class=builderNav><button class="btn secondary" onclick=builderEditSelections()>← Seçimleri Düzenle</button><button class=btn ${valid&&rule?'':'disabled'} onclick="${valid&&rule?'builderAskWrite()':"alert('Önce geçerli ürün sayısı ve fiyat kuralı gerekli.')"}">Devam Et</button></div>`);
 }
