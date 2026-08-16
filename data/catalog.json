@@ -73,7 +73,7 @@
       "id": "kategori-1786798033844",
       "name": "Tesbihler",
       "order": 5,
-      "hidden": false,
+      "hidden": true,
       "cover": "",
       "subcategories": []
     },
