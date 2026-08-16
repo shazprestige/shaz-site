@@ -411,7 +411,12 @@
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
-      "walletPhotoEnabled": true
+      "walletPhotoEnabled": true,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
+      "shippingRibbonEnabled": true
     },
     {
       "id": "urun-1786817515929-8-eu1y",
@@ -923,7 +928,7 @@
       "id": "sepet-1786813845553-fakn",
       "name": "3 adet saat kampanyası",
       "enabled": true,
-      "scopeType": "category",
+      "scopeType": "all",
       "categoryIds": [
         "saatler"
       ],
@@ -934,17 +939,21 @@
     },
     {
       "id": "sepet-1786894220202-bxip",
-      "name": "Yeni Kampanya",
+      "name": "2 adet saat kampanyası",
       "enabled": true,
       "scopeType": "category",
       "categoryIds": [
         "saatler"
       ],
       "productIds": [],
-      "minQty": 3,
+      "minQty": 2,
       "discountType": "fixed",
-      "discountValue": 0,
-      "excludedProductIds": []
+      "discountValue": 200,
+      "excludedProductIds": [
+        "urun-1786825421633-1-qpgw",
+        "urun-1786825421633-0-33da",
+        "urun-1786825421633-2-a94y"
+      ]
     }
   ]
 }
