@@ -1,0 +1,8 @@
+V83 — Ürün kartı görsel merkezleme / rozet metni / canlı önizleme
+
+- Ürün kartı kapak görselleri object-fit: contain + center ile gösterilir; yüklenen fotoğraf üstten/alttan rastgele kesilmez.
+- Ürün kartında fotoğraf alanı biraz uzatıldı, ürün adı-açıklama-fiyat arasındaki gereksiz boşluk azaltıldı.
+- Yuvarlak ürün rozeti aynı sistemde kalır; rozet metni kenardan yalnızca birkaç piksel taşabilecek şekilde ayrı iç katmana alındı.
+- Ürün bazlı kısa şerit (örn. Kargo Bedava) ayarları artık sağdaki müşteri canlı önizlemesinde ürün kartını anında hedefler.
+- Görünen fiyat biçimi ₺600 yerine 600 TL oldu; hesaplama/veri yapısı değişmedi.
+- Bunların dışında veri, sipariş, kampanya, kategori, set, sepet, Google E-Tablo veya sunucu davranışı değiştirilmedi.

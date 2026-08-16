@@ -1,0 +1,7 @@
+V84 — ALT KATEGORI SABIT GEZINTI
+
+- Alt kategori sekmeleri, müşteri ürünlerde aşağı inerken ana kategori şeridinin hemen altında sabit kalır.
+- Alt kategori seçildiğinde seçili sekme mümkün olduğu sürece ekran/logo merkezine kayar; sondaki sekmeler doğal sınırda kalır.
+- Ana kategori merkezleme hesabı logo merkezine göre hassaslaştırıldı; ilk üç kategori için mevcut başlangıç davranışı korunur.
+- Alt kategori ile ilk ürün satırı arasındaki boşluk azaltıldı.
+- Bunun dışında sistem, veri ve ayarlara dokunulmadı.

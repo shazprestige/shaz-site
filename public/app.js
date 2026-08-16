@@ -8,7 +8,7 @@ let checkoutState={payment:'cod',customer:null,requestId:null};
 let orderSubmitting=false;
 let adminPreviewMode=false;
 const $=s=>document.querySelector(s);
-const money=n=>'₺'+Number(n||0).toLocaleString('tr-TR');
+const money=n=>Number(n||0).toLocaleString('tr-TR')+' TL';
 
 async function init(){
   settings=await fetch('/api/settings').then(r=>r.json());
@@ -33,6 +33,7 @@ function bindCore(){
   if($('#categoryMenuBtn')) $('#categoryMenuBtn').onclick=openCategoryHub;
   if($('#categoryHubClose')) $('#categoryHubClose').onclick=closeCategoryHub;
   if($('#siteAnnouncementClose')) $('#siteAnnouncementClose').onclick=closeSiteAnnouncement;
+  window.addEventListener('resize',()=>{syncSubcategoryStickyOffset();positionActiveCategoryTab('auto');positionActiveSubcategoryTab('auto')},{passive:true});
   if($('#siteAnnouncementButton')) $('#siteAnnouncementButton').onclick=closeSiteAnnouncement;
 }
 
@@ -198,7 +199,28 @@ function subcategoryChooserHtml(category){
   if(activeSubcategory && !tabs.some(s=>s.id===activeSubcategory))activeSubcategory=tabs[0].id||'';
   return `<div class=subcategoryChooser><div class=subcategoryTabs>${tabs.map(s=>`<button class="subcategoryTab ${activeSubcategory===(s.id||'')?'active':''}" onclick="selectSubcategory('${escapeAttr(s.id||'')}')">${escapeHtml(s.name||'Alt kategori')}</button>`).join('')}</div></div>`;
 }
-function selectSubcategory(id){activeSubcategory=id||'';renderProducts($('#search')?.value||'');requestAnimationFrame(()=>document.querySelector('.subcategoryChooser')?.scrollIntoView({behavior:'smooth',block:'nearest'}))}
+function syncSubcategoryStickyOffset(){
+  const announce=document.getElementById('announceWrap');
+  const header=document.getElementById('stickyHeader');
+  const announceH=announce?.getBoundingClientRect().height||0;
+  const headerH=header?.getBoundingClientRect().height||0;
+  document.documentElement.style.setProperty('--subcategory-sticky-top',`${Math.round(announceH+headerH)}px`);
+}
+function positionActiveSubcategoryTab(behavior='smooth'){
+  const nav=document.querySelector('.subcategoryTabs');
+  if(!nav)return;
+  const tabs=[...nav.querySelectorAll('.subcategoryTab')];
+  const active=tabs.find(x=>x.classList.contains('active'));
+  if(!active)return;
+  const desired=active.offsetLeft-(nav.clientWidth-active.offsetWidth)/2;
+  const max=Math.max(0,nav.scrollWidth-nav.clientWidth);
+  nav.scrollTo({left:Math.max(0,Math.min(max,desired)),behavior});
+}
+function selectSubcategory(id){
+  activeSubcategory=id||'';
+  renderProducts($('#search')?.value||'');
+  requestAnimationFrame(()=>{syncSubcategoryStickyOffset();positionActiveSubcategoryTab('smooth')});
+}
 
 function positionActiveCategoryTab(behavior='smooth'){
   const nav=$('#catalogNav');
@@ -211,7 +233,11 @@ function positionActiveCategoryTab(behavior='smooth'){
   // seçildiğinde seçili kategori logonun altına/menünün merkezine doğru gelir
   // ve sağdaki diğer kategoriler görünür hale gelir.
   if(index<=2){nav.scrollTo({left:0,behavior});return}
-  const desired=active.offsetLeft-(nav.clientWidth-active.offsetWidth)/2;
+  const navRect=nav.getBoundingClientRect();
+  const logo=document.getElementById('brandLogo');
+  const logoRect=logo?.getBoundingClientRect();
+  const targetX=logoRect ? (logoRect.left+logoRect.width/2-navRect.left) : nav.clientWidth/2;
+  const desired=active.offsetLeft+active.offsetWidth/2-targetX;
   const max=Math.max(0,nav.scrollWidth-nav.clientWidth);
   nav.scrollTo({left:Math.max(0,Math.min(max,desired)),behavior});
 }
@@ -224,7 +250,8 @@ function renderCategories(){
   nav.querySelectorAll('.tab').forEach(btn=>{
     btn.addEventListener('click',()=>setCategory(btn.dataset.categoryId,btn.dataset.categoryName,{scroll:true}));
   });
-  requestAnimationFrame(()=>positionActiveCategoryTab('auto'));
+  requestAnimationFrame(()=>{positionActiveCategoryTab('auto');syncSubcategoryStickyOffset()});
+  setTimeout(()=>positionActiveCategoryTab('auto'),80);
 }
 
 let categoryHubParentId='';
@@ -335,9 +362,10 @@ function renderProducts(filter=''){
     const desc=p.description?`<p class="productDescription" data-preview-field="description" style="--product-text-wrap:${Math.max(18,Number(p.descriptionWrapCh||52))}ch">${escapeHtml(p.description)}</p>`:'';
     const badgeColor=['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange';
     const shippingRibbon=(p.shippingRibbonEnabled&&String(p.shippingRibbonText||'').trim())?`<div class="productShippingRibbon" style="--shipping-ribbon-color:${escapeAttr(p.shippingRibbonColor||'#444444')}">${escapeHtml(String(p.shippingRibbonText).trim())}</div>`:'';
-    return `<div class="card productCardLink" data-product-id="${escapeAttr(p.id)}" role="button" tabindex="0" onclick="openProductDetail('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProductDetail('${p.id}')}"><div class="photo" data-preview-field="photo">${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge badge-${badgeColor}" data-preview-field="badge">${escapeHtml(p.badge)}</span>`:''}${shippingRibbon}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}</div></div>`;
+    return `<div class="card productCardLink" data-product-id="${escapeAttr(p.id)}" role="button" tabindex="0" onclick="openProductDetail('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProductDetail('${p.id}')}"><div class="photo" data-preview-field="photo">${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge badge-${badgeColor}" data-preview-field="badge"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:''}${shippingRibbon}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}</div></div>`;
   }).join(''):`<div class="panel subcategoryEmpty"><b>Bu bölümde henüz ürün yok.</b></div>`;
   $('#productsList').innerHTML=chooser+cards;
+  requestAnimationFrame(()=>{syncSubcategoryStickyOffset();positionActiveSubcategoryTab('auto')});
 }
 function updateFavoriteBadge(){if($('#favBadge'))$('#favBadge').textContent=favorites.size}
 function toggleFav(id,e){e?.stopPropagation();favorites.has(id)?favorites.delete(id):favorites.add(id);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));updateFavoriteBadge();renderProducts($('#search')?.value||'')}
@@ -472,9 +500,9 @@ function openProductDetail(id,source='catalog'){
   openDrawer(`<div class="productDetailShell">
     <div class="wizardHead productDetailHead"><div class="productDetailTitle"><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div>${source==='favorites'?`<button class="pill productDetailClose" onclick="showFavorites()">← Favorilere Dön</button>`:`<button class="pill productDetailClose" onclick="closeDrawer()">Kapat</button>`}</div>
     ${productImages(p).length?`<div class=productDetailGallery>
-      <div class="productDetailMedia" style="--detail-bg:url(&quot;${escapeAttr(mainProductImage(p))}&quot;)" onclick="openProductImageViewer()" role="button" tabindex="0" aria-label="Fotoğrafı büyüt">${p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'}">${escapeHtml(p.badge)}</span>`:''}<img id=productDetailMain src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name||'Ürün')}"></div>
+      <div class="productDetailMedia" style="--detail-bg:url(&quot;${escapeAttr(mainProductImage(p))}&quot;)" onclick="openProductImageViewer()" role="button" tabindex="0" aria-label="Fotoğrafı büyüt">${p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'}"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:''}<img id=productDetailMain src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name||'Ürün')}"></div>
       ${productImages(p).length>1?`<div class=productDetailThumbs>${productImages(p).map((u,i)=>`<button class="${i===0?'active':''}" onclick="selectProductDetailImage(this,'${escapeAttr(u)}')"><img src="${escapeAttr(u)}" alt=""></button>`).join('')}</div>`:''}
-    </div>`:`<div class=productDetailMedia>${p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'}">${escapeHtml(p.badge)}</span>`:''}<div class=productDetailPlaceholder>⌚</div></div>`}
+    </div>`:`<div class=productDetailMedia>${p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'}"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:''}<div class=productDetailPlaceholder>⌚</div></div>`}
     ${infoBlocks.length?`<div class="productDetailInfoBox">${infoBlocks.join('')}</div>`:''}
     <div class="productDetailBottomBar"><div class="productDetailBottomPrice">${money(p.price)}${p.oldPrice?` <span class=old>${money(p.oldPrice)}</span>`:''}</div><button class="btn detailAddBtn" onclick="startProduct('${escapeAttr(p.id)}')">Sepete Ekle</button></div>
   </div>`);

@@ -2351,3 +2351,87 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
   #productsList .productCardLink .price{margin-top:6px!important}
   .productShippingRibbon{min-height:19px;padding:2px 6px;font-size:8px}
 }
+
+
+/* ===== V83 — ürün kartı merkezleme + rozet yazısı + kompakt bilgi alanı ===== */
+/* Kapak fotoğrafı ürünün kendisini tahmin edip kesmez; yüklenen görselin tamamını kendi merkezinden gösterir. */
+#productsList .productCardLink .photo{
+  aspect-ratio:1.12 / 1!important;
+  background:#f5f6f7!important;
+}
+#productsList .productCardLink .photo>img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:50% 50%!important;
+  display:block!important;
+}
+/* Bilgi alanındaki gereksiz dikey boşluğu azalt. */
+#productsList .productCardLink .info{
+  padding-top:7px!important;
+  padding-bottom:8px!important;
+}
+#productsList .productCardLink .info h3{
+  margin-top:0!important;
+  margin-bottom:2px!important;
+}
+#productsList .productCardLink .productDescription{
+  margin-top:0!important;
+  margin-bottom:3px!important;
+}
+#productsList .productCardLink .price{margin-top:3px!important}
+
+/* Rozet dairesi aynı kalır; yalnızca metin dairenin kenarından çok hafif taşabilir. */
+.badge .badgeText{
+  display:block!important;
+  width:calc(100% + 8px)!important;
+  margin-left:-4px!important;
+  margin-right:-4px!important;
+  text-align:center!important;
+  line-height:.92!important;
+  overflow:visible!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+  hyphens:none!important;
+}
+.detailProductBadge .badgeText{width:calc(100% + 9px)!important;margin-left:-4.5px!important;margin-right:-4.5px!important}
+
+@media(max-width:520px){
+  #productsList .productCardLink .photo{aspect-ratio:1.06 / 1!important}
+  #productsList .productCardLink .info{padding-top:6px!important;padding-bottom:7px!important}
+  #productsList .productCardLink .info h3{margin-bottom:1px!important}
+  #productsList .productCardLink .productDescription{margin-bottom:2px!important}
+  #productsList .productCardLink .price{margin-top:2px!important}
+  .badge .badgeText{width:calc(100% + 7px)!important;margin-left:-3.5px!important;margin-right:-3.5px!important}
+}
+
+
+/* ===== V84 — alt kategori sekmeleri gezintide sabit + akıllı yatay merkezleme ===== */
+/* Ana kategori şeridinin hemen altında kalır; ürün kartları biraz daha yakından başlar. */
+.subcategoryChooser{
+  position:sticky!important;
+  top:var(--subcategory-sticky-top,132px)!important;
+  z-index:19!important;
+  align-self:start!important;
+  width:100%!important;
+  margin:0 0 8px!important;
+  padding:7px 0 5px!important;
+  background:rgba(255,255,255,.97)!important;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.subcategoryTabs{
+  gap:7px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  padding:2px 12px 5px 2px!important;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none!important;
+}
+.subcategoryTabs::-webkit-scrollbar{display:none}
+.subcategoryTabs:after{content:"";flex:0 0 12px}
+@media(max-width:700px){
+  .subcategoryChooser{margin-bottom:7px!important;padding-top:6px!important;padding-bottom:4px!important}
+  .subcategoryTabs{padding-right:24px!important}
+}

@@ -758,10 +758,10 @@ Paslanmaz çelik kasa"
         </select>
       </div>
       <div class=field><label>Kart üzeri kısa şerit</label>
-        <label class=shippingRibbonAdminToggle><input type=checkbox ${p.shippingRibbonEnabled?'checked':''} onchange="catalog.products[${i}].shippingRibbonEnabled=this.checked;changed('.drawer')"> Göster</label>
-        <input class=formControl value="${attr(p.shippingRibbonText||'Kargo Bedava')}" placeholder="Örn: Kargo Bedava" oninput="catalog.products[${i}].shippingRibbonText=this.value;changed('.drawer')">
-        <div class=shippingRibbonColorRow><input type=color value="${attr(p.shippingRibbonColor||'#444444')}" oninput="catalog.products[${i}].shippingRibbonColor=this.value;changed('.drawer')"><span>Şerit rengi</span></div>
-        <div class=help>Yalnızca bu ürün kartının fotoğrafının alt kenarında görünür. Kapatırsan hiç gösterilmez.</div>
+        <label class=shippingRibbonAdminToggle><input data-preview-target="${attr(t('photo'))}" type=checkbox ${p.shippingRibbonEnabled?'checked':''} onchange="catalog.products[${i}].shippingRibbonEnabled=this.checked;changed(this.dataset.previewTarget)"> Göster</label>
+        <input class=formControl data-preview-target="${attr(t('photo'))}" value="${attr(p.shippingRibbonText||'Kargo Bedava')}" placeholder="Örn: Kargo Bedava" oninput="catalog.products[${i}].shippingRibbonText=this.value;changed(this.dataset.previewTarget)">
+        <div class=shippingRibbonColorRow><input data-preview-target="${attr(t('photo'))}" type=color value="${attr(p.shippingRibbonColor||'#444444')}" oninput="catalog.products[${i}].shippingRibbonColor=this.value;changed(this.dataset.previewTarget)"><span>Şerit rengi</span></div>
+        <div class=help>Yalnızca bu ürün kartının fotoğrafının alt kenarında görünür. Değişiklik yaptığında sağdaki müşteri önizlemesinde anında bu ürün kartı gösterilir.</div>
       </div>
     </div>
 
