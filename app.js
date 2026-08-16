@@ -1,13 +1,14 @@
 
 let settings={},catalog={},cart=[],favorites=new Set(JSON.parse(localStorage.getItem('shazFavs')||'[]'));
 let activeCategory='tum';
+let activeSubcategory='';
 let productSort='priceAsc';
 let campaignSliderTimer=0,campaignSliderIndex=0,campaignTouchStartX=null;
 let checkoutState={payment:'cod',customer:null,requestId:null};
 let orderSubmitting=false;
 let adminPreviewMode=false;
 const $=s=>document.querySelector(s);
-const money=n=>'₺'+Number(n||0).toLocaleString('tr-TR');
+const money=n=>Number(n||0).toLocaleString('tr-TR')+' TL';
 
 async function init(){
   settings=await fetch('/api/settings').then(r=>r.json());
@@ -32,6 +33,7 @@ function bindCore(){
   if($('#categoryMenuBtn')) $('#categoryMenuBtn').onclick=openCategoryHub;
   if($('#categoryHubClose')) $('#categoryHubClose').onclick=closeCategoryHub;
   if($('#siteAnnouncementClose')) $('#siteAnnouncementClose').onclick=closeSiteAnnouncement;
+  window.addEventListener('resize',()=>{syncSubcategoryStickyOffset();positionActiveCategoryTab('auto');positionActiveSubcategoryTab('auto')},{passive:true});
   if($('#siteAnnouncementButton')) $('#siteAnnouncementButton').onclick=closeSiteAnnouncement;
 }
 
@@ -48,6 +50,15 @@ function apply(){
   }
   if($('#heroTitle')) $('#heroTitle').textContent=settings.heroTitle||'Tarzına uygun saatini seç.';
   if($('#heroSubtitle')) $('#heroSubtitle').textContent=settings.heroSubtitle||'Saatini seç, setini kişiselleştir ve siparişini birkaç adımda tamamla.';
+  const spotlight=catalog.builder?.spotlight||{};
+  if($('#builderSpotlightEyebrow')) $('#builderSpotlightEyebrow').textContent=spotlight.eyebrow||'KENDİ SETİNİ OLUŞTUR';
+  if($('#builderSpotlightTitle')) $('#builderSpotlightTitle').textContent=spotlight.title||'Setini sen seç.';
+  if($('#builderSpotlightText')) $('#builderSpotlightText').textContent=spotlight.text||'Ürünlerini bir araya getir, özel set fiyatını anında gör.';
+  if($('#builderSpotlight')){
+    const img=String(spotlight.imageUrl||'').trim();
+    $('#builderSpotlight').classList.toggle('hasCustomImage',!!img);
+    $('#builderSpotlight').style.backgroundImage=img?`linear-gradient(90deg,rgba(10,14,20,.82),rgba(20,28,38,.58)),url("${img.replace(/"/g,'%22')}")`:'';
+  }
   if($('#wa')) $('#wa').href='https://wa.me/'+settings.whatsapp;
   if($('#ig')) $('#ig').href='https://ig.me/m/'+String(settings.instagram||'').replace(/^@/,'');
   if($('#cargoLink')) $('#cargoLink').href=settings.cargoTrackingUrl||'https://ebranch.araskargo.com.tr/';
@@ -180,6 +191,65 @@ function productImages(p){
   return [...new Set(list)];
 }
 function mainProductImage(p){return p?.image||productImages(p)[0]||''}
+function visibleSubcategories(category){
+  return (Array.isArray(category?.subcategories)?category.subcategories:[]).filter(s=>!s.hidden).sort((a,b)=>(a.order||0)-(b.order||0));
+}
+function categoryDefaultGroupName(category){
+  return String(category?.defaultSubcategoryName||'Ana ürünler');
+}
+function subcategoryById(category,id){return visibleSubcategories(category).find(s=>s.id===id)||null}
+function subcategoryChooserHtml(category){
+  const subs=visibleSubcategories(category);if(!subs.length)return '';
+  const hasMain=(catalog.products||[]).some(p=>!p.hidden&&p.category===category.id&&!p.subcategoryId);
+  const tabs=[];
+  if(hasMain)tabs.push({id:'',name:categoryDefaultGroupName(category)});
+  subs.forEach(s=>tabs.push(s));
+  if(!tabs.length)return '';
+  if(activeSubcategory && !tabs.some(s=>s.id===activeSubcategory))activeSubcategory=tabs[0].id||'';
+  return `<div class=subcategoryChooser><div class=subcategoryTabs>${tabs.map(s=>`<button class="subcategoryTab ${activeSubcategory===(s.id||'')?'active':''}" onclick="selectSubcategory('${escapeAttr(s.id||'')}')">${escapeHtml(s.name||'Alt kategori')}</button>`).join('')}</div></div>`;
+}
+function syncSubcategoryStickyOffset(){
+  const announce=document.getElementById('announceWrap');
+  const header=document.getElementById('stickyHeader');
+  const announceH=announce?.getBoundingClientRect().height||0;
+  const headerH=header?.getBoundingClientRect().height||0;
+  document.documentElement.style.setProperty('--subcategory-sticky-top',`${Math.round(announceH+headerH)}px`);
+}
+function positionActiveSubcategoryTab(behavior='smooth'){
+  const nav=document.querySelector('.subcategoryTabs');
+  if(!nav)return;
+  const tabs=[...nav.querySelectorAll('.subcategoryTab')];
+  const active=tabs.find(x=>x.classList.contains('active'));
+  if(!active)return;
+  const desired=active.offsetLeft-(nav.clientWidth-active.offsetWidth)/2;
+  const max=Math.max(0,nav.scrollWidth-nav.clientWidth);
+  nav.scrollTo({left:Math.max(0,Math.min(max,desired)),behavior});
+}
+function selectSubcategory(id){
+  activeSubcategory=id||'';
+  renderProducts($('#search')?.value||'');
+  requestAnimationFrame(()=>{syncSubcategoryStickyOffset();positionActiveSubcategoryTab('smooth')});
+}
+
+function positionActiveCategoryTab(behavior='smooth'){
+  const nav=$('#catalogNav');
+  if(!nav)return;
+  const tabs=[...nav.querySelectorAll('.tab')];
+  const active=tabs.find(x=>x.classList.contains('active'));
+  if(!active)return;
+  const index=tabs.indexOf(active);
+  // İlk üç kategori başlangıçta sabit görünür. Daha sağdaki kategorilerde ise
+  // seçili başlığın merkezi ekranın gerçek yatay merkezine gelir. Sonlara
+  // gelindiğinde doğal kaydırma sınırı korunur.
+  if(index<=2){nav.scrollTo({left:0,behavior});return}
+  const navRect=nav.getBoundingClientRect();
+  const viewportCenter=(window.innerWidth||document.documentElement.clientWidth)/2;
+  const targetX=viewportCenter-navRect.left;
+  const desired=active.offsetLeft+active.offsetWidth/2-targetX;
+  const max=Math.max(0,nav.scrollWidth-nav.clientWidth);
+  nav.scrollTo({left:Math.max(0,Math.min(max,desired)),behavior});
+}
+
 function renderCategories(){
   const cats=[{id:'tum',name:'Tüm Ürünler',order:-1},...catalog.categories.filter(c=>!c.hidden&&c.id!=='tum')].sort((a,b)=>(a.order??0)-(b.order??0));
   const nav=$('#catalogNav');
@@ -188,29 +258,60 @@ function renderCategories(){
   nav.querySelectorAll('.tab').forEach(btn=>{
     btn.addEventListener('click',()=>setCategory(btn.dataset.categoryId,btn.dataset.categoryName,{scroll:true}));
   });
+  requestAnimationFrame(()=>{positionActiveCategoryTab('auto');syncSubcategoryStickyOffset()});
+  setTimeout(()=>positionActiveCategoryTab('auto'),80);
 }
 
+let categoryHubParentId='';
 function openCategoryHub(){
+  categoryHubParentId='';
   renderCategoryHub();
   $('#categoryHub')?.classList.remove('hidden');
   document.body.classList.add('categoryHubOpen');
 }
 function closeCategoryHub(){
+  categoryHubParentId='';
   $('#categoryHub')?.classList.add('hidden');
   document.body.classList.remove('categoryHubOpen');
 }
+function categoryHubHead(title,subtitle){
+  const top=$('#categoryHub .categoryHubTop');if(!top)return;
+  top.innerHTML=`<button class="categoryBack" id="categoryHubClose">←</button><div><b>${escapeHtml(title)}</b><small>${escapeHtml(subtitle)}</small></div>`;
+  $('#categoryHubClose').onclick=()=>{if(categoryHubParentId){categoryHubParentId='';renderCategoryHub()}else closeCategoryHub()};
+}
 function renderCategoryHub(){
   const wrap=$('#categoryHubGrid'); if(!wrap)return;
+  if(categoryHubParentId){
+    const c=(catalog.categories||[]).find(x=>x.id===categoryHubParentId&&!x.hidden);
+    if(!c){categoryHubParentId='';return renderCategoryHub()}
+    categoryHubHead(c.name,'Alt kategoriler');
+    const subs=visibleSubcategories(c);
+    const hasMain=(catalog.products||[]).some(p=>!p.hidden&&p.category===c.id&&!p.subcategoryId);
+    const cards=[];
+    if(hasMain)cards.push({id:'',name:categoryDefaultGroupName(c),cover:c.cover||''});
+    subs.forEach(x=>cards.push(x));
+    wrap.innerHTML=cards.map(sc=>`<button class="categoryTile ${sc.cover?'hasCover':''}" ${sc.cover?`style="--cat-cover:url('${escapeAttr(sc.cover)}')"`:''} onclick="chooseSubcategoryFromHub('${escapeAttr(c.id)}','${escapeAttr(sc.id||'')}','${escapeAttr(c.name)}')"><div class="categoryTileText"><b>${escapeHtml(sc.name||'Alt kategori')}</b><span>Ürünleri gör →</span></div><div class="categoryTileMedia">${sc.cover?`<img src="${escapeAttr(sc.cover)}" alt="${escapeAttr(sc.name||'Alt kategori')}">`:`<span class="categoryPlaceholder">${escapeHtml((sc.name||'?').slice(0,1))}</span>`}</div></button>`).join('');
+    return;
+  }
+  categoryHubHead('Kategoriler','Tüm kategoriler');
   const cats=[{id:'tum',name:'Tüm Ürünler',cover:'',allProducts:true},...catalog.categories.filter(c=>!c.hidden&&c.id!=='tum').sort((a,b)=>(a.order??0)-(b.order??0))];
-  wrap.innerHTML=cats.map(c=>`<button class="categoryTile ${c.cover?'hasCover':''} ${c.allProducts?'allProductsTile':''}" ${c.cover?`style="--cat-cover:url('${escapeAttr(c.cover)}')"`:''} onclick="chooseCategoryFromHub('${escapeAttr(c.id)}','${escapeAttr(c.name)}')">
-    <div class="categoryTileText"><b>${escapeHtml(c.name)}</b><span>${c.allProducts?'Tümünü gör →':'Ürünleri gör →'}</span></div>
-    <div class="categoryTileMedia">${c.cover?`<img src="${escapeAttr(c.cover)}" alt="${escapeAttr(c.name)}">`:`<span class="categoryPlaceholder">${c.allProducts?'TÜ':escapeHtml((c.name||'?').slice(0,1))}</span>`}</div>
-  </button>`).join('');
+  wrap.innerHTML=cats.map(c=>`<button class="categoryTile ${c.cover?'hasCover':''} ${c.allProducts?'allProductsTile':''}" ${c.cover?`style="--cat-cover:url('${escapeAttr(c.cover)}')"`:''} onclick="chooseCategoryFromHub('${escapeAttr(c.id)}','${escapeAttr(c.name)}')"><div class="categoryTileText"><b>${escapeHtml(c.name)}</b><span>${c.allProducts?'Tümünü gör →':'Ürünleri gör →'}</span></div><div class="categoryTileMedia">${c.cover?`<img src="${escapeAttr(c.cover)}" alt="${escapeAttr(c.name)}">`:`<span class="categoryPlaceholder">${c.allProducts?'TÜ':escapeHtml((c.name||'?').slice(0,1))}</span>`}</div></button>`).join('');
 }
 function chooseCategoryFromHub(id,name){
-  // Hub kapanırken body overflow açıldıktan sonra scroll yap.
+  const c=(catalog.categories||[]).find(x=>x.id===id&&!x.hidden);
+  if(c&&visibleSubcategories(c).length){categoryHubParentId=id;renderCategoryHub();return}
   setCategory(id,name,{scroll:false});
   closeCategoryHub();
+  scrollCategoryHubToProducts();
+}
+function chooseSubcategoryFromHub(categoryId,subId,name){
+  setCategory(categoryId,name,{scroll:false});
+  activeSubcategory=subId||'';
+  renderProducts($('#search')?.value||'');
+  closeCategoryHub();
+  scrollCategoryHubToProducts();
+}
+function scrollCategoryHubToProducts(){
   setTimeout(()=>{
     const target=document.getElementById('products');
     if(!target)return;
@@ -221,8 +322,10 @@ function chooseCategoryFromHub(id,name){
   },60);
 }
 
+
 function setCategory(id,name,opts={}){
   activeCategory=id;
+  activeSubcategory='';
   if($('#catalogTitle')) $('#catalogTitle').textContent=name;
   renderCategories(); renderProducts($('#search')?.value||'');
   // Üst kategori sekmesinden seçim yapıldığında ürün alanına gerçekten götür.
@@ -246,22 +349,48 @@ function setCategory(id,name,opts={}){
 }
 function renderProducts(filter=''){
   const q=(filter||'').toLocaleLowerCase('tr-TR');
+  const category=activeCategory==='tum'?null:(catalog.categories||[]).find(c=>c.id===activeCategory&&!c.hidden);
+  const subs=visibleSubcategories(category);
+  if(category&&subs.length){
+    const hasMain=(catalog.products||[]).some(p=>!p.hidden&&p.category===activeCategory&&!p.subcategoryId);
+    const validIds=subs.map(s=>s.id);
+    if(activeSubcategory && !validIds.includes(activeSubcategory))activeSubcategory=hasMain?'':(validIds[0]||'');
+    if(!activeSubcategory && !hasMain)activeSubcategory=validIds[0]||'';
+  }else activeSubcategory='';
   let list=catalog.products.filter(x=>!x.hidden&&(activeCategory==='tum'||x.category===activeCategory)&&((x.name||'')+' '+(x.description||'')).toLocaleLowerCase('tr-TR').includes(q));
+  if(category&&subs.length){
+    list=list.filter(x=>activeSubcategory?x.subcategoryId===activeSubcategory:!x.subcategoryId);
+  }
   if(productSort==='priceAsc') list=[...list].sort((a,b)=>Number(a.price||0)-Number(b.price||0));
   if(productSort==='priceDesc') list=[...list].sort((a,b)=>Number(b.price||0)-Number(a.price||0));
   if(!$('#productsList')) return;
-  $('#productsList').innerHTML=list.length?list.map(p=>{
+  const chooser=category?subcategoryChooserHtml(category):'';
+  const cards=list.length?list.map(p=>{
     const name=p.name||'SHAZ Ürün';
-    const desc=p.description?`<p class="productDescription" data-preview-field="description">${escapeHtml(p.description)}</p>`:'';
+    const desc=p.description?`<p class="productDescription" data-preview-field="description" style="--product-text-wrap:${Math.max(18,Number(p.descriptionWrapCh||52))}ch">${escapeHtml(p.description)}</p>`:'';
     const badgeColor=['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange';
-    return `<div class="card productCardLink" data-product-id="${escapeAttr(p.id)}" role="button" tabindex="0" onclick="openProductDetail('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProductDetail('${p.id}')}"><div class="photo" data-preview-field="photo">${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge badge-${badgeColor}" data-preview-field="badge">${escapeHtml(p.badge)}</span>`:''}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}</div></div>`;
-  }).join(''):`<div class="panel"><b>Bu kategoride henüz ürün yok.</b></div>`;
+    const shippingRibbon=(p.shippingRibbonEnabled&&String(p.shippingRibbonText||'').trim())?`<div class="productShippingRibbon" style="--shipping-ribbon-color:${escapeAttr(p.shippingRibbonColor||'#444444')}">${escapeHtml(String(p.shippingRibbonText).trim())}</div>`:'';
+    return `<div class="card productCardLink" data-product-id="${escapeAttr(p.id)}" role="button" tabindex="0" onclick="openProductDetail('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProductDetail('${p.id}')}"><div class="photo" data-preview-field="photo">${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge badge-${badgeColor}" data-preview-field="badge"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:''}${shippingRibbon}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}</div></div>`;
+  }).join(''):`<div class="panel subcategoryEmpty"><b>Bu bölümde henüz ürün yok.</b></div>`;
+  $('#productsList').innerHTML=chooser+cards;
+  requestAnimationFrame(()=>{syncSubcategoryStickyOffset();positionActiveSubcategoryTab('auto')});
 }
 function updateFavoriteBadge(){if($('#favBadge'))$('#favBadge').textContent=favorites.size}
 function toggleFav(id,e){e?.stopPropagation();favorites.has(id)?favorites.delete(id):favorites.add(id);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));updateFavoriteBadge();renderProducts($('#search')?.value||'')}
 function removeFavorite(id){favorites.delete(id);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));updateFavoriteBadge();renderProducts($('#search')?.value||'');showFavorites()}
 function clearFavorites(){if(!favorites.size)return;favorites.clear();localStorage.setItem('shazFavs','[]');updateFavoriteBadge();renderProducts($('#search')?.value||'');showFavorites()}
-function showFavorites(){const ps=catalog.products.filter(p=>favorites.has(p.id));openDrawer(`<div class=wizardHead><h2>Favorilerim</h2><button class="pill" onclick=closeDrawer()>Kapat</button></div>${ps.length?`<div style="display:flex;justify-content:flex-end;margin:0 0 14px"><button class="pill" onclick="clearFavorites()">Favorileri Temizle</button></div>${ps.map(p=>`<div class=wizardCard><b>${escapeHtml(p.name)}</b><br>${money(p.price)}<br><br><div style="display:flex;gap:8px;flex-wrap:wrap"><button class=btn onclick="openProductDetail('${p.id}','favorites')">Ürünü İncele</button><button class="pill" onclick="removeFavorite('${p.id}')">Favoriden Kaldır</button></div></div>`).join('')}`:'Henüz favoriniz yok.'}`)}
+function showFavorites(){
+  const ps=catalog.products.filter(p=>favorites.has(p.id));
+  openDrawer(`<div class="wizardHead favoritesHead"><h2>Favorilerim <span class="favoritesTitleHeart">♥</span></h2><button class="pill favoritesClose" onclick=closeDrawer()>Kapat</button></div>
+  ${ps.length?`<div class="favoritesToolbar"><button class="pill" onclick="clearFavorites()">Favorileri Temizle</button></div><div class="favoritesList">${ps.map(p=>{const img=mainProductImage(p);return `<div class="favoriteCard"><button type="button" class="favoritePhoto" onclick="openProductDetail('${p.id}','favorites')" aria-label="${escapeAttr(p.name||'Ürün')} ürününü incele">${img?`<img src="${escapeAttr(img)}" alt="${escapeAttr(p.name||'Ürün')}">`:'⌚'}</button><div class="favoriteContent"><div class="favoriteMeta"><b>${escapeHtml(p.name)}</b><span>${money(p.price)}</span></div><div class="favoriteActions"><button class="btn" onclick="openProductDetail('${p.id}','favorites')">Ürünü İncele</button><button class="btn favoriteCartBtn" onclick="startProduct('${p.id}')">Sepete Ekle</button><button class="pill" onclick="removeFavorite('${p.id}')">Favoriden Kaldır</button></div></div></div>`}).join('')}</div>`:`<div class="favoritesEmpty"><div class="favoritesEmptyHeart">♡</div><b>Henüz favoriniz yok.</b><span>Beğendiğiniz ürünlerde kalp simgesine dokunarak buraya ekleyebilirsiniz.</span></div>`}`)
+}
+function toggleFavFromDetail(id){
+  favorites.has(id)?favorites.delete(id):favorites.add(id);
+  localStorage.setItem('shazFavs',JSON.stringify([...favorites]));
+  updateFavoriteBadge();renderProducts($('#search')?.value||'');
+  const b=document.getElementById('productDetailFavBtn');
+  if(b){b.textContent=favorites.has(id)?'♥':'♡';b.classList.toggle('active',favorites.has(id));b.setAttribute('aria-label',favorites.has(id)?'Favorilerden kaldır':'Favorilere ekle')}
+}
 function openDrawer(html){$('#overlay').classList.remove('hidden');$('#drawer').classList.remove('hidden');$('#drawer').innerHTML=html}
 function closeDrawer(){$('#overlay').classList.add('hidden');$('#drawer').classList.add('hidden')}
 function toast(msg){const t=$('#toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
@@ -384,15 +513,17 @@ function openProductDetail(id,source='catalog'){
   const features=productFeatureList(p);
   const positions=Array.isArray(p.writePositions)?p.writePositions.filter(Boolean):[];
   const infoBlocks=[];
-  if(p.description) infoBlocks.push(`<div class="productInfoPart"><h3>Açıklama</h3><p>${escapeHtml(p.description)}</p></div>`);
-  if(features.length) infoBlocks.push(`<div class="productInfoPart"><h3>${p.isSet?'Setin içindekiler':'Özellikler'}</h3><div class=detailFeatureList>${features.map(x=>`<div>✓ ${escapeHtml(x)}</div>`).join('')}</div></div>`);
+  if(p.description) infoBlocks.push(`<div class="productInfoPart productTextSized" style="--product-text-wrap:${Math.max(18,Number(p.descriptionWrapCh||70))}ch"><h3>Açıklama</h3><p>${escapeHtml(p.description)}</p></div>`);
+  if(features.length) infoBlocks.push(`<div class="productInfoPart productTextSized" style="--product-text-wrap:${Math.max(18,Number(p.featuresWrapCh||70))}ch"><h3>${p.isSet?'Setin içindekiler':'Özellikler'}</h3><div class=detailFeatureList>${features.map(x=>`<div>✓ ${escapeHtml(x)}</div>`).join('')}</div></div>`);
   if(p.writeEnabled!==false&&positions.length&&!p.isSet) infoBlocks.push(`<div class="productInfoPart"><h3>Kişiselleştirme alanları</h3><p>${positions.map(escapeHtml).join(' · ')}</p></div>`);
+  const closeAction=source==='favorites'?"showFavorites()":source==='builder'?"builderReturnFromDetail()":"closeDrawer()";
+  const closeLabel=source==='favorites'?'← Favorilere Dön':'Kapat';
   openDrawer(`<div class="productDetailShell">
-    <div class="wizardHead productDetailHead"><div class="productDetailTitle"><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div>${source==='favorites'?`<button class="pill productDetailClose" onclick="showFavorites()">← Favorilere Dön</button>`:`<button class="pill productDetailClose" onclick="closeDrawer()">Kapat</button>`}</div>
+    <div class="wizardHead productDetailHead"><div class="productDetailTitle"><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div><div class="productDetailHeadActions"><button id="productDetailFavBtn" class="productDetailFav ${favorites.has(p.id)?'active':''}" onclick="toggleFavFromDetail('${escapeAttr(p.id)}')" aria-label="${favorites.has(p.id)?'Favorilerden kaldır':'Favorilere ekle'}">${favorites.has(p.id)?'♥':'♡'}</button><button class="pill productDetailClose" onclick="${closeAction}">${closeLabel}</button></div></div>
     ${productImages(p).length?`<div class=productDetailGallery>
-      <div class="productDetailMedia" style="--detail-bg:url(&quot;${escapeAttr(mainProductImage(p))}&quot;)" onclick="openProductImageViewer()" role="button" tabindex="0" aria-label="Fotoğrafı büyüt">${p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'}">${escapeHtml(p.badge)}</span>`:''}<img id=productDetailMain src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name||'Ürün')}"></div>
+      <div class="productDetailMedia" style="--detail-bg:url(&quot;${escapeAttr(mainProductImage(p))}&quot;)" onclick="openProductImageViewer()" role="button" tabindex="0" aria-label="Fotoğrafı büyüt">${p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'}"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:''}<img id=productDetailMain src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name||'Ürün')}"></div>
       ${productImages(p).length>1?`<div class=productDetailThumbs>${productImages(p).map((u,i)=>`<button class="${i===0?'active':''}" onclick="selectProductDetailImage(this,'${escapeAttr(u)}')"><img src="${escapeAttr(u)}" alt=""></button>`).join('')}</div>`:''}
-    </div>`:`<div class=productDetailMedia>${p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'}">${escapeHtml(p.badge)}</span>`:''}<div class=productDetailPlaceholder>⌚</div></div>`}
+    </div>`:`<div class=productDetailMedia>${p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'}"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:''}<div class=productDetailPlaceholder>⌚</div></div>`}
     ${infoBlocks.length?`<div class="productDetailInfoBox">${infoBlocks.join('')}</div>`:''}
     <div class="productDetailBottomBar"><div class="productDetailBottomPrice">${money(p.price)}${p.oldPrice?` <span class=old>${money(p.oldPrice)}</span>`:''}</div><button class="btn detailAddBtn" onclick="startProduct('${escapeAttr(p.id)}')">Sepete Ekle</button></div>
   </div>`);
@@ -828,7 +959,8 @@ function cartItemSummary(x,i){
   if(!x.setCustomization && writes.length) lines.push(`<div class=muted>Yazı: ${writes.map(w=>`${escapeHtml(w.item)} — ${escapeHtml(w.position)}: “${escapeHtml(w.text)}”`).join('<br>')}</div>`);
   const photos=x.photoCustomizations||x.setCustomization?.photoCustomizations||[];
   if(photos.length)lines.push(`<div class=muted>Fotoğraf işlemesi: ${photos.map(ph=>`${escapeHtml(ph.item||'Cüzdan')} (+${money(ph.fee||walletPhotoFee())})${ph.caption?` · ${ph.captionPosition==='above'?'üstünde':'altında'} “${escapeHtml(ph.caption)}”`:''}`).join('<br>')}</div>`);
-  return `<div class="orderCartItem"><div class="cartItemMain"><div><b>${escapeHtml(x.product.name)}</b>${lines.join('')}</div><div class="cartItemRight"><strong>${money(x.product.price)}</strong><button type="button" class="cartRemoveBtn" onclick="removeCartItem(${i})">Kaldır</button></div></div></div>`;
+  const cartImg=mainProductImage(x.product)||(x.builderItems||[]).find(y=>y?.image)?.image||'';
+  return `<div class="orderCartItem"><div class="cartItemMain">${cartImg?`<div class="cartItemThumb"><img src="${escapeAttr(cartImg)}" alt="${escapeAttr(x.product.name||'Ürün')}"></div>`:''}<div class="cartItemCopy"><b>${escapeHtml(x.product.name)}</b>${lines.join('')}</div><div class="cartItemRight"><strong>${money(x.product.price)}</strong><button type="button" class="cartRemoveBtn" onclick="removeCartItem(${i})">Kaldır</button></div></div></div>`;
 }
 
 function normalizeTRMobile(raw){
@@ -999,13 +1131,15 @@ function getBuilderCategories(){
   return ordered.map(id=>catalog.categories.find(c=>c.id===id)).filter(Boolean).filter(c=>!c.hidden);
 }
 function getBuilderProducts(categoryId){
-  return catalog.products.filter(p=>
+  const eligible=catalog.products.filter(p=>
     !p.hidden &&
     !p.isSet &&
     p.category!=='setler' &&
     p.category===categoryId &&
     p.setEligible!==false
   );
+  const configured=catalog.builder?.allowedProducts?.[categoryId];
+  return Array.isArray(configured)?eligible.filter(p=>configured.includes(p.id)):eligible;
 }
 function builderBackFromCategory(){
   if(!customBuilder||customBuilder.index<=0){closeDrawer();return;}
@@ -1042,28 +1176,27 @@ function renderBuilderCategoryStep(){
   const progress=((customBuilder.index+1)/total)*100;
   const chosenCount=Object.values(customBuilder.selections).filter(Boolean).length;
 
-  openDrawer(`<div class=wizardHead><button class="pill backPill" onclick=builderBackFromCategory()>← Geri</button><div><div class=wizardProgress>Kendi Setini Oluştur</div><h2>${escapeHtml(cat.name)}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+  openDrawer(`<div class=builderScreen><div class=builderStickyStack><div class=builderTopSticky><div class=wizardHead><button class="pill backPill" onclick=builderBackFromCategory()>← Geri</button><div><div class=wizardProgress>Kendi Setini Oluştur</div><h2>${escapeHtml(cat.name)}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+    <div class="builderAllShownBar"><div class="builderAllShown builderAllShownSticky">Tüm ${escapeHtml(cat.name)} gösteriliyor</div></div>
     <div class=builderStepMeta><span class=builderStepName>${customBuilder.index+1}. ADIM / ${total}</span><span class=builderChosen>${chosenCount} ürün seçildi</span></div>
-    <div class=builderProgressBar><div class=builderProgressFill style="width:${progress}%"></div></div>
-    <div class=wizardCard>
+    <div class=builderProgressBar><div class=builderProgressFill style="width:${progress}%"></div></div></div></div>
+    <div class=wizardCard builderCategoryCard>
       <h3>${escapeHtml(cat.name)} kategorisinden hangisini setinize eklemek istersiniz?</h3>
       <p class=muted>Bu kategoride yalnızca normal tekli ürünler gösterilir. Hazır setler burada görünmez.</p>
       ${products.length?`<div class=builderProductGrid>${products.map(p=>`
         <div class="builderProductCard ${selectedId===p.id?'selected':''}" onclick="builderChoose('${escapeAttr(cat.id)}','${escapeAttr(p.id)}')">
-          <div class=builderProductPhoto>${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name)}">`:'⌚'}<span class=builderSelectMark>${selectedId===p.id?'✓':''}</span></div>
-          <div class=builderProductBody><b>${escapeHtml(p.name)}</b><small>${money(p.price)} tekli satış fiyatı</small></div>
+          <div class=builderProductPhoto>${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name)}">`:'⌚'}<span class=builderSelectMark></span></div>
+          <div class=builderProductBody><b>${escapeHtml(p.name)}</b><small>${money(p.price)} tekli satış fiyatı</small><button type="button" class="builderInspectBtn" onclick="event.stopPropagation();builderInspectProduct('${escapeAttr(p.id)}')">Ürünü İncele</button></div>
         </div>`).join('')}</div>`:`<div class=builderEmptyCategory>Bu kategoride set oluşturmaya açık tekli ürün bulunmuyor.</div>`}
-      <button class=builderSkip onclick="builderSkipCurrent()">Bu kategoriden ürün eklemek istemiyorum</button>
     </div>
-    <div class=builderNav>
-      ${customBuilder.index>0?`<button class="btn secondary" onclick=builderPrev()>← Geri</button>`:''}
-      <button class=btn onclick=builderNext()>${customBuilder.index===total-1?'Seçimlerimi Gör':'Devam Et →'}</button>
-    </div>`);
+    ${builderPriceDockHtml()}</div>`);
 }
 function builderChoose(categoryId,productId){
-  customBuilder.selections[categoryId]=productId;
+  customBuilder.selections[categoryId]=customBuilder.selections[categoryId]===productId?null:productId;
   renderBuilderCategoryStep();
 }
+function builderInspectProduct(productId){openProductDetail(productId,'builder')}
+function builderReturnFromDetail(){renderBuilderCategoryStep()}
 function builderSkipCurrent(){
   customBuilder.selections[customBuilder.categories[customBuilder.index].id]=null;
   builderNext();
@@ -1071,6 +1204,7 @@ function builderSkipCurrent(){
 function builderPrev(){if(customBuilder.index>0){customBuilder.index--;renderBuilderCategoryStep()}}
 function builderNext(){
   if(customBuilder.index<customBuilder.categories.length-1){customBuilder.index++;renderBuilderCategoryStep();return}
+  if(getBuilderSelectedProducts().length<2){alert('Kendi setinizi oluşturmak için en az 2 ürün seçmelisiniz.');return}
   renderBuilderSelectionSummary();
 }
 function getBuilderSelectedProducts(){
@@ -1086,11 +1220,24 @@ function builderTotalFor(count){
   const rule=getBuilderRule(count);
   return rule?Number(rule.pricePerItem||0)*count:0;
 }
+function builderCurrentPricing(){
+  const selected=getBuilderSelectedProducts();
+  const count=selected.length;
+  const retail=selected.reduce((sum,p)=>sum+Number(p?.price||0),0);
+  const rule=getBuilderRule(count);
+  const total=rule?Number(rule.pricePerItem||0)*count:0;
+  return {selected,count,retail,rule,total,savings:rule?Math.max(0,retail-total):0};
+}
+function builderPriceDockHtml(){
+  const snap=builderCurrentPricing();
+  const priceHtml=snap.count?`<div class="builderDockPrice"><div><span>Şu anki setiniz</span><strong>${snap.rule?money(snap.total):'Fiyat tanımlı değil'}</strong></div>${snap.rule?`<small>Ayrı ayrı ${money(snap.retail)}${snap.savings>0?` · <b>${money(snap.savings)} avantaj</b>`:''}<br>Ürün sayısı arttıkça set birim fiyatı değişebilir.</small>`:`<small>${snap.count} ürün seçildi. Bu adet için fiyat kuralı tanımlandığında toplam burada görünür.</small>`}</div>`:`<div class="builderDockPrice"><div><span>Şu anki setiniz</span><strong>0 TL</strong></div><small>Bir ürün seçtiğiniz anda set toplamı burada güncellenir.</small></div>`;
+  const hasBack=customBuilder.index>0;
+  return `<div class="builderStickyDock">${priceHtml}<div class="builderDockActions ${hasBack?'':'noBack'}">${hasBack?`<button class="builderDockBack" onclick="builderPrev()">← Geri</button>`:''}<button class="builderDockSkip" onclick="builderSkipCurrent()">Bu kategoriden ürün eklemek istemiyorum</button><button class="builderDockNext" onclick="builderNext()">${customBuilder.index===customBuilder.categories.length-1?'Seçimlerimi Gör':'Devam Et →'}</button></div></div>`;
+}
 function renderBuilderSelectionSummary(){
   const selected=getBuilderSelectedProducts();
-  const min=Number(catalog.builder?.minItems||1);
-  const max=Number(catalog.builder?.maxItems||99);
-  const valid=selected.length>=min&&selected.length<=max;
+  const min=2;
+  const valid=selected.length>=min;
   const total=builderTotalFor(selected.length);
   const rule=getBuilderRule(selected.length);
 
@@ -1101,15 +1248,16 @@ function renderBuilderSelectionSummary(){
         <div class=builderSummaryItem>
           <div class=builderSummaryThumb>${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}">`:'⌚'}</div>
           <div class=builderSummaryInfo><b>${escapeHtml(p.name)}</b><small>${escapeHtml((catalog.categories.find(c=>c.id===p.category)||{}).name||p.category)}</small></div>
+          ${rule?`<div class="builderSummaryPrices"><del>${money(Number(p.price||0))}</del><strong>${money(Number(rule.pricePerItem||0))} set fiyatı</strong></div>`:''}
         </div>`).join(''):'<div class=builderEmptyCategory>Henüz ürün seçmediniz.</div>'}</div>
     </div>
     <div class=wizardCard>
       <div class=summaryLine><span>Seçilen ürün sayısı</span><span>${selected.length}</span></div>
-      <div class=summaryLine><span>Minimum gerekli</span><span>${min}</span></div>
-      ${rule?`<div class=summaryLine><span>Özel set ürün başı fiyatı</span><span>${money(rule.pricePerItem)}</span></div>`:''}
+      ${selected.length?`<div class="summaryLine builderRetailTotal"><span>Ayrı ayrı alınsaydı</span><span><del>${money(selected.reduce((sum,p)=>sum+Number(p.price||0),0))}</del></span></div>`:''}
+      ${rule&&selected.reduce((sum,p)=>sum+Number(p.price||0),0)>total?`<div class="summaryLine builderSavingsLine"><span>Set avantajı</span><span>-${money(selected.reduce((sum,p)=>sum+Number(p.price||0),0)-total)}</span></div>`:''}
       <div class="summaryLine summaryTotal"><span>Set toplamı</span><span>${rule?money(total):'Fiyat tanımlı değil'}</span></div>
     </div>
-    ${!valid?`<div class=notice>Bu seti tamamlamak için en az ${min}, en fazla ${max} ürün seçmelisiniz.</div>`:''}
+    ${!valid?`<div class=notice>Kendi setinizi oluşturmak için en az ${min} ürün seçmelisiniz.</div>`:''}
     ${valid&&!rule?`<div class=notice>${selected.length} ürün için yönetim panelinde özel set fiyatı tanımlanmamış.</div>`:''}
     <div class=builderNav><button class="btn secondary" onclick=builderEditSelections()>← Seçimleri Düzenle</button><button class=btn ${valid&&rule?'':'disabled'} onclick="${valid&&rule?'builderAskWrite()':"alert('Önce geçerli ürün sayısı ve fiyat kuralı gerekli.')"}">Devam Et</button></div>`);
 }
