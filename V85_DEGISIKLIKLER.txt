@@ -1,0 +1,7 @@
+V85
+- Müşteri üst kategori sekmelerinde seçili orta kategori ekranın gerçek yatay merkezine hizalanır; uçlarda doğal sınır korunur.
+- Ürün kartı kapak görselleri boş/gri yan alan üretmeden, yüklenen görselin geometrik merkezinden object-fit:cover ile gösterilir.
+- Yönetim Kategoriler & Ürünler kategori şeridi daha kompakt hale getirildi; seçilen kategori yatay şeritte merkeze gelir, tıklama sayfayı başka yere sıçratmaz.
+- Kategori içi ürün arama alanı aynı üst kontrol satırında sağda kompaktlaştırıldı.
+- Açık ürün düzenleyici masaüstünde 3 kolonlu kompakt düzene alındı; ad, alt kategori, fotoğraf, açıklama/özellik ve fiyat-stok-etiket alanları daha az yer kaplar.
+- Ürün açıklaması ve özellik kutuları yine yeniden boyutlandırılabilir; kayıt/önizleme mantığı değiştirilmedi.

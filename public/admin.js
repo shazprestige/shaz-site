@@ -391,15 +391,15 @@ function renderCatalog(){
   }).join('');
   const active=cats.find(c=>c.id===adminOpenCategory);
   let html=catalogGlobalTools()+`<div class="panel catalogControlPanel">
-    <div class=campaignAdminHead><div><h2>Kategoriler & Ürünler</h2><div class=help>Kategori seç; yalnızca o kategorinin ürünleri açılır. Sıralamayı değiştirmek için kategori başlıklarını sürükleyip bırak.</div></div><button class=btn style="max-width:200px" onclick=addCategory()>＋ Kategori Ekle</button></div>
+    <div class=campaignAdminHead><div><h2>Kategoriler & Ürünler</h2><div class=help>Kategori seç; yalnızca o kategorinin ürünleri açılır. Sıralamayı değiştirmek için kategori başlıklarını sürükleyip bırak.</div></div><div class=catalogHeadActions><div class=adminProductSearch><input class=formControl value="${attr(adminProductSearch)}" placeholder="Bu kategoride ürün ara..." oninput="filterAdminProducts(this.value)"></div><button class=btn style="max-width:160px" onclick=addCategory()>＋ Kategori Ekle</button></div></div>
     <div class=catalogToolbar>
       <div class=categoryQuickNav>${nav}</div>
-      <div class=adminProductSearch><input class=formControl value="${attr(adminProductSearch)}" placeholder="Bu kategoride ürün ara..." oninput="filterAdminProducts(this.value)"></div>
     </div>
   </div>`;
   html+=active?categoryBlock(active):'<div class=panel>Henüz kategori yok.</div>';
   shell('Kategoriler & Ürünler','Bir ürünün içine girdiğinde fotoğraf, açıklama, fiyat, stok, etiket, kişiselleştirme ve hazır set içeriği dahil tüm ayarlarını aynı yerde yönetirsin.',html);
-  requestAnimationFrame(initProductTextLayoutEditors);
+  requestAnimationFrame(()=>{initProductTextLayoutEditors();positionActiveAdminCategoryTab('auto')});
+  setTimeout(()=>positionActiveAdminCategoryTab('auto'),60);
 }
 function categoryDragStart(e,id){
   adminDraggedCategory=id;
@@ -431,12 +431,20 @@ function categoryDragEnd(e){
   adminDraggedCategory=null;
   document.querySelectorAll('.categoryJumpBtn.dragging,.categoryJumpBtn.dragOver').forEach(x=>x.classList.remove('dragging','dragOver'));
 }
+function positionActiveAdminCategoryTab(behavior='smooth'){
+  const nav=document.querySelector('.categoryQuickNav');
+  const active=nav?.querySelector('.categoryJumpBtn.active');
+  if(!nav||!active)return;
+  const desired=active.offsetLeft+active.offsetWidth/2-nav.clientWidth/2;
+  const max=Math.max(0,nav.scrollWidth-nav.clientWidth);
+  nav.scrollTo({left:Math.max(0,Math.min(max,desired)),behavior});
+}
 function jumpAdminCategory(id){
   adminOpenCategory=id;
   adminProductSearch='';
   adminOpenProduct=null;
   renderCatalog();
-  requestAnimationFrame(()=>document.querySelector('.catalogControlPanel')?.scrollIntoView({behavior:'smooth',block:'start'}));
+  requestAnimationFrame(()=>positionActiveAdminCategoryTab('smooth'));
 }
 function toggleAdminCategory(id){
   adminOpenCategory=id;
@@ -689,7 +697,7 @@ function productCard(p,embedded=false){
   const t=field=>`${root} [data-preview-field="${field}"]`;
   const setContentShortcut=p.isSet?renderInlineSetEditor(p,i):'';
   return `<article class=adminProductCard id="admin-product-${attr(p.id)}">
-    <div class=field><label><b>Ürün adı</b></label>
+    <div class="field productNameField"><label><b>Ürün adı</b></label>
       <input class=formControl data-preview-target="${attr(t('name'))}" value="${attr(p.name)}"
         oninput="catalog.products[${i}].name=this.value;changed(this.dataset.previewTarget)">
     </div>
@@ -700,13 +708,13 @@ function productCard(p,embedded=false){
       ${productGalleryAdmin(p,i)}
     </div>
 
-    <div class=field><label><b>Ürün açıklaması</b></label>
+    <div class="field productTextField"><label><b>Ürün açıklaması</b></label>
       <textarea class="formControl productLayoutTextarea" data-product-layout-id="${attr(p.id)}" data-product-layout-kind="description" data-preview-target="${attr(t('description'))}" rows=3 style="width:${Math.max(240,Number(p.descriptionEditorWidth||420))}px" placeholder="Müşterinin ürün kartında okuyacağı kısa açıklama"
         oninput="catalog.products[${i}].description=this.value;changed(this.dataset.previewTarget)">${esc(p.description||'')}</textarea>
       <div class=help>Kutuyu sağ alt köşesinden genişletip daraltabilirsin; seçtiğin genişlik müşterideki satır kırılımına da yansır.</div>
     </div>
 
-    <div class=field><label><b>Özellikler / tikli maddeler</b></label>
+    <div class="field productTextField"><label><b>Özellikler / tikli maddeler</b></label>
       <textarea class="formControl productLayoutTextarea" data-product-layout-id="${attr(p.id)}" data-product-layout-kind="features" data-product-features-id="${attr(p.id)}" data-preview-target="${attr(root)}" rows=3 style="width:${Math.max(240,Number(p.featuresEditorWidth||420))}px" placeholder="Her satıra bir özellik yaz
 UV400 koruma
 Paslanmaz çelik kasa"

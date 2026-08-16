@@ -229,14 +229,13 @@ function positionActiveCategoryTab(behavior='smooth'){
   const active=tabs.find(x=>x.classList.contains('active'));
   if(!active)return;
   const index=tabs.indexOf(active);
-  // İlk üç kategori başlangıçta sabit görünür. Daha sağdaki bir kategori
-  // seçildiğinde seçili kategori logonun altına/menünün merkezine doğru gelir
-  // ve sağdaki diğer kategoriler görünür hale gelir.
+  // İlk üç kategori başlangıçta sabit görünür. Daha sağdaki kategorilerde ise
+  // seçili başlığın merkezi ekranın gerçek yatay merkezine gelir. Sonlara
+  // gelindiğinde doğal kaydırma sınırı korunur.
   if(index<=2){nav.scrollTo({left:0,behavior});return}
   const navRect=nav.getBoundingClientRect();
-  const logo=document.getElementById('brandLogo');
-  const logoRect=logo?.getBoundingClientRect();
-  const targetX=logoRect ? (logoRect.left+logoRect.width/2-navRect.left) : nav.clientWidth/2;
+  const viewportCenter=(window.innerWidth||document.documentElement.clientWidth)/2;
+  const targetX=viewportCenter-navRect.left;
   const desired=active.offsetLeft+active.offsetWidth/2-targetX;
   const max=Math.max(0,nav.scrollWidth-nav.clientWidth);
   nav.scrollTo({left:Math.max(0,Math.min(max,desired)),behavior});

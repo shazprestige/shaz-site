@@ -2435,3 +2435,103 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
   .subcategoryChooser{margin-bottom:7px!important;padding-top:6px!important;padding-bottom:4px!important}
   .subcategoryTabs{padding-right:24px!important}
 }
+
+/* ===== V85 — tam merkezleme + kapak crop merkezleme + kompakt yönetim ===== */
+/* Ürün kartı: yüklenen görseli boş şerit üretmeden, kendi geometrik merkezinden kırp. */
+#productsList .productCardLink .photo{
+  background:#fff!important;
+  overflow:hidden!important;
+}
+#productsList .productCardLink .photo>img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:50% 50%!important;
+  transform:none!important;
+  background:transparent!important;
+}
+
+/* Yönetim kategori şeridi daha küçük, yatay ve seçili kategori ortalanabilir. */
+.catalogToolbar{
+  grid-template-columns:minmax(0,1fr) 190px!important;
+  gap:8px!important;
+  align-items:center!important;
+}
+.categoryQuickNav{
+  display:flex!important;
+  gap:5px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  min-width:0!important;
+  padding:2px 3px 4px!important;
+  scrollbar-width:none!important;
+  scroll-behavior:smooth;
+}
+.categoryQuickNav::-webkit-scrollbar{display:none}
+.categoryJumpBtn{
+  flex:0 0 auto!important;
+  border-radius:7px!important;
+  padding:6px 8px!important;
+  font-size:10px!important;
+  gap:3px!important;
+}
+.categoryJumpBtn .categoryDragGrip{font-size:13px!important}
+.categoryJumpBtn span:not(.categoryDragGrip){min-width:15px!important;height:15px!important;padding:0 4px!important;margin-left:3px!important;font-size:8px!important}
+.adminProductSearch{min-width:0!important}
+.adminProductSearch .formControl{height:30px!important;font-size:10px!important;padding:6px 8px!important}
+
+/* Açık ürün düzenleyicisi: masaüstünde alanı üç kolonda verimli kullan. */
+@media(min-width:901px){
+  .compactEditor .adminProductCard{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:8px 10px!important;
+    align-items:start!important;
+  }
+  .compactEditor .adminProductCard>.field,
+  .compactEditor .adminProductCard>.twoMini,
+  .compactEditor .adminProductCard>.productToggles,
+  .compactEditor .adminProductCard>.productAdminActions,
+  .compactEditor .adminProductCard>.simpleAdminDetails,
+  .compactEditor .adminProductCard>.walletAdminBox,
+  .compactEditor .adminProductCard>.setItemToggle{
+    margin:0!important;
+  }
+  .compactEditor .productNameField{grid-column:span 1!important}
+  .compactEditor .photoAdminCompact{grid-column:span 2!important}
+  .compactEditor .productTextField{grid-column:span 2!important;max-width:100%!important}
+  .compactEditor .productTextField .productLayoutTextarea{
+    width:min(100%,360px)!important;
+    min-width:180px!important;
+    min-height:56px!important;
+    max-width:100%!important;
+    resize:both!important;
+  }
+  .compactEditor .adminProductCard>.twoMini{
+    grid-column:1/-1!important;
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:7px!important;
+  }
+  .compactEditor .adminProductCard>.productToggles,
+  .compactEditor .adminProductCard>.productAdminActions,
+  .compactEditor .adminProductCard>.simpleAdminDetails,
+  .compactEditor .adminProductCard>.walletAdminBox,
+  .compactEditor .adminProductCard>.setItemToggle{
+    grid-column:1/-1!important;
+  }
+  .compactEditor .field{min-width:0!important}
+  .compactEditor .formControl{min-height:32px!important;padding:6px 8px!important;font-size:10px!important}
+  .compactEditor .help{font-size:8px!important;line-height:1.25!important;margin-top:3px!important}
+  .compactEditor label{font-size:10px!important}
+  .compactEditor .photoUploadRow{display:flex!important;gap:5px!important;align-items:center!important}
+  .compactEditor .photoUploadRow input[type=file]{max-width:220px!important;font-size:9px!important}
+  .compactEditor .adminGallery{grid-template-columns:repeat(auto-fill,minmax(64px,82px))!important}
+}
+@media(max-width:900px){
+  .catalogToolbar{grid-template-columns:1fr!important}
+  .adminProductSearch{width:100%!important}
+}
+.catalogHeadActions{display:flex;align-items:center;gap:7px;justify-content:flex-end;min-width:0}.catalogHeadActions .adminProductSearch{width:180px;flex:0 1 180px}.catalogHeadActions .btn{padding:7px 10px!important;font-size:10px!important;min-height:30px!important}
+.catalogToolbar{grid-template-columns:minmax(0,1fr)!important}
+@media(max-width:900px){.catalogHeadActions{width:100%;justify-content:stretch;flex-wrap:wrap}.catalogHeadActions .adminProductSearch{width:auto;flex:1 1 160px}.catalogHeadActions .btn{flex:0 0 auto}}
