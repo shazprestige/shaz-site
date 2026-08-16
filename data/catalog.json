@@ -829,16 +829,22 @@
       "kategori-1786798033844"
     ],
     "categoryOrder": [
-      "gozlukler",
+      "saatler",
       "cuzdanlar",
       "kategori-1786740581832",
+      "kategori-1786798033844",
       "kategori-1786740619033",
-      "saatler",
-      "kategori-1786798033844"
+      "gozlukler"
     ],
     "allowSkip": true,
     "excludeSetProducts": true,
-    "allowedProducts": {}
+    "allowedProducts": {},
+    "spotlight": {
+      "eyebrow": "KENDİ SETİNİ OLUŞTUR",
+      "title": "Setini sen seç.",
+      "text": "Ürünlerini bir araya getir, özel set fiyatını anında gör.",
+      "imageUrl": ""
+    }
   },
   "personalizationPricing": {
     "first": 75,
