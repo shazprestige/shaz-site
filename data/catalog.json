@@ -269,7 +269,8 @@
       "badgeColor": "orange",
       "image": "/uploads/1786741094421-2xuskg.jpg",
       "images": [
-        "/uploads/1786741094421-2xuskg.jpg"
+        "/uploads/1786741094421-2xuskg.jpg",
+        "/uploads/1786842868172-slhz4a.jpeg"
       ],
       "hidden": false,
       "setEligible": true,
@@ -277,7 +278,11 @@
       "setItems": [],
       "writePositions": [],
       "walletPhotoEnabled": true,
-      "writeEnabled": true
+      "writeEnabled": true,
+      "descriptionEditorWidth": 360,
+      "descriptionWrapCh": 45,
+      "featuresEditorWidth": 360,
+      "featuresWrapCh": 45
     },
     {
       "id": "urun-1786749082450",
@@ -374,10 +379,10 @@
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "descriptionEditorWidth": 420,
-      "descriptionWrapCh": 53,
-      "featuresEditorWidth": 420,
-      "featuresWrapCh": 53,
+      "descriptionEditorWidth": 360,
+      "descriptionWrapCh": 45,
+      "featuresEditorWidth": 360,
+      "featuresWrapCh": 45,
       "shippingRibbonEnabled": true,
       "shippingRibbonText": "Kargo Bedava"
     },
@@ -824,11 +829,11 @@
       "kategori-1786798033844"
     ],
     "categoryOrder": [
-      "cuzdanlar",
       "gozlukler",
+      "cuzdanlar",
       "kategori-1786740581832",
-      "saatler",
       "kategori-1786740619033",
+      "saatler",
       "kategori-1786798033844"
     ],
     "allowSkip": true,
