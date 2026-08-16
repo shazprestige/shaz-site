@@ -369,7 +369,9 @@
       "descriptionEditorWidth": 420,
       "descriptionWrapCh": 53,
       "featuresEditorWidth": 420,
-      "featuresWrapCh": 53
+      "featuresWrapCh": 53,
+      "shippingRibbonEnabled": false,
+      "shippingRibbonText": "Kargo Bedava"
     },
     {
       "id": "urun-1786817515929-6-sr2c",
@@ -822,7 +824,8 @@
       "kategori-1786798033844"
     ],
     "allowSkip": true,
-    "excludeSetProducts": true
+    "excludeSetProducts": true,
+    "allowedProducts": {}
   },
   "personalizationPricing": {
     "first": 75,
