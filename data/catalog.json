@@ -341,7 +341,7 @@
     {
       "id": "urun-1786817515929-2-ux88",
       "name": "SHAZ - NOVA",
-      "description": "Erkek kol saati",
+      "description": "",
       "features": [
         "Paslanma ve solmaya dayanıklı",
         "Çelik kordon",
@@ -371,12 +371,13 @@
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "descriptionEditorWidth": 360,
-      "descriptionWrapCh": 45,
-      "featuresEditorWidth": 360,
-      "featuresWrapCh": 45,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
-      "shippingRibbonText": "Kargo Bedava"
+      "shippingRibbonText": "Kargo Bedava",
+      "subtitle": "Erkek kol saati"
     },
     {
       "id": "urun-1786817515929-6-sr2c",
@@ -810,6 +811,10 @@
       {
         "count": 6,
         "pricePerItem": 425
+      },
+      {
+        "count": 7,
+        "pricePerItem": 0
       }
     ],
     "allowedCategories": [
