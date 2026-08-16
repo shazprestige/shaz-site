@@ -4062,7 +4062,7 @@
         "urun-1786825421633-0-33da": 2,
         "urun-1786825421633-2-a94y": 2
       },
-      "repeatable": false,
+      "repeatable": true,
       "maxApplications": 2,
       "allowDoubleCount": false
     },
