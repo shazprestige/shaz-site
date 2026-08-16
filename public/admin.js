@@ -40,6 +40,8 @@ async function load(){
   catalog.checkoutUpsells=Array.isArray(catalog.checkoutUpsells)?catalog.checkoutUpsells:[];
   (catalog.products||[]).forEach(p=>{
     if(adminIsWalletProduct(p)&&p.walletPhotoEnabled===undefined)p.walletPhotoEnabled=true;
+    if(p.soldOutEnabled===undefined)p.soldOutEnabled=false;
+    if(p.soldOutUntil===undefined)p.soldOutUntil='';
     if(p.writeEnabled===undefined){
       const n=adminNormalizedTR(adminCategoryName(p)+' '+(p?.name||''));
       p.writeEnabled=!(n.includes('tesb')||n.includes('tesp'));
@@ -978,6 +980,8 @@ Paslanmaz çelik kasa"
       <div class=help>Her satır ayrı özellik olur. Kutuyu genişletip daralttığında müşterideki satır kırılımı da buna göre korunur.</div>
     </div>
 
+    <div class="panel soldOutAdmin"><label class=setItemToggle><span><b>Sepete Ekle yerine “Tükendi” göster</b><small class=muted>İşaretliyken müşteri bu ürünü sepete ekleyemez.</small></span><input type=checkbox ${p.soldOutEnabled?'checked':''} onchange="catalog.products[${i}].soldOutEnabled=this.checked;if(!this.checked)catalog.products[${i}].soldOutUntil='';renderCatalog();changed('${attr(root)}')"></label>${p.soldOutEnabled?`<div class=field><label><b>Yeniden stok zamanı</b></label><input class=formControl type=datetime-local value="${attr(p.soldOutUntil||'')}" onchange="catalog.products[${i}].soldOutUntil=this.value;changed('${attr(root)}')"><div class=help>Ürün detayındaki kırmızı TÜKENDİ butonunun altında otomatik geri sayım olarak görünür.</div></div>`:''}</div>
+
     ${!p.isSet?`<label class=setItemToggle><span><b>Yazı işlemini müşteriye kapat</b><small class=muted>Örn. tesbihte yazı yapılmıyorsa bunu işaretle. Müşteriye yazı seçeneği hiç gösterilmez.</small></span><input type=checkbox ${p.writeEnabled===false?'checked':''} onchange="catalog.products[${i}].writeEnabled=!this.checked;changed('.drawer');previewProductStage('${attr(p.id)}','write')"></label>
     <div class=field><label><b>Yazı / kişiselleştirme konumları</b></label>
       <input class=formControl data-preview-target=".drawer" value="${attr((p.writePositions||[]).join(', '))}" placeholder="Örn: Arka kapak, Kordon"
@@ -1515,33 +1519,43 @@ function formatTR(iso){
 }
 load();
 
-/* V115 - Sepet sonu ekstra ürün önerileri */
+/* V116 - Sepet sonu ekstra ürün önerileri: kararlı yönetim, görseller, tümünü seç, ürün bazlı fiyat */
 function upsellCategoryOptions(selected=''){
   return `<option value="">Kategori seç</option>`+(catalog.categories||[]).filter(c=>c.id!=='tum'&&!c.hidden).map(c=>`<option value="${attr(c.id)}" ${String(selected)===String(c.id)?'selected':''}>${esc(c.name||c.id)}</option>`).join('');
 }
+function upsellProductsFor(rule,mode){const catId=mode==='trigger'?rule.triggerCategoryId:rule.offerCategoryId;return (catalog.products||[]).filter(p=>!p.hidden&&catId&&p.category===catId)}
+function upsellRerender(i){renderUpsells(i)}
 function upsellProductChecks(rule,index,mode){
-  const catId=mode==='trigger'?rule.triggerCategoryId:rule.offerCategoryId;
-  const key=mode==='trigger'?'triggerProductIds':'offerProductIds';
-  const selected=new Set(rule[key]||[]);
-  const ps=(catalog.products||[]).filter(p=>!p.hidden&&(!catId||p.category===catId));
+  const catId=mode==='trigger'?rule.triggerCategoryId:rule.offerCategoryId,key=mode==='trigger'?'triggerProductIds':'offerProductIds',selected=new Set(rule[key]||[]),ps=upsellProductsFor(rule,mode);
   if(!catId)return '<div class=help>Önce kategori seç.</div>';
-  return `<div class=campaignScopeProductGrid>${ps.map(p=>`<label class=campaignProductChoice><input type=checkbox ${selected.has(p.id)?'checked':''} onchange="toggleUpsellProduct(${index},'${mode}','${attr(p.id)}',this.checked)"><span><b>${esc(p.name||'Ürün')}</b><small>${Number(p.price||0).toLocaleString('tr-TR')} TL</small></span></label>`).join('')||'<div class=help>Bu kategoride ürün yok.</div>'}</div>`;
+  const allOn=ps.length&&ps.every(p=>selected.has(p.id));
+  return `<div class="upsellBulkRow"><button type="button" class=smallBtn onclick="setAllUpsellProducts(${index},'${mode}',${allOn?'false':'true'})">${allOn?'Tümünün seçimini kaldır':'Tümünü seç'}</button><small>${selected.size} ürün seçili</small></div><div class="campaignScopeProductGrid upsellProductGrid">${ps.map(p=>{const img=p.image||(p.images||[])[0]||'';return `<label class="campaignProductChoice upsellProductChoice"><input type=checkbox ${selected.has(p.id)?'checked':''} onchange="toggleUpsellProduct(${index},'${mode}','${attr(p.id)}',this.checked)">${img?`<img src="${attr(img)}" alt="">`:''}<span><b>${esc(p.name||'Ürün')}</b><small>${Number(p.price||0).toLocaleString('tr-TR')} TL</small></span></label>`}).join('')||'<div class=help>Bu kategoride ürün yok.</div>'}</div>`;
 }
-function renderUpsells(){
+function upsellPriceEditor(rule,index){
+  const ps=upsellProductsFor(rule,'offer'),selected=new Set(rule.offerProductIds||[]),shown=(rule.offerMode||'all')==='all'?ps:ps.filter(p=>selected.has(p.id));rule.productPrices=rule.productPrices||{};
+  if(!rule.offerCategoryId)return '';
+  return `<div class="campaignScopeBox upsellPricesBox"><div class=upsellBulkPrice><b>Ürün bazlı özel fiyatlar</b><div><input id="upsellBulkPrice-${index}" class=formControl type=number min=0 placeholder="Hepsine aynı fiyat"><button type=button class=smallBtn onclick="applyUpsellBulkPrice(${index})">Hepsine uygula</button></div></div><div class=upsellPriceGrid>${shown.map(p=>{const img=p.image||(p.images||[])[0]||'',v=rule.productPrices[p.id]??rule.specialPrice??0;return `<div class=upsellPriceRow>${img?`<img src="${attr(img)}" alt="">`:''}<span><b>${esc(p.name||'Ürün')}</b><small>Normal: ${Number(p.price||0).toLocaleString('tr-TR')} TL</small></span><label>Özel fiyat<input class=formControl type=number min=0 value="${attr(v)}" oninput="setUpsellProductPrice(${index},'${attr(p.id)}',this.value)"></label></div>`}).join('')||'<div class=help>Fiyat girmek için önerilecek ürün seç.</div>'}</div></div>`;
+}
+function renderUpsells(openIndex=null){
   catalog.checkoutUpsells=Array.isArray(catalog.checkoutUpsells)?catalog.checkoutUpsells:[];
-  const cards=catalog.checkoutUpsells.map((r,i)=>`<details class="panel simpleAdminDetails"><summary><span>${esc(r.name||('Öneri '+(i+1)))}</span><small>${r.enabled!==false?'Aktif':'Kapalı'}</small></summary><div class=simpleDetailsBody>
+  const cards=catalog.checkoutUpsells.map((r,i)=>`<details class="panel simpleAdminDetails" ${openIndex===i?'open':''}><summary><span>${esc(r.name||('Öneri '+(i+1)))}</span><small>${r.enabled!==false?'Aktif':'Kapalı'}</small></summary><div class=simpleDetailsBody>
     <div class=campaignRuleHead><label class=setItemToggle><span><b>Öneri aktif</b><small class=muted>Kapalıyken müşteriye gösterilmez.</small></span><input type=checkbox ${r.enabled!==false?'checked':''} onchange="catalog.checkoutUpsells[${i}].enabled=this.checked;changed('.drawer')"></label><button class=dangerBtn onclick="removeUpsell(${i})">Öneriyi Sil</button></div>
     <div class=grid2>${input('Yönetim adı',`catalog.checkoutUpsells[${i}].name`,r.name||'Yeni ekstra ürün önerisi','Sadece yönetimde ayırt etmek için.','.drawer')}
-    <div class=field><label><b>Müşteri hangi kategoriden ürün aldığında?</b></label><select class=formControl onchange="catalog.checkoutUpsells[${i}].triggerCategoryId=this.value;catalog.checkoutUpsells[${i}].triggerProductIds=[];renderUpsells()">${upsellCategoryOptions(r.triggerCategoryId||'')}</select><div class=help>Bu kategori tetikleyicidir.</div></div>
-    <div class=field><label><b>Bu kategoride hangi ürünler tetiklesin?</b></label><select class=formControl onchange="catalog.checkoutUpsells[${i}].triggerMode=this.value;renderUpsells()"><option value=all ${(r.triggerMode||'all')==='all'?'selected':''}>Kategorideki tüm ürünler</option><option value=selected ${r.triggerMode==='selected'?'selected':''}>Sadece işaretlediğim ürünler</option></select><div class=help>İstersen tüm kategori, istersen yalnız belirli modeller.</div></div>
-    <div class=field><label><b>Müşteriye hangi kategoriyi öner?</b></label><select class=formControl onchange="catalog.checkoutUpsells[${i}].offerCategoryId=this.value;catalog.checkoutUpsells[${i}].offerProductIds=[];renderUpsells()">${upsellCategoryOptions(r.offerCategoryId||'')}</select><div class=help>Örn. Gözlük.</div></div>
-    <div class=field><label><b>Önerilecek ürünler</b></label><select class=formControl onchange="catalog.checkoutUpsells[${i}].offerMode=this.value;renderUpsells()"><option value=all ${(r.offerMode||'all')==='all'?'selected':''}>Kategorideki tüm ürünler</option><option value=selected ${r.offerMode==='selected'?'selected':''}>Sadece işaretlediğim ürünler</option></select><div class=help>Fotoğraflarıyla müşterinin önüne çıkacak modeller.</div></div>
-    ${input('Müşteriye özel fiyat (TL)',`catalog.checkoutUpsells[${i}].specialPrice`,Number(r.specialPrice||0),'Bu fiyat öneri ekranından eklenen her ürün için geçerli olur. Normal ürün fiyatı üstü çizili gösterilir.','.drawer','number')}</div>
+    <div class=field><label><b>Müşteri hangi kategoriden ürün aldığında?</b></label><select class=formControl onchange="catalog.checkoutUpsells[${i}].triggerCategoryId=this.value;catalog.checkoutUpsells[${i}].triggerProductIds=[];upsellRerender(${i})">${upsellCategoryOptions(r.triggerCategoryId||'')}</select><div class=help>Bu kategori tetikleyicidir.</div></div>
+    <div class=field><label><b>Bu kategoride hangi ürünler tetiklesin?</b></label><select class=formControl onchange="catalog.checkoutUpsells[${i}].triggerMode=this.value;upsellRerender(${i})"><option value=all ${(r.triggerMode||'all')==='all'?'selected':''}>Kategorideki tüm ürünler</option><option value=selected ${r.triggerMode==='selected'?'selected':''}>Sadece işaretlediğim ürünler</option></select></div>
+    <div class=field><label><b>Müşteriye hangi kategoriyi öner?</b></label><select class=formControl onchange="catalog.checkoutUpsells[${i}].offerCategoryId=this.value;catalog.checkoutUpsells[${i}].offerProductIds=[];catalog.checkoutUpsells[${i}].productPrices={};upsellRerender(${i})">${upsellCategoryOptions(r.offerCategoryId||'')}</select><div class=help>Kategori seçilince o kategorideki ürünler aşağıda açılır.</div></div>
+    <div class=field><label><b>Önerilecek ürünler</b></label><select class=formControl onchange="catalog.checkoutUpsells[${i}].offerMode=this.value;upsellRerender(${i})"><option value=all ${(r.offerMode||'all')==='all'?'selected':''}>Kategorideki tüm ürünler</option><option value=selected ${r.offerMode==='selected'?'selected':''}>Sadece işaretlediğim ürünler</option></select></div>
+    ${input('Varsayılan özel fiyat (TL)',`catalog.checkoutUpsells[${i}].specialPrice`,Number(r.specialPrice||0),'Ürün bazında ayrı fiyat girmezsen bu fiyat kullanılır.','.drawer','number')}</div>
     ${(r.triggerMode==='selected')?`<div class=campaignScopeBox><b>Tetikleyecek ürünleri seç</b>${upsellProductChecks(r,i,'trigger')}</div>`:''}
-    ${(r.offerMode==='selected')?`<div class=campaignScopeBox><b>Önerilecek ürünleri seç</b>${upsellProductChecks(r,i,'offer')}</div>`:''}
+    <div class=campaignScopeBox><b>Önerilecek ürünleri seç</b>${upsellProductChecks(r,i,'offer')}</div>
+    ${upsellPriceEditor(r,i)}
   </div></details>`).join('');
-  shell('Ekstra Ürün Önerileri','Müşteri sepette “Teslimat ve Ödemeye Geç” dediği anda, seçtiğin koşula göre son bir ürün önerisi gösterilir.',`<div class=panel><div class=campaignCreateRow><div><h2>Sepet Sonu Önerileri</h2><div class=help>Hangi kategori/model satın alındığında hangi kategori/modellerin gösterileceğini ve müşteriye özel fiyatı tamamen sen belirlersin.</div></div><button class=btn onclick=addUpsell()>+ Öneri Ekle</button></div></div>${cards||'<div class=panel><b>Henüz ekstra ürün önerisi yok.</b></div>'}`);
+  shell('Ekstra Ürün Önerileri','Müşteri “Teslimat ve Ödemeye Geç” dediğinde seçtiğin koşula göre son ürün önerisi gösterilir.',`<div class=panel><div class=campaignCreateRow><div><h2>Sepet Sonu Önerileri</h2><div class=help>Kategori, ürün ve ürün bazlı özel fiyatları ayrı ayrı yönetebilirsin.</div></div><button class=btn onclick=addUpsell()>+ Öneri Ekle</button></div></div>${cards||'<div class=panel><b>Henüz ekstra ürün önerisi yok.</b></div>'}`);
 }
-function addUpsell(){catalog.checkoutUpsells=catalog.checkoutUpsells||[];catalog.checkoutUpsells.push({id:'upsell-'+Date.now(),name:'Yeni ekstra ürün önerisi',enabled:true,triggerCategoryId:'',triggerMode:'all',triggerProductIds:[],offerCategoryId:'',offerMode:'all',offerProductIds:[],specialPrice:0});renderUpsells()}
+function addUpsell(){catalog.checkoutUpsells=catalog.checkoutUpsells||[];catalog.checkoutUpsells.push({id:'upsell-'+Date.now(),name:'Yeni ekstra ürün önerisi',enabled:true,triggerCategoryId:'',triggerMode:'all',triggerProductIds:[],offerCategoryId:'',offerMode:'all',offerProductIds:[],specialPrice:0,productPrices:{}});renderUpsells(catalog.checkoutUpsells.length-1)}
 function removeUpsell(i){if(confirm('Bu öneri silinsin mi?')){catalog.checkoutUpsells.splice(i,1);renderUpsells()}}
-function toggleUpsellProduct(i,mode,id,on){const r=catalog.checkoutUpsells[i],key=mode==='trigger'?'triggerProductIds':'offerProductIds';r[key]=r[key]||[];if(on&&!r[key].includes(id))r[key].push(id);if(!on)r[key]=r[key].filter(x=>x!==id);changed('.drawer')}
+function toggleUpsellProduct(i,mode,id,on){const r=catalog.checkoutUpsells[i],key=mode==='trigger'?'triggerProductIds':'offerProductIds';r[key]=r[key]||[];if(on&&!r[key].includes(id))r[key].push(id);if(!on)r[key]=r[key].filter(x=>x!==id);changed('.drawer');if(mode==='offer')renderUpsells(i)}
+function setAllUpsellProducts(i,mode,on){const r=catalog.checkoutUpsells[i],key=mode==='trigger'?'triggerProductIds':'offerProductIds';r[key]=on?upsellProductsFor(r,mode).map(p=>p.id):[];renderUpsells(i)}
+function setUpsellProductPrice(i,id,value){const r=catalog.checkoutUpsells[i];r.productPrices=r.productPrices||{};r.productPrices[id]=Math.max(0,Number(value||0));changed('.drawer')}
+function applyUpsellBulkPrice(i){const r=catalog.checkoutUpsells[i],el=document.getElementById('upsellBulkPrice-'+i),v=Math.max(0,Number(el?.value||0));r.specialPrice=v;r.productPrices=r.productPrices||{};const selected=new Set(r.offerProductIds||[]);upsellProductsFor(r,'offer').filter(p=>(r.offerMode||'all')==='all'||selected.has(p.id)).forEach(p=>r.productPrices[p.id]=v);renderUpsells(i)}
+

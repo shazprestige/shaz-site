@@ -682,6 +682,8 @@ function productFeatureList(p){
   // böylece aynı içerik adları ikinci kez listelenmez.
   return [...new Set(manual)];
 }
+function soldOutRemaining(p){const raw=String(p?.soldOutUntil||'').trim();if(!p?.soldOutEnabled||!raw)return '';const t=Date.parse(raw);if(!Number.isFinite(t))return raw;const d=t-Date.now();if(d<=0)return 'Yakında yeniden stokta';const days=Math.floor(d/86400000),hrs=Math.floor((d%86400000)/3600000),mins=Math.floor((d%3600000)/60000);return `${days?days+' gün ':''}${hrs?hrs+' saat ':''}${!days&&mins?mins+' dk ':''}sonra yeniden stokta`;}
+function soldOutButtonHtml(p){return p?.soldOutEnabled?`<button class="btn detailAddBtn soldOutBtn" disabled><span>TÜKENDİ</span>${p.soldOutUntil?`<small data-soldout-id="${escapeAttr(p.id)}">${escapeHtml(soldOutRemaining(p))}</small>`:''}</button>`:`<button class="btn detailAddBtn" onclick="startProduct('${escapeAttr(p.id)}')">Sepete Ekle</button>`;}
 function openProductDetail(id,source='catalog'){
   const p=catalog.products.find(x=>x.id===id); if(!p)return;
   activeProductDetailId=id;activeProductDetailSource=source;
@@ -706,7 +708,7 @@ function openProductDetail(id,source='catalog'){
       ${productImages(p).length>1?`<div class=productDetailThumbs>${productImages(p).map((u,i)=>`<button class="${i===0?'active':''}" onclick="selectProductDetailImage(this,'${escapeAttr(u)}')"><img src="${escapeAttr(u)}" alt=""></button>`).join('')}</div>`:''}
     </div>`:`<div class=productDetailMedia>${p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'}"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:''}<div class=productDetailPlaceholder>⌚</div></div>`}
     ${infoBlocks.length?`<div class="productDetailInfoBox">${infoBlocks.join('')}</div>`:''}
-    <div class="productDetailBottomBar"><div class="productDetailBottomPrice">${money(p.price)}${p.oldPrice?` <span class=old>${money(p.oldPrice)}</span>`:''}</div><button class="btn detailAddBtn" onclick="startProduct('${escapeAttr(p.id)}')">Sepete Ekle</button></div>
+    <div class="productDetailBottomBar"><div class="productDetailBottomPrice">${money(p.price)}${p.oldPrice?` <span class=old>${money(p.oldPrice)}</span>`:''}</div>${soldOutButtonHtml(p)}</div>
   </div>`);
 }
 
@@ -757,6 +759,7 @@ function selectProductDetailImage(btn,url){
 
 function startProduct(id){
   const p=catalog.products.find(x=>x.id===id); if(!p)return;
+  if(p.soldOutEnabled)return toast('Bu ürün şu anda tükendi.');
   if(p.isSet&&Array.isArray(p.setItems)&&p.setItems.length) return startSetWizard(p);
   startSingleWizard(p);
 }
@@ -809,7 +812,7 @@ function singleWriteStep(id){
 function finishSingleWrite(id){
   const p=catalog.products.find(x=>x.id===id), text=$('#singleText').value.trim(), pos=document.querySelector('input[name=singlePos]:checked')?.value;
   if(!text)return alert('Lütfen yazdırmak istediğiniz yazıyı girin.');
-  const fee=catalog.personalizationPricing?.first||75;
+  const fee=nextSingleWriteFee();
   cart.push({product:{...p,price:p.price+fee},basePrice:p.price,qty:1,personalized:true,writes:[{item:p.name,position:pos,text,fee}]});
   updateCart();closeDrawer();toast('✓ Ürün sepete eklendi');
 }
@@ -1365,10 +1368,18 @@ function focusDrawerField(el){
     if(r.top<topGuard||r.bottom>vh-bottomGuard)el.scrollIntoView({block:'center',behavior:'smooth'});
   }));
 }
+function syncDrawerVisualViewport(){
+  const drawer=$('#drawer'),vv=window.visualViewport;if(!drawer)return;
+  const h=Math.round(vv?.height||window.innerHeight),top=Math.round(vv?.offsetTop||0);
+  drawer.style.setProperty('--shaz-vvh',h+'px');drawer.style.setProperty('--shaz-vvtop',top+'px');
+  const active=drawer.querySelector('input:focus,textarea:focus,select:focus');if(active)setTimeout(()=>focusDrawerField(active),40);
+}
+let drawerViewportBound=false;
 function bindDrawerInputFocus(){
-  const drawer=$('#drawer');if(!drawer)return;
+  const drawer=$('#drawer');if(!drawer)return;syncDrawerVisualViewport();
+  if(!drawerViewportBound&&window.visualViewport){window.visualViewport.addEventListener('resize',syncDrawerVisualViewport,{passive:true});window.visualViewport.addEventListener('scroll',syncDrawerVisualViewport,{passive:true});drawerViewportBound=true}
   drawer.querySelectorAll('input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select').forEach(el=>{
-    el.addEventListener('focus',()=>focusDrawerField(el),{passive:true});
+    el.addEventListener('focus',()=>{syncDrawerVisualViewport();setTimeout(()=>focusDrawerField(el),120);setTimeout(()=>focusDrawerField(el),320)},{passive:true});
   });
 }
 function addressStep(){
@@ -1386,7 +1397,7 @@ function addressStep(){
         <div class="field fieldWide">${addrInputInner('Ad Soyad *','fullName',c.fullName,'text','Adınızı ve soyadınızı yazın')}</div>
         <div class="addressPair fieldWide">
           <div class="field"><label><b>Telefon *</b><small class="fieldHelp">05xx xxx xx xx veya 5xx xxx xx xx</small></label><input class=formControl id=addr-phone type=tel inputmode=numeric autocomplete=tel value="${escapeAttr(c.phone||'')}" placeholder="05xx xxx xx xx"></div>
-          <div class="field"><label><b>2. Telefon Numarası</b><small class="fieldHelp">İsteğe bağlı yedek numara</small></label><input class=formControl id=addr-extraPhone type=tel inputmode=numeric autocomplete=tel value="${escapeAttr(c.extraPhone||'')}" placeholder="05xx xxx xx xx"></div>
+          <div class="field"><label><b>2. Telefon Numarası *</b><small class="fieldHelp">Size ulaşamamamız halinde kullanabileceğimiz ikinci numara zorunludur.</small></label><input class=formControl id=addr-extraPhone type=tel inputmode=numeric autocomplete=tel value="${escapeAttr(c.extraPhone||'')}" placeholder="05xx xxx xx xx"></div>
         </div>
         <label class="branchChoice fieldWide"><input id="addr-branchToggle" type="checkbox" ${branch?'checked':''} onchange="toggleBranchDelivery()"><span><b>Kargom Aras Kargo şubesine gelsin</b><small>Adrese değil, seçtiğiniz Aras Kargo şubesinden teslim alırsınız.</small></span></label>
         <div class="addressPair fieldWide">
@@ -1433,17 +1444,18 @@ function saveAddressAndContinue(){
   if(!province)return alert('İl bilgisi geçerli değil. Lütfen Türkiye’deki 81 ilden birini doğru yazın.');
   const primaryPhone=normalizeTRMobile(g('phone'));
   const extraRaw=g('extraPhone');
-  const extraPhone=extraRaw?normalizeTRMobile(extraRaw):{ok:true,value:''};
+  if(!extraRaw)return alert('Lütfen size ulaşamamamız halinde kullanabileceğimiz 2. telefon numarasını da yazın.');
+  const extraPhone=normalizeTRMobile(extraRaw);
   if(!primaryPhone.ok)return alert(phoneValidationMessage('Telefon numarası'));
   if(!extraPhone.ok)return alert(phoneValidationMessage('2. telefon numarası'));
   if(extraPhone.value && primaryPhone.value===extraPhone.value)return alert('İki telefon numarası aynı olamaz. Lütfen yedek olarak farklı bir telefon numarası girin.');
-  const neighborhood=branch?'Aras Kargo Şube Teslim':addressPart(g('neighborhood'),'neighborhood');
-  const avenue=branch?g('branchName'):addressPart(g('avenue'),'avenue');
-  const street=branch?'':addressPart(g('street'),'street');
+  const neighborhood=addressPart(g('neighborhood'),'neighborhood');
+  const avenue=addressPart(g('avenue'),'avenue');
+  const street=addressPart(g('street'),'street');
   const customer={
     fullName,phone:primaryPhone.value,extraPhone:extraPhone.value,province,district:g('district'),
     deliveryMode:branch?'branch':'address',branchName:branch?g('branchName'):'',
-    neighborhood,avenue,street,fullAddress:branch?'':g('fullAddress'),
+    neighborhood,avenue,street,fullAddress:g('fullAddress'),
     buildingNo:'',floor:'',doorNo:'',placeType:'home',businessName:'',note:g('note')
   };
   if(!customer.phone||!customer.province||!customer.district)return alert('Lütfen * işaretli zorunlu alanları doldurun.');
@@ -1453,7 +1465,7 @@ function saveAddressAndContinue(){
   showAddressConfirmation(customer);
 }
 function customerAddressText(c){
-  if(c.deliveryMode==='branch')return `${c.province} / ${c.district} — ${c.branchName}`;
+  if(c.deliveryMode==='branch')return [`${c.province} / ${c.district} — ${c.branchName}`,[c.neighborhood,c.avenue,c.street,c.fullAddress].filter(Boolean).join(' · ')].filter(Boolean).join('\n');
   return [c.neighborhood,c.avenue,c.street,c.fullAddress].filter(Boolean).join(' ') + ` — ${c.district} / ${c.province}`;
 }
 function showAddressConfirmation(c){
@@ -1844,32 +1856,29 @@ function builderAddToCart(){
 
 init();
 
-/* V115 - Teslimata geçmeden önce yönetilebilir ekstra ürün önerisi */
+/* V117 - öneri akışı: çoklu ekleme + kişiselleştirme + net fiyat bilgisi */
 let pendingUpsellRule=null;
-function cartHasUpsellTrigger(rule){
-  const ids=new Set(rule.triggerProductIds||[]);
-  return cart.some(x=>x?.product && x.product.category===rule.triggerCategoryId && ((rule.triggerMode||'all')==='all'||ids.has(x.product.id)));
-}
-function eligibleUpsellProducts(rule){
-  const ids=new Set(rule.offerProductIds||[]);
-  return (catalog.products||[]).filter(p=>!p.hidden&&Number(p.stock||0)!==0&&p.category===rule.offerCategoryId&&((rule.offerMode||'all')==='all'||ids.has(p.id)));
-}
-function findCheckoutUpsell(){
-  return (catalog.checkoutUpsells||[]).find(r=>r&&r.enabled!==false&&r.triggerCategoryId&&r.offerCategoryId&&Number(r.specialPrice||0)>=0&&cartHasUpsellTrigger(r)&&eligibleUpsellProducts(r).length);
-}
-function proceedToAddressWithUpsell(){
-  const r=findCheckoutUpsell();
-  if(!r)return addressStep();
-  pendingUpsellRule=r;showCheckoutUpsell(r);
-}
+function cartHasUpsellTrigger(rule){const ids=new Set(rule.triggerProductIds||[]);return cart.some(x=>x?.product&&x.product.category===rule.triggerCategoryId&&((rule.triggerMode||'all')==='all'||ids.has(x.product.id)))}
+function upsellSpecialPrice(rule,p){const v=rule?.productPrices?.[p?.id];return v!==undefined&&v!==null&&v!==''?Math.max(0,Number(v||0)):Math.max(0,Number(rule?.specialPrice||0))}
+function eligibleUpsellProducts(rule){const ids=new Set(rule.offerProductIds||[]);return (catalog.products||[]).filter(p=>!p.hidden&&!p.soldOutEnabled&&p.category===rule.offerCategoryId&&((rule.offerMode||'all')==='all'||ids.has(p.id)))}
+function findCheckoutUpsell(){return (catalog.checkoutUpsells||[]).find(r=>r&&r.enabled!==false&&r.triggerCategoryId&&r.offerCategoryId&&Number(r.specialPrice||0)>=0&&cartHasUpsellTrigger(r)&&eligibleUpsellProducts(r).length)}
+function proceedToAddressWithUpsell(){const r=findCheckoutUpsell();if(!r)return addressStep();pendingUpsellRule=r;showCheckoutUpsell(r)}
 function showCheckoutUpsell(r){
-  const ps=eligibleUpsellProducts(r),cat=(catalog.categories||[]).find(c=>c.id===r.offerCategoryId),special=Number(r.specialPrice||0);
-  openDrawer(`<div class="checkoutShell checkoutUpsellShell"><div class="checkoutStickyTop"><div class="checkoutTop"><div><span class="checkoutEyebrow">SİZE ÖZEL FIRSAT</span><h2>Setinize ekstra ${escapeHtml((cat?.name||'ürün').toLocaleLowerCase('tr-TR'))} eklemek ister misiniz?</h2><p>Yalnızca bu aşamada seçtiğiniz ürünleri özel fiyatla sepetinize ekleyebilirsiniz.</p></div></div><div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="checkout()">← Sepete dön</button></div></div><div class="checkoutScrollBody"><div class="checkoutUpsellGrid">${ps.map(p=>{const img=mainProductImage(p);return `<article class="checkoutUpsellCard">${img?`<img src="${escapeAttr(img)}" alt="${escapeAttr(p.name||'Ürün')}">`:''}<div class="checkoutUpsellInfo"><b>${escapeHtml(p.name||'Ürün')}</b><div class="checkoutUpsellPrices"><span class="checkoutUpsellOld">${money(p.price)}</span><strong>${money(special)}</strong></div><button class="btn" onclick="addCheckoutUpsell('${escapeAttr(p.id)}')">Sepete Ekle</button></div></article>`}).join('')}</div></div><div class="checkoutStickyBottom checkoutUpsellBottom"><button class="pill checkoutUpsellNo" onclick="skipCheckoutUpsell()">Hayır, istemiyorum</button></div></div>`);
+ const ps=eligibleUpsellProducts(r),cat=(catalog.categories||[]).find(c=>c.id===r.offerCategoryId),catName=String(cat?.name||'ürün').trim().replace(/ler$|lar$/iu,'').toLocaleLowerCase('tr-TR');
+ openDrawer(`<div class="checkoutShell checkoutUpsellShell"><div class="checkoutStickyTop"><div class="checkoutTop upsellHero"><div><span class="checkoutEyebrow">SİZE ÖZEL FIRSAT</span><h2>Setinize ekstra ${escapeHtml(catName)} eklemek ister misiniz?</h2><p>İstediğiniz kadar ürün ekleyebilirsiniz. Her eklemeden sonra güncel toplamınızı göreceksiniz.</p></div></div><div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="checkout()">← Sepete dön</button></div></div><div class="checkoutScrollBody"><div class="checkoutUpsellGrid">${ps.map(p=>{const img=mainProductImage(p);return `<article class="checkoutUpsellCard" onclick="openUpsellProduct('${escapeAttr(p.id)}')">${img?`<img src="${escapeAttr(img)}" alt="${escapeAttr(p.name||'Ürün')}">`:''}<div class="checkoutUpsellInfo"><b>${escapeHtml(p.name||'Ürün')}</b><div class="checkoutUpsellPrices"><span class="checkoutUpsellOld">${money(p.price)}</span><strong>${money(upsellSpecialPrice(r,p))}</strong></div><button class="btn" onclick="event.stopPropagation();addCheckoutUpsell('${escapeAttr(p.id)}')">Sepete Ekle</button></div></article>`}).join('')}</div></div><div class="checkoutStickyBottom checkoutUpsellBottom"><button class="pill checkoutUpsellNo" onclick="skipCheckoutUpsell()">Hayır, istemiyorum</button></div></div>`)
 }
+function openUpsellProduct(id){const r=pendingUpsellRule,p=(catalog.products||[]).find(x=>x.id===id);if(!r||!p)return;const special=upsellSpecialPrice(r,p),original=p.price;p.price=special;openProductDetail(id,'upsell');p.price=original}
+function upsellCartTotal(){normalizeCartPersonalizationFees();return calculateCartCampaigns().total}
 function addCheckoutUpsell(productId){
-  const r=pendingUpsellRule,p=(catalog.products||[]).find(x=>x.id===productId);if(!r||!p)return;
-  const special=Math.max(0,Number(r.specialPrice||0));
-  cart.push({product:{...p,price:special},basePrice:special,qty:1,personalized:false,upsell:{ruleId:r.id,normalPrice:Number(p.price||0),specialPrice:special}});
-  updateCart();pendingUpsellRule=null;toast('✓ Özel fiyatlı ürün sepete eklendi');addressStep();
+ const r=pendingUpsellRule,p=(catalog.products||[]).find(x=>x.id===productId);if(!r||!p)return;const special=upsellSpecialPrice(r,p),before=upsellCartTotal();
+ const offered={...p,price:special};
+ if(writeAvailable(p)&&!p.isSet){return showUpsellPersonalization(offered,r,before)}
+ finalizeUpsellAdd(offered,r,before,null)
 }
+function showUpsellPersonalization(p,r,before){const fee=nextSingleWriteFee();openDrawer(`<div class="wizardHead"><button class="pill backPill" onclick="showCheckoutUpsell(pendingUpsellRule)">← Geri</button><div><div class="wizardProgress">Özel fırsat</div><h2>${escapeHtml(p.name)}</h2></div></div><div class="wizardCard"><h3>${escapeHtml(p.name)} ürününüze yazı yazdırmak ister misiniz?</h3><p class="muted">Sepetinizdeki kişiselleştirme sırasına göre bu ürün için yazı ücreti <b>+${money(fee)}</b>.</p><div class="choiceStack"><button class="choiceBtn" onclick="finalizeUpsellAdd(catalog.products.find(x=>x.id==='${escapeAttr(p.id)}'),pendingUpsellRule,${before},null,true)">Hayır, yazısız ekle</button><button class="choiceBtn primary" onclick="showUpsellWriteForm('${escapeAttr(p.id)}',${before})">Evet, yazı yazdır</button></div></div>`)}
+function showUpsellWriteForm(id,before){const base=(catalog.products||[]).find(x=>x.id===id),r=pendingUpsellRule;if(!base||!r)return;const p={...base,price:upsellSpecialPrice(r,base)},fee=nextSingleWriteFee(),positions=defaultPositionsForProduct(base);openDrawer(`<div class="wizardHead"><button class="pill backPill" onclick="showUpsellPersonalization({...catalog.products.find(x=>x.id==='${escapeAttr(id)}'),price:${p.price}},pendingUpsellRule,${before})">← Geri</button><div><h2>${escapeHtml(p.name)}</h2></div></div><div class="writeItem"><div class="positionChoices">${positions.map((x,i)=>positionOptionHtml('upsellPos',x,i,p.preferredWritePosition)).join('')}</div><input class="writeInput" id="upsellText" placeholder="Yazdırmak istediğiniz yazıyı girin"></div><div class="wizardBottomAction"><button class="btn" onclick="finishUpsellWrite('${escapeAttr(id)}',${before})">Sepete Ekle · +${money(fee)}</button></div>`)}
+function finishUpsellWrite(id,before){const base=(catalog.products||[]).find(x=>x.id===id),r=pendingUpsellRule,text=$('#upsellText')?.value.trim(),pos=document.querySelector('input[name=upsellPos]:checked')?.value;if(!text)return alert('Lütfen yazdırmak istediğiniz yazıyı girin.');const fee=nextSingleWriteFee(),special=upsellSpecialPrice(r,base);finalizeUpsellAdd({...base,price:special+fee},r,before,{item:base.name,position:pos,text,fee},false,special)}
+function finalizeUpsellAdd(p,r,before,write=null,restoreSpecial=false,baseSpecial=null){if(restoreSpecial){const base=(catalog.products||[]).find(x=>x.id===p.id);p={...base,price:upsellSpecialPrice(r,base)}}const special=baseSpecial??Number(p.price||0);cart.push({product:p,basePrice:special,qty:1,personalized:!!write,writes:write?[write]:[],upsell:{ruleId:r.id,normalPrice:Number((catalog.products||[]).find(x=>x.id===p.id)?.price||0),specialPrice:special}});updateCart();showUpsellAdded(p,before)}
+function showUpsellAdded(p,before){const after=upsellCartTotal();openDrawer(`<div class="checkoutShell upsellAddedShell"><div class="wizardCard upsellAddedCard"><span class="checkoutEyebrow">ÜRÜNÜNÜZ SEPETE EKLENDİ</span><h2>${escapeHtml(p.name)}</h2><div class="upsellTotalChange"><span>Önceki toplam <b>${money(before)}</b></span><span>Güncel toplam <strong>${money(after)}</strong></span></div><div class="choiceStack"><button class="choiceBtn primary" onclick="showCheckoutUpsell(pendingUpsellRule)">Bir adet daha almak istiyorum</button><button class="choiceBtn" onclick="skipCheckoutUpsell()">Teslimat bilgilerine geç</button></div></div></div>`)}
 function skipCheckoutUpsell(){pendingUpsellRule=null;addressStep()}
+
