@@ -324,19 +324,21 @@
     },
     {
       "id": "urun-1786817515929-2-ux88",
-      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "name": "SHAZ - NOVA",
       "description": "",
       "features": [
-        "Takvim göstergeli, çelik kordonlu quartz kol saati",
-        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
-        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
-        "Metal püsküllü, cam plastik karışımlı tesbih",
-        "Ayarlanabilir metal tokalı SHAZ kemer",
-        "Metal detaylı ayarlanabilir erkek bileklik",
-        "Özel bölmeli, premium set kutusu"
+        "Paslanma ve solmaya dayanıklı",
+        "Çelik kordon",
+        "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
+        "Safir çizilmelere dayanıklı cam",
+        "takvim",
+        "Ayarlanabilir kordon",
+        "Kasa çapı 32-36 mm",
+        "Kordon uzunluk 19 cm",
+        "Kordon genişlik 2 cm"
       ],
       "category": "saatler",
-      "price": 1000,
+      "price": 600,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -349,8 +351,11 @@
       "setEligible": true,
       "isSet": false,
       "setItems": [],
-      "writePositions": [],
-      "preferredWritePosition": "",
+      "writePositions": [
+        "Kordon",
+        "Arka kapak"
+      ],
+      "preferredWritePosition": "Kordon",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
       "descriptionEditorWidth": 320,
@@ -359,7 +364,7 @@
       "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
       "shippingRibbonText": "Kargo Bedava",
-      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "subtitle": "Erkek kol saati",
       "shippingRibbonColor": "#444444"
     },
     {
