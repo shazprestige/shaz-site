@@ -2535,3 +2535,56 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
 .catalogHeadActions{display:flex;align-items:center;gap:7px;justify-content:flex-end;min-width:0}.catalogHeadActions .adminProductSearch{width:180px;flex:0 1 180px}.catalogHeadActions .btn{padding:7px 10px!important;font-size:10px!important;min-height:30px!important}
 .catalogToolbar{grid-template-columns:minmax(0,1fr)!important}
 @media(max-width:900px){.catalogHeadActions{width:100%;justify-content:stretch;flex-wrap:wrap}.catalogHeadActions .adminProductSearch{width:auto;flex:1 1 160px}.catalogHeadActions .btn{flex:0 0 auto}}
+
+/* ===== V86 — yönetim kategori hareketi, silme ve daha yoğun ürün düzeni ===== */
+/* Yönetim kategori şeridinde tıklama sırasında animasyon hissi verme; JS mevcut konumu koruyup doğrudan hizalar. */
+.categoryQuickNav{scroll-behavior:auto!important}
+
+/* Kendi Setini Oluştur sırası: sadece tutamaç sürüklenebilir, satırın kendisi tıklanabilir/normal kalır. */
+.builderOrderRow{cursor:default!important}
+.builderDragHandle[draggable=true]{cursor:grab!important;touch-action:none}
+.builderDragHandle[draggable=true]:active{cursor:grabbing!important}
+
+/* Açık ürün düzenleyicisi: kullanılmayan sağ alanları fiyat/stok/etiket ayarlarıyla doldur. */
+@media(min-width:901px){
+  .compactEditor .adminProductCard{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    grid-auto-flow:dense!important;
+    gap:7px 9px!important;
+  }
+  .compactEditor .productNameField{grid-column:1!important;grid-row:1!important}
+  .compactEditor .productSubcategoryField{grid-column:2!important;grid-row:1!important}
+  .compactEditor .photoAdminCompact{grid-column:1 / 3!important;grid-row:2!important}
+  .compactEditor .productTextField{grid-column:1 / 3!important;max-width:100%!important}
+  .compactEditor .productTextField .productLayoutTextarea{
+    width:min(100%,320px)!important;
+    min-width:160px!important;
+    min-height:52px!important;
+    max-width:100%!important;
+    resize:both!important;
+  }
+  .compactEditor .adminProductCard>.twoMini{
+    grid-column:3 / 5!important;
+    grid-row:1 / span 4!important;
+    align-self:start!important;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:6px 7px!important;
+    padding:7px!important;
+    border:1px solid #e6e9ed!important;
+    border-radius:8px!important;
+    background:#fafbfc!important;
+  }
+  .compactEditor .adminProductCard>.twoMini .field{margin:0!important}
+  .compactEditor .adminProductCard>.twoMini .help{display:none!important}
+  .compactEditor .adminProductCard>.twoMini .shippingRibbonColorRow{margin-top:3px!important}
+  .compactEditor .adminProductCard>.twoMini .shippingRibbonAdminToggle{margin-bottom:3px!important}
+  .compactEditor .adminProductCard>.setItemToggle,
+  .compactEditor .adminProductCard>.walletAdminBox,
+  .compactEditor .adminProductCard>.productToggles,
+  .compactEditor .adminProductCard>.productAdminActions,
+  .compactEditor .adminProductCard>.simpleAdminDetails{
+    grid-column:1 / -1!important;
+  }
+  .compactEditor .photoAdminCompact .adminGallery{grid-template-columns:repeat(auto-fill,minmax(58px,72px))!important}
+}

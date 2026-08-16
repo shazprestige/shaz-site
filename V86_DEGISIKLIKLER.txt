@@ -1,0 +1,6 @@
+V86
+- Yönetim paneli kategori şeridinde tıklamada sıfırdan kayıyormuş hissi kaldırıldı; mevcut yatay konum korunup seçili kategori doğrudan hizalanır.
+- Boş kategoriler için güvenli kategori silme butonu eklendi. İçinde ürün varsa veri kaybını önlemek için silme engellenir.
+- Açık ürün düzenleme ekranında fiyat, eski fiyat, stok, etiket, etiket rengi ve kısa şerit ayarları sağdaki boş alanı kullanacak şekilde kompaktlaştırıldı.
+- Kendi Setini Oluştur kategori sıralamasında yalnızca ⠿ tutamacı sürüklenebilir; sürükleme sırasında kategoriye geçiş yapılmaz.
+- Diğer sistemlere dokunulmadı.

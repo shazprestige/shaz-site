@@ -291,7 +291,7 @@ function catalogGlobalTools(){
     const checked=(catalog.builder.allowedCategories||[]).includes(c.id);
     return `<label class=setItemToggle><span><b>${esc(c.name)}</b><small class=muted>Müşterinin kendi setini oluştururken seçebileceği kategori</small></span><input type=checkbox ${checked?'checked':''} onchange="toggleBuilderCategory('${attr(c.id)}',this.checked)"></label>`;
   }).join('');
-  const builderOrderHtml=builderOrder.length?builderOrder.map((id,pos)=>{const c=catalog.categories.find(x=>x.id===id);if(!c)return '';const products=builderAdminProductsForCategory(id);const explicit=Array.isArray(catalog.builder.allowedProducts?.[id]);const selected=explicit?catalog.builder.allowedProducts[id]:products.map(p=>p.id);return `<div class=builderOrderRow draggable=true data-builder-category="${attr(id)}" ondragstart="builderCategoryDragStart(event,'${attr(id)}')" ondragover="builderCategoryDragOver(event)" ondrop="builderCategoryDrop(event,'${attr(id)}')"><span class=builderDragHandle title="Tut ve sürükle">⠿</span><span class=builderOrderText><b>${pos+1}. ${esc(c.name)}</b><small>Tutup sürükleyerek sırala</small></span><details class=builderProductPicker><summary>Ürünler <em>${selected.length}/${products.length}</em></summary><div class=builderMiniProductList>${products.length?products.map(p=>`<label class=builderMiniProduct><input type=checkbox ${selected.includes(p.id)?'checked':''} onchange="toggleBuilderProduct('${attr(id)}','${attr(p.id)}',this.checked)"><span>${esc(p.name)}</span></label>`).join(''):'<small>Bu kategoride uygun ürün yok.</small>'}</div></details></div>`}).join(''):'<div class=help>Önce yukarıdan en az bir kategori seç.</div>';
+  const builderOrderHtml=builderOrder.length?builderOrder.map((id,pos)=>{const c=catalog.categories.find(x=>x.id===id);if(!c)return '';const products=builderAdminProductsForCategory(id);const explicit=Array.isArray(catalog.builder.allowedProducts?.[id]);const selected=explicit?catalog.builder.allowedProducts[id]:products.map(p=>p.id);return `<div class=builderOrderRow data-builder-category="${attr(id)}" ondragover="builderCategoryDragOver(event)" ondrop="builderCategoryDrop(event,'${attr(id)}')"><span class=builderDragHandle draggable=true title="Tut ve sürükle" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()" ondragstart="builderCategoryDragStart(event,'${attr(id)}')">⠿</span><span class=builderOrderText><b>${pos+1}. ${esc(c.name)}</b><small>Tutup sürükleyerek sırala</small></span><details class=builderProductPicker><summary>Ürünler <em>${selected.length}/${products.length}</em></summary><div class=builderMiniProductList>${products.length?products.map(p=>`<label class=builderMiniProduct><input type=checkbox ${selected.includes(p.id)?'checked':''} onchange="toggleBuilderProduct('${attr(id)}','${attr(p.id)}',this.checked)"><span>${esc(p.name)}</span></label>`).join(''):'<small>Bu kategoride uygun ürün yok.</small>'}</div></details></div>`}).join(''):'<div class=help>Önce yukarıdan en az bir kategori seç.</div>';
   const categoryOptions=catalog.categories.filter(c=>c.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0)).map(c=>`<option value="${attr(c.id)}">${esc(c.name)}</option>`).join('');
   return `<div class="panel unifiedCatalogSettings">
     <details class=simpleAdminDetails><summary>Genel ürün / set ayarları <small>Ürünlerle ilgili ortak ayarlar</small></summary><div class=simpleDetailsBody>
@@ -382,6 +382,7 @@ function removeDiscountCampaign(i){if(confirm('Bu kampanya silinsin mi?')){catal
 function toggleDiscountCampaignCategory(i,id,on){const r=catalog.checkoutCampaigns[i];r.categoryIds=r.categoryIds||[];if(on&&!r.categoryIds.includes(id))r.categoryIds.push(id);if(!on)r.categoryIds=r.categoryIds.filter(x=>x!==id);changed('.drawer')}
 function toggleDiscountCampaignProduct(i,id,on){const r=catalog.checkoutCampaigns[i];r.productIds=r.productIds||[];if(on&&!r.productIds.includes(id))r.productIds.push(id);if(!on)r.productIds=r.productIds.filter(x=>x!==id);changed('.drawer')}
 
+let adminCategoryNavScrollLeft=0;
 function renderCatalog(){
   const cats=catalog.categories.filter(c=>c.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0));
   if(!adminOpenCategory||!cats.some(c=>c.id===adminOpenCategory))adminOpenCategory=cats[0]?.id||null;
@@ -398,8 +399,12 @@ function renderCatalog(){
   </div>`;
   html+=active?categoryBlock(active):'<div class=panel>Henüz kategori yok.</div>';
   shell('Kategoriler & Ürünler','Bir ürünün içine girdiğinde fotoğraf, açıklama, fiyat, stok, etiket, kişiselleştirme ve hazır set içeriği dahil tüm ayarlarını aynı yerde yönetirsin.',html);
-  requestAnimationFrame(()=>{initProductTextLayoutEditors();positionActiveAdminCategoryTab('auto')});
-  setTimeout(()=>positionActiveAdminCategoryTab('auto'),60);
+  requestAnimationFrame(()=>{
+    initProductTextLayoutEditors();
+    const nav=document.querySelector('.categoryQuickNav');
+    if(nav)nav.scrollLeft=adminCategoryNavScrollLeft;
+    positionActiveAdminCategoryTab('auto');
+  });
 }
 function categoryDragStart(e,id){
   adminDraggedCategory=id;
@@ -440,11 +445,12 @@ function positionActiveAdminCategoryTab(behavior='smooth'){
   nav.scrollTo({left:Math.max(0,Math.min(max,desired)),behavior});
 }
 function jumpAdminCategory(id){
+  const nav=document.querySelector('.categoryQuickNav');
+  if(nav)adminCategoryNavScrollLeft=nav.scrollLeft;
   adminOpenCategory=id;
   adminProductSearch='';
   adminOpenProduct=null;
   renderCatalog();
-  requestAnimationFrame(()=>positionActiveAdminCategoryTab('smooth'));
 }
 function toggleAdminCategory(id){
   adminOpenCategory=id;
@@ -477,6 +483,7 @@ function categoryBlock(c){
           <div class=field><label><b>Sıralama</b></label><div class=categoryOrderHint>Üstteki kategori başlığını sürükleyip istediğin yere bırak.</div></div>
           <div class=field><label><b>Kategori kapak fotoğrafı</b></label><input id="catFile${ci}" type=file accept="image/*"><button class=smallBtn onclick="uploadCategoryCover(${ci})">Fotoğrafı Yükle</button><div class=help>Bu görsel Kategoriler ekranındaki kutuda görünür.</div>${c.cover?`<img src="${attr(c.cover)}" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px">`:''}</div>
           <div class=field><label><b>Kategoriyi gizle</b></label><label><input data-preview-target="${attr(catTarget)}" type=checkbox ${c.hidden?'checked':''} onchange="catalog.categories[${ci}].hidden=this.checked;changed(this.dataset.previewTarget)"> Gizli</label></div>
+          <div class=field><label><b>Kategoriyi sil</b></label><button type=button class="smallBtn dangerSoft" onclick="deleteCategory('${attr(c.id)}')">Bu kategoriyi sil</button><div class=help>İçinde ürün varsa yanlışlıkla veri kaybı olmaması için silme engellenir.</div></div>
         </div>
         ${renderSubcategoryAdmin(c)}
       </details>
@@ -558,7 +565,7 @@ async function uploadSubcategoryCover(categoryId,subId,inputEl){
 function productSubcategoryField(p,i){
   const c=catalog.categories.find(x=>x.id===p.category),subs=categorySubcategories(c);if(!subs.length)return '';
   const opts=subs.map(s=>`<option value="${attr(s.id)}" ${p.subcategoryId===s.id?'selected':''}>${esc(s.name||'Alt kategori')}${s.hidden?' (gizli)':''}</option>`).join('');
-  return `<div class=field><label><b>Alt kategori</b></label><select class=formControl onchange="catalog.products[${i}].subcategoryId=this.value;changed('#products')"><option value="" ${!p.subcategoryId?'selected':''}>Ana ürünler</option>${opts}</select><div class=help>Bu ürün ana kategoride hangi alt başlık altında görünsün?</div></div>`;
+  return `<div class="field productSubcategoryField"><label><b>Alt kategori</b></label><select class=formControl onchange="catalog.products[${i}].subcategoryId=this.value;changed('#products')"><option value="" ${!p.subcategoryId?'selected':''}>Ana ürünler</option>${opts}</select><div class=help>Bu ürün ana kategoride hangi alt başlık altında görünsün?</div></div>`;
 }
 function builderOrderedCategoryIds(){
   catalog.builder=catalog.builder||{allowedCategories:[],categoryOrder:[],pricingRules:[]};
@@ -566,7 +573,7 @@ function builderOrderedCategoryIds(){
   const order=(catalog.builder.categoryOrder||[]).filter(id=>allowed.includes(id));allowed.forEach(id=>{if(!order.includes(id))order.push(id)});catalog.builder.categoryOrder=order;return order;
 }
 let builderDraggedCategoryId='';
-function builderCategoryDragStart(ev,id){builderDraggedCategoryId=id;try{ev.dataTransfer.effectAllowed='move';ev.dataTransfer.setData('text/plain',id)}catch(e){}}
+function builderCategoryDragStart(ev,id){ev.stopPropagation();builderDraggedCategoryId=id;try{ev.dataTransfer.effectAllowed='move';ev.dataTransfer.setData('text/plain',id)}catch(e){}}
 function builderCategoryDragOver(ev){ev.preventDefault();try{ev.dataTransfer.dropEffect='move'}catch(e){}}
 function builderCategoryDrop(ev,targetId){ev.preventDefault();const sourceId=builderDraggedCategoryId||(()=>{try{return ev.dataTransfer.getData('text/plain')}catch(e){return ''}})();builderDraggedCategoryId='';if(!sourceId||sourceId===targetId)return;const order=builderOrderedCategoryIds();const from=order.indexOf(sourceId),to=order.indexOf(targetId);if(from<0||to<0)return;order.splice(to,0,order.splice(from,1)[0]);catalog.builder.categoryOrder=order;changed('.builderCard');renderCatalog();}
 function builderAdminProductsForCategory(categoryId){return (catalog.products||[]).filter(p=>!p.hidden&&!p.isSet&&p.category!=='setler'&&p.category===categoryId&&p.setEligible!==false)}
@@ -882,6 +889,22 @@ function applyProductInfoToSelected(sourceId){
   alert(`${count} ürüne seçtiğin bilgiler uygulandı. Kalıcı olması için “Değişiklikleri Kaydet”e bas.`);
 }
 
+function deleteCategory(categoryId){
+  const c=(catalog.categories||[]).find(x=>x.id===categoryId);if(!c)return;
+  const productCount=(catalog.products||[]).filter(p=>p.category===categoryId).length;
+  if(productCount){alert(`“${c.name||'Bu kategori'}” içinde ${productCount} ürün var. Ürün kaybını önlemek için önce ürünleri başka kategoriye taşı veya sil.`);return;}
+  if(!confirm(`“${c.name||'Bu kategori'}” kategorisi silinsin mi?`))return;
+  catalog.categories=(catalog.categories||[]).filter(x=>x.id!==categoryId);
+  if(catalog.builder){
+    catalog.builder.allowedCategories=(catalog.builder.allowedCategories||[]).filter(id=>id!==categoryId);
+    catalog.builder.categoryOrder=(catalog.builder.categoryOrder||[]).filter(id=>id!==categoryId);
+    if(catalog.builder.allowedProducts&&typeof catalog.builder.allowedProducts==='object')delete catalog.builder.allowedProducts[categoryId];
+  }
+  (catalog.categories||[]).filter(x=>x.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0)).forEach((x,i)=>x.order=i+1);
+  adminOpenCategory=(catalog.categories||[]).filter(x=>x.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0))[0]?.id||null;
+  adminOpenProduct=null;adminProductSearch='';adminCategoryNavScrollLeft=0;
+  changed('#products');renderCatalog();
+}
 function addCategory(){
   const id='kategori-'+Date.now();
   catalog.categories.push({id,name:'Yeni Kategori',order:catalog.categories.length+1,hidden:false,cover:''});
