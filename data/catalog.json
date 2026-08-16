@@ -4056,7 +4056,7 @@
     {
       "id": "sepet-1786813845553-fakn",
       "name": "3 adet saat kampanyası",
-      "enabled": true,
+      "enabled": false,
       "scopeType": "category",
       "categoryIds": [
         "saatler"
@@ -4092,7 +4092,7 @@
         "urun-1786825421633-0-33da": 2,
         "urun-1786825421633-2-a94y": 2
       },
-      "repeatable": false,
+      "repeatable": true,
       "maxApplications": 2,
       "allowDoubleCount": false
     }
