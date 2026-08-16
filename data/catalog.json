@@ -4151,7 +4151,11 @@
       "minQty": 2,
       "discountType": "fixed",
       "discountValue": 200,
-      "excludedProductIds": [],
+      "excludedProductIds": [
+        "urun-1786825421633-1-qpgw",
+        "urun-1786825421633-0-33da",
+        "urun-1786825421633-2-a94y"
+      ],
       "productUnitCounts": {
         "urun-1786825421633-1-qpgw": 2,
         "urun-1786825421633-0-33da": 2,
