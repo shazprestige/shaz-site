@@ -4049,7 +4049,7 @@
       "id": "sepet-1786813845553-fakn",
       "name": "3 adet saat kampanyası",
       "enabled": true,
-      "scopeType": "all",
+      "scopeType": "category",
       "categoryIds": [
         "saatler"
       ],
@@ -4057,15 +4057,19 @@
       "minQty": 3,
       "discountType": "fixed",
       "discountValue": 500,
-      "productUnitCounts": {},
-      "repeatable": true,
+      "productUnitCounts": {
+        "urun-1786825421633-1-qpgw": 2,
+        "urun-1786825421633-0-33da": 2,
+        "urun-1786825421633-2-a94y": 2
+      },
+      "repeatable": false,
       "maxApplications": 2,
       "allowDoubleCount": false
     },
     {
       "id": "sepet-1786894220202-bxip",
       "name": "2 adet saat kampanyası",
-      "enabled": true,
+      "enabled": false,
       "scopeType": "category",
       "categoryIds": [
         "saatler"
@@ -4074,14 +4078,14 @@
       "minQty": 2,
       "discountType": "fixed",
       "discountValue": 200,
-      "excludedProductIds": [
-        "urun-1786825421633-1-qpgw",
-        "urun-1786825421633-0-33da",
-        "urun-1786825421633-2-a94y"
-      ],
-      "productUnitCounts": {},
+      "excludedProductIds": [],
+      "productUnitCounts": {
+        "urun-1786825421633-1-qpgw": 2,
+        "urun-1786825421633-0-33da": 2,
+        "urun-1786825421633-2-a94y": 2
+      },
       "repeatable": true,
-      "maxApplications": 0,
+      "maxApplications": 2,
       "allowDoubleCount": false
     }
   ]
