@@ -3021,3 +3021,54 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
   /* Siyah duyuru bandı görsel dengeyi yukarı çektiği için marka bloğunu yalnız masaüstünde hafifçe aşağı al. */
   #brandLogo.logo{top:55%!important;}
 }
+
+/* V98 — yalnızca builder sabit üst alanını bir kademe daha kompaktlaştırma + masaüstü logo hizası */
+.builderStickyStack .builderTopSticky{
+  padding-bottom:2px!important;
+}
+.builderStickyStack .builderTopSticky>.wizardHead{
+  margin-bottom:2px!important;
+}
+.builderStickyStack .builderTopSticky .builderAllShownBar{
+  margin:2px 0 3px!important;
+}
+.builderStickyStack .builderTopSticky .builderStepMeta{
+  margin:0 0 5px!important;
+}
+.builderStickyStack .builderTopSticky .builderProgressBar{
+  margin:0 0 1px!important;
+}
+@media(min-width:701px){
+  /* Yalnız masaüstünde: üst siyah duyuru bandının görsel ağırlığını hesaba katıp markayı biraz daha aşağı taşı. */
+  #brandLogo.logo{top:58%!important;}
+}
+
+
+/* V99 — yalnızca istenen son ince ayarlar: builder alt kısmını yukarı toplama, masaüstü logo ve ürün paylaşımı */
+.builderStickyStack .builderTopSticky{
+  padding-bottom:0!important;
+}
+.builderStickyStack .builderTopSticky .builderAllShownBar{
+  margin:1px 0 1px!important;
+}
+.builderStickyStack .builderTopSticky .builderStepMeta{
+  margin:-1px 0 3px!important;
+}
+.builderStickyStack .builderTopSticky .builderProgressBar{
+  margin:-1px 0 0!important;
+}
+.productDetailShare{
+  width:38px;height:38px;display:grid;place-items:center;border-radius:50%;
+  border:1px solid #dfe3e8;background:#fff;color:#111;cursor:pointer;padding:0;
+}
+.productDetailShare svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.productDetailTitle .wizardProgress{padding-right:198px!important}
+@media(max-width:700px){
+  .productDetailShare{width:34px;height:34px}
+  .productDetailShare svg{width:18px;height:18px}
+}
+@media(max-width:520px){.productDetailTitle .wizardProgress{padding-right:178px!important}}
+@media(min-width:701px){
+  /* Kullanıcının gerçek masaüstü görünümüne göre, mevcut geometrik konumdan bilinçli olarak 1-2 kademe daha aşağı. */
+  #brandLogo.logo{top:61%!important;}
+}

@@ -21,6 +21,8 @@ async function init(){
     }
   });
   apply(); renderCampaignCards(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart(); bindFloatingContacts(); renderSiteAnnouncement();
+  const sharedProductId=new URLSearchParams(location.search).get('product');
+  if(sharedProductId&&catalog.products.some(p=>p.id===sharedProductId)) setTimeout(()=>openProductDetail(sharedProductId,'shared'),0);
 }
 function bindCore(){
   if($('#overlay')) $('#overlay').onclick=closeDrawer;
@@ -391,6 +393,27 @@ function toggleFavFromDetail(id){
   const b=document.getElementById('productDetailFavBtn');
   if(b){b.textContent=favorites.has(id)?'♥':'♡';b.classList.toggle('active',favorites.has(id));b.setAttribute('aria-label',favorites.has(id)?'Favorilerden kaldır':'Favorilere ekle')}
 }
+function productShareUrl(id){
+  const u=new URL(location.href);
+  u.searchParams.delete('adminpreview');
+  u.searchParams.set('product',id);
+  u.hash='';
+  return u.toString();
+}
+async function shareProduct(id){
+  const p=catalog.products.find(x=>x.id===id); if(!p)return;
+  const url=productShareUrl(id);
+  const data={title:p.name||'SHAZ Ürün',text:`${p.name||'SHAZ Ürün'} - SHAZ`,url};
+  try{
+    if(navigator.share){await navigator.share(data);return}
+    if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(url);toast('Ürün bağlantısı kopyalandı');return}
+    window.prompt('Ürün bağlantısını kopyalayın:',url);
+  }catch(e){
+    if(e?.name!=='AbortError'){
+      try{await navigator.clipboard?.writeText(url);toast('Ürün bağlantısı kopyalandı')}catch(_){window.prompt('Ürün bağlantısını kopyalayın:',url)}
+    }
+  }
+}
 function openDrawer(html){$('#overlay').classList.remove('hidden');$('#drawer').classList.remove('hidden');$('#drawer').innerHTML=html}
 function closeDrawer(){$('#overlay').classList.add('hidden');$('#drawer').classList.add('hidden')}
 function toast(msg){const t=$('#toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
@@ -519,7 +542,7 @@ function openProductDetail(id,source='catalog'){
   const closeAction=source==='favorites'?"showFavorites()":source==='builder'?"builderReturnFromDetail()":"closeDrawer()";
   const closeLabel=source==='favorites'?'← Favorilere Dön':'Kapat';
   openDrawer(`<div class="productDetailShell">
-    <div class="wizardHead productDetailHead"><div class="productDetailTitle"><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div><div class="productDetailHeadActions"><button id="productDetailFavBtn" class="productDetailFav ${favorites.has(p.id)?'active':''}" onclick="toggleFavFromDetail('${escapeAttr(p.id)}')" aria-label="${favorites.has(p.id)?'Favorilerden kaldır':'Favorilere ekle'}">${favorites.has(p.id)?'♥':'♡'}</button><button class="pill productDetailClose" onclick="${closeAction}">${closeLabel}</button></div></div>
+    <div class="wizardHead productDetailHead"><div class="productDetailTitle"><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div><div class="productDetailHeadActions"><button id="productDetailFavBtn" class="productDetailFav ${favorites.has(p.id)?'active':''}" onclick="toggleFavFromDetail('${escapeAttr(p.id)}')" aria-label="${favorites.has(p.id)?'Favorilerden kaldır':'Favorilere ekle'}">${favorites.has(p.id)?'♥':'♡'}</button><button type="button" class="productDetailShare" onclick="shareProduct('${escapeAttr(p.id)}')" aria-label="Ürünü paylaş" title="Ürünü paylaş"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 11v8h14v-8"/></svg></button><button class="pill productDetailClose" onclick="${closeAction}">${closeLabel}</button></div></div>
     ${productImages(p).length?`<div class=productDetailGallery>
       <div class="productDetailMedia" style="--detail-bg:url(&quot;${escapeAttr(mainProductImage(p))}&quot;)" onclick="openProductImageViewer()" role="button" tabindex="0" aria-label="Fotoğrafı büyüt">${p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'}"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:''}<img id=productDetailMain src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name||'Ürün')}"></div>
       ${productImages(p).length>1?`<div class=productDetailThumbs>${productImages(p).map((u,i)=>`<button class="${i===0?'active':''}" onclick="selectProductDetailImage(this,'${escapeAttr(u)}')"><img src="${escapeAttr(u)}" alt=""></button>`).join('')}</div>`:''}
