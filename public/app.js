@@ -1,5 +1,15 @@
 
-let settings={},catalog={},cart=[],favorites=new Set(JSON.parse(localStorage.getItem('shazFavs')||'[]'));
+let settings={},catalog={},cart=[],favorites=new Set();
+const CART_STORAGE_KEY='shazCartV113';
+function loadLocalState(){
+  try{
+    const favRaw=JSON.parse(localStorage.getItem('shazFavs')||'[]');
+    favorites=new Set(Array.isArray(favRaw)?favRaw:[]);
+    const savedCart=JSON.parse(localStorage.getItem(CART_STORAGE_KEY)||'[]');
+    cart=Array.isArray(savedCart)?savedCart:[];
+  }catch(_){favorites=new Set();cart=[]}
+}
+function persistCart(){if(adminPreviewMode)return;try{localStorage.setItem(CART_STORAGE_KEY,JSON.stringify(cart))}catch(_){}}
 let activeCategory='tum';
 let activeSubcategory='';
 let productSort='priceAsc';
@@ -32,6 +42,7 @@ function syncCatalogViewControls(){
 }
 
 async function init(){
+  loadLocalState();
   settings=await fetch('/api/settings').then(r=>r.json());
   catalog=await fetch('/api/catalog').then(r=>r.json());
   catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
@@ -42,6 +53,8 @@ async function init(){
     }
   });
   restoreCatalogView();
+  favorites=new Set([...favorites].filter(id=>(catalog.products||[]).some(p=>p.id===id&&!p.hidden)));
+  try{localStorage.setItem('shazFavs',JSON.stringify([...favorites]))}catch(_){}
   syncCatalogViewControls();
   apply(); renderCampaignCards(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart(); bindFloatingContacts(); renderSiteAnnouncement();
   const sharedProductId=new URLSearchParams(location.search).get('product');
@@ -473,6 +486,9 @@ function openDrawer(html){
   const drawer=$('#drawer');
   drawer?.classList.toggle('productDetailDrawer',isProductDetail);
   $('#overlay').classList.remove('hidden');drawer.classList.remove('hidden');drawer.innerHTML=html;
+  requestAnimationFrame(()=>{
+    drawer.querySelectorAll('input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select').forEach(el=>{if(!el.style.fontSize)el.style.fontSize='16px'});
+  });
 }
 function closeDrawer(){
   if(activeProductDetailId){activeProductDetailId='';activeProductDetailSource='catalog';clearProductRoute()}
@@ -540,6 +556,7 @@ function normalizeCartPersonalizationFees(){
 }
 function updateCart(){
   normalizeCartPersonalizationFees();
+  persistCart();
   const count=cart.reduce((s,x)=>s+Number(x.qty||1),0);
   if($('#cartCount')) $('#cartCount').textContent=count;
   if($('#cartBadge')) $('#cartBadge').textContent=count;
@@ -786,7 +803,7 @@ function singleWriteStep(id){
   openDrawer(`<div class=wizardHead><button class="pill backPill" onclick='startSingleWizard(catalog.products.find(x=>x.id===${JSON.stringify(p.id)}))'>← Geri</button><div><div class=wizardProgress>2 / 2</div><h2>${p.name}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
   <div class=priceInfo><b>Yazı ücretlendirmesi</b><br>${used?`Sepetinizde ${used} kişiselleştirilmiş ürün var. Bu ürünün yazı ücreti şu an +${money(nextFee)} olarak hesaplanır.`:`Bu sepetteki ilk kişiselleştirme için +${money(nextFee)} uygulanır.`}</div>
   <div class=writeItem><h3>${p.name}</h3><div class=positionChoices>${positions.map((x,i)=>positionOptionHtml('singlePos',x,i,p.preferredWritePosition)).join('')}</div><input class=writeInput id=singleText placeholder="Yazdırmak istediğiniz yazıyı girin"></div>
-  <button class=btn onclick='finishSingleWrite(${JSON.stringify(p.id)})'>Sepete Ekle</button>`);
+  <div class="wizardBottomAction"><button class=btn onclick='finishSingleWrite(${JSON.stringify(p.id)})'>Sepete Ekle</button></div>`);
 }
 function finishSingleWrite(id){
   const p=catalog.products.find(x=>x.id===id), text=$('#singleText').value.trim(), pos=document.querySelector('input[name=singlePos]:checked')?.value;
@@ -894,7 +911,7 @@ function refreshRemovalSummary(){
   const removed=wiz.product.setItems.filter(x=>!kept.includes(x.id)), remain=wiz.product.setItems.filter(x=>kept.includes(x.id));
   const removedTotal=removed.reduce((sum,x)=>sum+Number(x.removeDiscount||0),0);
   const currentTotal=Math.max(0,Number(wiz.product.price||0)-removedTotal);
-  $('#removeSummary').innerHTML=`<div class=setRemovalLiveTotal><span>Şu anki set tutarı</span><b>${money(currentTotal)}</b><small>${removed.length?money(removedTotal)+' düşüldü':'Henüz ürün çıkarılmadı'}</small></div><div class=remainingList><b>Size gelecek ürünler:</b><br>${remain.length?remain.map(x=>'✓ '+x.name).join('<br>'):'Hiç ürün kalmadı.'}</div>${removed.length?`<div class=removedList><b>Çıkardığınız ürünler:</b><br>${removed.map(x=>'✕ '+x.name+' (-'+money(x.removeDiscount)+')').join('<br>')}</div>`:''}${removalFriendlyMessage?`<div class=removalFriendlyNote><b>Setinizi koruyalım</b><span>${escapeHtml(removalFriendlyMessage)}</span><button type=button class=smallInlineBtn onclick=goToRemainingSetItemCategory()>Kategoriyi Gör →</button></div>`:''}`;
+  $('#removeSummary').innerHTML=`<div class=setRemovalLiveTotal><span>Şu anki set tutarı</span><b>${money(currentTotal)}</b><small>${removed.length?money(removedTotal)+' düşüldü':'Henüz ürün çıkarılmadı'}</small></div><div class=removalSplitSummary><div class=remainingList><b>Size gelecek ürünler:</b><br>${remain.length?remain.map(x=>'✓ '+x.name).join('<br>'):'Hiç ürün kalmadı.'}</div><div class=removedList><b>Çıkardığınız ürünler:</b><br>${removed.length?removed.map(x=>'✕ '+x.name+' (-'+money(x.removeDiscount)+')').join('<br>'):'—'}</div></div>${removalFriendlyMessage?`<div class=removalFriendlyNote><b>Setinizi koruyalım</b><span>${escapeHtml(removalFriendlyMessage)}</span><button type=button class=smallInlineBtn onclick=goToRemainingSetItemCategory()>Kategoriyi Gör →</button></div>`:''}`;
 }
 function confirmRemoval(){
   wiz.keptIds=[...document.querySelectorAll('.keepItem:checked')].map(x=>x.dataset.id);
@@ -926,7 +943,7 @@ function renderWriteSelection(restoring=false){
     }
     return `<div class=setItemToggle data-personalize-row="${escapeAttr(x.id)}"><span><b>${escapeHtml(x.name)}</b><div class=muted>Bu ürüne yazı eklemek istiyorsanız seçin.</div></span><label class=positionChoice><input type=checkbox class=writePick data-id="${escapeAttr(x.id)}" ${mode==='write'?'checked':''}> <span>Yazı yazdırmak istiyorum</span></label></div>`;
   }).join('')}</div><div id=writeFeePreview></div></div>
-  <button class=btn onclick=renderWriteDetails()>Seçtiklerimle Devam Et</button>`);
+  <div class="wizardBottomAction"><button class=btn onclick=renderWriteDetails()>Seçtiklerimle Devam Et</button></div>`);
   document.querySelectorAll('[data-personalize-row] input').forEach(el=>el.addEventListener('change',refreshWriteFeePreview));
   refreshWriteFeePreview();
 }
@@ -943,7 +960,8 @@ function collectSetPersonalizationPlan(){
 }
 function refreshWriteFeePreview(){
   const plan=collectSetPersonalizationPlan();
-  $('#writeFeePreview').innerHTML=plan.length?`<div class=remainingList><b>Kişiselleştirme seçimi:</b><br>${plan.map((x,i)=>`${i+1}. ${escapeHtml(x.item)} — ${x.mode==='photo'?'Fotoğraf':'Yazı'} +${money(x.slotFee)}${x.mode==='photo'&&plan.length>1?` + ${money(walletPhotoFee())} fotoğraf işlemesi`:''}`).join('<br>')}<br><br><b>Not:</b> Cüzdan yalnızca fotoğrafla kişiselleştirilen tek ürünse toplam kişiselleştirme ücreti ${money(catalog.personalizationPricing?.first||75)} olur.</div>`:'';
+  const walletPhotoSelected=plan.some(x=>x.mode==='photo'&&isWalletSetItem(wiz.product.setItems.find(i=>i.id===x.itemId)));
+  $('#writeFeePreview').innerHTML=plan.length?`<div class=remainingList><b>Kişiselleştirme seçimi:</b><br>${plan.map((x,i)=>`${i+1}. ${escapeHtml(x.item)} — ${x.mode==='photo'?'Fotoğraf':'Yazı'} +${money(x.slotFee)}${x.mode==='photo'&&plan.length>1?` + ${money(walletPhotoFee())} fotoğraf işlemesi`:''}`).join('<br>')}${walletPhotoSelected?`<br><br><b>Not:</b> Cüzdan yalnızca fotoğrafla kişiselleştirilen tek ürünse toplam kişiselleştirme ücreti ${money(catalog.personalizationPricing?.first||75)} olur.`:''}</div>`:'';
 }
 function renderWriteDetails(restoring=false){
   if(!restoring){
@@ -960,7 +978,7 @@ function renderWriteDetails(restoring=false){
     const item=wiz.product.setItems.find(it=>it.id===x.itemId);
     return `<div class=writeItem data-write-id="${escapeAttr(x.itemId)}" data-fee="${Number(x.slotFee||0)}" data-set-preview-stage="write" data-set-preview-item="${escapeAttr(x.itemId)}"><div class=writeItemTop><b>${escapeHtml(item.name)}</b><span>+${money(x.slotFee)}</span></div><div class=writeDetails><div class=muted>${escapeHtml(item.name)} yazısı nereye işlensin?</div><div class=positionChoices>${(item.writePositions||[]).map((pos,j)=>positionOptionHtml('pos-'+item.id,pos,j,preferredForSetItem(item))).join('')||'<span class=muted>Bu ürün için henüz yazı konumu tanımlı değil.</span>'}</div><input class=writeInput id="text-${escapeAttr(item.id)}" placeholder="${escapeAttr(item.name)} üzerine yazdırmak istediğiniz yazı"></div></div>`;
   }).join('')}</div>
-  <button class=btn onclick=confirmWriteDetails()>${plan.some(x=>x.mode==='photo')?'Fotoğraf Detayına Devam Et':'Özeti Gör'}</button>`);
+  <div class="wizardBottomAction"><button class=btn onclick=confirmWriteDetails()>${plan.some(x=>x.mode==='photo')?'Fotoğraf Detayına Devam Et':'Özeti Gör'}</button></div>`);
 }
 function confirmWriteDetails(){
   const cards=[...document.querySelectorAll('[data-write-id]')],writes=[];
@@ -988,7 +1006,7 @@ function renderWalletPhotoDetails(restoring=false){
       ${setItemWriteAvailable(item)?`<label class=walletToggle><input id="setWalletRegularToggle-${idx}" type=checkbox onchange="document.querySelector('#setWalletRegularFields-${idx}').classList.toggle('hidden',!this.checked)"> Fotoğraftan ayrı olarak cüzdanın ön/iç yüzüne normal yazı da istiyorum</label>
       <div id="setWalletRegularFields-${idx}" class=hidden><div class=positionChoices>${positions.map((pos,j)=>positionOptionHtml('set-wallet-pos-'+idx,pos,j,preferredForSetItem(item))).join('')}</div><input id="setWalletRegularText-${idx}" class=writeInput placeholder="Cüzdanın ön/iç yüzüne yazılacak metin"></div>`:''}
     </div>`;
-  }).join('')}<button class=btn onclick=finishSetWalletPhoto(this)>Fotoğrafları Yükle ve Özeti Gör</button>`);
+  }).join('')}<div class="wizardBottomAction"><button class=btn onclick=finishSetWalletPhoto(this)>Fotoğrafları Yükle ve Özeti Gör</button></div>`);
 }
 async function finishSetWalletPhoto(button){
   const photoPlan=(wiz.personalizationPlan||[]).filter(x=>x.mode==='photo');
@@ -1245,7 +1263,7 @@ function shareCartFromCheckout(){
 
 function renderSharedCart(data){
   const items=Array.isArray(data.items)?data.items:[];
-  openDrawer(`<div class="checkoutShell sharedCartShell"><div class="checkoutTop"><div><h2>Paylaşılan Sepet</h2><p>Bu ekran, size gönderilen SHAZ sepetinin fiyat ve ürün özetidir.</p></div><button class="pill" onclick="closeDrawer()">Kapat</button></div><div class="checkoutProductPanel">${items.map(x=>`<div class="orderCartItem"><div class="cartItemMain">${x.image?`<div class="cartItemThumb"><img src="${escapeAttr(x.image)}" alt=""></div>`:''}<div class="cartItemCopy"><b>${escapeHtml(x.name)}</b>${(x.writes||[]).map(w=>`<div class=muted>Yazı: “${escapeHtml(w.text||'')}” · +${money(w.fee||0)}</div>`).join('')}${(x.photos||[]).map(ph=>`<div class=muted>Fotoğraf işlemesi · +${money(ph.fee||0)}</div>`).join('')}</div><div class="cartItemRight"><strong>${money(x.price)}</strong></div></div></div>`).join('')}</div><div class="checkoutPriceBreakdown"><div><span>Ara toplam</span><strong>${money(data.subtotal)}</strong></div>${(data.applied||[]).map(a=>`<div class="checkoutDiscountLine"><span>${escapeHtml(a.name)}</span><strong>-${money(a.discount)}</strong></div>`).join('')}<div class="checkoutTotal"><span>Toplam</span><strong>${money(data.total)}</strong></div></div><button class="btn sharedCartShopBtn" onclick="history.replaceState({},'',location.pathname);closeDrawer()">Alışverişe Git →</button></div>`);
+  openDrawer(`<div class="checkoutShell sharedCartShell"><div class="checkoutTop"><div><h2>Paylaşılan Sepet</h2><p>Bu ekran, size gönderilen SHAZ sepetinin fiyat ve ürün özetidir.</p></div><button class="pill" onclick="closeDrawer()">Kapat</button></div><div class="checkoutProductPanel">${items.map(x=>`<div class="orderCartItem"><div class="cartItemMain">${x.image?`<div class="cartItemThumb"><img src="${escapeAttr(x.image)}" alt=""></div>`:''}<div class="cartItemCopy"><b>${escapeHtml(x.name)}</b>${(x.writes||[]).map(w=>`<div class=muted>Yazı: ${w.item?escapeHtml(w.item)+' · ':''}${w.position?escapeHtml(w.position)+' · ':''}“${escapeHtml(w.text||'')}” · +${money(w.fee||0)}</div>`).join('')}${(x.photos||[]).map(ph=>`<div class=muted>Fotoğraf işlemesi · +${money(ph.fee||0)}</div>`).join('')}</div><div class="cartItemRight"><strong>${money(x.price)}</strong></div></div></div>`).join('')}</div><div class="checkoutPriceBreakdown"><div><span>Ara toplam</span><strong>${money(data.subtotal)}</strong></div>${(data.applied||[]).map(a=>`<div class="checkoutDiscountLine"><span>${escapeHtml(a.name)}</span><strong>-${money(a.discount)}</strong></div>`).join('')}<div class="checkoutTotal"><span>Toplam</span><strong>${money(data.total)}</strong></div></div><button class="btn sharedCartShopBtn" onclick="history.replaceState({},'',location.pathname);closeDrawer()">Alışverişe Git →</button></div>`);
 }
 function openSharedCartFromUrl(){
   const params=new URLSearchParams(location.search),shortId=params.get('s'),raw=params.get('sharedCart');
@@ -1300,7 +1318,7 @@ function cartItemSummary(x,i){
   }
   if(x.builderItems?.length)lines.push(`<div class=muted>Set içeriği: ${x.builderItems.map(p=>escapeHtml(p.name)).join(', ')}</div>`);
   const writes=x.writes||x.setCustomization?.writes||[];
-  if(writes.length){lines.push(`<div class=muted>Yazı: ${writes.map(w=>`${x.setCustomization?escapeHtml(w.item||'Ürün')+' · ':''}“${escapeHtml(w.text||'')}”`).join('<br>')}</div>`);writes.forEach(w=>{if(Number(w.fee||0))priceLines.push(`<div><span>${x.setCustomization?'Kişiselleştirme · '+escapeHtml(w.item||'Ürün'):'Kişiselleştirme'}</span><strong>+${money(w.fee)}</strong></div>`)})}
+  if(writes.length){lines.push(`<div class=muted>Yazı: ${writes.map(w=>`${x.setCustomization?escapeHtml(w.item||'Ürün')+' · ':''}${w.position?escapeHtml(w.position)+' · ':''}“${escapeHtml(w.text||'')}”`).join('<br>')}</div>`);writes.forEach(w=>{if(Number(w.fee||0))priceLines.push(`<div><span>${x.setCustomization?'Kişiselleştirme · '+escapeHtml(w.item||'Ürün'):'Kişiselleştirme'}</span><strong>+${money(w.fee)}</strong></div>`)})}
   const photos=x.photoCustomizations||x.setCustomization?.photoCustomizations||[];
   if(photos.length){lines.push(`<div class=muted>Fotoğraf: ${photos.map(ph=>escapeHtml(ph.item||'Cüzdan')).join(', ')}</div>`);photos.forEach(ph=>{
     const slotFee=Number(ph.slotFee||0),extra=Number(ph.photoExtraFee??(Number(ph.fee||0)-slotFee));
