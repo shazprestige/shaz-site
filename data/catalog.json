@@ -4232,5 +4232,50 @@
       "maxApplications": 3,
       "allowDoubleCount": false
     }
+  ],
+  "checkoutUpsells": [
+    {
+      "id": "upsell-1786920061857",
+      "name": "GÖZLÜK",
+      "enabled": true,
+      "triggerCategoryId": "setler",
+      "triggerMode": "all",
+      "triggerProductIds": [
+        "urun-1786899570443-16-3bya",
+        "urun-1786899570443-18-pns9",
+        "urun-1786899570443-2-xly6",
+        "urun-1786899570443-4-unxa",
+        "urun-1786899570443-6-90hj",
+        "urun-1786899570443-8-k3w3",
+        "urun-1786899570443-10-zmhi",
+        "urun-1786899570443-12-xe9r",
+        "urun-1786899570443-14-hda4",
+        "urun-1786899570443-20-sb6i",
+        "urun-1786899570443-22-tprf",
+        "urun-1786899570443-23-0cio",
+        "urun-1786899570443-21-cpwj",
+        "urun-1786899570443-19-3hay",
+        "urun-1786899570443-17-6ai3",
+        "urun-1786899570443-15-m6tq",
+        "urun-1786899570443-13-m0w1",
+        "urun-1786899570443-11-j355",
+        "urun-1786899570443-9-k358",
+        "urun-1786899570443-7-rtyx",
+        "urun-1786899570443-5-w1vb",
+        "urun-1786899570443-3-oxdi",
+        "urun-1786899570443-1-1xl3",
+        "urun-1786899570443-0-11aq"
+      ],
+      "offerCategoryId": "gozlukler",
+      "offerMode": "all",
+      "offerProductIds": [
+        "urun-1786910492353-4-ukzz",
+        "urun-1786910492353-2-zuew",
+        "urun-1786910492353-0-cc9w",
+        "urun-1786910492353-1-p6qf",
+        "urun-1786910492353-3-rxft"
+      ],
+      "specialPrice": 200
+    }
   ]
 }
