@@ -2597,3 +2597,86 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
 .builderSpotlightUploadRow{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .builderCard.hasCustomImage{background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
 .builderCard.hasCustomImage .builderSpotlightCopy{position:relative;z-index:1}
+
+/* ===== V88 — yalnızca Kendi Setini Oluştur ürün görünümü + Favoriler + ürün detay favorisi ===== */
+.builderAllShown{
+  display:inline-flex;align-items:center;gap:6px;
+  margin:2px 0 6px;padding:5px 8px;border-radius:7px;
+  background:#f3f4f6;border:1px solid #e2e5e9;color:#4f5967;
+  font-size:10px;font-weight:800;line-height:1.2
+}
+.builderProductPhoto{
+  height:auto!important;aspect-ratio:1/1!important;padding:6px!important;
+  background:#fff!important;overflow:hidden!important
+}
+.builderProductPhoto img{
+  width:100%!important;height:100%!important;object-fit:contain!important;
+  object-position:center!important;display:block!important
+}
+.builderProductBody{display:flex!important;flex-direction:column!important;gap:4px!important}
+.builderInspectBtn{
+  width:100%;border:1px solid #dfe3e8;background:#fff;color:#111;
+  border-radius:7px;padding:5px 6px;font-size:9px;font-weight:800;line-height:1.15;cursor:pointer
+}
+.builderInspectBtn:hover{background:#f7f8f9}
+.builderSelectMark{color:transparent!important}
+.builderProductCard.selected .builderSelectMark{background:#111!important;border-color:#111!important;color:transparent!important}
+
+.productDetailHeadActions{display:flex;align-items:center;gap:7px;flex:0 0 auto}
+.productDetailFav{
+  width:38px;height:38px;display:grid;place-items:center;border-radius:50%;
+  border:1px solid #dfe3e8;background:#fff;color:#1593ff;font-size:22px;line-height:1;cursor:pointer
+}
+.productDetailFav.active{background:#eef7ff;color:#1593ff;border-color:#bcdfff}
+
+.favoritesHead{padding-bottom:6px!important}
+.favoritesHead h2{display:flex;align-items:center;gap:8px}
+.favoritesTitleHeart{color:#1593ff;font-size:.9em;line-height:1}
+.favoritesClose{padding:7px 12px!important;min-height:34px!important}
+.favoritesToolbar{display:flex;justify-content:flex-end;margin:0 0 10px;padding:0 2px}
+.favoritesList{display:grid;gap:10px}
+.favoriteCard{
+  display:grid;grid-template-columns:138px minmax(0,1fr);gap:14px;
+  padding:12px;background:#fff;border:1px solid #e1e5e9;border-radius:14px;align-items:stretch
+}
+.favoritePhoto{
+  width:138px;min-height:148px;padding:6px;border:1px solid #e4e7eb;border-radius:11px;
+  overflow:hidden;background:#fff;display:grid;place-items:center;cursor:pointer
+}
+.favoritePhoto img{width:100%;height:100%;max-height:174px;object-fit:contain;object-position:center;display:block}
+.favoriteContent{min-width:0;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.favoriteMeta b{display:block;font-size:16px;line-height:1.25;margin-bottom:4px}
+.favoriteMeta span{display:block;font-size:14px;font-weight:800}
+.favoriteActions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.favoriteActions .btn,.favoriteActions .pill{min-height:36px;padding:8px 10px;font-size:10px}
+.favoriteCartBtn{background:#111!important;color:#fff!important}
+.favoritesEmpty{
+  min-height:55vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;color:#535c68;padding:30px 18px
+}
+.favoritesEmptyHeart{font-size:48px;color:#1593ff;line-height:1;margin-bottom:12px}
+.favoritesEmpty b{font-size:19px;color:#111;margin-bottom:7px}
+.favoritesEmpty span{font-size:12px;max-width:280px;line-height:1.5;color:#7a828d}
+
+@media(max-width:700px){
+  .builderProductPhoto{aspect-ratio:1/1!important;padding:5px!important}
+  .builderProductBody b{font-size:11px!important}
+  .builderProductBody small{font-size:9px!important}
+  .builderInspectBtn{font-size:9px;padding:6px 5px}
+  .productDetailHeadActions{gap:5px}
+  .productDetailFav{width:34px;height:34px;font-size:20px}
+  .favoriteCard{grid-template-columns:118px minmax(0,1fr);gap:11px;padding:10px}
+  .favoritePhoto{width:118px;min-height:142px;padding:5px}
+  .favoriteMeta b{font-size:15px}.favoriteMeta span{font-size:13px}
+  .favoriteActions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .favoriteActions .btn,.favoriteActions .pill{width:100%;font-size:9px;padding:7px 6px}
+  .favoriteActions .pill{grid-column:1/-1}
+}
+@media(min-width:701px){
+  .builderProductPhoto{aspect-ratio:1/1!important}
+}
+/* V88 ürün detay başlığında kalp + kapat aynı üst hizada. */
+.productDetailHeadActions{position:absolute!important;top:0!important;right:0!important;z-index:6!important}
+.productDetailHeadActions .productDetailClose{position:static!important;top:auto!important;right:auto!important}
+.productDetailTitle .wizardProgress{padding-right:150px!important}
+@media(max-width:520px){.productDetailTitle .wizardProgress{padding-right:138px!important}}

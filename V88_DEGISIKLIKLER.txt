@@ -1,0 +1,10 @@
+V88 - Sadece istenen alanlar
+
+1) Kendi Setini Oluştur ürün görselleri mobil ve PC'de kırpılmadan tam görünür.
+2) Her builder adımında "Tüm [Kategori] gösteriliyor" ibaresi vardır.
+3) Builder ürün kartlarına Ürünü İncele eklendi; detay Kapat ile aynı seçim adımına geri döner.
+4) Builder seçili ürün işaretindeki gereksiz beyaz tik kaldırıldı; siyah seçim noktası korunur.
+5) Favoriler ekranı daha kompakt/premium hale getirildi; ürün fotoğrafı büyütüldü, Sepete Ekle eklendi, boş ekran ortalandı.
+6) Ürün detay ekranına favori kalbi eklendi.
+
+V87'ye göre çalışan dosyalardan yalnızca public/app.js ve public/styles.css değiştirilmiştir.

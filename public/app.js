@@ -379,7 +379,18 @@ function updateFavoriteBadge(){if($('#favBadge'))$('#favBadge').textContent=favo
 function toggleFav(id,e){e?.stopPropagation();favorites.has(id)?favorites.delete(id):favorites.add(id);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));updateFavoriteBadge();renderProducts($('#search')?.value||'')}
 function removeFavorite(id){favorites.delete(id);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));updateFavoriteBadge();renderProducts($('#search')?.value||'');showFavorites()}
 function clearFavorites(){if(!favorites.size)return;favorites.clear();localStorage.setItem('shazFavs','[]');updateFavoriteBadge();renderProducts($('#search')?.value||'');showFavorites()}
-function showFavorites(){const ps=catalog.products.filter(p=>favorites.has(p.id));openDrawer(`<div class=wizardHead><h2>Favorilerim</h2><button class="pill" onclick=closeDrawer()>Kapat</button></div>${ps.length?`<div style="display:flex;justify-content:flex-end;margin:0 0 14px"><button class="pill" onclick="clearFavorites()">Favorileri Temizle</button></div>${ps.map(p=>{const img=mainProductImage(p);return `<div class=wizardCard><div style="display:grid;grid-template-columns:88px minmax(0,1fr);gap:14px;align-items:center"><button type="button" onclick="openProductDetail('${p.id}','favorites')" style="width:88px;height:88px;padding:0;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer" aria-label="${escapeAttr(p.name||'Ürün')} ürününü incele">${img?`<img src="${escapeAttr(img)}" alt="${escapeAttr(p.name||'Ürün')}" style="width:100%;height:100%;object-fit:contain;display:block">`:'⌚'}</button><div style="min-width:0"><b>${escapeHtml(p.name)}</b><br>${money(p.price)}</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class=btn onclick="openProductDetail('${p.id}','favorites')">Ürünü İncele</button><button class="pill" onclick="removeFavorite('${p.id}')">Favoriden Kaldır</button></div></div>`}).join('')}`:'Henüz favoriniz yok.'}`)}
+function showFavorites(){
+  const ps=catalog.products.filter(p=>favorites.has(p.id));
+  openDrawer(`<div class="wizardHead favoritesHead"><h2>Favorilerim <span class="favoritesTitleHeart">♥</span></h2><button class="pill favoritesClose" onclick=closeDrawer()>Kapat</button></div>
+  ${ps.length?`<div class="favoritesToolbar"><button class="pill" onclick="clearFavorites()">Favorileri Temizle</button></div><div class="favoritesList">${ps.map(p=>{const img=mainProductImage(p);return `<div class="favoriteCard"><button type="button" class="favoritePhoto" onclick="openProductDetail('${p.id}','favorites')" aria-label="${escapeAttr(p.name||'Ürün')} ürününü incele">${img?`<img src="${escapeAttr(img)}" alt="${escapeAttr(p.name||'Ürün')}">`:'⌚'}</button><div class="favoriteContent"><div class="favoriteMeta"><b>${escapeHtml(p.name)}</b><span>${money(p.price)}</span></div><div class="favoriteActions"><button class="btn" onclick="openProductDetail('${p.id}','favorites')">Ürünü İncele</button><button class="btn favoriteCartBtn" onclick="startProduct('${p.id}')">Sepete Ekle</button><button class="pill" onclick="removeFavorite('${p.id}')">Favoriden Kaldır</button></div></div></div>`}).join('')}</div>`:`<div class="favoritesEmpty"><div class="favoritesEmptyHeart">♡</div><b>Henüz favoriniz yok.</b><span>Beğendiğiniz ürünlerde kalp simgesine dokunarak buraya ekleyebilirsiniz.</span></div>`}`)
+}
+function toggleFavFromDetail(id){
+  favorites.has(id)?favorites.delete(id):favorites.add(id);
+  localStorage.setItem('shazFavs',JSON.stringify([...favorites]));
+  updateFavoriteBadge();renderProducts($('#search')?.value||'');
+  const b=document.getElementById('productDetailFavBtn');
+  if(b){b.textContent=favorites.has(id)?'♥':'♡';b.classList.toggle('active',favorites.has(id));b.setAttribute('aria-label',favorites.has(id)?'Favorilerden kaldır':'Favorilere ekle')}
+}
 function openDrawer(html){$('#overlay').classList.remove('hidden');$('#drawer').classList.remove('hidden');$('#drawer').innerHTML=html}
 function closeDrawer(){$('#overlay').classList.add('hidden');$('#drawer').classList.add('hidden')}
 function toast(msg){const t=$('#toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
@@ -505,8 +516,10 @@ function openProductDetail(id,source='catalog'){
   if(p.description) infoBlocks.push(`<div class="productInfoPart productTextSized" style="--product-text-wrap:${Math.max(18,Number(p.descriptionWrapCh||70))}ch"><h3>Açıklama</h3><p>${escapeHtml(p.description)}</p></div>`);
   if(features.length) infoBlocks.push(`<div class="productInfoPart productTextSized" style="--product-text-wrap:${Math.max(18,Number(p.featuresWrapCh||70))}ch"><h3>${p.isSet?'Setin içindekiler':'Özellikler'}</h3><div class=detailFeatureList>${features.map(x=>`<div>✓ ${escapeHtml(x)}</div>`).join('')}</div></div>`);
   if(p.writeEnabled!==false&&positions.length&&!p.isSet) infoBlocks.push(`<div class="productInfoPart"><h3>Kişiselleştirme alanları</h3><p>${positions.map(escapeHtml).join(' · ')}</p></div>`);
+  const closeAction=source==='favorites'?"showFavorites()":source==='builder'?"builderReturnFromDetail()":"closeDrawer()";
+  const closeLabel=source==='favorites'?'← Favorilere Dön':'Kapat';
   openDrawer(`<div class="productDetailShell">
-    <div class="wizardHead productDetailHead"><div class="productDetailTitle"><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div>${source==='favorites'?`<button class="pill productDetailClose" onclick="showFavorites()">← Favorilere Dön</button>`:`<button class="pill productDetailClose" onclick="closeDrawer()">Kapat</button>`}</div>
+    <div class="wizardHead productDetailHead"><div class="productDetailTitle"><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div><div class="productDetailHeadActions"><button id="productDetailFavBtn" class="productDetailFav ${favorites.has(p.id)?'active':''}" onclick="toggleFavFromDetail('${escapeAttr(p.id)}')" aria-label="${favorites.has(p.id)?'Favorilerden kaldır':'Favorilere ekle'}">${favorites.has(p.id)?'♥':'♡'}</button><button class="pill productDetailClose" onclick="${closeAction}">${closeLabel}</button></div></div>
     ${productImages(p).length?`<div class=productDetailGallery>
       <div class="productDetailMedia" style="--detail-bg:url(&quot;${escapeAttr(mainProductImage(p))}&quot;)" onclick="openProductImageViewer()" role="button" tabindex="0" aria-label="Fotoğrafı büyüt">${p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'}"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:''}<img id=productDetailMain src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name||'Ürün')}"></div>
       ${productImages(p).length>1?`<div class=productDetailThumbs>${productImages(p).map((u,i)=>`<button class="${i===0?'active':''}" onclick="selectProductDetailImage(this,'${escapeAttr(u)}')"><img src="${escapeAttr(u)}" alt=""></button>`).join('')}</div>`:''}
@@ -1167,11 +1180,12 @@ function renderBuilderCategoryStep(){
     <div class=builderProgressBar><div class=builderProgressFill style="width:${progress}%"></div></div>
     <div class=wizardCard>
       <h3>${escapeHtml(cat.name)} kategorisinden hangisini setinize eklemek istersiniz?</h3>
+      <div class="builderAllShown">Tüm ${escapeHtml(cat.name)} gösteriliyor</div>
       <p class=muted>Bu kategoride yalnızca normal tekli ürünler gösterilir. Hazır setler burada görünmez.</p>
       ${products.length?`<div class=builderProductGrid>${products.map(p=>`
         <div class="builderProductCard ${selectedId===p.id?'selected':''}" onclick="builderChoose('${escapeAttr(cat.id)}','${escapeAttr(p.id)}')">
-          <div class=builderProductPhoto>${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name)}">`:'⌚'}<span class=builderSelectMark>${selectedId===p.id?'✓':''}</span></div>
-          <div class=builderProductBody><b>${escapeHtml(p.name)}</b><small>${money(p.price)} tekli satış fiyatı</small></div>
+          <div class=builderProductPhoto>${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name)}">`:'⌚'}<span class=builderSelectMark></span></div>
+          <div class=builderProductBody><b>${escapeHtml(p.name)}</b><small>${money(p.price)} tekli satış fiyatı</small><button type="button" class="builderInspectBtn" onclick="event.stopPropagation();builderInspectProduct('${escapeAttr(p.id)}')">Ürünü İncele</button></div>
         </div>`).join('')}</div>`:`<div class=builderEmptyCategory>Bu kategoride set oluşturmaya açık tekli ürün bulunmuyor.</div>`}
       <button class=builderSkip onclick="builderSkipCurrent()">Bu kategoriden ürün eklemek istemiyorum</button>
     </div>
@@ -1184,6 +1198,8 @@ function builderChoose(categoryId,productId){
   customBuilder.selections[categoryId]=productId;
   renderBuilderCategoryStep();
 }
+function builderInspectProduct(productId){openProductDetail(productId,'builder')}
+function builderReturnFromDetail(){renderBuilderCategoryStep()}
 function builderSkipCurrent(){
   customBuilder.selections[customBuilder.categories[customBuilder.index].id]=null;
   builderNext();
