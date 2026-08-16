@@ -370,7 +370,14 @@ function discountCampaignProductChoice(rule,index,p,mode='include'){
 }
 function discountCampaignScopeProducts(rule,index){
   const scope=rule.scopeType||'category';
-  if(scope==='all')return '<div class=help>Bu kampanya sepetteki tüm ürünleri sayar.</div>';
+  if(scope==='all'){
+    const groups=(catalog.categories||[]).filter(c=>c.id!=='tum').map(c=>{
+      const ps=(catalog.products||[]).filter(p=>p.category===c.id);
+      if(!ps.length)return '';
+      return `<details class="campaignScopeGroup"><summary>${esc(c.name||c.id)} <small>${ps.length} ürün · tümü dahil</small></summary><div class="campaignScopeProductGrid">${ps.map(p=>discountCampaignProductChoice(rule,index,p,'exclude')).join('')}</div></details>`;
+    }).join('');
+    return `<div class=campaignScopeBox><b>Tüm ürünler içinde özel seçim</b><div class=help>Varsayılan olarak tüm ürünler kampanyaya dahildir. İstemediğin modelin tikini kaldırabilir; çift/üçlü ürünleri kampanyada kaç adet sayacağını ayrıca seçebilirsin.</div>${groups||'<div class=help>Ürün bulunamadı.</div>'}</div>`;
+  }
   if(scope==='products'){
     const groups=(catalog.categories||[]).filter(c=>c.id!=='tum').map(c=>{
       const ps=(catalog.products||[]).filter(p=>p.category===c.id);
@@ -395,7 +402,7 @@ function discountTypeHelp(rule){
 }
 function renderDiscountCampaigns(){
   catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
-  catalog.checkoutCampaigns.forEach(r=>{r.productUnitCounts=r.productUnitCounts||{};if(r.repeatable===undefined)r.repeatable=false;if(r.maxApplications===undefined)r.maxApplications=0;if(r.allowDoubleCount===undefined)r.allowDoubleCount=false;});
+  catalog.checkoutCampaigns.forEach(r=>{r.productUnitCounts=r.productUnitCounts||{};if(r.repeatable===undefined)r.repeatable=false;if(r.maxApplications===undefined||Number(r.maxApplications)<1)r.maxApplications=1;if(r.allowDoubleCount===undefined)r.allowDoubleCount=false;});
   const cards=catalog.checkoutCampaigns.map((r,i)=>`<details class="panel simpleAdminDetails discountCampaignAdmin" ${i===catalog.checkoutCampaigns.length-1?'open':''}><summary><span>${esc(r.name||('Kampanya '+(i+1)))}</span><small>${r.enabled!==false?'Aktif':'Kapalı'} · ${Math.max(1,Number(r.minQty||1))} kampanya adedi</small></summary><div class=simpleDetailsBody>
     <div class=campaignRuleHead><label class=setItemToggle><span><b>Kampanya aktif</b><small class=muted>İstediğinde kapatabilirsin; silmek zorunda değilsin.</small></span><input type=checkbox ${r.enabled!==false?'checked':''} onchange="catalog.checkoutCampaigns[${i}].enabled=this.checked;changed('.drawer')"></label><button class=dangerBtn onclick="removeDiscountCampaign(${i})">Kampanyayı Sil</button></div>
     <div class=grid2>
@@ -404,18 +411,18 @@ function renderDiscountCampaigns(){
       <div class=field><label><b>Kampanya hangi ürünlerde?</b></label><select class=formControl onchange="catalog.checkoutCampaigns[${i}].scopeType=this.value;renderDiscountCampaigns()"><option value=category ${(r.scopeType||'category')==='category'?'selected':''}>Kategori seç</option><option value=products ${r.scopeType==='products'?'selected':''}>Tek tek ürün seç</option><option value=all ${r.scopeType==='all'?'selected':''}>Tüm ürünler</option></select><div class=help>Bir kategori seçtiğinde içindeki modeller aşağıda açılır; istemediğini çıkarabilir ve her ürünün kampanya sayısını ayrı belirleyebilirsin.</div></div>
       <div class=field><label><b>İndirim türü</b></label><select class=formControl onchange="catalog.checkoutCampaigns[${i}].discountType=this.value;renderDiscountCampaigns()"><option value=fixed ${(r.discountType||'fixed')==='fixed'?'selected':''}>Sabit TL indirim</option><option value=percent ${r.discountType==='percent'?'selected':''}>Yüzdelik indirim</option><option value=bundlePrice ${r.discountType==='bundlePrice'?'selected':''}>Kampanyalı toplam fiyat</option></select><div class=help>${discountTypeHelp(r)}</div></div>
       ${input(r.discountType==='percent'?'İndirim yüzdesi':r.discountType==='bundlePrice'?'Kampanyalı toplam fiyat':'İndirim tutarı',`catalog.checkoutCampaigns[${i}].discountValue`,Number(r.discountValue||0),r.discountType==='percent'?'Örn: 15 = %15 indirim.':r.discountType==='bundlePrice'?'Örn: 1300 = seçilen kampanya adedi toplam 1300 TL.':'Örn: 400 = toplamdan 400 TL düşer.','.drawer','number')}
-      <label class=setItemToggle><span><b>Aynı kampanya tekrar uygulanabilsin</b><small class=muted>Örn. 3'lü kampanya açıkken 6 uygun adet varsa kampanya 2 kez uygulanır.</small></span><input type=checkbox ${r.repeatable?'checked':''} onchange="catalog.checkoutCampaigns[${i}].repeatable=this.checked;changed('.drawer');renderDiscountCampaigns()"></label>
-      <div class=field><label><b>En fazla kaç kez uygulansın?</b></label><input class=formControl type=number min=0 value="${Math.max(0,Number(r.maxApplications||0))}" ${r.repeatable?'':'disabled'} oninput="catalog.checkoutCampaigns[${i}].maxApplications=Math.max(0,Number(this.value||0));changed('.drawer')"><div class=help>${r.repeatable?'0 = sınırsız. Örn. 2 yazarsan bu kampanya sepette en fazla iki kez çalışır.':'Önce “tekrar uygulanabilsin” seçeneğini aç.'}</div></div>
-      <label class=setItemToggle><span><b>Aynı ürünleri başka kampanyada tekrar say</b><small class=muted>Kapalı bırakman önerilir. Böylece 3 ürün varsa 3'lü ve 2'li kampanya üst üste binmez; sistem daha avantajlı/geçerli kombinasyonu seçer.</small></span><input type=checkbox ${r.allowDoubleCount?'checked':''} onchange="catalog.checkoutCampaigns[${i}].allowDoubleCount=this.checked;changed('.drawer')"></label>
+      <label class=setItemToggle><span><b>Aynı kampanya tekrar uygulanabilsin</b><small class=muted><b>Açık:</b> kampanya uygun ürün grubu oluştuğu kadar tekrar çalışabilir; aşağıdaki üst sınırı aşmaz. <b>Kapalı:</b> sepette yalnızca 1 kez çalışır. Örn. 3'lü kampanyada 6 uygun ürün + sınır 2 ⇒ kampanya 2 kez uygulanır.</small></span><input type=checkbox ${r.repeatable?'checked':''} onchange="catalog.checkoutCampaigns[${i}].repeatable=this.checked;if(this.checked&&Number(catalog.checkoutCampaigns[${i}].maxApplications||0)<2)catalog.checkoutCampaigns[${i}].maxApplications=2;changed('.drawer');renderDiscountCampaigns()"></label>
+      <div class=field><label><b>En fazla kaç kez uygulansın?</b></label><input class=formControl type=number min=1 value="${Math.max(1,Number(r.maxApplications||1))}" ${r.repeatable?'':'disabled'} oninput="catalog.checkoutCampaigns[${i}].maxApplications=Math.max(1,Number(this.value||1));changed('.drawer')"><div class=help>${r.repeatable?'Burada sınırsız seçeneği yoktur. 1 = en fazla 1 kez, 2 = en fazla 2 kez, 3 = en fazla 3 kez. Örn. 3’lü kampanya + 6 uygun ürün + sınır 2 ⇒ iki ayrı 3’lü grup indirim alır.':'Tekrar kapalıyken bu alan devre dışıdır ve kampanya yalnızca 1 kez uygulanır.'}</div></div>
+      <label class=setItemToggle><span><b>Aynı ürünleri başka kampanyada tekrar say</b><small class=muted><b>Kapalı (önerilen):</b> aynı fiziksel ürün iki kampanyada birden kullanılamaz; sistem toplam indirimi en yüksek geçerli dağılımı seçer. Örn. 6 ürün varsa 3+3 ile 2+2+2 seçeneklerini karşılaştırır. <b>Açık:</b> aynı ürün farklı kampanyalarda yeniden sayılabilir ve indirimler üst üste binebilir.</small></span><input type=checkbox ${r.allowDoubleCount?'checked':''} onchange="catalog.checkoutCampaigns[${i}].allowDoubleCount=this.checked;changed('.drawer')"></label>
     </div>
     ${discountCampaignScopeProducts(r,i)}
-    <div class=campaignRuleNote><b>Çakışma koruması:</b> “Aynı ürünleri başka kampanyada tekrar say” kapalıysa 3 uygun adette 3'lü kampanya ile 2'li kampanya aynı ürünlere birlikte uygulanmaz. 5 uygun adette 3+2, 6 uygun adette 3+3 gibi en avantajlı geçerli dağılım seçilir. Tekrar seçeneğini ve üst sınırı her kampanyada ayrı yönetebilirsin.</div>
+    <div class=campaignRuleNote><b>Nasıl hesaplanır?</b> Aynı ürünleri başka kampanyada tekrar say seçeneği kapalıysa sistem ürünleri kampanyalar arasında paylaştırır ve müşteriye en yüksek toplam indirimi veren geçerli kombinasyonu seçer. Örnek: 3 ürün varsa 3’lü kampanya, 5 ürün varsa 3+2, 6 ürün varsa 3+3 veya 2+2+2 seçeneklerinden daha avantajlı olan uygulanır. Tekrar uygulanabilsin açıksa aynı kampanya da belirlediğin üst sınıra kadar birden fazla kez çalışır.</div>
   </div></details>`).join('');
   shell('Kampanyalar','Sepet indirimi kuralları burada. Her kampanya kapalı kutu halinde durur; açıp yalnızca o kampanyayı düzenlersin.',`<div class=panel><div class=campaignCreateRow><div><h2>Sepet Kampanyaları</h2><div class=help>Ürünleri kategori/model bazında seçebilir, bir ürünün kampanyada 1/2/3… adet sayılmasını belirleyebilir ve kampanyaların üst üste binmesini engelleyebilirsin.</div></div><button class=btn onclick=addDiscountCampaign()>+ Kampanya Ekle</button></div><div class=campaignRuleNote>Varsayılan güvenli davranış: aynı uygun ürünler iki ayrı kampanyada tekrar sayılmaz. İstersen kampanya içinden bunu özellikle açabilirsin.</div></div>${cards||'<div class=panel><b>Henüz sepet kampanyası yok.</b><div class=help>“Kampanya Ekle” ile ilk kampanyanı oluştur.</div></div>'}`);
 }
 function addDiscountCampaign(){
   catalog.checkoutCampaigns=catalog.checkoutCampaigns||[];
-  catalog.checkoutCampaigns.push({id:'sepet-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),name:'Yeni Kampanya',enabled:true,scopeType:'category',categoryIds:[],productIds:[],excludedProductIds:[],productUnitCounts:{},minQty:3,discountType:'fixed',discountValue:0,repeatable:false,maxApplications:0,allowDoubleCount:false});
+  catalog.checkoutCampaigns.push({id:'sepet-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),name:'Yeni Kampanya',enabled:true,scopeType:'category',categoryIds:[],productIds:[],excludedProductIds:[],productUnitCounts:{},minQty:3,discountType:'fixed',discountValue:0,repeatable:false,maxApplications:1,allowDoubleCount:false});
   renderDiscountCampaigns();
 }
 function removeDiscountCampaign(i){if(confirm('Bu kampanya silinsin mi?')){catalog.checkoutCampaigns.splice(i,1);renderDiscountCampaigns()}}
@@ -1047,19 +1054,28 @@ function renderInlineSetEditor(p,pi){
     ${rows||'<div class=emptyAdmin>Henüz set içeriği yok. Yukarıdan katalog ürünü seç veya elle içerik ekle.</div>'}
   </div></details>`;
 }
+function rerenderInlineSetEditorStable(setId){
+  adminOpenProduct=setId;
+  preserveAdminViewport(()=>renderCatalog());
+  requestAnimationFrame(()=>{
+    const article=document.getElementById('admin-product-'+setId);
+    const details=article?.querySelector('.inlineSetEditor');
+    if(details)details.open=true;
+  });
+}
 function addExistingProductToInlineSet(setId){
   const set=catalog.products.find(x=>x.id===setId),sel=$('#inlineSetAdd-'+CSS.escape(setId));
   if(!set||!sel?.value)return alert('Önce bir ürün seç.');
   const p=catalog.products.find(x=>x.id===sel.value);if(!p)return;
   set.setItems=set.setItems||[];
   set.setItems.push({id:'setitem-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),productId:p.id,name:p.name,type:(catalog.categories.find(c=>c.id===p.category)||{}).name||p.category,removeDiscount:Number(p.price||0),writePositions:[...(p.writePositions||[])],preferredWritePosition:p.preferredWritePosition||'',walletPhotoEnabled:p.walletPhotoEnabled!==false});
-  changed('.drawer');renderCatalog();
+  changed('.drawer');rerenderInlineSetEditorStable(setId);
 }
 function addBlankInlineSetItem(setId){
   const set=catalog.products.find(x=>x.id===setId);if(!set)return;
   set.setItems=set.setItems||[];
   set.setItems.push({id:'setitem-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),productId:'',name:'Yeni içerik',type:'',removeDiscount:0,writePositions:[],preferredWritePosition:'',writeEnabled:true,walletPhotoEnabled:true});
-  changed('.drawer');renderCatalog();
+  changed('.drawer');rerenderInlineSetEditorStable(setId);
 }
 function renderCopyProductSettingsPanel(p,i){
   const categories=catalog.categories.filter(c=>c.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0));

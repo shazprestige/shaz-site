@@ -596,8 +596,10 @@ window.addEventListener('message',e=>{
 
 function productFeatureList(p){
   const manual=Array.isArray(p.features)?p.features.filter(Boolean):[];
-  const setFeatures=(p.isSet&&Array.isArray(p.setItems))?p.setItems.map(x=>x.name).filter(Boolean):[];
-  return [...new Set([...manual,...setFeatures])];
+  // Hazır setlerde setItems, ürün çıkarma/kişiselleştirme akışının verisidir.
+  // Ürün detayında yalnızca yönetimde özellikle yazılan özellikler gösterilir;
+  // böylece aynı içerik adları ikinci kez listelenmez.
+  return [...new Set(manual)];
 }
 function openProductDetail(id,source='catalog'){
   const p=catalog.products.find(x=>x.id===id); if(!p)return;
@@ -636,32 +638,9 @@ function openProductImageViewer(){
 function bindFloatingContacts(){
   const floating=document.querySelector('.floating');
   if(!floating)return;
-  let raf=0;
-  const update=()=>{
-    raf=0;
-    if(window.innerWidth>700){
-      floating.style.transform='translate3d(0,0,0)';
-      return;
-    }
-    const doc=document.documentElement;
-    const scrollTop=window.scrollY||doc.scrollTop||0;
-    const distanceToBottom=Math.max(0,doc.scrollHeight-(scrollTop+window.innerHeight));
-    // İletişim kutuları sayfanın büyük bölümünde sağda kalır. Sadece son raddede,
-    // son ürünleri kapatmayacağı alana gelirken düz bir hat üzerinde alt ortaya kayar.
-    // Kullanıcı yukarı çıktığında aynı hareket tersine dönerek anında sağa döner.
-    const travelZone=Math.max(220,Math.min(420,window.innerHeight*.42));
-    const progress=Math.max(0,Math.min(1,1-(distanceToBottom/travelZone)));
-    const width=floating.getBoundingClientRect().width||176;
-    const currentRight=10;
-    const centeredLeft=(window.innerWidth-width)/2;
-    const currentLeft=window.innerWidth-currentRight-width;
-    const shift=centeredLeft-currentLeft;
-    floating.style.transform=`translate3d(${shift*progress}px,0,0)`;
-  };
-  const schedule=()=>{if(!raf)raf=requestAnimationFrame(update)};
-  window.addEventListener('scroll',schedule,{passive:true});
-  window.addEventListener('resize',schedule,{passive:true});
-  update();
+  // İletişim kutuları ürün kartlarının üstünü kapatmasın. Sayfa akışında,
+  // ürün listesinin altında kalır; kaydırmaya göre ekranda dolaşmaz.
+  floating.style.transform='none';
 }
 
 function selectProductDetailImage(btn,url){
@@ -803,13 +782,15 @@ function renderRemovalSelection(restoring=false){
   if(!restoring)setWizardNext('removeQuestion');
   openDrawer(head('Set içeriğini düzenle')+`<div class=wizardCard><h3>Size gönderilmesini istediğiniz ürünler işaretli kalsın.</h3><p>Çıkarmak istediğiniz ürünün tikini kaldırın. Çıkardığınız ürünün tanımlı tutarı toplamdan düşer.</p>
   <div class=setItemList>${wiz.product.setItems.map(x=>`<label class=setItemToggle data-set-preview-stage="remove" data-set-preview-item="${escapeAttr(x.id)}"><span><b>${x.name}</b><div class=muted>Çıkarılırsa -${money(x.removeDiscount)}</div></span><input type=checkbox class=keepItem data-id="${x.id}" ${wiz.keptIds.includes(x.id)?'checked':''} onchange=refreshRemovalSummary()></label>`).join('')}</div>
-  <div id=removeSummary></div></div><button class=btn onclick=confirmRemoval()>Devam Et</button>`);
+  <div id=removeSummary></div></div><div class=setRemovalActions><button class=btn onclick=confirmRemoval()>Devam Et</button></div>`);
   refreshRemovalSummary();
 }
 function refreshRemovalSummary(){
   const kept=[...document.querySelectorAll('.keepItem:checked')].map(x=>x.dataset.id);
   const removed=wiz.product.setItems.filter(x=>!kept.includes(x.id)), remain=wiz.product.setItems.filter(x=>kept.includes(x.id));
-  $('#removeSummary').innerHTML=`<div class=remainingList><b>Size gelecek ürünler:</b><br>${remain.length?remain.map(x=>'✓ '+x.name).join('<br>'):'Hiç ürün kalmadı.'}</div>${removed.length?`<div class=removedList><b>Çıkardığınız ürünler:</b><br>${removed.map(x=>'✕ '+x.name+' (-'+money(x.removeDiscount)+')').join('<br>')}</div>`:''}`;
+  const removedTotal=removed.reduce((sum,x)=>sum+Number(x.removeDiscount||0),0);
+  const currentTotal=Math.max(0,Number(wiz.product.price||0)-removedTotal);
+  $('#removeSummary').innerHTML=`<div class=setRemovalLiveTotal><span>Şu anki set tutarı</span><b>${money(currentTotal)}</b><small>${removed.length?money(removedTotal)+' düşüldü':'Henüz ürün çıkarılmadı'}</small></div><div class=remainingList><b>Size gelecek ürünler:</b><br>${remain.length?remain.map(x=>'✓ '+x.name).join('<br>'):'Hiç ürün kalmadı.'}</div>${removed.length?`<div class=removedList><b>Çıkardığınız ürünler:</b><br>${removed.map(x=>'✕ '+x.name+' (-'+money(x.removeDiscount)+')').join('<br>')}</div>`:''}`;
 }
 function confirmRemoval(){
   wiz.keptIds=[...document.querySelectorAll('.keepItem:checked')].map(x=>x.dataset.id);
@@ -967,49 +948,40 @@ function addSetToCart(){
 
 function campaignProductMatches(rule,p){
   if(!p)return false;
+  const excluded=rule.excludedProductIds||[];
+  if(excluded.includes(p.id))return false;
   const scope=rule.scopeType||'category';
   if(scope==='all')return true;
   if(scope==='products')return (rule.productIds||[]).includes(p.id);
-  if(!(rule.categoryIds||[]).includes(p.category))return false;
-  return !(rule.excludedProductIds||[]).includes(p.id);
+  return (rule.categoryIds||[]).includes(p.category);
 }
 function campaignUnitWeight(rule,p){
   return Math.max(1,Math.min(10,Number(rule?.productUnitCounts?.[p?.id]||1)));
 }
-function cartUnitsForCampaign(rule){
+function physicalCartUnits(){
   const units=[];
   cart.forEach((x,cartIndex)=>{
-    if(!campaignProductMatches(rule,x.product))return;
     const qty=Math.max(1,Number(x.qty||1));
-    const weight=campaignUnitWeight(rule,x.product);
-    for(let n=0;n<qty;n++)units.push({price:Number(x.product?.price||0),weight,cartIndex,productId:x.product?.id||''});
+    for(let n=0;n<qty;n++)units.push({key:`${cartIndex}:${n}`,price:Number(x.product?.price||0),cartIndex,product:x.product});
   });
   return units;
+}
+function cartUnitsForCampaign(rule){
+  return physicalCartUnits().filter(u=>campaignProductMatches(rule,u.product)).map(u=>({...u,weight:campaignUnitWeight(rule,u.product),productId:u.product?.id||''}));
 }
 function campaignWeightedCount(rule){return cartUnitsForCampaign(rule).reduce((s,u)=>s+u.weight,0)}
 function campaignBenefitText(rule){
   const v=Number(rule.discountValue||0);
   if(rule.discountType==='percent')return `%${v} indirim`;
-  if(rule.discountType==='bundlePrice')return `${money(v)} kampanya fiyatı`;
+  if(rule.discountType==='bundlePrice')return `${money(v)} kampanya toplamı`;
   return `${money(v)} indirim`;
 }
-function campaignScopeSignature(rule){
-  const scope=rule.scopeType||'category';
-  const cats=[...(rule.categoryIds||[])].sort();
-  const prods=[...(rule.productIds||[])].sort();
-  const excluded=[...(rule.excludedProductIds||[])].sort();
-  const weights=Object.entries(rule.productUnitCounts||{}).filter(([,v])=>Number(v||1)!==1).sort((a,b)=>String(a[0]).localeCompare(String(b[0])));
-  return JSON.stringify({scope,cats,prods,excluded,weights});
-}
-function campaignEstimatedApplicationDiscount(rule,units,totalWeight){
-  const q=Math.max(1,Number(rule.minQty||1));
+function campaignApplicationDiscount(rule,units){
   const v=Math.max(0,Number(rule.discountValue||0));
   if(rule.discountType==='fixed')return v;
-  const subtotal=units.reduce((s,u)=>s+u.price,0);
-  const share=totalWeight>0?Math.min(1,q/totalWeight):0;
-  const groupSubtotal=subtotal*share;
-  if(rule.discountType==='percent')return groupSubtotal*Math.max(0,Math.min(100,v))/100;
-  if(rule.discountType==='bundlePrice')return Math.max(0,groupSubtotal-v);
+  const subtotal=units.reduce((s,u)=>s+Number(u.price||0),0);
+  if(rule.discountType==='percent')return subtotal*Math.max(0,Math.min(100,v))/100;
+  if(rule.discountType==='bundlePrice')return Math.max(0,subtotal-v);
   return v;
 }
 function campaignMaxUses(rule,totalWeight){
@@ -1017,74 +989,106 @@ function campaignMaxUses(rule,totalWeight){
   if(totalWeight<q)return 0;
   if(!rule.repeatable)return 1;
   const natural=Math.floor(totalWeight/q);
-  const limit=Math.max(0,Number(rule.maxApplications||0));
-  return limit?Math.min(natural,limit):natural;
+  const limit=Math.max(1,Number(rule.maxApplications||1));
+  return Math.min(natural,limit);
 }
-function optimizeExclusiveCampaignGroup(rules){
-  if(!rules.length)return [];
-  const units=cartUnitsForCampaign(rules[0]);
-  const totalWeight=units.reduce((s,u)=>s+u.weight,0);
-  if(!totalWeight)return [];
-  const dp=Array(totalWeight+1).fill(null);dp[0]={value:0,uses:[]};
-  rules.forEach(rule=>{
-    const q=Math.max(1,Number(rule.minQty||1));
-    const maxUses=campaignMaxUses(rule,totalWeight);
-    if(!maxUses)return;
-    const benefit=Math.max(0,campaignEstimatedApplicationDiscount(rule,units,totalWeight));
-    if(benefit<=0)return;
-    const prev=dp.map(x=>x?{value:x.value,uses:[...x.uses]}:null);
-    for(let used=0;used<=totalWeight;used++){
-      const base=prev[used];if(!base)continue;
-      for(let k=1;k<=maxUses;k++){
-        const next=used+q*k;if(next>totalWeight)break;
-        const value=base.value+benefit*k;
-        if(!dp[next]||value>dp[next].value+0.0001)dp[next]={value,uses:[...base.uses,{rule,count:k,discount:benefit*k}]};
+function campaignCandidateGroups(rule,allUnits,maxCandidates=700){
+  const q=Math.max(1,Number(rule.minQty||1));
+  const eligible=[];
+  allUnits.forEach((u,index)=>{if(campaignProductMatches(rule,u.product))eligible.push({index,unit:u,weight:campaignUnitWeight(rule,u.product)})});
+  const totalWeight=eligible.reduce((s,x)=>s+x.weight,0);
+  const maxUses=campaignMaxUses(rule,totalWeight);
+  if(!maxUses)return {groups:[],totalWeight,maxUses};
+  const groups=[],seen=new Set();
+  function walk(pos,sum,chosen){
+    if(groups.length>=maxCandidates)return;
+    if(sum>=q){
+      const key=chosen.map(x=>x.index).join(',');
+      if(!seen.has(key)){
+        seen.add(key);
+        const units=chosen.map(x=>x.unit);
+        let mask=0n;chosen.forEach(x=>{mask|=(1n<<BigInt(x.index))});
+        groups.push({mask,units,discount:Math.max(0,campaignApplicationDiscount(rule,units))});
+      }
+      return;
+    }
+    if(pos>=eligible.length)return;
+    let possible=sum;
+    for(let i=pos;i<eligible.length;i++)possible+=eligible[i].weight;
+    if(possible<q)return;
+    walk(pos+1,sum+eligible[pos].weight,[...chosen,eligible[pos]]);
+    walk(pos+1,sum,chosen);
+  }
+  walk(0,0,[]);
+  groups.sort((a,b)=>b.discount-a.discount || a.units.length-b.units.length);
+  return {groups,totalWeight,maxUses};
+}
+function optimizeCampaignsExclusive(rules){
+  const allUnits=physicalCartUnits();
+  if(!allUnits.length||!rules.length)return [];
+  // Normal sepetler küçük olduğu için fiziksel ürün bazında gerçek çakışmayı çözüyoruz.
+  // Çok büyük sepetlerde aday sayısını sınırlayarak tarayıcıyı kilitlemiyoruz.
+  const prepared=rules.map(rule=>({rule,...campaignCandidateGroups(rule,allUnits,allUnits.length>22?220:700)})).filter(x=>x.groups.length&&x.maxUses>0);
+  if(!prepared.length)return [];
+  const memo=new Map();
+  function dfs(usedMask,counts){
+    const key=usedMask.toString()+'|'+counts.join(',');
+    if(memo.has(key))return memo.get(key);
+    let best={value:0,apps:[]};
+    for(let ri=0;ri<prepared.length;ri++){
+      const pr=prepared[ri];
+      if((counts[ri]||0)>=pr.maxUses)continue;
+      for(const g of pr.groups){
+        if((usedMask&g.mask)!==0n)continue;
+        const nextCounts=counts.slice();nextCounts[ri]=(nextCounts[ri]||0)+1;
+        const tail=dfs(usedMask|g.mask,nextCounts);
+        const value=g.discount+tail.value;
+        if(value>best.value+0.0001)best={value,apps:[{rule:pr.rule,discount:g.discount},...tail.apps]};
       }
     }
-  });
-  let best=dp[0];
-  dp.forEach(x=>{if(x&&x.value>(best?.value||0)+0.0001)best=x});
-  return best?.uses||[];
+    memo.set(key,best);return best;
+  }
+  return dfs(0n,Array(prepared.length).fill(0)).apps;
+}
+function campaignPromptForRule(rule){
+  const count=campaignWeightedCount(rule),q=Math.max(1,Number(rule.minQty||1));
+  if(count<=0)return null;
+  const maxUses=rule.repeatable?Math.max(1,Number(rule.maxApplications||1)):1;
+  const completed=Math.floor(count/q);
+  if(completed>=maxUses)return null;
+  const remainder=count%q;
+  const remaining=remainder===0?q:q-remainder;
+  return {id:rule.id,name:rule.name||'Kampanya',remaining,benefit:campaignBenefitText(rule),repeat:completed>0};
 }
 function calculateCartCampaigns(){
   const subtotal=cart.reduce((a,x)=>a+Number(x.product?.price||0)*Math.max(1,Number(x.qty||1)),0);
   const active=(catalog.checkoutCampaigns||[]).filter(r=>r&&r.enabled!==false);
   const applied=[],prompts=[];
 
-  active.forEach(rule=>{
-    const count=campaignWeightedCount(rule),minQty=Math.max(1,Number(rule.minQty||1));
-    if(count>0&&count<minQty)prompts.push({id:rule.id,name:rule.name||'Kampanya',remaining:minQty-count,benefit:campaignBenefitText(rule)});
-  });
+  active.forEach(rule=>{const p=campaignPromptForRule(rule);if(p)prompts.push(p)});
 
-  // “Aynı ürünleri başka kampanyada tekrar say” açık olan kurallar bağımsız çalışır.
+  // Kullanıcı özellikle çift saymaya izin verdiyse bu kampanya diğerlerinden bağımsızdır.
   active.filter(r=>r.allowDoubleCount===true).forEach(rule=>{
-    const units=cartUnitsForCampaign(rule),totalWeight=units.reduce((s,u)=>s+u.weight,0);
-    const uses=campaignMaxUses(rule,totalWeight);if(!uses)return;
-    const perUse=campaignEstimatedApplicationDiscount(rule,units,totalWeight);
-    const discount=Math.max(0,perUse*uses);
-    if(discount>0)applied.push({id:rule.id,name:rule.name||'Kampanya',discount:Number(discount.toFixed(2)),uses});
-  });
-
-  // Varsayılan güvenli sistem: aynı kapsam + aynı adet ağırlıkları içindeki kampanyalar
-  // aynı kampanya adetlerini iki kez kullanamaz. En yüksek indirimi veren 3+2 / 3+3 gibi dağılım seçilir.
-  const groups=new Map();
-  active.filter(r=>r.allowDoubleCount!==true).forEach(rule=>{
-    const key=campaignScopeSignature(rule);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(rule);
-  });
-  groups.forEach(rules=>{
-    optimizeExclusiveCampaignGroup(rules).forEach(x=>{
-      if(x.discount>0)applied.push({id:x.rule.id,name:x.rule.name||'Kampanya',discount:Number(x.discount.toFixed(2)),uses:x.count});
+    // Başka kampanyalarla çakışmasına izin verilir; kendi içinde ise aynı fiziksel ürün iki kez kullanılamaz.
+    optimizeCampaignsExclusive([rule]).forEach(x=>{
+      if(x.discount>0)applied.push({id:x.rule.id,name:x.rule.name||'Kampanya',discount:Number(x.discount.toFixed(2)),uses:1});
     });
   });
 
-  // Aynı kampanya birden fazla kez çalıştıysa sepette tek satırda topla.
+  // Çift sayma kapalı kampanyaların tamamını aynı anda optimize et.
+  // Örn. 3 ürün: 3'lü; 5 ürün: 3+2; 6 ürün: 3+3 veya 2+2+2 — hangisi daha avantajlıysa o seçilir.
+  const exclusive=active.filter(r=>r.allowDoubleCount!==true);
+  optimizeCampaignsExclusive(exclusive).forEach(x=>{
+    if(x.discount>0)applied.push({id:x.rule.id,name:x.rule.name||'Kampanya',discount:Number(x.discount.toFixed(2)),uses:1});
+  });
+
   const merged=[];
   applied.forEach(a=>{
     const found=merged.find(x=>x.id===a.id);
     if(found){found.discount=Number((found.discount+a.discount).toFixed(2));found.uses=(found.uses||1)+(a.uses||1)}else merged.push({...a});
   });
   let remaining=subtotal;
-  merged.forEach(a=>{a.discount=Math.min(a.discount,Math.max(0,remaining));remaining-=a.discount});
+  merged.sort((a,b)=>b.discount-a.discount).forEach(a=>{a.discount=Math.min(a.discount,Math.max(0,remaining));remaining-=a.discount});
   const discount=Number(merged.reduce((s,a)=>s+a.discount,0).toFixed(2));
   return {subtotal,discount,total:Math.max(0,Number((subtotal-discount).toFixed(2))),applied:merged,prompts};
 }
@@ -1096,7 +1100,7 @@ function checkout(){
     <div class="checkoutSteps"><span class="active">1 Sepet</span><span>2 Teslimat</span><span>3 Onay</span></div>
     <div class="cartToolbar"><span>${cart.reduce((n,x)=>n+Number(x.qty||1),0)} ürün</span><button type="button" class="cartClearBtn" onclick="clearCartFromCheckout()">Sepeti boşalt</button></div>
     <div class="checkoutProductPanel">${cart.map((x,i)=>cartItemSummary(x,i)).join('')}</div>
-    ${campaign.prompts.length?`<div class="campaignPromptBox">${campaign.prompts.map(x=>`<div><b>${escapeHtml(x.name)}</b> için <strong>${x.remaining} ürün daha ekle</strong> — ${escapeHtml(x.benefit)}</div>`).join('')}</div>`:''}
+    ${campaign.prompts.length?`<div class="campaignPromptBox">${campaign.prompts.map(x=>`<div><b>${escapeHtml(x.name)}</b>: <strong>${x.remaining} uygun ürün daha ekle</strong> → ${x.repeat?'kampanya bir kez daha uygulanır, ':' '}${escapeHtml(x.benefit)} kazanırsın.</div>`).join('')}</div>`:''}
     <div class="checkoutPriceBreakdown"><div><span>Ara toplam</span><strong>${money(campaign.subtotal)}</strong></div>${campaign.applied.map(x=>`<div class="checkoutDiscountLine"><span>${escapeHtml(x.name)}</span><strong>-${money(x.discount)}</strong></div>`).join('')}<div class="checkoutTotal"><span>Toplam</span><strong>${money(campaign.total)}</strong></div></div>
     <div class="checkoutPayment"><label for="pay"><b>Ödeme yöntemi</b><small>Ödeme tercihinizi seçin.</small></label><select id="pay" class="formControl"><option value="cod">Kapıda ödeme</option><option value="online">Online ödeme</option></select></div>
     <button class="btn checkoutPrimary" onclick="addressStep()">Teslimat Bilgilerine Geç →</button></div>`);
