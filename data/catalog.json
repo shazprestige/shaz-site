@@ -834,7 +834,7 @@
         "Kordon genişlik 2 cm"
       ],
       "category": "saatler",
-      "price": 600,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -851,7 +851,7 @@
         "Kordon",
         "Arka kapak"
       ],
-      "preferredWritePosition": "Kordon",
+      "preferredWritePosition": "Arka kapak",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
       "subcategoryId": "alt-1786824992077-ro14",
@@ -860,7 +860,7 @@
       "featuresEditorWidth": 320,
       "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
-      "subtitle": "Erkek kol saati",
+      "subtitle": "Kadın, Erkek  çift saati",
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444"
     },
@@ -897,7 +897,7 @@
         "Kordon",
         "Arka kapak"
       ],
-      "preferredWritePosition": "Kordon",
+      "preferredWritePosition": "Arka kapak",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
       "subcategoryId": "alt-1786824992077-ro14",
@@ -906,7 +906,7 @@
       "featuresEditorWidth": 320,
       "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
-      "subtitle": "Erkek kol saati",
+      "subtitle": "Kadın, Erkek  çift saati",
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444"
     },
