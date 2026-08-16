@@ -445,7 +445,12 @@
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
-      "walletPhotoEnabled": true
+      "walletPhotoEnabled": true,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
+      "shippingRibbonEnabled": true
     },
     {
       "id": "urun-1786817515929-0-8z49",
@@ -479,7 +484,12 @@
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
-      "walletPhotoEnabled": true
+      "walletPhotoEnabled": true,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
+      "shippingRibbonEnabled": true
     },
     {
       "id": "urun-1786817515929-1-nrm5",
@@ -513,7 +523,12 @@
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
-      "walletPhotoEnabled": true
+      "walletPhotoEnabled": true,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
+      "shippingRibbonEnabled": true
     },
     {
       "id": "urun-1786817515929-3-jj54",
@@ -547,7 +562,12 @@
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
-      "walletPhotoEnabled": true
+      "walletPhotoEnabled": true,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
+      "shippingRibbonEnabled": true
     },
     {
       "id": "urun-1786817515929-4-okmm",
@@ -581,7 +601,12 @@
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
-      "walletPhotoEnabled": true
+      "walletPhotoEnabled": true,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
+      "shippingRibbonEnabled": true
     },
     {
       "id": "urun-1786817515929-5-de8a",
@@ -615,7 +640,12 @@
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
-      "walletPhotoEnabled": true
+      "walletPhotoEnabled": true,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
+      "shippingRibbonEnabled": true
     },
     {
       "id": "urun-1786817515929-7-jcik",
@@ -649,7 +679,12 @@
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
-      "walletPhotoEnabled": true
+      "walletPhotoEnabled": true,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
+      "shippingRibbonEnabled": true
     },
     {
       "id": "urun-1786817515929-9-6j0k",
@@ -683,7 +718,12 @@
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
-      "walletPhotoEnabled": true
+      "walletPhotoEnabled": true,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
+      "shippingRibbonEnabled": true
     },
     {
       "id": "urun-1786825421633-0-33da",
@@ -697,7 +737,7 @@
         "Ayarlanabilir kordon"
       ],
       "category": "saatler",
-      "price": 600,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -715,10 +755,11 @@
       "writeEnabled": true,
       "walletPhotoEnabled": true,
       "subcategoryId": "alt-1786824992077-ro14",
-      "descriptionEditorWidth": 420,
-      "descriptionWrapCh": 53,
-      "featuresEditorWidth": 420,
-      "featuresWrapCh": 53
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
+      "shippingRibbonEnabled": true
     },
     {
       "id": "urun-1786825421633-1-qpgw",
@@ -732,7 +773,7 @@
         "Ayarlanabilir kordon"
       ],
       "category": "saatler",
-      "price": 600,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -750,10 +791,11 @@
       "writeEnabled": true,
       "walletPhotoEnabled": true,
       "subcategoryId": "alt-1786824992077-ro14",
-      "descriptionEditorWidth": 420,
-      "descriptionWrapCh": 53,
-      "featuresEditorWidth": 420,
-      "featuresWrapCh": 53
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
+      "shippingRibbonEnabled": true
     },
     {
       "id": "urun-1786825421633-2-a94y",
@@ -767,7 +809,7 @@
         "Ayarlanabilir kordon"
       ],
       "category": "saatler",
-      "price": 600,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -785,10 +827,11 @@
       "writeEnabled": true,
       "walletPhotoEnabled": true,
       "subcategoryId": "alt-1786824992077-ro14",
-      "descriptionEditorWidth": 420,
-      "descriptionWrapCh": 53,
-      "featuresEditorWidth": 420,
-      "featuresWrapCh": 53
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
+      "shippingRibbonEnabled": true
     }
   ],
   "builder": {
@@ -858,7 +901,16 @@
       "text": "Ürünlerini bir araya getir, özel set fiyatını anında gör.",
       "imageUrl": ""
     },
-    "productPricing": {}
+    "productPricing": {},
+    "pricingCounts": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "pricingMaxCount": 7
   },
   "personalizationPricing": {
     "first": 75,
@@ -885,11 +937,14 @@
       "name": "Yeni Kampanya",
       "enabled": true,
       "scopeType": "category",
-      "categoryIds": [],
+      "categoryIds": [
+        "saatler"
+      ],
       "productIds": [],
       "minQty": 3,
       "discountType": "fixed",
-      "discountValue": 0
+      "discountValue": 0,
+      "excludedProductIds": []
     }
   ]
 }
