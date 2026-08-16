@@ -7,8 +7,29 @@ let campaignSliderTimer=0,campaignSliderIndex=0,campaignTouchStartX=null;
 let checkoutState={payment:'cod',customer:null,requestId:null};
 let orderSubmitting=false;
 let adminPreviewMode=false;
+let activeProductDetailId='',activeProductDetailSource='catalog';
 const $=s=>document.querySelector(s);
 const money=n=>Number(n||0).toLocaleString('tr-TR')+' TL';
+
+function restoreCatalogView(){
+  try{
+    const saved=JSON.parse(sessionStorage.getItem('shazCatalogView')||'null');
+    if(!saved)return;
+    const validCategories=new Set(['tum',...(catalog.categories||[]).filter(c=>!c.hidden).map(c=>c.id)]);
+    if(validCategories.has(saved.category))activeCategory=saved.category;
+    activeSubcategory=String(saved.subcategory||'');
+    if(['priceAsc','priceDesc'].includes(saved.sort))productSort=saved.sort;
+  }catch(_){ }
+}
+function persistCatalogView(){
+  if(adminPreviewMode)return;
+  try{sessionStorage.setItem('shazCatalogView',JSON.stringify({category:activeCategory,subcategory:activeSubcategory,sort:productSort}))}catch(_){ }
+}
+function syncCatalogViewControls(){
+  const c=activeCategory==='tum'?null:(catalog.categories||[]).find(x=>x.id===activeCategory&&!x.hidden);
+  if($('#catalogTitle'))$('#catalogTitle').textContent=c?.name||'Tüm Ürünler';
+  if($('#sortProducts'))$('#sortProducts').value=productSort;
+}
 
 async function init(){
   settings=await fetch('/api/settings').then(r=>r.json());
@@ -20,9 +41,12 @@ async function init(){
       p.writeEnabled=!(n.includes('tesb')||n.includes('tesp'));
     }
   });
+  restoreCatalogView();
+  syncCatalogViewControls();
   apply(); renderCampaignCards(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart(); bindFloatingContacts(); renderSiteAnnouncement();
   const sharedProductId=new URLSearchParams(location.search).get('product');
   if(sharedProductId&&catalog.products.some(p=>p.id===sharedProductId)) setTimeout(()=>openProductDetail(sharedProductId,'shared'),0);
+  else if(sharedProductId) clearProductRoute();
 }
 function bindCore(){
   if($('#overlay')) $('#overlay').onclick=closeDrawer;
@@ -31,7 +55,7 @@ function bindCore(){
   if($('#cartBtn')) $('#cartBtn').onclick=checkout;
   if($('#builderSpotlightBtn')) $('#builderSpotlightBtn').onclick=openBuilder;
   if($('#builderSpotlight')) $('#builderSpotlight').onclick=e=>{if(e.target.id!=='builderSpotlightBtn')openBuilder()};
-  if($('#sortProducts')) $('#sortProducts').onchange=e=>{productSort=e.target.value;renderProducts($('#search')?.value||'')};
+  if($('#sortProducts')) $('#sortProducts').onchange=e=>{productSort=e.target.value;persistCatalogView();renderProducts($('#search')?.value||'')};
   if($('#categoryMenuBtn')) $('#categoryMenuBtn').onclick=openCategoryHub;
   if($('#categoryHubClose')) $('#categoryHubClose').onclick=closeCategoryHub;
   if($('#siteAnnouncementClose')) $('#siteAnnouncementClose').onclick=closeSiteAnnouncement;
@@ -229,6 +253,7 @@ function positionActiveSubcategoryTab(behavior='smooth'){
 }
 function selectSubcategory(id){
   activeSubcategory=id||'';
+  persistCatalogView();
   renderProducts($('#search')?.value||'');
   requestAnimationFrame(()=>{syncSubcategoryStickyOffset();positionActiveSubcategoryTab('smooth')});
 }
@@ -309,6 +334,7 @@ function chooseCategoryFromHub(id,name){
 function chooseSubcategoryFromHub(categoryId,subId,name){
   setCategory(categoryId,name,{scroll:false});
   activeSubcategory=subId||'';
+  persistCatalogView();
   renderProducts($('#search')?.value||'');
   closeCategoryHub();
   scrollCategoryHubToProducts();
@@ -328,6 +354,7 @@ function scrollCategoryHubToProducts(){
 function setCategory(id,name,opts={}){
   activeCategory=id;
   activeSubcategory='';
+  persistCatalogView();
   if($('#catalogTitle')) $('#catalogTitle').textContent=name;
   renderCategories(); renderProducts($('#search')?.value||'');
   // Üst kategori sekmesinden seçim yapıldığında ürün alanına gerçekten götür.
@@ -375,6 +402,7 @@ function renderProducts(filter=''){
     return `<div class="card productCardLink" data-product-id="${escapeAttr(p.id)}" role="button" tabindex="0" onclick="openProductDetail('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProductDetail('${p.id}')}"><div class="photo" data-preview-field="photo">${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge badge-${badgeColor}" data-preview-field="badge"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:''}${shippingRibbon}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}</div></div>`;
   }).join(''):`<div class="panel subcategoryEmpty"><b>Bu bölümde henüz ürün yok.</b></div>`;
   $('#productsList').innerHTML=chooser+cards;
+  persistCatalogView();
   requestAnimationFrame(()=>{syncSubcategoryStickyOffset();positionActiveSubcategoryTab('auto')});
 }
 function updateFavoriteBadge(){if($('#favBadge'))$('#favBadge').textContent=favorites.size}
@@ -414,8 +442,39 @@ async function shareProduct(id){
     }
   }
 }
-function openDrawer(html){$('#overlay').classList.remove('hidden');$('#drawer').classList.remove('hidden');$('#drawer').innerHTML=html}
-function closeDrawer(){$('#overlay').classList.add('hidden');$('#drawer').classList.add('hidden')}
+function productRouteId(){return new URLSearchParams(location.search).get('product')||''}
+function setProductRoute(id,mode='replace'){
+  if(adminPreviewMode||new URLSearchParams(location.search).get('adminpreview')==='1')return;
+  const u=new URL(location.href);
+  if(id)u.searchParams.set('product',id);else u.searchParams.delete('product');
+  const state={...(history.state||{}),shazProduct:id||null};
+  history[mode==='push'?'pushState':'replaceState'](state,'',u.pathname+u.search+u.hash);
+}
+function clearProductRoute(){if(productRouteId())setProductRoute('','replace')}
+function setProductDetailScrollLock(on){
+  document.body.classList.toggle('productDetailOpen',!!on);
+  document.documentElement.classList.toggle('productDetailOpen',!!on);
+}
+function openDrawer(html){
+  const isProductDetail=String(html||'').includes('productDetailShell');
+  if(!isProductDetail&&activeProductDetailId){activeProductDetailId='';activeProductDetailSource='catalog';clearProductRoute()}
+  setProductDetailScrollLock(isProductDetail);
+  const drawer=$('#drawer');
+  drawer?.classList.toggle('productDetailDrawer',isProductDetail);
+  $('#overlay').classList.remove('hidden');drawer.classList.remove('hidden');drawer.innerHTML=html;
+}
+function closeDrawer(){
+  if(activeProductDetailId){activeProductDetailId='';activeProductDetailSource='catalog';clearProductRoute()}
+  setProductDetailScrollLock(false);
+  $('#drawer')?.classList.remove('productDetailDrawer');
+  $('#overlay').classList.add('hidden');$('#drawer').classList.add('hidden');
+}
+function closeProductDetail(source=activeProductDetailSource||'catalog'){
+  activeProductDetailId='';activeProductDetailSource='catalog';clearProductRoute();setProductDetailScrollLock(false);
+  if(source==='favorites')return showFavorites();
+  if(source==='builder')return builderReturnFromDetail();
+  closeDrawer();
+}
 function toast(msg){const t=$('#toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
 function updateCart(){
   const count=cart.reduce((s,x)=>s+Number(x.qty||1),0);
@@ -533,16 +592,18 @@ function productFeatureList(p){
 }
 function openProductDetail(id,source='catalog'){
   const p=catalog.products.find(x=>x.id===id); if(!p)return;
+  activeProductDetailId=id;activeProductDetailSource=source;
+  if(source==='shared'||source==='route'){if(productRouteId()!==id)setProductRoute(id,'replace')}
+  else if(productRouteId()!==id)setProductRoute(id,'replace');
   const features=productFeatureList(p);
   const positions=Array.isArray(p.writePositions)?p.writePositions.filter(Boolean):[];
   const infoBlocks=[];
   if(p.description) infoBlocks.push(`<div class="productInfoPart productTextSized" style="--product-text-wrap:${Math.max(18,Number(p.descriptionWrapCh||70))}ch"><h3>Açıklama</h3><p>${escapeHtml(p.description)}</p></div>`);
   if(features.length) infoBlocks.push(`<div class="productInfoPart productTextSized" style="--product-text-wrap:${Math.max(18,Number(p.featuresWrapCh||70))}ch"><h3>${p.isSet?'Setin içindekiler':'Özellikler'}</h3><div class=detailFeatureList>${features.map(x=>`<div>✓ ${escapeHtml(x)}</div>`).join('')}</div></div>`);
   if(p.writeEnabled!==false&&positions.length&&!p.isSet) infoBlocks.push(`<div class="productInfoPart"><h3>Kişiselleştirme alanları</h3><p>${positions.map(escapeHtml).join(' · ')}</p></div>`);
-  const closeAction=source==='favorites'?"showFavorites()":source==='builder'?"builderReturnFromDetail()":"closeDrawer()";
   const closeLabel=source==='favorites'?'← Favorilere Dön':'Kapat';
   openDrawer(`<div class="productDetailShell">
-    <div class="wizardHead productDetailHead"><div class="productDetailTitle"><div class=wizardProgress>ÜRÜN DETAYI</div><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2></div><div class="productDetailHeadActions"><button id="productDetailFavBtn" class="productDetailFav ${favorites.has(p.id)?'active':''}" onclick="toggleFavFromDetail('${escapeAttr(p.id)}')" aria-label="${favorites.has(p.id)?'Favorilerden kaldır':'Favorilere ekle'}">${favorites.has(p.id)?'♥':'♡'}</button><button type="button" class="productDetailShare" onclick="shareProduct('${escapeAttr(p.id)}')" aria-label="Ürünü paylaş" title="Ürünü paylaş"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 11v8h14v-8"/></svg></button><button class="pill productDetailClose" onclick="${closeAction}">${closeLabel}</button></div></div>
+    <div class="wizardHead productDetailHead"><div class="productDetailTitle"><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2>${String(p.subtitle||'').trim()?`<div class="productDetailSubtitle">${escapeHtml(String(p.subtitle).trim())}</div>`:''}</div><div class="productDetailHeadActions"><button id="productDetailFavBtn" class="productDetailFav ${favorites.has(p.id)?'active':''}" onclick="toggleFavFromDetail('${escapeAttr(p.id)}')" aria-label="${favorites.has(p.id)?'Favorilerden kaldır':'Favorilere ekle'}">${favorites.has(p.id)?'♥':'♡'}</button><button type="button" class="productDetailShare" onclick="shareProduct('${escapeAttr(p.id)}')" aria-label="Ürünü paylaş" title="Ürünü paylaş"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 11v8h14v-8"/></svg></button><button class="pill productDetailClose" onclick="closeProductDetail('${escapeAttr(source)}')">${closeLabel}</button></div></div>
     ${productImages(p).length?`<div class=productDetailGallery>
       <div class="productDetailMedia" style="--detail-bg:url(&quot;${escapeAttr(mainProductImage(p))}&quot;)" onclick="openProductImageViewer()" role="button" tabindex="0" aria-label="Fotoğrafı büyüt">${p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'}"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:''}<img id=productDetailMain src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name||'Ürün')}"></div>
       ${productImages(p).length>1?`<div class=productDetailThumbs>${productImages(p).map((u,i)=>`<button class="${i===0?'active':''}" onclick="selectProductDetailImage(this,'${escapeAttr(u)}')"><img src="${escapeAttr(u)}" alt=""></button>`).join('')}</div>`:''}

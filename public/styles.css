@@ -3072,3 +3072,89 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
   /* Kullanıcının gerçek masaüstü görünümüne göre, mevcut geometrik konumdan bilinçli olarak 1-2 kademe daha aşağı. */
   #brandLogo.logo{top:61%!important;}
 }
+
+/* V100 — yalnızca ürün detay başlığı, alt başlık, yenileme rotasıyla ilgili görsel kilit ve iOS overscroll düzeltmesi */
+/* Ürün detayı açıkken arka sayfanın iOS lastik gibi çekilmesini engelle; drawer kendi içinde dikey kaymaya devam eder. */
+html.productDetailOpen,
+body.productDetailOpen{
+  overscroll-behavior-y:none!important;
+}
+html.productDetailOpen{background:#0f0f10!important}
+body.productDetailOpen{overflow:hidden!important}
+.drawer.productDetailDrawer{
+  overscroll-behavior-y:contain!important;
+  overscroll-behavior-x:none!important;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* Ürün detayının marka/model + aksiyon alanı artık kompakt ve drawer içinde sabit. */
+.drawer.productDetailDrawer .productDetailShell{padding-top:0!important}
+.drawer.productDetailDrawer .productDetailHead{
+  position:sticky!important;
+  top:0!important;
+  z-index:160!important;
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:8px 12px 7px!important;
+  background:var(--paper)!important;
+  border-bottom:1px solid #e5e8ec!important;
+  box-shadow:0 1px 0 rgba(16,19,26,.02)!important;
+}
+.drawer.productDetailDrawer .productDetailTitle{
+  width:100%!important;
+  min-width:0!important;
+  padding:0 164px 0 0!important;
+}
+.drawer.productDetailDrawer .productDetailTitle h2{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0!important;
+  font-size:clamp(21px,5.6vw,27px)!important;
+  line-height:1.08!important;
+  letter-spacing:-.02em!important;
+  text-align:left!important;
+  overflow-wrap:anywhere!important;
+}
+.productDetailSubtitle{
+  margin-top:3px;
+  color:#727b87;
+  font-size:11px;
+  line-height:1.25;
+  font-weight:600;
+  letter-spacing:.01em;
+  overflow-wrap:anywhere;
+}
+.drawer.productDetailDrawer .productDetailHeadActions{
+  position:absolute!important;
+  top:50%!important;
+  right:10px!important;
+  transform:translateY(-50%)!important;
+  z-index:6!important;
+  gap:5px!important;
+}
+.drawer.productDetailDrawer .productDetailFav,
+.drawer.productDetailDrawer .productDetailShare{
+  width:34px!important;
+  height:34px!important;
+}
+.drawer.productDetailDrawer .productDetailShare svg{width:18px!important;height:18px!important}
+.drawer.productDetailDrawer .productDetailClose{
+  position:static!important;
+  top:auto!important;
+  right:auto!important;
+  min-height:34px!important;
+  padding:7px 10px!important;
+  font-size:11px!important;
+}
+
+@media(min-width:701px){
+  .drawer.productDetailDrawer .productDetailHead{padding:8px 18px 7px!important}
+  .drawer.productDetailDrawer .productDetailTitle{padding:0 190px!important}
+  .drawer.productDetailDrawer .productDetailTitle h2{text-align:center!important;font-size:25px!important}
+  .drawer.productDetailDrawer .productDetailSubtitle{text-align:center!important}
+  .drawer.productDetailDrawer .productDetailHeadActions{right:18px!important}
+}
