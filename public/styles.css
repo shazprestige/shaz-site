@@ -3359,3 +3359,10 @@ body.productDetailOpen{overflow:hidden!important}
 .categoryQuickNav::-webkit-scrollbar-track{background:#eceff2!important;border-radius:999px!important}
 .categoryQuickNav::-webkit-scrollbar-thumb{background:#8d949d!important;border-radius:999px!important;border:1px solid #eceff2!important}
 .categoryQuickNav::-webkit-scrollbar-thumb:hover{background:#646b74!important}
+
+
+/* V109 targeted fixes */
+.floating{position:fixed!important;right:12px!important;bottom:12px!important;margin:0!important;width:max-content!important;max-width:min(360px,calc(100vw - 24px))!important;z-index:24!important;transition:left .22s ease,right .22s ease,transform .22s ease!important}
+.floating.atPageBottom{right:auto!important;left:18px!important;transform:none!important}
+@media(max-width:700px){.floating{right:10px!important;bottom:86px!important;max-width:calc(100vw - 20px)!important}.floating.atPageBottom{left:10px!important;right:auto!important}}
+.setPersonalizationInfo{display:grid;gap:10px}.personalizationIntro{margin:0!important}.personalizationGroup{display:grid;gap:5px}.personalizationLine{display:flex;align-items:center;gap:7px;line-height:1.35}.miniYes,.miniNo{font-size:15px;font-weight:800;line-height:1;background:none!important;border:0!important}.miniYes{color:#1f9d55}.miniNo{color:#b23a2c}.removalFriendlyNote{margin-top:12px;padding:12px 14px;border:1px solid #e5d6bf;border-radius:14px;background:#fffaf2;display:grid;gap:6px}.removalFriendlyNote span{color:#596274;line-height:1.35}.smallInlineBtn{justify-self:start;border:0;background:transparent;color:#111;font-weight:800;text-decoration:underline;cursor:pointer;padding:2px 0}.campaignPromptBox strong{font-weight:850}

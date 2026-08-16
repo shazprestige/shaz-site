@@ -286,6 +286,7 @@ function positionActiveCategoryTab(behavior='smooth'){
 }
 
 function renderCategories(){
+  if(activeCategory!=='tum' && !(catalog.categories||[]).some(c=>c.id===activeCategory&&!c.hidden)){activeCategory='tum';activeSubcategory='';persistCatalogView();syncCatalogViewControls()}
   const cats=[{id:'tum',name:'Tüm Ürünler',order:-1},...catalog.categories.filter(c=>!c.hidden&&c.id!=='tum')].sort((a,b)=>(a.order??0)-(b.order??0));
   const nav=$('#catalogNav');
   if(!nav)return;
@@ -485,7 +486,25 @@ function closeProductDetail(source=activeProductDetailSource||'catalog'){
   closeDrawer();
 }
 function toast(msg){const t=$('#toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+function normalizeCartPersonalizationFees(){
+  let slot=0;
+  const feeAt=i=>i===0?Number(catalog.personalizationPricing?.first||75):i===1?Number(catalog.personalizationPricing?.second||50):Number(catalog.personalizationPricing?.thirdPlus||25);
+  cart.forEach(x=>{
+    if(x.setCustomization)return; // hazır setin kendi iç ücret sırası korunur
+    const writes=Array.isArray(x.writes)?x.writes:[];
+    const photos=Array.isArray(x.photoCustomizations)?x.photoCustomizations:[];
+    if(!writes.length&&!photos.length)return;
+    // Cüzdan/fotoğraf akışının özel ücret yapısını değiştirmiyoruz; yalnızca sıralamada kişiselleştirme olarak sayıyoruz.
+    if(photos.length){slot+=Math.max(1,writes.length+photos.length);return;}
+    if(!writes.length)return;
+    let personalTotal=0;
+    writes.forEach(w=>{w.fee=feeAt(slot++);personalTotal+=Number(w.fee||0)});
+    const base=Number(x.basePrice??x.product?.price??0);x.basePrice=base;
+    x.product={...x.product,price:base+personalTotal};
+  });
+}
 function updateCart(){
+  normalizeCartPersonalizationFees();
   const count=cart.reduce((s,x)=>s+Number(x.qty||1),0);
   if($('#cartCount')) $('#cartCount').textContent=count;
   if($('#cartBadge')) $('#cartBadge').textContent=count;
@@ -498,6 +517,7 @@ window.addEventListener('message',e=>{
     adminPreviewMode=true;
     if(e.data.settings) settings=structuredClone(e.data.settings);
     if(e.data.catalog) catalog=structuredClone(e.data.catalog);
+    if(activeCategory!=='tum' && !(catalog.categories||[]).some(c=>c.id===activeCategory&&!c.hidden)){activeCategory='tum';activeSubcategory=''}
     apply();renderCampaignCards();renderCategories();renderProducts($('#search')?.value||'');
     updateFavoriteBadge();updateCart();$('#siteAnnouncement')?.classList.add('hidden');
     return;
@@ -611,6 +631,11 @@ function openProductDetail(id,source='catalog'){
   const infoBlocks=[];
   if(p.description) infoBlocks.push(`<div class="productInfoPart productTextSized" style="--product-text-wrap:${Math.max(18,Number(p.descriptionWrapCh||70))}ch"><h3>Açıklama</h3><p>${escapeHtml(p.description)}</p></div>`);
   if(features.length) infoBlocks.push(`<div class="productInfoPart productTextSized" style="--product-text-wrap:${Math.max(18,Number(p.featuresWrapCh||70))}ch"><h3>${p.isSet?'Setin içindekiler':'Özellikler'}</h3><div class=detailFeatureList>${features.map(x=>`<div>✓ ${escapeHtml(x)}</div>`).join('')}</div></div>`);
+  if(p.isSet&&Array.isArray(p.setItems)&&p.setItems.length){
+    const can=p.setItems.filter(x=>setItemWriteAvailable(x)||isWalletSetItem(x));
+    const cannot=p.setItems.filter(x=>!(setItemWriteAvailable(x)||isWalletSetItem(x)));
+    infoBlocks.push(`<div class="productInfoPart setPersonalizationInfo"><h3>Kişiselleştirme</h3><p class=personalizationIntro>Set içeriğindeki uygun ürünleri sipariş sırasında kişiselleştirebilirsiniz.</p>${can.length?`<div class=personalizationGroup><b>Kişiselleştirme yapılabilir</b>${can.map(x=>`<div class=personalizationLine><span class=miniYes>✓</span>${escapeHtml(x.name)}</div>`).join('')}</div>`:''}${cannot.length?`<div class=personalizationGroup><b>Kişiselleştirme yapılamaz</b>${cannot.map(x=>`<div class=personalizationLine><span class=miniNo>×</span>${escapeHtml(x.name)}</div>`).join('')}</div>`:''}</div>`);
+  }
   if(p.writeEnabled!==false&&positions.length&&!p.isSet) infoBlocks.push(`<div class="productInfoPart"><h3>Kişiselleştirme alanları</h3><p>${positions.map(escapeHtml).join(' · ')}</p></div>`);
   const closeLabel=source==='favorites'?'← Favorilere Dön':'Kapat';
   openDrawer(`<div class="productDetailShell">
@@ -636,11 +661,13 @@ function openProductImageViewer(){
 }
 
 function bindFloatingContacts(){
-  const floating=document.querySelector('.floating');
-  if(!floating)return;
-  // İletişim kutuları ürün kartlarının üstünü kapatmasın. Sayfa akışında,
-  // ürün listesinin altında kalır; kaydırmaya göre ekranda dolaşmaz.
-  floating.style.transform='none';
+  const floating=document.querySelector('.floating');if(!floating)return;
+  const update=()=>{
+    const nearBottom=(window.innerHeight+window.scrollY)>=document.documentElement.scrollHeight-180;
+    floating.classList.toggle('atPageBottom',nearBottom);
+  };
+  window.removeEventListener('scroll',window._shazFloatingUpdate||(()=>{}));
+  window._shazFloatingUpdate=update;window.addEventListener('scroll',update,{passive:true});window.addEventListener('resize',update,{passive:true});update();
 }
 
 function selectProductDetailImage(btn,url){
@@ -781,20 +808,33 @@ function keepAllSetItems(){wiz.keptIds=wiz.product.setItems.map(x=>x.id);renderW
 function renderRemovalSelection(restoring=false){
   if(!restoring)setWizardNext('removeQuestion');
   openDrawer(head('Set içeriğini düzenle')+`<div class=wizardCard><h3>Size gönderilmesini istediğiniz ürünler işaretli kalsın.</h3><p>Çıkarmak istediğiniz ürünün tikini kaldırın. Çıkardığınız ürünün tanımlı tutarı toplamdan düşer.</p>
-  <div class=setItemList>${wiz.product.setItems.map(x=>`<label class=setItemToggle data-set-preview-stage="remove" data-set-preview-item="${escapeAttr(x.id)}"><span><b>${x.name}</b><div class=muted>Çıkarılırsa -${money(x.removeDiscount)}</div></span><input type=checkbox class=keepItem data-id="${x.id}" ${wiz.keptIds.includes(x.id)?'checked':''} onchange=refreshRemovalSummary()></label>`).join('')}</div>
+  <div class=setItemList>${wiz.product.setItems.map(x=>`<label class=setItemToggle data-set-preview-stage="remove" data-set-preview-item="${escapeAttr(x.id)}"><span><b>${x.name}</b><div class=muted>Çıkarılırsa -${money(x.removeDiscount)}</div></span><input type=checkbox class=keepItem data-id="${x.id}" ${wiz.keptIds.includes(x.id)?'checked':''} onchange=handleRemovalToggle(this)></label>`).join('')}</div>
   <div id=removeSummary></div></div><div class=setRemovalActions><button class=btn onclick=confirmRemoval()>Devam Et</button></div>`);
   refreshRemovalSummary();
+}
+let removalFriendlyMessage='';
+function handleRemovalToggle(el){
+  const checked=[...document.querySelectorAll('.keepItem:checked')];
+  if(checked.length<2){el.checked=true;removalFriendlyMessage='Hazır sette en az 2 ürün kalmalıdır. Tek ürün almak isterseniz ilgili kategoriden ürünü doğrudan seçebilirsiniz.';}else removalFriendlyMessage='';
+  refreshRemovalSummary();
+}
+function goToRemainingSetItemCategory(){
+  const kept=[...document.querySelectorAll('.keepItem:checked')].map(x=>x.dataset.id);
+  const item=wiz?.product?.setItems?.find(x=>kept.includes(x.id));const linked=item?.productId?(catalog.products||[]).find(p=>p.id===item.productId):null;
+  closeDrawer();
+  if(linked){const cat=(catalog.categories||[]).find(c=>c.id===linked.category&&!c.hidden);setCategory(cat?.id||'tum',cat?.name||'Tüm Ürünler',{scroll:true});}
+  else setCategory('tum','Tüm Ürünler',{scroll:true});
 }
 function refreshRemovalSummary(){
   const kept=[...document.querySelectorAll('.keepItem:checked')].map(x=>x.dataset.id);
   const removed=wiz.product.setItems.filter(x=>!kept.includes(x.id)), remain=wiz.product.setItems.filter(x=>kept.includes(x.id));
   const removedTotal=removed.reduce((sum,x)=>sum+Number(x.removeDiscount||0),0);
   const currentTotal=Math.max(0,Number(wiz.product.price||0)-removedTotal);
-  $('#removeSummary').innerHTML=`<div class=setRemovalLiveTotal><span>Şu anki set tutarı</span><b>${money(currentTotal)}</b><small>${removed.length?money(removedTotal)+' düşüldü':'Henüz ürün çıkarılmadı'}</small></div><div class=remainingList><b>Size gelecek ürünler:</b><br>${remain.length?remain.map(x=>'✓ '+x.name).join('<br>'):'Hiç ürün kalmadı.'}</div>${removed.length?`<div class=removedList><b>Çıkardığınız ürünler:</b><br>${removed.map(x=>'✕ '+x.name+' (-'+money(x.removeDiscount)+')').join('<br>')}</div>`:''}`;
+  $('#removeSummary').innerHTML=`<div class=setRemovalLiveTotal><span>Şu anki set tutarı</span><b>${money(currentTotal)}</b><small>${removed.length?money(removedTotal)+' düşüldü':'Henüz ürün çıkarılmadı'}</small></div><div class=remainingList><b>Size gelecek ürünler:</b><br>${remain.length?remain.map(x=>'✓ '+x.name).join('<br>'):'Hiç ürün kalmadı.'}</div>${removed.length?`<div class=removedList><b>Çıkardığınız ürünler:</b><br>${removed.map(x=>'✕ '+x.name+' (-'+money(x.removeDiscount)+')').join('<br>')}</div>`:''}${removalFriendlyMessage?`<div class=removalFriendlyNote><b>Setinizi koruyalım</b><span>${escapeHtml(removalFriendlyMessage)}</span><button type=button class=smallInlineBtn onclick=goToRemainingSetItemCategory()>Kategoriyi Gör →</button></div>`:''}`;
 }
 function confirmRemoval(){
   wiz.keptIds=[...document.querySelectorAll('.keepItem:checked')].map(x=>x.dataset.id);
-  if(!wiz.keptIds.length)return alert('Sette en az bir ürün kalmalıdır.');
+  if(wiz.keptIds.length<2){removalFriendlyMessage='Hazır sette en az 2 ürün kalmalıdır. Tek ürün almak isterseniz ilgili kategoriden ürünü doğrudan seçebilirsiniz.';refreshRemovalSummary();return;}
   renderWriteQuestion();
 }
 function renderWriteQuestion(restoring=false){
@@ -1054,11 +1094,12 @@ function campaignPromptForRule(rule){
   const count=campaignWeightedCount(rule),q=Math.max(1,Number(rule.minQty||1));
   if(count<=0)return null;
   const maxUses=rule.repeatable?Math.max(1,Number(rule.maxApplications||1)):1;
-  const completed=Math.floor(count/q);
+  const completed=Math.min(maxUses,Math.floor(count/q));
   if(completed>=maxUses)return null;
   const remainder=count%q;
   const remaining=remainder===0?q:q-remainder;
-  return {id:rule.id,name:rule.name||'Kampanya',remaining,benefit:campaignBenefitText(rule),repeat:completed>0};
+  const nextUse=completed+1, usesLeft=maxUses-completed;
+  return {id:rule.id,name:rule.name||'Kampanya',remaining,benefit:campaignBenefitText(rule),completed,nextUse,usesLeft,maxUses,repeatable:!!rule.repeatable};
 }
 function calculateCartCampaigns(){
   const subtotal=cart.reduce((a,x)=>a+Number(x.product?.price||0)*Math.max(1,Number(x.qty||1)),0);
@@ -1093,6 +1134,7 @@ function calculateCartCampaigns(){
   return {subtotal,discount,total:Math.max(0,Number((subtotal-discount).toFixed(2))),applied:merged,prompts};
 }
 function checkout(){
+  normalizeCartPersonalizationFees();
   if(!cart.length)return openDrawer('<div class="checkoutEmpty"><h2>Sepetiniz boş</h2><p>Beğendiğiniz ürünleri sepete ekleyerek siparişe başlayabilirsiniz.</p><button class="btn" onclick="closeDrawer()">Ürünlere Dön</button></div>');
   const campaign=calculateCartCampaigns();
   openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><h2>Sepetiniz</h2><p>Ürünlerinizi kontrol edin, ardından teslimat bilgilerinize geçin.</p></div><button class="pill" onclick=closeDrawer()>Kapat</button></div>
@@ -1100,7 +1142,7 @@ function checkout(){
     <div class="checkoutSteps"><span class="active">1 Sepet</span><span>2 Teslimat</span><span>3 Onay</span></div>
     <div class="cartToolbar"><span>${cart.reduce((n,x)=>n+Number(x.qty||1),0)} ürün</span><button type="button" class="cartClearBtn" onclick="clearCartFromCheckout()">Sepeti boşalt</button></div>
     <div class="checkoutProductPanel">${cart.map((x,i)=>cartItemSummary(x,i)).join('')}</div>
-    ${campaign.prompts.length?`<div class="campaignPromptBox">${campaign.prompts.map(x=>`<div><b>${escapeHtml(x.name)}</b>: <strong>${x.remaining} uygun ürün daha ekle</strong> → ${x.repeat?'kampanya bir kez daha uygulanır, ':' '}${escapeHtml(x.benefit)} kazanırsın.</div>`).join('')}</div>`:''}
+    ${campaign.prompts.length?`<div class="campaignPromptBox">${campaign.prompts.map(x=>`<div><b>${escapeHtml(x.name)}</b>: <strong>${x.remaining} uygun ürün daha ekle</strong> → ${x.completed?`${x.nextUse}. kampanya avantajını kazan. ${x.usesLeft>1?`Sonrasında ${x.usesLeft-1} kez daha yararlanabilirsin.`:''}`:`${escapeHtml(x.benefit)} kazan.`}</div>`).join('')}</div>`:''}
     <div class="checkoutPriceBreakdown"><div><span>Ara toplam</span><strong>${money(campaign.subtotal)}</strong></div>${campaign.applied.map(x=>`<div class="checkoutDiscountLine"><span>${escapeHtml(x.name)}</span><strong>-${money(x.discount)}</strong></div>`).join('')}<div class="checkoutTotal"><span>Toplam</span><strong>${money(campaign.total)}</strong></div></div>
     <div class="checkoutPayment"><label for="pay"><b>Ödeme yöntemi</b><small>Ödeme tercihinizi seçin.</small></label><select id="pay" class="formControl"><option value="cod">Kapıda ödeme</option><option value="online">Online ödeme</option></select></div>
     <button class="btn checkoutPrimary" onclick="addressStep()">Teslimat Bilgilerine Geç →</button></div>`);
@@ -1232,6 +1274,7 @@ function newOrderRequestId(){
   try{return crypto.randomUUID()}catch{return 'shaz-'+Date.now()+'-'+Math.random().toString(36).slice(2)}
 }
 async function finalizeOrder(personalApproved,button){
+  normalizeCartPersonalizationFees();
   // Çift/çoklu tıklama aynı siparişi birden fazla kez göndermesin.
   if(orderSubmitting)return;
   if(!checkoutState.customer){

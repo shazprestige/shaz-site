@@ -1,10 +1,11 @@
 
 let settings={},catalog={};
-let adminOpenCategory=null,adminProductSearch="",adminOpenProduct=null;
+let adminOpenCategory=sessionStorage.getItem('shazAdminCategory')||null,adminProductSearch="",adminOpenProduct=null;
 let adminDraggedCategory=null;
 let adminDraggedProduct=null;
 let adminBuilderPricingCategory="";
 let adminBuilderPricingProduct="";
+let adminOpenCampaignId=sessionStorage.getItem('shazAdminOpenCampaign')||'';
 let setBulkDraft={};
 let currentPreviewTarget=null;
 let previewFocusToken=0;
@@ -22,6 +23,10 @@ document.addEventListener('focusin',e=>{
   const target=el?.dataset?.previewTarget;
   if(target)previewTo(target,true);
 });
+let adminPreviewSyncTimer=null;
+function scheduleAdminPreviewSync(){clearTimeout(adminPreviewSyncTimer);adminPreviewSyncTimer=setTimeout(()=>sendPreview(),25)}
+document.addEventListener('change',scheduleAdminPreviewSync);
+document.addEventListener('click',e=>{if(e.target.closest('button,input,select,label,summary'))scheduleAdminPreviewSync()});
 
 async function logoutAdmin(){
   await fetch('/api/admin/logout',{method:'POST'});
@@ -53,7 +58,8 @@ async function load(){
   }
   if(!['full','center','middle'].includes(settings.campaignMarqueePosition))settings.campaignMarqueePosition='full';
   settings.theme=settings.theme||{};
-  show('site');
+  const savedTab=sessionStorage.getItem('shazAdminTab')||'site';
+  show(['site','catalog','custom','discounts','orders'].includes(savedTab)?savedTab:'site');
   setTimeout(()=>{sendPreview();previewTo('header')},600);
 }
 async function saveAll(){
@@ -150,6 +156,7 @@ function syncSetPreferredSelect(selectId,productIndex,itemIndex){
 }
 
 function show(tab){
+  try{sessionStorage.setItem('shazAdminTab',tab)}catch(_){}
   const adminRoot=document.querySelector('.simpleAdmin');
   const preview=document.querySelector('.previewPane');
   const isOrders=tab==='orders';
@@ -403,15 +410,15 @@ function discountTypeHelp(rule){
 function renderDiscountCampaigns(){
   catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
   catalog.checkoutCampaigns.forEach(r=>{r.productUnitCounts=r.productUnitCounts||{};if(r.repeatable===undefined)r.repeatable=false;if(r.maxApplications===undefined||Number(r.maxApplications)<1)r.maxApplications=1;if(r.allowDoubleCount===undefined)r.allowDoubleCount=false;});
-  const cards=catalog.checkoutCampaigns.map((r,i)=>`<details class="panel simpleAdminDetails discountCampaignAdmin" ${i===catalog.checkoutCampaigns.length-1?'open':''}><summary><span>${esc(r.name||('Kampanya '+(i+1)))}</span><small>${r.enabled!==false?'Aktif':'Kapalı'} · ${Math.max(1,Number(r.minQty||1))} kampanya adedi</small></summary><div class=simpleDetailsBody>
+  const cards=catalog.checkoutCampaigns.map((r,i)=>`<details class="panel simpleAdminDetails discountCampaignAdmin" data-campaign-admin-id="${attr(r.id)}" ${adminOpenCampaignId===r.id?'open':''} ontoggle="if(this.open){adminOpenCampaignId='${attr(r.id)}';sessionStorage.setItem('shazAdminOpenCampaign',adminOpenCampaignId)}else if(adminOpenCampaignId==='${attr(r.id)}'){adminOpenCampaignId='';sessionStorage.removeItem('shazAdminOpenCampaign')}"><summary><span>${esc(r.name||('Kampanya '+(i+1)))}</span><small>${r.enabled!==false?'Aktif':'Kapalı'} · ${Math.max(1,Number(r.minQty||1))} kampanya adedi</small></summary><div class=simpleDetailsBody>
     <div class=campaignRuleHead><label class=setItemToggle><span><b>Kampanya aktif</b><small class=muted>İstediğinde kapatabilirsin; silmek zorunda değilsin.</small></span><input type=checkbox ${r.enabled!==false?'checked':''} onchange="catalog.checkoutCampaigns[${i}].enabled=this.checked;changed('.drawer')"></label><button class=dangerBtn onclick="removeDiscountCampaign(${i})">Kampanyayı Sil</button></div>
     <div class=grid2>
       ${input('Kampanya adı',`catalog.checkoutCampaigns[${i}].name`,r.name||'Yeni Kampanya','Müşteri sepette bu adı görür.','.drawer')}
       ${input('Kampanya için gerekli adet',`catalog.checkoutCampaigns[${i}].minQty`,Math.max(1,Number(r.minQty||1)),'Buradaki adet normal sepet satırı değil, kampanya adedidir. Örneğin çift saat ürününü aşağıda 2 adet saydırabilirsin.','.drawer','number')}
-      <div class=field><label><b>Kampanya hangi ürünlerde?</b></label><select class=formControl onchange="catalog.checkoutCampaigns[${i}].scopeType=this.value;renderDiscountCampaigns()"><option value=category ${(r.scopeType||'category')==='category'?'selected':''}>Kategori seç</option><option value=products ${r.scopeType==='products'?'selected':''}>Tek tek ürün seç</option><option value=all ${r.scopeType==='all'?'selected':''}>Tüm ürünler</option></select><div class=help>Bir kategori seçtiğinde içindeki modeller aşağıda açılır; istemediğini çıkarabilir ve her ürünün kampanya sayısını ayrı belirleyebilirsin.</div></div>
-      <div class=field><label><b>İndirim türü</b></label><select class=formControl onchange="catalog.checkoutCampaigns[${i}].discountType=this.value;renderDiscountCampaigns()"><option value=fixed ${(r.discountType||'fixed')==='fixed'?'selected':''}>Sabit TL indirim</option><option value=percent ${r.discountType==='percent'?'selected':''}>Yüzdelik indirim</option><option value=bundlePrice ${r.discountType==='bundlePrice'?'selected':''}>Kampanyalı toplam fiyat</option></select><div class=help>${discountTypeHelp(r)}</div></div>
+      <div class=field><label><b>Kampanya hangi ürünlerde?</b></label><select class=formControl onchange="catalog.checkoutCampaigns[${i}].scopeType=this.value;rerenderDiscountCampaigns('${attr(r.id)}')"><option value=category ${(r.scopeType||'category')==='category'?'selected':''}>Kategori seç</option><option value=products ${r.scopeType==='products'?'selected':''}>Tek tek ürün seç</option><option value=all ${r.scopeType==='all'?'selected':''}>Tüm ürünler</option></select><div class=help>Bir kategori seçtiğinde içindeki modeller aşağıda açılır; istemediğini çıkarabilir ve her ürünün kampanya sayısını ayrı belirleyebilirsin.</div></div>
+      <div class=field><label><b>İndirim türü</b></label><select class=formControl onchange="catalog.checkoutCampaigns[${i}].discountType=this.value;rerenderDiscountCampaigns('${attr(r.id)}')"><option value=fixed ${(r.discountType||'fixed')==='fixed'?'selected':''}>Sabit TL indirim</option><option value=percent ${r.discountType==='percent'?'selected':''}>Yüzdelik indirim</option><option value=bundlePrice ${r.discountType==='bundlePrice'?'selected':''}>Kampanyalı toplam fiyat</option></select><div class=help>${discountTypeHelp(r)}</div></div>
       ${input(r.discountType==='percent'?'İndirim yüzdesi':r.discountType==='bundlePrice'?'Kampanyalı toplam fiyat':'İndirim tutarı',`catalog.checkoutCampaigns[${i}].discountValue`,Number(r.discountValue||0),r.discountType==='percent'?'Örn: 15 = %15 indirim.':r.discountType==='bundlePrice'?'Örn: 1300 = seçilen kampanya adedi toplam 1300 TL.':'Örn: 400 = toplamdan 400 TL düşer.','.drawer','number')}
-      <label class=setItemToggle><span><b>Aynı kampanya tekrar uygulanabilsin</b><small class=muted><b>Açık:</b> kampanya uygun ürün grubu oluştuğu kadar tekrar çalışabilir; aşağıdaki üst sınırı aşmaz. <b>Kapalı:</b> sepette yalnızca 1 kez çalışır. Örn. 3'lü kampanyada 6 uygun ürün + sınır 2 ⇒ kampanya 2 kez uygulanır.</small></span><input type=checkbox ${r.repeatable?'checked':''} onchange="catalog.checkoutCampaigns[${i}].repeatable=this.checked;if(this.checked&&Number(catalog.checkoutCampaigns[${i}].maxApplications||0)<2)catalog.checkoutCampaigns[${i}].maxApplications=2;changed('.drawer');renderDiscountCampaigns()"></label>
+      <label class=setItemToggle><span><b>Aynı kampanya tekrar uygulanabilsin</b><small class=muted><b>Açık:</b> kampanya uygun ürün grubu oluştuğu kadar tekrar çalışabilir; aşağıdaki üst sınırı aşmaz. <b>Kapalı:</b> sepette yalnızca 1 kez çalışır. Örn. 3'lü kampanyada 6 uygun ürün + sınır 2 ⇒ kampanya 2 kez uygulanır.</small></span><input type=checkbox ${r.repeatable?'checked':''} onchange="catalog.checkoutCampaigns[${i}].repeatable=this.checked;if(this.checked&&Number(catalog.checkoutCampaigns[${i}].maxApplications||0)<2)catalog.checkoutCampaigns[${i}].maxApplications=2;changed('.drawer');rerenderDiscountCampaigns('${attr(r.id)}')"></label>
       <div class=field><label><b>En fazla kaç kez uygulansın?</b></label><input class=formControl type=number min=1 value="${Math.max(1,Number(r.maxApplications||1))}" ${r.repeatable?'':'disabled'} oninput="catalog.checkoutCampaigns[${i}].maxApplications=Math.max(1,Number(this.value||1));changed('.drawer')"><div class=help>${r.repeatable?'Burada sınırsız seçeneği yoktur. 1 = en fazla 1 kez, 2 = en fazla 2 kez, 3 = en fazla 3 kez. Örn. 3’lü kampanya + 6 uygun ürün + sınır 2 ⇒ iki ayrı 3’lü grup indirim alır.':'Tekrar kapalıyken bu alan devre dışıdır ve kampanya yalnızca 1 kez uygulanır.'}</div></div>
       <label class=setItemToggle><span><b>Aynı ürünleri başka kampanyada tekrar say</b><small class=muted><b>Kapalı (önerilen):</b> aynı fiziksel ürün iki kampanyada birden kullanılamaz; sistem toplam indirimi en yüksek geçerli dağılımı seçer. Örn. 6 ürün varsa 3+3 ile 2+2+2 seçeneklerini karşılaştırır. <b>Açık:</b> aynı ürün farklı kampanyalarda yeniden sayılabilir ve indirimler üst üste binebilir.</small></span><input type=checkbox ${r.allowDoubleCount?'checked':''} onchange="catalog.checkoutCampaigns[${i}].allowDoubleCount=this.checked;changed('.drawer')"></label>
     </div>
@@ -420,17 +427,22 @@ function renderDiscountCampaigns(){
   </div></details>`).join('');
   shell('Kampanyalar','Sepet indirimi kuralları burada. Her kampanya kapalı kutu halinde durur; açıp yalnızca o kampanyayı düzenlersin.',`<div class=panel><div class=campaignCreateRow><div><h2>Sepet Kampanyaları</h2><div class=help>Ürünleri kategori/model bazında seçebilir, bir ürünün kampanyada 1/2/3… adet sayılmasını belirleyebilir ve kampanyaların üst üste binmesini engelleyebilirsin.</div></div><button class=btn onclick=addDiscountCampaign()>+ Kampanya Ekle</button></div><div class=campaignRuleNote>Varsayılan güvenli davranış: aynı uygun ürünler iki ayrı kampanyada tekrar sayılmaz. İstersen kampanya içinden bunu özellikle açabilirsin.</div></div>${cards||'<div class=panel><b>Henüz sepet kampanyası yok.</b><div class=help>“Kampanya Ekle” ile ilk kampanyanı oluştur.</div></div>'}`);
 }
+function rerenderDiscountCampaigns(id){
+  if(id){adminOpenCampaignId=id;try{sessionStorage.setItem('shazAdminOpenCampaign',id)}catch(_){}}
+  const x=window.scrollX,y=window.scrollY;renderDiscountCampaigns();requestAnimationFrame(()=>window.scrollTo(x,y));
+}
 function addDiscountCampaign(){
   catalog.checkoutCampaigns=catalog.checkoutCampaigns||[];
   catalog.checkoutCampaigns.push({id:'sepet-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),name:'Yeni Kampanya',enabled:true,scopeType:'category',categoryIds:[],productIds:[],excludedProductIds:[],productUnitCounts:{},minQty:3,discountType:'fixed',discountValue:0,repeatable:false,maxApplications:1,allowDoubleCount:false});
+  adminOpenCampaignId=catalog.checkoutCampaigns[catalog.checkoutCampaigns.length-1].id;sessionStorage.setItem('shazAdminOpenCampaign',adminOpenCampaignId);
   renderDiscountCampaigns();
 }
-function removeDiscountCampaign(i){if(confirm('Bu kampanya silinsin mi?')){catalog.checkoutCampaigns.splice(i,1);renderDiscountCampaigns()}}
+function removeDiscountCampaign(i){if(confirm('Bu kampanya silinsin mi?')){const id=catalog.checkoutCampaigns[i]?.id;catalog.checkoutCampaigns.splice(i,1);if(adminOpenCampaignId===id){adminOpenCampaignId='';sessionStorage.removeItem('shazAdminOpenCampaign')}renderDiscountCampaigns()}}
 function toggleDiscountCampaignCategory(i,id,on){
   const r=catalog.checkoutCampaigns[i];r.categoryIds=r.categoryIds||[];r.excludedProductIds=r.excludedProductIds||[];
   if(on&&!r.categoryIds.includes(id))r.categoryIds.push(id);
   if(!on){r.categoryIds=r.categoryIds.filter(x=>x!==id);const ids=new Set((catalog.products||[]).filter(p=>p.category===id).map(p=>p.id));r.excludedProductIds=r.excludedProductIds.filter(x=>!ids.has(x));}
-  changed('.drawer');preserveAdminViewport(()=>renderDiscountCampaigns());
+  changed('.drawer');rerenderDiscountCampaigns(r.id);
 }
 function toggleDiscountCampaignCategoryProduct(i,id,on){
   const r=catalog.checkoutCampaigns[i];r.excludedProductIds=r.excludedProductIds||[];
@@ -438,7 +450,7 @@ function toggleDiscountCampaignCategoryProduct(i,id,on){
   if(on)r.excludedProductIds=r.excludedProductIds.filter(x=>x!==id);
   changed('.drawer');
 }
-function toggleDiscountCampaignProduct(i,id,on){const r=catalog.checkoutCampaigns[i];r.productIds=r.productIds||[];if(on&&!r.productIds.includes(id))r.productIds.push(id);if(!on)r.productIds=r.productIds.filter(x=>x!==id);changed('.drawer');preserveAdminViewport(()=>renderDiscountCampaigns())}
+function toggleDiscountCampaignProduct(i,id,on){const r=catalog.checkoutCampaigns[i];r.productIds=r.productIds||[];if(on&&!r.productIds.includes(id))r.productIds.push(id);if(!on)r.productIds=r.productIds.filter(x=>x!==id);changed('.drawer');rerenderDiscountCampaigns(r.id)}
 function setDiscountCampaignProductUnits(i,id,value){const r=catalog.checkoutCampaigns[i];if(!r)return;r.productUnitCounts=r.productUnitCounts||{};r.productUnitCounts[id]=Math.max(1,Math.min(10,Number(value||1)));changed('.drawer')}
 
 let adminCategoryNavScrollLeft=0;
@@ -506,13 +518,13 @@ function positionActiveAdminCategoryTab(behavior='smooth'){
 function jumpAdminCategory(id){
   const nav=document.querySelector('.categoryQuickNav');
   if(nav)adminCategoryNavScrollLeft=nav.scrollLeft;
-  adminOpenCategory=id;
+  adminOpenCategory=id;try{sessionStorage.setItem('shazAdminCategory',id)}catch(_){}
   adminProductSearch='';
   adminOpenProduct=null;
   renderCatalog();
 }
 function toggleAdminCategory(id){
-  adminOpenCategory=id;
+  adminOpenCategory=id;try{sessionStorage.setItem('shazAdminCategory',id)}catch(_){}
   renderCatalog();
 }
 function filterAdminProducts(value){
