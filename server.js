@@ -325,6 +325,18 @@ const customerUpload=multer({
  }
 });
 
+// Kısa, üyelik gerektirmeyen sepet paylaşım bağlantıları.
+const sharedCartDir=path.join(dataDir,'shared-carts');fs.mkdirSync(sharedCartDir,{recursive:true});
+app.post('/api/shared-cart',(req,res)=>{
+  try{const id=crypto.randomBytes(4).toString('hex');fs.writeFileSync(path.join(sharedCartDir,id+'.json'),JSON.stringify(req.body||{}));res.json({ok:true,id});}
+  catch(e){res.status(500).json({ok:false})}
+});
+app.get('/api/shared-cart/:id',(req,res)=>{
+  const id=String(req.params.id||'');if(!/^[a-f0-9]{8}$/.test(id))return res.status(404).json({ok:false});
+  const f=path.join(sharedCartDir,id+'.json');if(!fs.existsSync(f))return res.status(404).json({ok:false});
+  try{res.json({ok:true,cart:JSON.parse(fs.readFileSync(f,'utf8'))})}catch(e){res.status(404).json({ok:false})}
+});
+
 app.get('/api/settings',(req,res)=>res.json(readJson('settings.json',{})));
 app.get('/api/catalog',(req,res)=>res.json(readJson('catalog.json',{categories:[],products:[],builder:{}})));
 

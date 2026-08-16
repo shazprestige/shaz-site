@@ -47,7 +47,7 @@ async function init(){
   const sharedProductId=new URLSearchParams(location.search).get('product');
   if(sharedProductId&&catalog.products.some(p=>p.id===sharedProductId)) setTimeout(()=>openProductDetail(sharedProductId,'shared'),0);
   else if(sharedProductId) clearProductRoute();
-  if(new URLSearchParams(location.search).get('sharedCart'))setTimeout(()=>openSharedCartFromUrl(),40);
+  if(new URLSearchParams(location.search).get('sharedCart')||new URLSearchParams(location.search).get('s'))setTimeout(()=>openSharedCartFromUrl(),40);
 }
 function bindCore(){
   if($('#overlay')) $('#overlay').onclick=closeDrawer;
@@ -1040,7 +1040,7 @@ function renderSetSummary(restoring=false){
   ${wiz.writes.length?`<div class=wizardCard><h3>Kişiye özel yazılar</h3>${wiz.writes.map(x=>`<div class=summaryLine><span><b>${x.item}</b><br><span class=muted>${x.position}: “${x.text}”</span></span><span>+${money(x.fee)}</span></div>`).join('')}</div>`:''}
   ${(wiz.photoCustomizations||[]).length?`<div class=wizardCard><h3>Cüzdan fotoğrafı</h3>${wiz.photoCustomizations.map(x=>`<div class=summaryLine><span><b>${x.item}</b>${x.caption?`<br><span class=muted>${x.captionPosition==='above'?'Fotoğrafın üstünde':'Fotoğrafın altında'}: “${escapeHtml(x.caption)}”</span>`:''}</span><span>+${money(x.fee)}</span></div>`).join('')}</div>`:''}
   <div class=wizardCard><div class=summaryLine><span>Set fiyatı</span><span>${money(pr.base)}</span></div>${pr.removed?`<div class=summaryLine><span>Çıkarılan ürünler</span><span>-${money(pr.removed)}</span></div>`:''}${pr.writeFee?`<div class=summaryLine><span>Yazı işlemleri</span><span>+${money(pr.writeFee)}</span></div>`:''}${pr.photoFee?`<div class=summaryLine><span>Fotoğraf işlemesi</span><span>+${money(pr.photoFee)}</span></div>`:''}<div class="summaryLine summaryTotal"><span>Toplam</span><span>${money(pr.total)}</span></div></div>
-  <button class=btn onclick=addSetToCart()>Sepete Ekle</button>`);
+  <div class="wizardFinalAction"><button class=btn onclick=addSetToCart()>Sepete Ekle</button></div>`);
 }
 function addSetToCart(){
   const pr=calcSetPrice();
@@ -1234,21 +1234,24 @@ function shareCartFromCheckout(){
   normalizeCartPersonalizationFees();
   const campaign=calculateCartCampaigns();
   const payload={v:1,items:cart.map(x=>({name:x.product?.name||'Ürün',price:Number(x.product?.price||0),image:mainProductImage(x.product)||'',qty:Number(x.qty||1),basePrice:Number(x.basePrice??x.product?.price??0),writes:(x.writes||x.setCustomization?.writes||[]).map(w=>({item:w.item,text:w.text,position:w.position,fee:Number(w.fee||0)})),photos:(x.photoCustomizations||x.setCustomization?.photoCustomizations||[]).map(ph=>({item:ph.item,fee:Number(ph.fee||0)}))})),subtotal:campaign.subtotal,discount:campaign.discount,total:campaign.total,applied:(campaign.applied||[]).map(a=>({name:a.name,discount:a.discount}))};
-  const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-  const url=new URL(location.origin+location.pathname);url.searchParams.set('sharedCart',encoded);
-  const text='SHAZ sepetimi seninle paylaştım.';
-  if(navigator.share){navigator.share({title:'SHAZ Sepetim',text,url:url.toString()}).catch(()=>{});return;}
-  navigator.clipboard?.writeText(url.toString()).then(()=>toast('Sepet bağlantısı kopyalandı')).catch(()=>toast('Sepet paylaşılamadı'));
+  fetch('/api/shared-cart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>r.json()).then(r=>{
+    if(!r.ok||!r.id)throw new Error('share');
+    const url=new URL(location.origin+location.pathname);url.searchParams.set('s',r.id);
+    const text='SHAZ sepetimi seninle paylaştım.';
+    if(navigator.share){navigator.share({title:'SHAZ Sepetim',text,url:url.toString()}).catch(()=>{});return;}
+    navigator.clipboard?.writeText(url.toString()).then(()=>toast('Sepet bağlantısı kopyalandı')).catch(()=>toast('Sepet paylaşılamadı'));
+  }).catch(()=>toast('Sepet paylaşılamadı'));
 }
 
+function renderSharedCart(data){
+  const items=Array.isArray(data.items)?data.items:[];
+  openDrawer(`<div class="checkoutShell sharedCartShell"><div class="checkoutTop"><div><h2>Paylaşılan Sepet</h2><p>Bu ekran, size gönderilen SHAZ sepetinin fiyat ve ürün özetidir.</p></div><button class="pill" onclick="closeDrawer()">Kapat</button></div><div class="checkoutProductPanel">${items.map(x=>`<div class="orderCartItem"><div class="cartItemMain">${x.image?`<div class="cartItemThumb"><img src="${escapeAttr(x.image)}" alt=""></div>`:''}<div class="cartItemCopy"><b>${escapeHtml(x.name)}</b>${(x.writes||[]).map(w=>`<div class=muted>Yazı: “${escapeHtml(w.text||'')}” · +${money(w.fee||0)}</div>`).join('')}${(x.photos||[]).map(ph=>`<div class=muted>Fotoğraf işlemesi · +${money(ph.fee||0)}</div>`).join('')}</div><div class="cartItemRight"><strong>${money(x.price)}</strong></div></div></div>`).join('')}</div><div class="checkoutPriceBreakdown"><div><span>Ara toplam</span><strong>${money(data.subtotal)}</strong></div>${(data.applied||[]).map(a=>`<div class="checkoutDiscountLine"><span>${escapeHtml(a.name)}</span><strong>-${money(a.discount)}</strong></div>`).join('')}<div class="checkoutTotal"><span>Toplam</span><strong>${money(data.total)}</strong></div></div><button class="btn sharedCartShopBtn" onclick="history.replaceState({},'',location.pathname);closeDrawer()">Alışverişe Git →</button></div>`);
+}
 function openSharedCartFromUrl(){
-  const raw=new URLSearchParams(location.search).get('sharedCart');if(!raw)return false;
-  try{
-    const data=JSON.parse(decodeURIComponent(escape(atob(raw))));
-    const items=Array.isArray(data.items)?data.items:[];
-    openDrawer(`<div class="checkoutShell sharedCartShell"><div class="checkoutTop"><div><h2>Paylaşılan Sepet</h2><p>Bu ekran, size gönderilen SHAZ sepetinin fiyat ve ürün özetidir.</p></div><button class="pill" onclick="closeDrawer()">Kapat</button></div><div class="checkoutProductPanel">${items.map(x=>`<div class="orderCartItem"><div class="cartItemMain">${x.image?`<div class="cartItemThumb"><img src="${escapeAttr(x.image)}" alt=""></div>`:''}<div class="cartItemCopy"><b>${escapeHtml(x.name)}</b>${(x.writes||[]).map(w=>`<div class=muted>Yazı: ${escapeHtml(w.text||'')} · +${money(w.fee||0)}</div>`).join('')}${(x.photos||[]).map(ph=>`<div class=muted>Fotoğraf işlemesi · +${money(ph.fee||0)}</div>`).join('')}</div><div class="cartItemRight"><strong>${money(x.price)}</strong></div></div></div>`).join('')}</div><div class="checkoutPriceBreakdown"><div><span>Ara toplam</span><strong>${money(data.subtotal)}</strong></div>${(data.applied||[]).map(a=>`<div class="checkoutDiscountLine"><span>${escapeHtml(a.name)}</span><strong>-${money(a.discount)}</strong></div>`).join('')}<div class="checkoutTotal"><span>Toplam</span><strong>${money(data.total)}</strong></div></div><button class="btn" onclick="history.replaceState({},'',location.pathname);closeDrawer()">Alışverişe Git →</button></div>`);
-    return true;
-  }catch(e){console.warn('Paylaşılan sepet açılamadı',e);return false}
+  const params=new URLSearchParams(location.search),shortId=params.get('s'),raw=params.get('sharedCart');
+  if(shortId){fetch('/api/shared-cart/'+encodeURIComponent(shortId)).then(r=>r.json()).then(r=>{if(r.ok&&r.cart)renderSharedCart(r.cart)}).catch(()=>{});return true}
+  if(!raw)return false;
+  try{renderSharedCart(JSON.parse(decodeURIComponent(escape(atob(raw)))));return true}catch(e){console.warn('Paylaşılan sepet açılamadı',e);return false}
 }
 
 function checkout(){
@@ -1257,7 +1260,7 @@ function checkout(){
   const campaign=calculateCartCampaigns(),itemCount=cart.reduce((n,x)=>n+Number(x.qty||1),0),next=campaign.prompts?.[0];
   openDrawer(`<div class="checkoutShell checkoutShell--cart"><div class="checkoutStickyTop"><div class="checkoutTop"><div><h2>Sepetiniz</h2><p>Ürünleri kontrol edin; ardından teslimat ve ödemeye geçin.</p></div><div class="checkoutTopActions"><button type="button" class="checkoutMiniAction" onclick="shareCartFromCheckout()"><span class="checkoutMiniIcon">⤴</span><small>Sepeti paylaş</small></button><button class="pill" onclick=closeDrawer()>Kapat</button></div></div><div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="closeDrawer()">← Alışverişe dön</button></div><div class="checkoutSteps"><span class="active">1 Sepet</span><span>2 Teslimat</span><span>3 Onay</span></div></div>
     <div class="checkoutScrollBody"><div class="cartToolbar"><span>${itemCount} ürün</span><button type="button" class="cartClearBtn" onclick="clearCartFromCheckout()">Sepeti boşalt</button></div><div class="checkoutProductPanel">${cart.map((x,i)=>cartItemSummary(x,i)).join('')}</div></div>
-    <div class="checkoutStickyBottom">${next?`<div class="campaignPromptBox campaignPromptBox--next"><b>${escapeHtml(next.name)}:</b> <strong>${next.remaining} uygun ürün daha ekle</strong> → ${escapeHtml(next.benefit)} ek indirim kazan.</div>`:''}<div class="checkoutPriceBreakdown"><div><span>Ara toplam</span><strong>${money(campaign.subtotal)}</strong></div>${campaign.applied.map(x=>`<div class="checkoutDiscountLine"><span>${escapeHtml(x.name)}</span><strong>-${money(x.discount)}</strong></div>`).join('')}<div class="checkoutTotal"><span>Toplam</span><strong>${money(campaign.total)}</strong></div></div><button class="btn checkoutPrimary" onclick="addressStep()">Teslimat ve Ödemeye Geç →</button></div></div>`);
+    <div class="checkoutStickyBottom">${next?`<div class="campaignPromptBox campaignPromptBox--next"><b>${escapeHtml(next.name)}:</b> <strong>${next.remaining} ürün daha ekle</strong> → ${escapeHtml(next.benefit)} indirim kazan.</div>`:''}<div class="checkoutPriceBreakdown"><div><span>Ara toplam</span><strong>${money(campaign.subtotal)}</strong></div>${campaign.applied.map(x=>`<div class="checkoutDiscountLine"><span>${escapeHtml(x.name)}</span><strong>-${money(x.discount)}</strong></div>`).join('')}<div class="checkoutTotal"><span>Toplam</span><strong>${money(campaign.total)}</strong></div></div><button class="btn checkoutPrimary" onclick="addressStep()">Teslimat ve Ödemeye Geç →</button></div></div>`);
 }
 let cartEditBackup=null;
 function openCartItemProduct(i){const x=cart[i];if(!x?.product?.id)return;openProductDetail(x.product.id,'cart')}
@@ -1297,7 +1300,7 @@ function cartItemSummary(x,i){
   }
   if(x.builderItems?.length)lines.push(`<div class=muted>Set içeriği: ${x.builderItems.map(p=>escapeHtml(p.name)).join(', ')}</div>`);
   const writes=x.writes||x.setCustomization?.writes||[];
-  if(writes.length){lines.push(`<div class=muted>Yazı: ${writes.map(w=>`${escapeHtml(w.item||'Ürün')} · “${escapeHtml(w.text||'')}”`).join('<br>')}</div>`);writes.forEach(w=>{if(Number(w.fee||0))priceLines.push(`<div><span>Kişiselleştirme · ${escapeHtml(w.item||'Ürün')}</span><strong>+${money(w.fee)}</strong></div>`)})}
+  if(writes.length){lines.push(`<div class=muted>Yazı: ${writes.map(w=>`${x.setCustomization?escapeHtml(w.item||'Ürün')+' · ':''}“${escapeHtml(w.text||'')}”`).join('<br>')}</div>`);writes.forEach(w=>{if(Number(w.fee||0))priceLines.push(`<div><span>${x.setCustomization?'Kişiselleştirme · '+escapeHtml(w.item||'Ürün'):'Kişiselleştirme'}</span><strong>+${money(w.fee)}</strong></div>`)})}
   const photos=x.photoCustomizations||x.setCustomization?.photoCustomizations||[];
   if(photos.length){lines.push(`<div class=muted>Fotoğraf: ${photos.map(ph=>escapeHtml(ph.item||'Cüzdan')).join(', ')}</div>`);photos.forEach(ph=>{
     const slotFee=Number(ph.slotFee||0),extra=Number(ph.photoExtraFee??(Number(ph.fee||0)-slotFee));
