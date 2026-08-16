@@ -2924,3 +2924,62 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
   .builderStickyStack .builderAllShownBar{padding:7px 12px 9px!important}
   .builderCategoryCard{margin-top:10px!important}
 }
+
+/* V95 — Builder sabit üst alan: iOS/PC sticky düzeltmesi, ayrı 'Tüm ... gösteriliyor' satırı */
+/* overflow-x:hidden Safari'de sticky'nin referans kaydırma alanını bozabildiği için clip kullan. */
+.drawer:has(.builderScreen){
+  overflow-x:clip!important;
+  overflow-y:auto!important;
+  overscroll-behavior-x:none!important;
+  touch-action:pan-y!important;
+}
+.builderScreen{
+  overflow-x:clip!important;
+  max-width:100%!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+}
+.builderStickyStack{
+  position:sticky!important;
+  top:0!important;
+  z-index:120!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin:0!important;
+  overflow:visible!important;
+  background:#f6f7f8!important;
+  box-shadow:none!important;
+  isolation:isolate!important;
+}
+.builderStickyStack .builderTopSticky{
+  position:relative!important;
+  z-index:2!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin:0!important;
+  background:#f6f7f8!important;
+  box-sizing:border-box!important;
+}
+.builderStickyStack .builderAllShownBar{
+  position:relative!important;
+  z-index:2!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin:0!important;
+  padding:7px 0 9px!important;
+  background:#f6f7f8!important;
+  border:0!important;
+  box-shadow:none!important;
+  box-sizing:border-box!important;
+}
+.builderStickyStack .builderAllShownSticky{
+  position:static!important;
+  margin:0 auto!important;
+}
+/* Sticky katmanın arkasından ürün kartlarının görünmesini engelle. */
+.builderCategoryCard{z-index:1!important}
+@media(max-width:700px){
+  .builderStickyStack{overflow:visible!important}
+  .builderStickyStack .builderTopSticky{padding:0 14px 6px!important}
+  .builderStickyStack .builderAllShownBar{padding:7px 12px 9px!important;border:0!important}
+}
