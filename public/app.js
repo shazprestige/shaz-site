@@ -47,6 +47,7 @@ async function init(){
   const sharedProductId=new URLSearchParams(location.search).get('product');
   if(sharedProductId&&catalog.products.some(p=>p.id===sharedProductId)) setTimeout(()=>openProductDetail(sharedProductId,'shared'),0);
   else if(sharedProductId) clearProductRoute();
+  if(new URLSearchParams(location.search).get('sharedCart'))setTimeout(()=>openSharedCartFromUrl(),40);
 }
 function bindCore(){
   if($('#overlay')) $('#overlay').onclick=closeDrawer;
@@ -492,34 +493,48 @@ function cartPersonalizationSlotCount(){
   cart.forEach(x=>{
     const writes=Array.isArray(x.writes)?x.writes:Array.isArray(x.setCustomization?.writes)?x.setCustomization.writes:[];
     const photos=Array.isArray(x.photoCustomizations)?x.photoCustomizations:Array.isArray(x.setCustomization?.photoCustomizations)?x.setCustomization.photoCustomizations:[];
-    if(!writes.length&&!photos.length)return;
-    slot+=writes.length+photos.length;
+    if(x.setCustomization){
+      const keys=new Set();
+      writes.forEach(w=>keys.add(String(w.itemId||w.item||'set-write')));
+      photos.forEach(ph=>keys.add(String(ph.itemId||ph.item||'set-photo')));
+      slot+=keys.size;
+    }else if(writes.length||photos.length) slot+=1;
   });
   return slot;
 }
 function nextSingleWriteFee(){return personalizationFeeAt(cartPersonalizationSlotCount())}
 function nextWalletPricingPreview(){
   const slotCount=cartPersonalizationSlotCount();
-  const writeFee=personalizationFeeAt(slotCount);
-  return {slotCount,photoOnlyFee:writeFee,writeFee,photoExtraFee:walletPhotoFee(),combinedFee:writeFee+walletPhotoFee()};
+  const slotFee=personalizationFeeAt(slotCount);
+  const photoExtraFee=walletPhotoFee();
+  return {slotCount,slotFee,writeFee:slotFee,photoExtraFee,totalPhotoOnly:slotFee+photoExtraFee,totalWriteAndPhoto:slotFee+photoExtraFee};
 }
 function normalizeCartPersonalizationFees(){
   let slot=0;
   cart.forEach(x=>{
-    const writes=Array.isArray(x.writes)?x.writes:[];
-    const photos=Array.isArray(x.photoCustomizations)?x.photoCustomizations:[];
     if(x.setCustomization){
-      slot+=(Array.isArray(x.setCustomization.writes)?x.setCustomization.writes.length:0)+(Array.isArray(x.setCustomization.photoCustomizations)?x.setCustomization.photoCustomizations.length:0);
+      const sw=Array.isArray(x.setCustomization.writes)?x.setCustomization.writes:[];
+      const sp=Array.isArray(x.setCustomization.photoCustomizations)?x.setCustomization.photoCustomizations:[];
+      const keys=[];[...sw,...sp].forEach(v=>{const k=String(v.itemId||v.item||'set-item');if(!keys.includes(k))keys.push(k)});
+      let personalTotal=0;
+      keys.forEach(k=>{
+        const tier=personalizationFeeAt(slot++);
+        const writes=sw.filter(w=>String(w.itemId||w.item||'set-item')===k);
+        const photos=sp.filter(ph=>String(ph.itemId||ph.item||'set-item')===k);
+        writes.forEach((w,idx)=>{w.fee=idx===0?tier:0;personalTotal+=Number(w.fee||0)});
+        photos.forEach((ph,idx)=>{ph.slotFee=(!writes.length&&idx===0)?tier:0;ph.photoExtraFee=walletPhotoFee();ph.fee=Number(ph.slotFee||0)+Number(ph.photoExtraFee||0);personalTotal+=Number(ph.fee||0)});
+      });
+      const base=Number(x.basePrice??x.product?.price??0);x.basePrice=base;
+      const removed=(x.setCustomization.removedIds||[]).map(id=>(x.product.setItems||[]).find(si=>si.id===id)).filter(Boolean).reduce((sum,si)=>sum+Number(si.removeDiscount||0),0);
+      x.product={...x.product,price:Math.max(0,base-removed+personalTotal)};
       return;
     }
+    const writes=Array.isArray(x.writes)?x.writes:[],photos=Array.isArray(x.photoCustomizations)?x.photoCustomizations:[];
     if(!writes.length&&!photos.length)return;
     const base=Number(x.basePrice??x.product?.price??0);x.basePrice=base;
-    let personalTotal=0;
-    writes.forEach(w=>{w.fee=personalizationFeeAt(slot++);personalTotal+=Number(w.fee||0)});
-    photos.forEach(ph=>{
-      ph.fee=writes.length?walletPhotoFee():personalizationFeeAt(slot++);
-      personalTotal+=Number(ph.fee||0);
-    });
+    const tier=personalizationFeeAt(slot++);let personalTotal=0;
+    writes.forEach((w,idx)=>{w.fee=idx===0?tier:0;personalTotal+=Number(w.fee||0)});
+    photos.forEach((ph,idx)=>{ph.slotFee=(!writes.length&&idx===0)?tier:0;ph.photoExtraFee=walletPhotoFee();ph.fee=Number(ph.slotFee||0)+Number(ph.photoExtraFee||0);personalTotal+=Number(ph.fee||0)});
     x.product={...x.product,price:base+personalTotal};
   });
 }
@@ -534,7 +549,7 @@ function showSoftNotice(title,text,actionText='',actionJs=''){
   closeSoftNotice();
   const box=document.createElement('div');
   box.className='softNoticeOverlay';
-  box.innerHTML=`<div class="softNoticeCard"><button class="softNoticeClose" type="button" onclick="closeSoftNotice()">×</button><h3>${escapeHtml(title||'Bilgi')}</h3><p>${escapeHtml(text||'')}</p><div class="softNoticeActions">${actionText?`<button type="button" class="btn" onclick="${actionJs}">${escapeHtml(actionText)}</button>`:''}</div></div>`;
+  box.innerHTML=`<div class="softNoticeCard"><button class="softNoticeClose" type="button" onclick="closeSoftNotice()">×</button><h3>${escapeHtml(title||'Bilgi')}</h3><p>${escapeHtml(text||'')}</p><div class="softNoticeActions softNoticeActions--center">${actionText?`<button type="button" class="btn" onclick="${actionJs}">${escapeHtml(actionText)}</button>`:''}</div></div>`;
   document.body.appendChild(box);
 }
 
@@ -690,12 +705,25 @@ function openProductImageViewer(){
 
 function bindFloatingContacts(){
   const floating=document.querySelector('.floating');if(!floating)return;
+  let raf=0;
   const update=()=>{
-    const nearBottom=(window.innerHeight+window.scrollY)>=document.documentElement.scrollHeight-260;
-    floating.classList.toggle('atPageBottom',nearBottom);
+    raf=0;
+    if(window.innerWidth>700){floating.style.transform='translate3d(0,0,0)';return;}
+    const doc=document.documentElement;
+    const scrollTop=window.scrollY||doc.scrollTop||0;
+    const distanceToBottom=Math.max(0,doc.scrollHeight-(scrollTop+window.innerHeight));
+    const travelZone=Math.max(240,Math.min(430,window.innerHeight*.46));
+    const progress=Math.max(0,Math.min(1,1-distanceToBottom/travelZone));
+    const width=floating.getBoundingClientRect().width||176;
+    const right=10;
+    const rightLeft=window.innerWidth-right-width;
+    const centerLeft=(window.innerWidth-width)/2;
+    floating.style.transform=`translate3d(${(centerLeft-rightLeft)*progress}px,0,0)`;
   };
-  window.removeEventListener('scroll',window._shazFloatingUpdate||(()=>{}));
-  window._shazFloatingUpdate=update;window.addEventListener('scroll',update,{passive:true});window.addEventListener('resize',update,{passive:true});update();
+  const schedule=()=>{if(!raf)raf=requestAnimationFrame(update)};
+  if(window._shazFloatingUpdate)window.removeEventListener('scroll',window._shazFloatingUpdate);
+  window._shazFloatingUpdate=schedule;
+  window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',schedule,{passive:true});update();
 }
 
 function selectProductDetailImage(btn,url){
@@ -769,16 +797,16 @@ function finishSingleWrite(id){
 }
 function singleWalletPhotoStep(id){
   const p=catalog.products.find(x=>x.id===id);if(!p)return;
-  const positions=defaultPositionsForProduct(p);
-  const pricing=nextWalletPricingPreview();
+  const positions=defaultPositionsForProduct(p),pricing=nextWalletPricingPreview();
+  const sıra=pricing.slotCount+1;
   openDrawer(`<div class=wizardHead><button class="pill backPill" onclick='startSingleWizard(catalog.products.find(x=>x.id===${JSON.stringify(p.id)}))'>← Geri</button><div><div class=wizardProgress>Cüzdan kişiselleştirme</div><h2>${p.name}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
-    <div class=priceInfo><b>Fotoğraf kişiselleştirmesi</b><br>${pricing.slotCount?`Sepetinizde ${pricing.slotCount} kişiselleştirilmiş ürün var.`:'Bu sepette henüz kişiselleştirilmiş ürün yok.'} Sadece fotoğraf seçerseniz bu ürün için +${money(pricing.photoOnlyFee)} uygulanır. Fotoğraftan ayrı normal yazı da eklerseniz yazı ücreti +${money(pricing.writeFee)} ve fotoğraf işlemesi +${money(pricing.photoExtraFee)} olarak devam eder.</div>
+    <div class=priceInfo><b>Bu ürünün kişiselleştirme ücreti</b><br>Sepet sırasına göre ${sıra}. kişiselleştirilmiş ürün: <b>+${money(pricing.slotFee)}</b>. Fotoğraf işleme ayrıca <b>+${money(pricing.photoExtraFee)}</b>. Yani fotoğraf seçerseniz bu ürün için toplam kişiselleştirme <b>+${money(pricing.totalPhotoOnly)}</b> olur.${pricing.slotCount?` Sepet değişirse bu tutar otomatik yeniden hesaplanır.`:''}</div>
     <div class="wizardCard walletPhotoCard"><h3>İşlenecek fotoğrafı yükleyin</h3><p><b>En sağlıklı sonuç için</b> fotoğrafın çok karanlık, aşırı parlak veya patlamış olmamasına dikkat edin. Net ve kontrastı dengeli fotoğraflar daha iyi sonuç verir. <b>Genelde göz fotoğrafları özellikle iyi sonuç verir.</b></p><input id=walletPhotoFile class=formControl type=file accept="image/*">
       <label class=walletToggle><input id=walletCaptionToggle type=checkbox onchange="document.querySelector('#walletCaptionFields').classList.toggle('hidden',!this.checked)"> Fotoğrafın üstüne veya altına yazı da eklemek istiyorum</label>
       <div id=walletCaptionFields class="walletCaptionFields hidden"><input id=walletCaptionText class=writeInput placeholder="Fotoğrafla birlikte işlenecek yazı"><select id=walletCaptionPosition class=formControl><option value=below>Fotoğrafın altında</option><option value=above>Fotoğrafın üstünde</option></select></div>
     </div>
     ${writeAvailable(p)?`<div class=wizardCard><label class=walletToggle><input id=walletRegularWriteToggle type=checkbox onchange="document.querySelector('#walletRegularWriteFields').classList.toggle('hidden',!this.checked)"> Fotoğraftan ayrı olarak cüzdanın ön/iç yüzüne normal yazı da istiyorum</label>
-      <div id=walletRegularWriteFields class="hidden"><div class=priceInfo>Bu ayrı yazı işlemi mevcut sepet sırasına göre şu an +${money(pricing.writeFee)} olarak hesaplanır.</div><div class=positionChoices>${positions.map((x,i)=>positionOptionHtml('walletRegularPos',x,i,p.preferredWritePosition)).join('')}</div><input id=walletRegularText class=writeInput placeholder="Cüzdanın ön/iç yüzüne yazılacak metin"></div>
+      <div id=walletRegularWriteFields class="hidden"><div class=priceInfo>Normal yazı aynı ürünün kişiselleştirme hakkı içindedir; ayrıca yeni bir 75/50/25 TL sırası açmaz. Fotoğraf ek ücreti +${money(pricing.photoExtraFee)} olarak kalır.</div><div class=positionChoices>${positions.map((x,i)=>positionOptionHtml('walletRegularPos',x,i,p.preferredWritePosition)).join('')}</div><input id=walletRegularText class=writeInput placeholder="Cüzdanın ön/iç yüzüne yazılacak metin"></div>
     </div>`:''}
     <button class=btn id=walletPhotoSubmit onclick='finishSingleWalletPhoto(${JSON.stringify(p.id)},this)'>Fotoğrafı Yükle ve Sepete Ekle</button>`);
 }
@@ -791,13 +819,10 @@ async function finishSingleWalletPhoto(id,button){
   if(regularOn&&!regularText)return alert('Cüzdana yazdırmak istediğiniz normal yazıyı girin.');
   const old=button?.textContent||'';if(button){button.disabled=true;button.textContent='Fotoğraf yükleniyor…'}
   try{
-    const up=await uploadCustomerPhoto(file);
-    const firstFee=Number(catalog.personalizationPricing?.first||75);
-    const writeFee=regularOn?firstFee:0;
-    const photoFee=regularOn?walletPhotoFee():firstFee;
-    const writes=regularOn?[{item:p.name,position:document.querySelector('input[name=walletRegularPos]:checked')?.value,text:regularText,fee:writeFee}]:[];
-    const photo={item:p.name,imageUrl:up.url,originalName:up.name||file.name,caption,captionPosition:$('#walletCaptionPosition')?.value||'below',fee:photoFee};
-    cart.push({product:{...p,price:Number(p.price||0)+photoFee+writeFee},basePrice:p.price,qty:1,personalized:true,writes,photoCustomizations:[photo]});
+    const up=await uploadCustomerPhoto(file), tier=nextSingleWriteFee(), photoExtra=walletPhotoFee();
+    const writes=regularOn?[{item:p.name,position:document.querySelector('input[name=walletRegularPos]:checked')?.value,text:regularText,fee:tier}]:[];
+    const photo={item:p.name,imageUrl:up.url,originalName:up.name||file.name,caption,captionPosition:$('#walletCaptionPosition')?.value||'below',slotFee:regularOn?0:tier,photoExtraFee:photoExtra,fee:(regularOn?0:tier)+photoExtra};
+    cart.push({product:{...p,price:Number(p.price||0)+tier+photoExtra},basePrice:p.price,qty:1,personalized:true,writes,photoCustomizations:[photo]});
     updateCart();closeDrawer();toast('✓ Fotoğraflı cüzdan sepete eklendi');
   }catch(e){alert(e.message||'Fotoğraf yüklenemedi.');if(button){button.disabled=false;button.textContent=old}}
 }
@@ -954,7 +979,7 @@ function renderWalletPhotoDetails(restoring=false){
   const photoPlan=(wiz.personalizationPlan||[]).filter(x=>x.mode==='photo');
   if(!photoPlan.length)return renderSetSummary();
   if(!restoring)setWizardNext('writeDetails');
-  openDrawer(head('Cüzdana fotoğraf işleme')+`<div class=priceInfo><b>Fotoğraf kişiselleştirmesi</b><br>Cüzdan fotoğrafı da kişiselleştirme sırasına dahildir. Başka kişiselleştirilmiş ürünler de varsa fotoğraf işlemesi için ayrıca +${money(walletPhotoFee())} uygulanır. Yalnızca cüzdan fotoğrafı seçildiyse toplam kişiselleştirme ücreti ${money(catalog.personalizationPricing?.first||75)} olarak kalır.</div>
+  openDrawer(head('Cüzdana fotoğraf işleme')+`<div class=priceInfo><b>Fotoğraf kişiselleştirmesi</b><br>Seçtiğiniz cüzdan, kişiselleştirme sırasındaki 75/50/25 TL ücretini alır. <b>Fotoğraf işleme bunun üzerine ayrıca +${money(walletPhotoFee())}</b> eklenir. Örnek: bu cüzdan 3. kişiselleştirilmiş ürünse +${money(catalog.personalizationPricing?.thirdPlus||25)} kişiselleştirme + ${money(walletPhotoFee())} fotoğraf işleme uygulanır.</div>
   ${photoPlan.map((plan,idx)=>{
     const item=wiz.product.setItems.find(x=>x.id===plan.itemId),positions=item?.writePositions||[];
     return `<div class="wizardCard walletPhotoCard" data-photo-plan="${escapeAttr(plan.itemId)}"><h3>${escapeHtml(item?.name||plan.item)} için fotoğraf yükleyin</h3><p><b>En sağlıklı sonuç için</b> fotoğrafın çok karanlık, aşırı parlak veya patlamış olmamasına dikkat edin. Net ve kontrastı dengeli fotoğraflar daha iyi sonuç verir. <b>Genelde göz fotoğrafları özellikle iyi sonuç verir.</b></p><input id="setWalletPhotoFile-${idx}" class=formControl type=file accept="image/*">
@@ -986,7 +1011,7 @@ async function finishSetWalletPhoto(button){
         extraWrites.push({itemId:item.id,item:item.name,position:document.querySelector(`input[name="set-wallet-pos-${idx}"]:checked`)?.value,text:regularText,fee:Number(plan.slotFee||0)});
         photoFee=walletPhotoFee();
       }else{
-        photoFee=Number(plan.slotFee||0)+(onlyPersonalization?0:walletPhotoFee());
+        photoFee=Number(plan.slotFee||0)+walletPhotoFee();
       }
       photos.push({itemId:item.id,item:item.name,imageUrl:up.url,originalName:up.name||file.name,caption,captionPosition:$(`#setWalletCaptionPosition-${idx}`)?.value||'below',fee:photoFee});
     }
@@ -1146,7 +1171,7 @@ function campaignPromptForRule(rule,selectedApps,usedExclusiveMask=0n){
   const remaining=availableWeight===0?q:(remainder===0?q:q-remainder);
   return {id:rule.id,name:rule.name||'Kampanya',remaining,benefit:campaignBenefitText(rule),completed:usedCount,nextUse:usedCount+1,usesLeft:maxUses-usedCount,maxUses,repeatable:!!rule.repeatable};
 }
-function calculateCartCampaigns(){
+function calculateCartCampaignsCore(){
   const subtotal=cart.reduce((a,x)=>a+Number(x.product?.price||0)*Math.max(1,Number(x.qty||1)),0);
   const active=(catalog.checkoutCampaigns||[]).filter(r=>r&&r.enabled!==false);
   const applied=[];
@@ -1175,32 +1200,83 @@ function calculateCartCampaigns(){
   const discount=Number(merged.reduce((s,a)=>s+a.discount,0).toFixed(2));
   return {subtotal,discount,total:Math.max(0,Number((subtotal-discount).toFixed(2))),applied:merged,prompts};
 }
+
+function nextCampaignGuidance(){
+  const active=(catalog.checkoutCampaigns||[]).filter(r=>r&&r.enabled!==false);
+  if(!active.length)return null;
+  const now=calculateCartCampaignsCore();
+  const nowDiscount=Number(now.discount||0);
+  // 1..12 ek ürün içinde indirimi ilk artıran noktayı bul. Böylece müşteri sadece sıradaki gerçek adıma yönlendirilir.
+  const candidates=(catalog.products||[]).filter(p=>!p.hidden&&active.some(r=>campaignProductMatches(r,p)));
+  if(!candidates.length)return null;
+  const sample=candidates.sort((a,b)=>Number(a.price||0)-Number(b.price||0))[0];
+  const original=cart;
+  try{
+    for(let add=1;add<=12;add++){
+      const extras=Array.from({length:add},()=>({product:sample,qty:1,personalized:false}));
+      cart=[...original,...extras];
+      const next=calculateCartCampaignsCore();
+      if(Number(next.discount||0)>nowDiscount+.001){
+        const gained=(next.applied||[]).find(n=>{const old=(now.applied||[]).find(o=>o.id===n.id);return Number(n.discount||0)>Number(old?.discount||0)+.001})||next.applied?.[0];
+        return {remaining:add,name:gained?.name||'Kampanya',benefit:money(Number(next.discount||0)-nowDiscount)};
+      }
+    }
+  }finally{cart=original}
+  return null;
+}
+function calculateCartCampaigns(){
+  const result=calculateCartCampaignsCore();
+  const next=nextCampaignGuidance();
+  result.prompts=next?[next]:[];
+  return result;
+}
 function shareCartFromCheckout(){
+  normalizeCartPersonalizationFees();
   const campaign=calculateCartCampaigns();
-  const lines=cart.map((x,i)=>`${i+1}. ${x.product?.name||'Ürün'} — ${money(x.product?.price||0)}`);
-  const text=`SHAZ sepetim
+  const payload={v:1,items:cart.map(x=>({name:x.product?.name||'Ürün',price:Number(x.product?.price||0),image:mainProductImage(x.product)||'',qty:Number(x.qty||1),basePrice:Number(x.basePrice??x.product?.price??0),writes:(x.writes||x.setCustomization?.writes||[]).map(w=>({item:w.item,text:w.text,position:w.position,fee:Number(w.fee||0)})),photos:(x.photoCustomizations||x.setCustomization?.photoCustomizations||[]).map(ph=>({item:ph.item,fee:Number(ph.fee||0)}))})),subtotal:campaign.subtotal,discount:campaign.discount,total:campaign.total,applied:(campaign.applied||[]).map(a=>({name:a.name,discount:a.discount}))};
+  const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  const url=new URL(location.origin+location.pathname);url.searchParams.set('sharedCart',encoded);
+  const text='SHAZ sepetimi seninle paylaştım.';
+  if(navigator.share){navigator.share({title:'SHAZ Sepetim',text,url:url.toString()}).catch(()=>{});return;}
+  navigator.clipboard?.writeText(url.toString()).then(()=>toast('Sepet bağlantısı kopyalandı')).catch(()=>toast('Sepet paylaşılamadı'));
+}
 
-${lines.join('\n')}
-
-Toplam: ${money(campaign.total)}`;
-  if(navigator.share){navigator.share({title:'SHAZ Sepetim',text,url:location.href}).catch(()=>{});return;}
-  navigator.clipboard?.writeText(text).then(()=>toast('Sepet özeti kopyalandı')).catch(()=>toast('Sepet paylaşılamadı'));
+function openSharedCartFromUrl(){
+  const raw=new URLSearchParams(location.search).get('sharedCart');if(!raw)return false;
+  try{
+    const data=JSON.parse(decodeURIComponent(escape(atob(raw))));
+    const items=Array.isArray(data.items)?data.items:[];
+    openDrawer(`<div class="checkoutShell sharedCartShell"><div class="checkoutTop"><div><h2>Paylaşılan Sepet</h2><p>Bu ekran, size gönderilen SHAZ sepetinin fiyat ve ürün özetidir.</p></div><button class="pill" onclick="closeDrawer()">Kapat</button></div><div class="checkoutProductPanel">${items.map(x=>`<div class="orderCartItem"><div class="cartItemMain">${x.image?`<div class="cartItemThumb"><img src="${escapeAttr(x.image)}" alt=""></div>`:''}<div class="cartItemCopy"><b>${escapeHtml(x.name)}</b>${(x.writes||[]).map(w=>`<div class=muted>Yazı: ${escapeHtml(w.text||'')} · +${money(w.fee||0)}</div>`).join('')}${(x.photos||[]).map(ph=>`<div class=muted>Fotoğraf işlemesi · +${money(ph.fee||0)}</div>`).join('')}</div><div class="cartItemRight"><strong>${money(x.price)}</strong></div></div></div>`).join('')}</div><div class="checkoutPriceBreakdown"><div><span>Ara toplam</span><strong>${money(data.subtotal)}</strong></div>${(data.applied||[]).map(a=>`<div class="checkoutDiscountLine"><span>${escapeHtml(a.name)}</span><strong>-${money(a.discount)}</strong></div>`).join('')}<div class="checkoutTotal"><span>Toplam</span><strong>${money(data.total)}</strong></div></div><button class="btn" onclick="history.replaceState({},'',location.pathname);closeDrawer()">Alışverişe Git →</button></div>`);
+    return true;
+  }catch(e){console.warn('Paylaşılan sepet açılamadı',e);return false}
 }
 
 function checkout(){
   normalizeCartPersonalizationFees();
   if(!cart.length)return openDrawer('<div class="checkoutEmpty"><h2>Sepetiniz boş</h2><p>Beğendiğiniz ürünleri sepete ekleyerek siparişe başlayabilirsiniz.</p><button class="btn" onclick="closeDrawer()">Ürünlere Dön</button></div>');
-  const campaign=calculateCartCampaigns();
-  const itemCount=cart.reduce((n,x)=>n+Number(x.qty||1),0);
-  openDrawer(`<div class="checkoutShell checkoutShell--cart"><div class="checkoutStickyTop"><div class="checkoutTop"><div><h2>Sepetiniz</h2><p>Ürünlerinizi kontrol edin, ardından ödeme ve teslimat bilgilerinize geçin.</p></div><div class="checkoutTopActions"><button type="button" class="checkoutMiniAction" onclick="shareCartFromCheckout()"><span class="checkoutMiniIcon">⤴</span><small>Sepeti paylaş</small></button><button class="pill" onclick=closeDrawer()>Kapat</button></div></div>
-    <div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="closeDrawer()">← Alışverişe dön</button></div>
-    <div class="checkoutSteps"><span class="active">1 Sepet</span><span>2 Teslimat</span><span>3 Onay</span></div></div>
-    <div class="checkoutScrollBody"><div class="cartToolbar"><span>${itemCount} ürün</span><button type="button" class="cartClearBtn" onclick="clearCartFromCheckout()">Sepeti boşalt</button></div>
-    <div class="checkoutProductPanel">${cart.map((x,i)=>cartItemSummary(x,i)).join('')}</div></div>
-    <div class="checkoutStickyBottom">${campaign.prompts.length?`<div class="campaignPromptBox">${campaign.prompts.map(x=>`<div><b>${escapeHtml(x.name)}</b>: <strong>${x.remaining} uygun ürün daha ekle</strong> → ${x.completed?`${x.nextUse}. kampanya indirimini aç. ${x.usesLeft>1?`Sonrasında ${x.usesLeft-1} kullanım hakkı daha kalır.`:''}`:`${escapeHtml(x.benefit)} kazan.`}</div>`).join('')}</div>`:''}
-    <div class="checkoutPriceBreakdown"><div><span>Ara toplam</span><strong>${money(campaign.subtotal)}</strong></div>${campaign.applied.map(x=>`<div class="checkoutDiscountLine"><span>${escapeHtml(x.name)}</span><strong>-${money(x.discount)}</strong></div>`).join('')}<div class="checkoutTotal"><span>Toplam</span><strong>${money(campaign.total)}</strong></div></div>
-    <button class="btn checkoutPrimary" onclick="addressStep()">Teslimat ve Ödeme Bilgilerine Geç →</button></div></div>`);
+  const campaign=calculateCartCampaigns(),itemCount=cart.reduce((n,x)=>n+Number(x.qty||1),0),next=campaign.prompts?.[0];
+  openDrawer(`<div class="checkoutShell checkoutShell--cart"><div class="checkoutStickyTop"><div class="checkoutTop"><div><h2>Sepetiniz</h2><p>Ürünleri kontrol edin; ardından teslimat ve ödemeye geçin.</p></div><div class="checkoutTopActions"><button type="button" class="checkoutMiniAction" onclick="shareCartFromCheckout()"><span class="checkoutMiniIcon">⤴</span><small>Sepeti paylaş</small></button><button class="pill" onclick=closeDrawer()>Kapat</button></div></div><div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="closeDrawer()">← Alışverişe dön</button></div><div class="checkoutSteps"><span class="active">1 Sepet</span><span>2 Teslimat</span><span>3 Onay</span></div></div>
+    <div class="checkoutScrollBody"><div class="cartToolbar"><span>${itemCount} ürün</span><button type="button" class="cartClearBtn" onclick="clearCartFromCheckout()">Sepeti boşalt</button></div><div class="checkoutProductPanel">${cart.map((x,i)=>cartItemSummary(x,i)).join('')}</div></div>
+    <div class="checkoutStickyBottom">${next?`<div class="campaignPromptBox campaignPromptBox--next"><b>${escapeHtml(next.name)}:</b> <strong>${next.remaining} uygun ürün daha ekle</strong> → ${escapeHtml(next.benefit)} ek indirim kazan.</div>`:''}<div class="checkoutPriceBreakdown"><div><span>Ara toplam</span><strong>${money(campaign.subtotal)}</strong></div>${campaign.applied.map(x=>`<div class="checkoutDiscountLine"><span>${escapeHtml(x.name)}</span><strong>-${money(x.discount)}</strong></div>`).join('')}<div class="checkoutTotal"><span>Toplam</span><strong>${money(campaign.total)}</strong></div></div><button class="btn checkoutPrimary" onclick="addressStep()">Teslimat ve Ödemeye Geç →</button></div></div>`);
 }
+let cartEditBackup=null;
+function openCartItemProduct(i){const x=cart[i];if(!x?.product?.id)return;openProductDetail(x.product.id,'cart')}
+function editCartItem(i){
+  const x=cart[i];if(!x)return;
+  const writes=x.writes||x.setCustomization?.writes||[];
+  const photos=x.photoCustomizations||x.setCustomization?.photoCustomizations||[];
+  const fields=writes.map((w,n)=>`<label class="cartEditField"><span>${escapeHtml(w.item||'Ürün')} · ${escapeHtml(w.position||'Yazı')}</span><input class="formControl" data-cart-edit-write="${n}" value="${escapeAttr(w.text||'')}"></label>`).join('');
+  showSoftNotice('Ürünü düzenle',writes.length?'Yazıları burada değiştirebilirsiniz. Ürünün diğer seçeneklerini yeniden seçmek için ürün ekranını açın.':photos.length?'Fotoğraf seçiminiz korunuyor. Ürünün diğer seçenekleri için ürün ekranını açabilirsiniz.':'Bu üründe mevcut bir kişiselleştirme yok. Ürün ekranından seçenekleri yeniden açabilirsiniz.','','');
+  const card=document.querySelector('.softNoticeCard');if(!card)return;
+  card.insertAdjacentHTML('beforeend',`${fields?`<div class="cartEditFields">${fields}</div>`:''}${photos.length?`<div class="cartEditPhotoNote">📷 ${photos.length} fotoğraf işlemesi mevcut.</div>`:''}<div class="cartEditActions">${writes.length?`<button class="btn" type="button" onclick="saveCartItemEdits(${i})">Değişiklikleri Kaydet</button>`:''}<button class="pill" type="button" onclick="closeSoftNotice();openCartItemProduct(${i})">Ürün Ekranını Aç</button></div>`);
+}
+function saveCartItemEdits(i){
+  const x=cart[i];if(!x)return;
+  const writes=x.writes||x.setCustomization?.writes||[];
+  [...document.querySelectorAll('[data-cart-edit-write]')].forEach(inp=>{const w=writes[Number(inp.dataset.cartEditWrite)];if(w)w.text=inp.value.trim()});
+  closeSoftNotice();normalizeCartPersonalizationFees();checkout();toast('✓ Ürün güncellendi');
+}
+function restoreCartEditIfNeeded(){}
 function removeCartItem(i){
   if(i<0||i>=cart.length)return;
   cart.splice(i,1);updateCart();
@@ -1213,35 +1289,24 @@ function clearCartFromCheckout(){
 }
 
 function cartItemSummary(x,i){
-  const lines=[];
-  const priceLines=[];
-  const basePrice=Number(x.basePrice??x.product?.price??0);
-  priceLines.push(`<div><span>${x.setCustomization||x.builderItems?.length?'Ürün fiyatı':'Ürün fiyatı'}</span><strong>${money(basePrice)}</strong></div>`);
+  const lines=[],priceLines=[],basePrice=Number(x.basePrice??x.product?.price??0);
+  priceLines.push(`<div><span>Ürün fiyatı</span><strong>${money(basePrice)}</strong></div>`);
   if(x.setCustomization){
     const removed=(x.setCustomization.removedIds||[]).map(id=>(x.product.setItems||[]).find(s=>s.id===id)).filter(Boolean);
-    if(removed.length){
-      lines.push(`<div class=muted>Çıkarılan: ${removed.map(x=>escapeHtml(x.name)).join(', ')}</div>`);
-      removed.forEach(item=>priceLines.push(`<div class="isDiscount"><span>Çıkarılan ürün: ${escapeHtml(item.name)}</span><strong>-${money(item.removeDiscount||0)}</strong></div>`));
-    }
-    const writes=x.setCustomization.writes||[];
-    if(writes.length){
-      lines.push(`<div class=muted>Yazılar: ${writes.map(w=>`${escapeHtml(w.item)} — ${escapeHtml(w.position)}: “${escapeHtml(w.text)}”`).join('<br>')}</div>`);
-      writes.forEach(w=>priceLines.push(`<div><span>Yazı işlemi · ${escapeHtml(w.item)}</span><strong>+${money(w.fee||0)}</strong></div>`));
-    }
+    if(removed.length){lines.push(`<div class=muted>Çıkarılan: ${removed.map(x=>escapeHtml(x.name)).join(', ')}</div>`);removed.forEach(item=>priceLines.push(`<div class="isDiscount"><span>Çıkarılan · ${escapeHtml(item.name)}</span><strong>-${money(item.removeDiscount||0)}</strong></div>`));}
   }
-  if(x.builderItems?.length) lines.push(`<div class=muted>Set içeriği: ${x.builderItems.map(p=>escapeHtml(p.name)).join(', ')}</div>`);
+  if(x.builderItems?.length)lines.push(`<div class=muted>Set içeriği: ${x.builderItems.map(p=>escapeHtml(p.name)).join(', ')}</div>`);
   const writes=x.writes||x.setCustomization?.writes||[];
-  if(!x.setCustomization && writes.length){
-    lines.push(`<div class=muted>Yazı: ${writes.map(w=>`${escapeHtml(w.item)} — ${escapeHtml(w.position)}: “${escapeHtml(w.text)}”`).join('<br>')}</div>`);
-    writes.forEach(w=>priceLines.push(`<div><span>Yazı işlemi · ${escapeHtml(w.item)}</span><strong>+${money(w.fee||0)}</strong></div>`));
-  }
+  if(writes.length){lines.push(`<div class=muted>Yazı: ${writes.map(w=>`${escapeHtml(w.item||'Ürün')} · “${escapeHtml(w.text||'')}”`).join('<br>')}</div>`);writes.forEach(w=>{if(Number(w.fee||0))priceLines.push(`<div><span>Kişiselleştirme · ${escapeHtml(w.item||'Ürün')}</span><strong>+${money(w.fee)}</strong></div>`)})}
   const photos=x.photoCustomizations||x.setCustomization?.photoCustomizations||[];
-  if(photos.length){
-    lines.push(`<div class=muted>Fotoğraf işlemesi: ${photos.map(ph=>`${escapeHtml(ph.item||'Cüzdan')} (+${money(ph.fee||walletPhotoFee())})${ph.caption?` · ${ph.captionPosition==='above'?'üstünde':'altında'} “${escapeHtml(ph.caption)}”`:''}`).join('<br>')}</div>`);
-    photos.forEach(ph=>priceLines.push(`<div><span>Fotoğraf işlemesi · ${escapeHtml(ph.item||'Cüzdan')}</span><strong>+${money(ph.fee||walletPhotoFee())}</strong></div>`));
-  }
+  if(photos.length){lines.push(`<div class=muted>Fotoğraf: ${photos.map(ph=>escapeHtml(ph.item||'Cüzdan')).join(', ')}</div>`);photos.forEach(ph=>{
+    const slotFee=Number(ph.slotFee||0),extra=Number(ph.photoExtraFee??(Number(ph.fee||0)-slotFee));
+    if(slotFee)priceLines.push(`<div><span>Kişiselleştirme · ${escapeHtml(ph.item||'Cüzdan')}</span><strong>+${money(slotFee)}</strong></div>`);
+    if(extra>0)priceLines.push(`<div><span>Fotoğraf işleme · ${escapeHtml(ph.item||'Cüzdan')}</span><strong>+${money(extra)}</strong></div>`);
+    else if(Number(ph.fee||0)>0)priceLines.push(`<div><span>Fotoğraf işleme · ${escapeHtml(ph.item||'Cüzdan')}</span><strong>+${money(ph.fee)}</strong></div>`);
+  })}
   const cartImg=mainProductImage(x.product)||(x.builderItems||[]).find(y=>y?.image)?.image||'';
-  return `<div class="orderCartItem"><div class="cartItemMain">${cartImg?`<div class="cartItemThumb"><img src="${escapeAttr(cartImg)}" alt="${escapeAttr(x.product.name||'Ürün')}"></div>`:''}<div class="cartItemCopy"><b>${escapeHtml(x.product.name)}</b>${lines.join('')}${priceLines.length>1?`<div class="cartItemBreakdown">${priceLines.map(line=>line).join('')}</div>`:''}</div><div class="cartItemRight"><strong>${money(x.product.price)}</strong><button type="button" class="cartRemoveBtn" onclick="removeCartItem(${i})">Kaldır</button></div></div></div>`;
+  return `<div class="orderCartItem"><div class="cartItemMain cartItemClickable" onclick="openCartItemProduct(${i})">${cartImg?`<div class="cartItemThumb"><img src="${escapeAttr(cartImg)}" alt="${escapeAttr(x.product.name||'Ürün')}"></div>`:''}<div class="cartItemCopy"><b>${escapeHtml(x.product.name)}</b>${lines.join('')}${priceLines.length>1?`<div class="cartItemBreakdown">${priceLines.join('')}</div>`:''}</div><div class="cartItemRight"><strong>${money(x.product.price)}</strong><div class="cartItemActions"><button type="button" class="cartEditBtn" onclick="event.stopPropagation();editCartItem(${i})">Düzenle</button><button type="button" class="cartRemoveBtn" onclick="event.stopPropagation();removeCartItem(${i})">Kaldır</button></div></div></div></div>`;
 }
 function normalizeTRMobile(raw){
   const digits=String(raw||'').replace(/\D/g,'');

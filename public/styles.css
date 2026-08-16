@@ -3403,3 +3403,29 @@ body.productDetailOpen{overflow:hidden!important}
   .checkoutMiniAction small{font-size:10px}
   .cartItemBreakdown>div{font-size:10.5px}
 }
+
+
+/* V111 — yalnızca bu turdaki sepet/iletişim düzeltmeleri */
+.floating{position:fixed!important;right:10px!important;left:auto!important;bottom:max(10px,env(safe-area-inset-bottom))!important;margin:0!important;transform:translate3d(0,0,0);transition:transform .32s ease!important;z-index:24!important}
+.floating.atPageBottom{left:auto!important;right:10px!important}
+@media(max-width:700px){.floating{right:10px!important;left:auto!important;bottom:max(10px,env(safe-area-inset-bottom))!important;max-width:calc(100vw - 20px)!important}.floating.atPageBottom{left:auto!important;right:10px!important}}
+.checkoutShell--cart{height:100dvh!important;min-height:100dvh!important;display:grid!important;grid-template-rows:auto minmax(0,1fr) auto!important;overflow:hidden!important;padding:0!important}
+.checkoutStickyTop{position:relative!important;top:auto!important;padding:8px 12px 6px!important;z-index:10!important;background:#f6f7f8!important}
+.checkoutStickyTop .checkoutTop{margin:0 0 4px!important;gap:8px!important}
+.checkoutStickyTop .checkoutTop h2{font-size:24px!important;margin:0 0 2px!important}
+.checkoutStickyTop .checkoutTop p{font-size:11px!important;line-height:1.25!important;max-width:290px!important}
+.checkoutStickyTop .checkoutBackRow{margin:0!important;min-height:0!important}
+.checkoutStickyTop .checkoutBackBtn{font-size:12px!important;padding:3px 0!important}
+.checkoutStickyTop .checkoutSteps{margin:5px 0 0!important;gap:5px!important}
+.checkoutStickyTop .checkoutSteps span{padding:6px 4px!important;font-size:9px!important}
+.checkoutTopActions{gap:6px!important;align-items:center!important}.checkoutMiniAction{padding:0!important}.checkoutMiniIcon{font-size:16px!important}.checkoutMiniAction small{font-size:9px!important}.checkoutTopActions .pill{padding:7px 10px!important;font-size:11px!important}
+.checkoutScrollBody{overflow-y:auto!important;min-height:0!important;padding:6px 12px 8px!important;overscroll-behavior:contain!important}
+.checkoutScrollBody .cartToolbar{margin:0 0 5px!important;font-size:10px!important}.checkoutScrollBody .checkoutProductPanel{padding:8px 10px!important}
+.orderCartItem{padding:5px 0!important}.checkoutProductPanel .orderCartItem+.orderCartItem{margin-top:4px!important;padding-top:7px!important}.cartItemMain{gap:9px!important}.cartItemThumb{width:58px!important;height:58px!important;flex:0 0 58px!important}.cartItemCopy>b{font-size:13px!important}.cartItemCopy .muted{font-size:9.5px!important;line-height:1.25!important}.cartItemRight>strong{font-size:14px!important}.cartItemActions{display:flex;gap:7px;justify-content:flex-end;margin-top:3px}.cartEditBtn,.cartRemoveBtn{font-size:9.5px!important;padding:2px 0!important;border:0;background:transparent;font-weight:800;cursor:pointer}.cartEditBtn{color:#2d5f9a}.cartItemClickable{cursor:pointer}
+.cartItemBreakdown{margin-top:5px!important;padding:6px 7px!important;gap:2px!important}.cartItemBreakdown>div{font-size:9px!important}
+.checkoutStickyBottom{position:relative!important;bottom:auto!important;padding:6px 12px calc(7px + env(safe-area-inset-bottom))!important;gap:5px!important;z-index:10!important;box-shadow:0 -5px 16px rgba(15,23,42,.06)!important}
+.campaignPromptBox--next{padding:6px 8px!important;margin:0!important;border-radius:9px!important;font-size:9.5px!important;line-height:1.25!important}.campaignPromptBox--next strong{font-size:9.5px!important}
+.checkoutPriceBreakdown{border-radius:10px!important;overflow:hidden!important}.checkoutPriceBreakdown>div{padding:5px 9px!important;font-size:10px!important}.checkoutPriceBreakdown .checkoutTotal{padding:6px 9px!important;margin:0!important;border-radius:0!important}.checkoutPriceBreakdown .checkoutTotal strong{font-size:19px!important}
+.checkoutStickyBottom .checkoutPrimary{margin:0!important;padding:10px 12px!important;font-size:12px!important;min-height:0!important}
+.softNoticeActions--center{justify-content:center!important}.softNoticeActions--center .btn{width:auto!important;min-width:170px!important}.sharedCartShell{padding:14px!important}.sharedCartShell .checkoutProductPanel{max-height:60vh;overflow:auto}.sharedCartShell .checkoutPriceBreakdown{margin:10px 0}
+.cartEditFields{display:grid;gap:8px}.cartEditField{display:grid;gap:4px}.cartEditField span,.cartEditPhotoNote{font-size:11px;color:#667085}.cartEditActions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.cartEditActions .btn,.cartEditActions .pill{width:auto!important;margin:0!important}
