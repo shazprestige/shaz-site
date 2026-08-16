@@ -81,7 +81,7 @@
       "id": "kategori-1786903369075",
       "name": "Bileklikler",
       "order": 7,
-      "hidden": false,
+      "hidden": true,
       "cover": "",
       "subcategories": []
     }
