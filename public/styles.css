@@ -3237,3 +3237,8 @@ body.productDetailOpen{overflow:hidden!important}
   .builderPricingProducts{grid-template-columns:repeat(2,minmax(0,1fr))}
   .builderProductPriceGrid{grid-template-columns:1fr 1fr}
 }
+
+/* v102: Kendi Setini Oluştur ürün bazlı fiyat alanında dinamik adet ekleme */
+.builderPriceAddCell{appearance:none;width:100%;text-align:left;cursor:pointer;border-style:dashed!important;background:#fafbfc!important;color:#111!important;min-height:72px}
+.builderPriceAddCell>b{display:block;font-size:24px;line-height:1;margin:7px 0 3px}
+.builderPriceAddCell:hover{background:#f3f5f7!important}

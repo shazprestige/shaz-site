@@ -1307,8 +1307,8 @@ function builderPriceForProduct(product,count){
     const value=Number(map[key]);
     return Number.isFinite(value)&&value>=0?value:null;
   }
-  const fallback=getBuilderRule(count);
-  return fallback?Number(fallback.pricePerItem||0):null;
+  const single=Number(product?.price||0);
+  return Number.isFinite(single)&&single>=0?single:null;
 }
 function builderCurrentPricing(){
   const selected=getBuilderSelectedProducts();

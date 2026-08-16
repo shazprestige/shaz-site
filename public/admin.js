@@ -672,13 +672,22 @@ function builderPricingCategoryIds(){
   return (catalog.categories||[]).filter(c=>c.id!=='tum'&&!isSetCategory(c.id)).sort((a,b)=>(a.order||0)-(b.order||0)).map(c=>c.id);
 }
 function builderPricingCountsForProduct(productId){
+  catalog.builder=catalog.builder||{};
   const explicit=Object.keys(ensureBuilderProductPricing()[productId]||{}).map(Number).filter(n=>Number.isFinite(n)&&n>=2);
   const legacy=(catalog.builder?.pricingRules||[]).map(r=>Number(r.count)).filter(n=>Number.isFinite(n)&&n>=2);
-  const maxBase=Math.max(6,builderPricingCategoryIds().length,...legacy,...explicit);
-  const max=Math.min(12,maxBase);
+  const savedMax=Number(catalog.builder.pricingMaxCount||0);
+  const maxBase=Math.max(7,builderPricingCategoryIds().length,...legacy,...explicit,savedMax);
+  const max=Math.max(2,Math.min(50,maxBase));
   const out=[];for(let i=2;i<=max;i++)out.push(i);
-  explicit.filter(n=>n>max).sort((a,b)=>a-b).forEach(n=>{if(!out.includes(n))out.push(n)});
   return out;
+}
+function addBuilderPricingCount(){
+  catalog.builder=catalog.builder||{};
+  const counts=builderPricingCountsForProduct(adminBuilderPricingProduct);
+  const current=Math.max(1,...counts);
+  catalog.builder.pricingMaxCount=Math.min(50,current+1);
+  changed('.builderCard');
+  refreshBuilderProductPricingAdmin();
 }
 function renderBuilderProductPricingAdmin(){
   const pricing=ensureBuilderProductPricing();
@@ -695,9 +704,9 @@ function renderBuilderProductPricingAdmin(){
     const counts=builderPricingCountsForProduct(selected.id);
     const productMap=pricing[selected.id]||{};
     const img=selected.image||productImages(selected)[0]||'';
-    editor=`<div class=builderPricingSelected><div class=builderPricingSelectedHead>${img?`<img src="${attr(img)}" alt="">`:''}<div><b>${esc(selected.name||'Yeni Ürün')}</b><small>Toplam sette kaç ürün olduğuna göre bu ürünün sete eklenecek fiyatını yaz.</small></div></div><div class=builderProductPriceGrid>${counts.map(count=>{const has=Object.prototype.hasOwnProperty.call(productMap,String(count));const own=has?Number(productMap[String(count)]):'';const fallback=builderLegacyPriceForCount(count);return `<label class=builderProductPriceCell><span>${count} ürünlü sette</span><input class=formControl type=number min=0 step=1 value="${has?own:''}" placeholder="${fallback!==null?`Genel: ${fallback} TL`:'Fiyat gir'}" oninput="setBuilderProductPrice('${attr(selected.id)}',${count},this.value)"><small>${has?'Bu ürüne özel fiyat':fallback!==null?`Boşsa eski genel fiyat: ${fallback} TL`:'Boşsa bu adet için fiyat tanımsız'}</small></label>`}).join('')}</div></div>`;
+    editor=`<div class=builderPricingSelected><div class=builderPricingSelectedHead>${img?`<img src="${attr(img)}" alt="">`:''}<div><b>${esc(selected.name||'Yeni Ürün')}</b><small>Toplam sette kaç ürün olduğuna göre bu ürünün sete eklenecek fiyatını yaz.</small></div></div><div class=builderProductPriceGrid>${counts.map(count=>{const has=Object.prototype.hasOwnProperty.call(productMap,String(count));const own=has?Number(productMap[String(count)]):'';const single=Number(selected.price||0);return `<label class=builderProductPriceCell><span>${count} ürünlü sette</span><input class=formControl type=number min=0 step=1 value="${has?own:''}" placeholder="Tekli fiyat: ${single.toLocaleString('tr-TR')} TL" oninput="setBuilderProductPrice('${attr(selected.id)}',${count},this.value)"><small>${has?'Bu ürüne özel fiyat':`Boşsa tekli gerçek fiyat: ${single.toLocaleString('tr-TR')} TL`}</small></label>`}).join('')}<button type=button class="builderProductPriceCell builderPriceAddCell" onclick="addBuilderPricingCount()"><span>${Math.max(...counts)+1} ürünlü sette</span><b>＋</b><small>Yeni adet kuralı ekle</small></button></div></div>`;
   }
-  return `<div class=builderPricingAdmin id=builderProductPricingAdmin><div class=builderPricingTitle><b>Kendi Setini Oluştur özel fiyatları</b><span>Ürüne göre fiyatlandırma</span></div><div class=help>Önce kategori ve ürünü seç. Örneğin çakmak 3 ürünlü sette 100 TL, 5 ürünlü sette 15 TL olabilir. Boş bıraktığın alanlarda mevcut eski genel fiyat kuralı varsa o değer kullanılmaya devam eder.</div><div class=builderPricingCats>${catsHtml||'<span class=help>Önce Kendi Setini Oluştur için kategori aç.</span>'}</div><div class=builderPricingWorkspace><div class=builderPricingProducts>${productsHtml}</div><div class=builderPricingEditor>${editor}</div></div></div>`;
+  return `<div class=builderPricingAdmin id=builderProductPricingAdmin><div class=builderPricingTitle><b>Kendi Setini Oluştur özel fiyatları</b><span>Ürüne göre fiyatlandırma</span></div><div class=help>Önce kategori ve ürünü seç. Örneğin çakmak 3 ürünlü sette 100 TL, 5 ürünlü sette 15 TL olabilir. Bir adet için özel fiyatı boş bırakırsan o ürünün normal tekli satış fiyatı kullanılır.</div><div class=builderPricingCats>${catsHtml||'<span class=help>Önce Kendi Setini Oluştur için kategori aç.</span>'}</div><div class=builderPricingWorkspace><div class=builderPricingProducts>${productsHtml}</div><div class=builderPricingEditor>${editor}</div></div></div>`;
 }
 function refreshBuilderProductPricingAdmin(){
   const host=document.getElementById('builderProductPricingAdmin');
