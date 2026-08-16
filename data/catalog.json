@@ -168,7 +168,12 @@
         "/uploads/1786724306713-eorq5p.jpeg"
       ],
       "badgeColor": "orange",
-      "writeEnabled": true
+      "writeEnabled": true,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
+      "subtitle": "7 parçalı set"
     },
     {
       "id": "urun-1786798357237-gijni",
