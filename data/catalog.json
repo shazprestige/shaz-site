@@ -65,7 +65,7 @@
       "id": "kategori-1786740619033",
       "name": "Kemerler",
       "order": 6,
-      "hidden": true,
+      "hidden": false,
       "cover": "",
       "subcategories": []
     },
