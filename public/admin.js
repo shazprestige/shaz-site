@@ -167,6 +167,17 @@ function campaignCategoryOptions(selected='tum'){
   const cats=[{id:'tum',name:'Tüm Ürünler'},...(catalog.categories||[]).filter(c=>!c.hidden&&c.id!=='tum')];
   return cats.filter(c=>c?.id&&!seen.has(c.id)&&seen.add(c.id)).map(c=>`<option value="${attr(c.id)}" ${String(selected||'tum')===String(c.id)?'selected':''}>${esc(c.name||c.id)}</option>`).join('');
 }
+function campaignTextPositionOptions(selected=''){
+  const opts=[
+    ['', 'Mevcut konum'],
+    ['top','En üst'],
+    ['uppermid','Üst ile orta arası'],
+    ['middle','Tam orta'],
+    ['lowermid','Orta ile alt arası'],
+    ['bottom','En alt']
+  ];
+  return opts.map(([v,n])=>`<option value="${v}" ${String(selected||'')===v?'selected':''}>${n}</option>`).join('');
+}
 function renderSite(){
   const cards=(settings.campaignCards||[]).sort((a,b)=>(a.order||0)-(b.order||0));
   const campaigns=cards.map((c,i)=>{
@@ -191,6 +202,10 @@ function renderSite(){
       <div class=grid2>
         ${input('Başlık',`settings.campaignCards[${i}].title`,c.title||'','Fotoğrafın üzerindeki büyük yazı.',contentTarget)}
         ${input('Kısa açıklama',`settings.campaignCards[${i}].subtitle`,c.subtitle||'','Başlığın altındaki kısa yazı.',contentTarget)}
+        <div class=field><label><b>Başlık konumu</b></label><select class=formControl data-preview-target='${attr(contentTarget)}' onchange="settings.campaignCards[${i}].titlePosition=this.value;changed(this.dataset.previewTarget)">${campaignTextPositionOptions(c.titlePosition||'')}</select><div class=help>En üst, üst-orta arası, tam orta, orta-alt arası veya en alt konumlarından birini seçebilirsin.</div></div>
+        <div class=field><label><b>Kısa açıklama konumu</b></label><select class=formControl data-preview-target='${attr(contentTarget)}' onchange="settings.campaignCards[${i}].subtitlePosition=this.value;changed(this.dataset.previewTarget)">${campaignTextPositionOptions(c.subtitlePosition||'')}</select><div class=help>Kısa açıklamayı başlıktan bağımsız olarak farklı bir yüksekliğe taşıyabilirsin.</div></div>
+        ${input('Başlık yazı boyutu (px)',`settings.campaignCards[${i}].titleFontSize`,c.titleFontSize||'','Boş/0 bırakırsan mevcut otomatik boyut kullanılır.',contentTarget,'number')}
+        ${input('Kısa açıklama yazı boyutu (px)',`settings.campaignCards[${i}].subtitleFontSize`,c.subtitleFontSize||'','Boş/0 bırakırsan mevcut otomatik boyut kullanılır.',contentTarget,'number')}
         ${input('Buton yazısı',`settings.campaignCards[${i}].buttonText`,c.buttonText||'ÜRÜNLERİ GÖR','Örn: Ürünleri Gör, Keşfet, Setlere Bak.',buttonTarget)}
         <div class=field><label><b>Buton nereye gitsin?</b></label><select class=formControl data-preview-target='${attr(buttonTarget)}' onchange="settings.campaignCards[${i}].targetCategory=this.value;changed(this.dataset.previewTarget)">${campaignCategoryOptions(c.targetCategory||'tum')}</select><div class=help>Sadece sitendeki kategorilerden seç. Müşteri butona basınca o kategori açılır.</div></div>
       </div>
@@ -350,7 +365,8 @@ function discountCampaignProductChoice(rule,index,p,mode='include'){
   const image=p.image||p.images?.[0]||'';
   const checked=mode==='exclude'?!(rule.excludedProductIds||[]).includes(p.id):(rule.productIds||[]).includes(p.id);
   const handler=mode==='exclude'?`toggleDiscountCampaignCategoryProduct(${index},'${attr(p.id)}',this.checked)`:`toggleDiscountCampaignProduct(${index},'${attr(p.id)}',this.checked)`;
-  return `<label class="campaignProductChoice"><input type=checkbox ${checked?'checked':''} onchange="${handler}">${image?`<img src="${attr(image)}" alt="">`:'<span class=campaignProductNoImage>—</span>'}<span><b>${esc(p.name||'Ürün')}</b><small>${Number(p.price||0)} TL</small></span></label>`;
+  const unitCount=Math.max(1,Math.min(10,Number(rule.productUnitCounts?.[p.id]||1)));
+  return `<div class="campaignProductChoiceWrap ${checked?'isIncluded':'isExcluded'}"><label class="campaignProductChoice"><input type=checkbox ${checked?'checked':''} onchange="${handler}">${image?`<img src="${attr(image)}" alt="">`:'<span class=campaignProductNoImage>—</span>'}<span><b>${esc(p.name||'Ürün')}</b><small>${Number(p.price||0)} TL</small></span></label><label class=campaignUnitCount>Bu ürün kampanyada <select onchange="setDiscountCampaignProductUnits(${index},'${attr(p.id)}',this.value)">${Array.from({length:10},(_,n)=>`<option value="${n+1}" ${unitCount===n+1?'selected':''}>${n+1} adet</option>`).join('')}</select> sayılsın</label></div>`;
 }
 function discountCampaignScopeProducts(rule,index){
   const scope=rule.scopeType||'category';
@@ -379,23 +395,27 @@ function discountTypeHelp(rule){
 }
 function renderDiscountCampaigns(){
   catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
-  const cards=catalog.checkoutCampaigns.map((r,i)=>`<details class="panel simpleAdminDetails discountCampaignAdmin" ${i===catalog.checkoutCampaigns.length-1?'open':''}><summary><span>${esc(r.name||('Kampanya '+(i+1)))}</span><small>${r.enabled!==false?'Aktif':'Kapalı'} · En az ${Math.max(1,Number(r.minQty||1))} ürün</small></summary><div class=simpleDetailsBody>
+  catalog.checkoutCampaigns.forEach(r=>{r.productUnitCounts=r.productUnitCounts||{};if(r.repeatable===undefined)r.repeatable=false;if(r.maxApplications===undefined)r.maxApplications=0;if(r.allowDoubleCount===undefined)r.allowDoubleCount=false;});
+  const cards=catalog.checkoutCampaigns.map((r,i)=>`<details class="panel simpleAdminDetails discountCampaignAdmin" ${i===catalog.checkoutCampaigns.length-1?'open':''}><summary><span>${esc(r.name||('Kampanya '+(i+1)))}</span><small>${r.enabled!==false?'Aktif':'Kapalı'} · ${Math.max(1,Number(r.minQty||1))} kampanya adedi</small></summary><div class=simpleDetailsBody>
     <div class=campaignRuleHead><label class=setItemToggle><span><b>Kampanya aktif</b><small class=muted>İstediğinde kapatabilirsin; silmek zorunda değilsin.</small></span><input type=checkbox ${r.enabled!==false?'checked':''} onchange="catalog.checkoutCampaigns[${i}].enabled=this.checked;changed('.drawer')"></label><button class=dangerBtn onclick="removeDiscountCampaign(${i})">Kampanyayı Sil</button></div>
     <div class=grid2>
       ${input('Kampanya adı',`catalog.checkoutCampaigns[${i}].name`,r.name||'Yeni Kampanya','Müşteri sepette bu adı görür.','.drawer')}
-      ${input('Kampanya için gerekli adet',`catalog.checkoutCampaigns[${i}].minQty`,Math.max(1,Number(r.minQty||1)),'Yalnızca seçtiğin ürün/kategoriler bu adede sayılır. Sepette başka ürün bulunması kampanyayı bozmaz.','.drawer','number')}
-      <div class=field><label><b>Kampanya hangi ürünlerde?</b></label><select class=formControl onchange="catalog.checkoutCampaigns[${i}].scopeType=this.value;renderDiscountCampaigns()"><option value=category ${(r.scopeType||'category')==='category'?'selected':''}>Kategori seç</option><option value=products ${r.scopeType==='products'?'selected':''}>Tek tek ürün seç</option><option value=all ${r.scopeType==='all'?'selected':''}>Tüm ürünler</option></select><div class=help>Örn. sadece Saat kategorisi veya istediğin tek tek ürünler.</div></div>
+      ${input('Kampanya için gerekli adet',`catalog.checkoutCampaigns[${i}].minQty`,Math.max(1,Number(r.minQty||1)),'Buradaki adet normal sepet satırı değil, kampanya adedidir. Örneğin çift saat ürününü aşağıda 2 adet saydırabilirsin.','.drawer','number')}
+      <div class=field><label><b>Kampanya hangi ürünlerde?</b></label><select class=formControl onchange="catalog.checkoutCampaigns[${i}].scopeType=this.value;renderDiscountCampaigns()"><option value=category ${(r.scopeType||'category')==='category'?'selected':''}>Kategori seç</option><option value=products ${r.scopeType==='products'?'selected':''}>Tek tek ürün seç</option><option value=all ${r.scopeType==='all'?'selected':''}>Tüm ürünler</option></select><div class=help>Bir kategori seçtiğinde içindeki modeller aşağıda açılır; istemediğini çıkarabilir ve her ürünün kampanya sayısını ayrı belirleyebilirsin.</div></div>
       <div class=field><label><b>İndirim türü</b></label><select class=formControl onchange="catalog.checkoutCampaigns[${i}].discountType=this.value;renderDiscountCampaigns()"><option value=fixed ${(r.discountType||'fixed')==='fixed'?'selected':''}>Sabit TL indirim</option><option value=percent ${r.discountType==='percent'?'selected':''}>Yüzdelik indirim</option><option value=bundlePrice ${r.discountType==='bundlePrice'?'selected':''}>Kampanyalı toplam fiyat</option></select><div class=help>${discountTypeHelp(r)}</div></div>
-      ${input(r.discountType==='percent'?'İndirim yüzdesi':r.discountType==='bundlePrice'?'Kampanyalı toplam fiyat':'İndirim tutarı',`catalog.checkoutCampaigns[${i}].discountValue`,Number(r.discountValue||0),r.discountType==='percent'?'Örn: 15 = %15 indirim.':r.discountType==='bundlePrice'?'Örn: 1300 = seçilen adet kampanyada toplam 1300 TL.':'Örn: 400 = toplamdan 400 TL düşer.','.drawer','number')}
+      ${input(r.discountType==='percent'?'İndirim yüzdesi':r.discountType==='bundlePrice'?'Kampanyalı toplam fiyat':'İndirim tutarı',`catalog.checkoutCampaigns[${i}].discountValue`,Number(r.discountValue||0),r.discountType==='percent'?'Örn: 15 = %15 indirim.':r.discountType==='bundlePrice'?'Örn: 1300 = seçilen kampanya adedi toplam 1300 TL.':'Örn: 400 = toplamdan 400 TL düşer.','.drawer','number')}
+      <label class=setItemToggle><span><b>Aynı kampanya tekrar uygulanabilsin</b><small class=muted>Örn. 3'lü kampanya açıkken 6 uygun adet varsa kampanya 2 kez uygulanır.</small></span><input type=checkbox ${r.repeatable?'checked':''} onchange="catalog.checkoutCampaigns[${i}].repeatable=this.checked;changed('.drawer');renderDiscountCampaigns()"></label>
+      <div class=field><label><b>En fazla kaç kez uygulansın?</b></label><input class=formControl type=number min=0 value="${Math.max(0,Number(r.maxApplications||0))}" ${r.repeatable?'':'disabled'} oninput="catalog.checkoutCampaigns[${i}].maxApplications=Math.max(0,Number(this.value||0));changed('.drawer')"><div class=help>${r.repeatable?'0 = sınırsız. Örn. 2 yazarsan bu kampanya sepette en fazla iki kez çalışır.':'Önce “tekrar uygulanabilsin” seçeneğini aç.'}</div></div>
+      <label class=setItemToggle><span><b>Aynı ürünleri başka kampanyada tekrar say</b><small class=muted>Kapalı bırakman önerilir. Böylece 3 ürün varsa 3'lü ve 2'li kampanya üst üste binmez; sistem daha avantajlı/geçerli kombinasyonu seçer.</small></span><input type=checkbox ${r.allowDoubleCount?'checked':''} onchange="catalog.checkoutCampaigns[${i}].allowDoubleCount=this.checked;changed('.drawer')"></label>
     </div>
     ${discountCampaignScopeProducts(r,i)}
-    <div class=campaignRuleNote>Sepette kampanya şartı henüz tamamlanmadıysa müşteri, kaç ürün daha eklerse kampanyaya ulaşacağını küçük bir bilgilendirme olarak görür. Sepette başka ürünler olması bu kampanyanın sayımını bozmaz.</div>
+    <div class=campaignRuleNote><b>Çakışma koruması:</b> “Aynı ürünleri başka kampanyada tekrar say” kapalıysa 3 uygun adette 3'lü kampanya ile 2'li kampanya aynı ürünlere birlikte uygulanmaz. 5 uygun adette 3+2, 6 uygun adette 3+3 gibi en avantajlı geçerli dağılım seçilir. Tekrar seçeneğini ve üst sınırı her kampanyada ayrı yönetebilirsin.</div>
   </div></details>`).join('');
-  shell('Kampanyalar','Sepet indirimi kuralları burada. Her kampanya kapalı kutu halinde durur; açıp yalnızca o kampanyayı düzenlersin.',`<div class=panel><div class=campaignCreateRow><div><h2>Sepet Kampanyaları</h2><div class=help>TL indirim, yüzdelik indirim veya belirli adette kampanyalı toplam fiyat oluşturabilirsin.</div></div><button class=btn onclick=addDiscountCampaign()>+ Kampanya Ekle</button></div><div class=campaignRuleNote>Aynı ürün birden fazla aktif kampanyanın şartını aynı anda karşılarsa kampanyalar birlikte uygulanır.</div></div>${cards||'<div class=panel><b>Henüz sepet kampanyası yok.</b><div class=help>“Kampanya Ekle” ile ilk kampanyanı oluştur.</div></div>'}`);
+  shell('Kampanyalar','Sepet indirimi kuralları burada. Her kampanya kapalı kutu halinde durur; açıp yalnızca o kampanyayı düzenlersin.',`<div class=panel><div class=campaignCreateRow><div><h2>Sepet Kampanyaları</h2><div class=help>Ürünleri kategori/model bazında seçebilir, bir ürünün kampanyada 1/2/3… adet sayılmasını belirleyebilir ve kampanyaların üst üste binmesini engelleyebilirsin.</div></div><button class=btn onclick=addDiscountCampaign()>+ Kampanya Ekle</button></div><div class=campaignRuleNote>Varsayılan güvenli davranış: aynı uygun ürünler iki ayrı kampanyada tekrar sayılmaz. İstersen kampanya içinden bunu özellikle açabilirsin.</div></div>${cards||'<div class=panel><b>Henüz sepet kampanyası yok.</b><div class=help>“Kampanya Ekle” ile ilk kampanyanı oluştur.</div></div>'}`);
 }
 function addDiscountCampaign(){
   catalog.checkoutCampaigns=catalog.checkoutCampaigns||[];
-  catalog.checkoutCampaigns.push({id:'sepet-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),name:'Yeni Kampanya',enabled:true,scopeType:'category',categoryIds:[],productIds:[],minQty:3,discountType:'fixed',discountValue:0});
+  catalog.checkoutCampaigns.push({id:'sepet-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),name:'Yeni Kampanya',enabled:true,scopeType:'category',categoryIds:[],productIds:[],excludedProductIds:[],productUnitCounts:{},minQty:3,discountType:'fixed',discountValue:0,repeatable:false,maxApplications:0,allowDoubleCount:false});
   renderDiscountCampaigns();
 }
 function removeDiscountCampaign(i){if(confirm('Bu kampanya silinsin mi?')){catalog.checkoutCampaigns.splice(i,1);renderDiscountCampaigns()}}
@@ -411,7 +431,8 @@ function toggleDiscountCampaignCategoryProduct(i,id,on){
   if(on)r.excludedProductIds=r.excludedProductIds.filter(x=>x!==id);
   changed('.drawer');
 }
-function toggleDiscountCampaignProduct(i,id,on){const r=catalog.checkoutCampaigns[i];r.productIds=r.productIds||[];if(on&&!r.productIds.includes(id))r.productIds.push(id);if(!on)r.productIds=r.productIds.filter(x=>x!==id);changed('.drawer')}
+function toggleDiscountCampaignProduct(i,id,on){const r=catalog.checkoutCampaigns[i];r.productIds=r.productIds||[];if(on&&!r.productIds.includes(id))r.productIds.push(id);if(!on)r.productIds=r.productIds.filter(x=>x!==id);changed('.drawer');preserveAdminViewport(()=>renderDiscountCampaigns())}
+function setDiscountCampaignProductUnits(i,id,value){const r=catalog.checkoutCampaigns[i];if(!r)return;r.productUnitCounts=r.productUnitCounts||{};r.productUnitCounts[id]=Math.max(1,Math.min(10,Number(value||1)));changed('.drawer')}
 
 let adminCategoryNavScrollLeft=0;
 function renderCatalog(){
@@ -980,9 +1001,9 @@ Paslanmaz çelik kasa"
         </select>
       </div>
       <div class=field><label>Kart üzeri kısa şerit</label>
-        <label class=shippingRibbonAdminToggle><input data-preview-target="${attr(t('photo'))}" type=checkbox ${p.shippingRibbonEnabled?'checked':''} onchange="catalog.products[${i}].shippingRibbonEnabled=this.checked;changed(this.dataset.previewTarget)"> Göster</label>
-        <input class=formControl data-preview-target="${attr(t('photo'))}" value="${attr(p.shippingRibbonText||'Kargo Bedava')}" placeholder="Örn: Kargo Bedava" oninput="catalog.products[${i}].shippingRibbonText=this.value;changed(this.dataset.previewTarget)">
-        <div class=shippingRibbonColorRow><input data-preview-target="${attr(t('photo'))}" type=color value="${attr(p.shippingRibbonColor||'#444444')}" oninput="catalog.products[${i}].shippingRibbonColor=this.value;changed(this.dataset.previewTarget)"><span>Şerit rengi</span></div>
+        <label class=shippingRibbonAdminToggle><input data-preview-target="${attr(root)}" type=checkbox ${p.shippingRibbonEnabled?'checked':''} onchange="catalog.products[${i}].shippingRibbonEnabled=this.checked;changed(this.dataset.previewTarget)"> Göster</label>
+        <input class=formControl data-preview-target="${attr(root)}" value="${attr(p.shippingRibbonText||'Kargo Bedava')}" placeholder="Örn: Kargo Bedava" oninput="catalog.products[${i}].shippingRibbonText=this.value;changed(this.dataset.previewTarget)">
+        <div class=shippingRibbonColorRow><input data-preview-target="${attr(root)}" type=color value="${attr(p.shippingRibbonColor||'#444444')}" oninput="catalog.products[${i}].shippingRibbonColor=this.value;changed(this.dataset.previewTarget)"><span>Şerit rengi</span></div>
         <div class=help>Yalnızca bu ürün kartının fotoğrafının alt kenarında görünür. Değişiklik yaptığında sağdaki müşteri önizlemesinde anında bu ürün kartı gösterilir.</div>
       </div>
     </div>
@@ -1050,22 +1071,32 @@ function renderCopyProductSettingsPanel(p,i){
       ${products.map(x=>`<label><input type=checkbox class="copyTarget-${attr(p.id)} copyCat-${attr(p.id)}-${attr(c.id)}" value="${attr(x.id)}"> ${esc(x.name||'Yeni Ürün')}</label>`).join('')}
     </div></details>`;
   }).join('');
-  return `<details class="copySettingsPanel simpleAdminDetails"><summary>Bu bilgileri diğer ürünlerde kullan <small>Tekrar yazmak yerine seçtiklerine kopyala</small></summary><div class=simpleDetailsBody>
-    <div class=copySettingsExplain><b>Nasıl çalışır?</b> Önce hangi bilgilerin kopyalanacağını seç, sonra aşağıdan kategori ve ürünleri işaretle. <b>Fotoğraflar ve stok hiçbir zaman otomatik kopyalanmaz.</b> Ürün adını istersen aşağıdaki kutudan ayrıca seçebilirsin.</div>
+  return `<details class="copySettingsPanel simpleAdminDetails"><summary>Ürün ayarlarını diğer ürünlerde kullan <small>İstediğin ayarları seçip topluca uygula</small></summary><div class=simpleDetailsBody>
+    <div class=copySettingsExplain><b>Nasıl çalışır?</b> Bu üründe yaptığın ayarlardan hangilerini çoğaltmak istediğini seç, sonra hedef kategori/ürünleri işaretle. <b>Fotoğraflar ve stok güvenlik için otomatik kopyalanmaz.</b></div>
     <div class=copyFieldChoices>
       <label><input type=checkbox class="copyField-${attr(p.id)}" value=name> Ürün adı</label>
+      <label><input type=checkbox class="copyField-${attr(p.id)}" value=subtitle> Ürün alt başlığı</label>
       <label><input type=checkbox class="copyField-${attr(p.id)}" value=description checked> Açıklama</label>
       <label><input type=checkbox class="copyField-${attr(p.id)}" value=features checked> Özellikler</label>
-      <label><input type=checkbox class="copyField-${attr(p.id)}" value=writePositions checked> Yazı konumları</label>
+      <label><input type=checkbox class="copyField-${attr(p.id)}" value=writePositions checked> Yazı konumları + tercih edilen konum</label>
+      <label><input type=checkbox class="copyField-${attr(p.id)}" value=writeEnabled> Yazı işlemi açık/kapalı</label>
+      ${adminIsWalletProduct(p)?`<label><input type=checkbox class="copyField-${attr(p.id)}" value=walletPhotoEnabled> Cüzdan fotoğraf işleme açık/kapalı</label>`:''}
       <label><input type=checkbox class="copyField-${attr(p.id)}" value=price> Fiyat</label>
       <label><input type=checkbox class="copyField-${attr(p.id)}" value=oldPrice> Eski fiyat</label>
-      <label><input type=checkbox class="copyField-${attr(p.id)}" value=badge> Etiket + etiket rengi</label>
+      <label><input type=checkbox class="copyField-${attr(p.id)}" value=badge> Ürün etiketi + etiket rengi</label>
+      <label><input type=checkbox class="copyField-${attr(p.id)}" value=shippingRibbon> Kart şeridi / Kargo Bedava + yazı + renk</label>
+      <label><input type=checkbox class="copyField-${attr(p.id)}" value=setEligible> Kendi sette kullanılabilir</label>
+      <label><input type=checkbox class="copyField-${attr(p.id)}" value=hidden> Ürün görünürlüğü (Gizle)</label>
       ${p.isSet?`<label><input type=checkbox class="copyField-${attr(p.id)}" value=setItems> Set içeriği + çıkarılınca düşecek TL + yazı konumları</label>`:''}
     </div>
-    <div class=copyCategoryGroups>${groups||'<div class=emptyAdmin>Kopyalanabilecek başka ürün yok.</div>'}</div>
+    <label class="copySelectAll copySelectAllGlobal"><input type=checkbox onchange="toggleCopyAllTargets('${attr(p.id)}',this.checked)"> Tüm ürünleri seç</label><div class=copyCategoryGroups>${groups||'<div class=emptyAdmin>Kopyalanabilecek başka ürün yok.</div>'}</div>
     <button class=btn onclick="applyProductInfoToSelected('${attr(p.id)}')">Seçtiğim Bilgileri İşaretli Ürünlere Uygula</button>
     <div class=help>Bu işlem fotoğrafları değiştirmez. Set içeriğini seçersen yalnızca hazır set olan hedeflere set içeriği kopyalanır.</div>
   </div></details>`;
+}
+function toggleCopyAllTargets(sourceId,checked){
+  document.querySelectorAll(`.copyTarget-${CSS.escape(sourceId)}`).forEach(x=>x.checked=checked);
+  document.querySelectorAll(`.copyCategoryGroup .copySelectAll input`).forEach(x=>x.checked=checked);
 }
 function toggleCopyCategory(sourceId,catId,checked){
   document.querySelectorAll(`.copyCat-${CSS.escape(sourceId)}-${CSS.escape(catId)}`).forEach(x=>x.checked=checked);
@@ -1082,12 +1113,18 @@ function applyProductInfoToSelected(sourceId){
     const t=catalog.products.find(x=>x.id===id);if(!t)return;
     fields.forEach(f=>{
       if(f==='name')t.name=src.name||'';
+      else if(f==='subtitle')t.subtitle=src.subtitle||'';
       else if(f==='description')t.description=src.description||'';
       else if(f==='features')t.features=[...(src.features||[])];
       else if(f==='writePositions'){t.writePositions=[...(src.writePositions||[])];t.preferredWritePosition=src.preferredWritePosition||'';}
+      else if(f==='writeEnabled')t.writeEnabled=src.writeEnabled!==false;
+      else if(f==='walletPhotoEnabled' && adminIsWalletProduct(t))t.walletPhotoEnabled=src.walletPhotoEnabled!==false;
       else if(f==='price')t.price=Number(src.price||0);
       else if(f==='oldPrice')t.oldPrice=Number(src.oldPrice||0);
       else if(f==='badge'){t.badge=src.badge||'';t.badgeColor=src.badgeColor||'orange';}
+      else if(f==='shippingRibbon'){t.shippingRibbonEnabled=!!src.shippingRibbonEnabled;t.shippingRibbonText=src.shippingRibbonText||'Kargo Bedava';t.shippingRibbonColor=src.shippingRibbonColor||'#444444';}
+      else if(f==='setEligible' && !t.isSet)t.setEligible=src.setEligible!==false;
+      else if(f==='hidden')t.hidden=!!src.hidden;
       else if(f==='setItems' && src.isSet && t.isSet){t.setItems=(src.setItems||[]).map((it,n)=>({...JSON.parse(JSON.stringify(it)),id:'setitem-'+Date.now()+'-'+n+'-'+Math.random().toString(36).slice(2,5)}));}
     });
     count++;

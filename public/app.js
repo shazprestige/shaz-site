@@ -157,13 +157,21 @@ function renderCampaignCards(){
   wrap.innerHTML=`<section class="campaignSlider" id="campaignSlider" aria-label="Kampanyalar">
     <div class="campaignSlides">${cards.map((c,i)=>{
       const op=Math.min(.75,Math.max(0,Number(c.overlayOpacity??28)/100));
+      const validPos=v=>['top','uppermid','middle','lowermid','bottom'].includes(v)?v:'';
+      const titlePos=validPos(c.titlePosition);
+      const subtitlePos=validPos(c.subtitlePosition);
+      const customLayout=!!(titlePos||subtitlePos);
+      const effectiveTitlePos=customLayout?(titlePos||'lowermid'):'';
+      const effectiveSubtitlePos=customLayout?(subtitlePos||'bottom'):'';
+      const titleSize=Number(c.titleFontSize)>0?Math.max(10,Math.min(80,Number(c.titleFontSize))):0;
+      const subtitleSize=Number(c.subtitleFontSize)>0?Math.max(9,Math.min(60,Number(c.subtitleFontSize))):0;
       return `<article class="campaignSlide ${i===campaignSliderIndex?'isActive':''}" data-slide-index="${i}" data-campaign-id="${escapeAttr(c.id||('slide-'+i))}" style="--campaign-overlay:${op}">
         <div class="campaignSlideBackdrop" style="background-image:url('${escapeAttr(c.imageUrl)}')"></div>
         <img class="campaignSlideImage" src="${escapeAttr(c.imageUrl)}" alt="${escapeAttr(c.title||'SHAZ kampanya')}">
         <div class="campaignSlideShade"></div>
-        <div class="campaignContent">
-          ${c.title?`<h2>${escapeHtml(c.title)}</h2>`:''}
-          ${c.subtitle?`<p>${escapeHtml(c.subtitle)}</p>`:''}
+        <div class="campaignContent ${customLayout?'campaignContent--customText':''}">
+          ${c.title?`<h2 class="${effectiveTitlePos?'campaignTextPlaced campaignTextPos-'+effectiveTitlePos:''}"${titleSize?` style="font-size:${titleSize}px"`:''}>${escapeHtml(c.title)}</h2>`:''}
+          ${c.subtitle?`<p class="${effectiveSubtitlePos?'campaignTextPlaced campaignTextPos-'+effectiveSubtitlePos:''}"${subtitleSize?` style="font-size:${subtitleSize}px"`:''}>${escapeHtml(c.subtitle)}</p>`:''}
           ${c.buttonText?`<button class="campaignBtn" type="button" data-campaign-target="${escapeAttr(c.targetCategory||'tum')}">${escapeHtml(c.buttonText)}</button>`:''}
         </div>
       </article>`}).join('')}</div>
@@ -398,7 +406,8 @@ function renderProducts(filter=''){
     const name=p.name||'SHAZ Ürün';
     const desc=p.description?`<p class="productDescription" data-preview-field="description" style="--product-text-wrap:${Math.max(18,Number(p.descriptionWrapCh||52))}ch">${escapeHtml(p.description)}</p>`:'';
     const badgeColor=['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange';
-    const shippingRibbon=(p.shippingRibbonEnabled&&String(p.shippingRibbonText||'').trim())?`<div class="productShippingRibbon" style="--shipping-ribbon-color:${escapeAttr(p.shippingRibbonColor||'#444444')}">${escapeHtml(String(p.shippingRibbonText).trim())}</div>`:'';
+    const shippingRibbonText=p.shippingRibbonText===undefined?'Kargo Bedava':String(p.shippingRibbonText||'');
+    const shippingRibbon=(p.shippingRibbonEnabled&&shippingRibbonText.trim())?`<div class="productShippingRibbon" style="--shipping-ribbon-color:${escapeAttr(p.shippingRibbonColor||'#444444')}">${escapeHtml(shippingRibbonText.trim())}</div>`:'';
     return `<div class="card productCardLink" data-product-id="${escapeAttr(p.id)}" role="button" tabindex="0" onclick="openProductDetail('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProductDetail('${p.id}')}"><div class="photo" data-preview-field="photo">${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge badge-${badgeColor}" data-preview-field="badge"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:''}${shippingRibbon}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}</div></div>`;
   }).join(''):`<div class="panel subcategoryEmpty"><b>Bu bölümde henüz ürün yok.</b></div>`;
   $('#productsList').innerHTML=chooser+cards;
@@ -964,47 +973,120 @@ function campaignProductMatches(rule,p){
   if(!(rule.categoryIds||[]).includes(p.category))return false;
   return !(rule.excludedProductIds||[]).includes(p.id);
 }
+function campaignUnitWeight(rule,p){
+  return Math.max(1,Math.min(10,Number(rule?.productUnitCounts?.[p?.id]||1)));
+}
 function cartUnitsForCampaign(rule){
   const units=[];
   cart.forEach((x,cartIndex)=>{
     if(!campaignProductMatches(rule,x.product))return;
     const qty=Math.max(1,Number(x.qty||1));
-    for(let n=0;n<qty;n++)units.push({price:Number(x.product?.price||0),cartIndex});
+    const weight=campaignUnitWeight(rule,x.product);
+    for(let n=0;n<qty;n++)units.push({price:Number(x.product?.price||0),weight,cartIndex,productId:x.product?.id||''});
   });
   return units;
 }
+function campaignWeightedCount(rule){return cartUnitsForCampaign(rule).reduce((s,u)=>s+u.weight,0)}
 function campaignBenefitText(rule){
   const v=Number(rule.discountValue||0);
   if(rule.discountType==='percent')return `%${v} indirim`;
   if(rule.discountType==='bundlePrice')return `${money(v)} kampanya fiyatı`;
   return `${money(v)} indirim`;
 }
+function campaignScopeSignature(rule){
+  const scope=rule.scopeType||'category';
+  const cats=[...(rule.categoryIds||[])].sort();
+  const prods=[...(rule.productIds||[])].sort();
+  const excluded=[...(rule.excludedProductIds||[])].sort();
+  const weights=Object.entries(rule.productUnitCounts||{}).filter(([,v])=>Number(v||1)!==1).sort((a,b)=>String(a[0]).localeCompare(String(b[0])));
+  return JSON.stringify({scope,cats,prods,excluded,weights});
+}
+function campaignEstimatedApplicationDiscount(rule,units,totalWeight){
+  const q=Math.max(1,Number(rule.minQty||1));
+  const v=Math.max(0,Number(rule.discountValue||0));
+  if(rule.discountType==='fixed')return v;
+  const subtotal=units.reduce((s,u)=>s+u.price,0);
+  const share=totalWeight>0?Math.min(1,q/totalWeight):0;
+  const groupSubtotal=subtotal*share;
+  if(rule.discountType==='percent')return groupSubtotal*Math.max(0,Math.min(100,v))/100;
+  if(rule.discountType==='bundlePrice')return Math.max(0,groupSubtotal-v);
+  return v;
+}
+function campaignMaxUses(rule,totalWeight){
+  const q=Math.max(1,Number(rule.minQty||1));
+  if(totalWeight<q)return 0;
+  if(!rule.repeatable)return 1;
+  const natural=Math.floor(totalWeight/q);
+  const limit=Math.max(0,Number(rule.maxApplications||0));
+  return limit?Math.min(natural,limit):natural;
+}
+function optimizeExclusiveCampaignGroup(rules){
+  if(!rules.length)return [];
+  const units=cartUnitsForCampaign(rules[0]);
+  const totalWeight=units.reduce((s,u)=>s+u.weight,0);
+  if(!totalWeight)return [];
+  const dp=Array(totalWeight+1).fill(null);dp[0]={value:0,uses:[]};
+  rules.forEach(rule=>{
+    const q=Math.max(1,Number(rule.minQty||1));
+    const maxUses=campaignMaxUses(rule,totalWeight);
+    if(!maxUses)return;
+    const benefit=Math.max(0,campaignEstimatedApplicationDiscount(rule,units,totalWeight));
+    if(benefit<=0)return;
+    const prev=dp.map(x=>x?{value:x.value,uses:[...x.uses]}:null);
+    for(let used=0;used<=totalWeight;used++){
+      const base=prev[used];if(!base)continue;
+      for(let k=1;k<=maxUses;k++){
+        const next=used+q*k;if(next>totalWeight)break;
+        const value=base.value+benefit*k;
+        if(!dp[next]||value>dp[next].value+0.0001)dp[next]={value,uses:[...base.uses,{rule,count:k,discount:benefit*k}]};
+      }
+    }
+  });
+  let best=dp[0];
+  dp.forEach(x=>{if(x&&x.value>(best?.value||0)+0.0001)best=x});
+  return best?.uses||[];
+}
 function calculateCartCampaigns(){
   const subtotal=cart.reduce((a,x)=>a+Number(x.product?.price||0)*Math.max(1,Number(x.qty||1)),0);
+  const active=(catalog.checkoutCampaigns||[]).filter(r=>r&&r.enabled!==false);
   const applied=[],prompts=[];
-  (catalog.checkoutCampaigns||[]).filter(r=>r&&r.enabled!==false).forEach(rule=>{
-    const minQty=Math.max(1,Number(rule.minQty||1));
-    const units=cartUnitsForCampaign(rule);
-    if(units.length<minQty){
-      if(units.length>0)prompts.push({id:rule.id,name:rule.name||'Kampanya',remaining:minQty-units.length,benefit:campaignBenefitText(rule)});
-      return;
-    }
-    let discount=0;
-    if(rule.discountType==='percent'){
-      const matchedSubtotal=units.reduce((s,u)=>s+u.price,0);
-      discount=matchedSubtotal*Math.max(0,Math.min(100,Number(rule.discountValue||0)))/100;
-    }else if(rule.discountType==='bundlePrice'){
-      const campaignGroup=units.slice(0,minQty);
-      const groupSubtotal=campaignGroup.reduce((s,u)=>s+u.price,0);
-      discount=Math.max(0,groupSubtotal-Math.max(0,Number(rule.discountValue||0)));
-    }else{
-      discount=Math.max(0,Number(rule.discountValue||0));
-    }
-    discount=Math.min(discount,Math.max(0,subtotal-applied.reduce((s,a)=>s+a.discount,0)));
-    if(discount>0)applied.push({id:rule.id,name:rule.name||'Kampanya',discount:Number(discount.toFixed(2))});
+
+  active.forEach(rule=>{
+    const count=campaignWeightedCount(rule),minQty=Math.max(1,Number(rule.minQty||1));
+    if(count>0&&count<minQty)prompts.push({id:rule.id,name:rule.name||'Kampanya',remaining:minQty-count,benefit:campaignBenefitText(rule)});
   });
-  const discount=Number(applied.reduce((s,a)=>s+a.discount,0).toFixed(2));
-  return {subtotal,discount,total:Math.max(0,Number((subtotal-discount).toFixed(2))),applied,prompts};
+
+  // “Aynı ürünleri başka kampanyada tekrar say” açık olan kurallar bağımsız çalışır.
+  active.filter(r=>r.allowDoubleCount===true).forEach(rule=>{
+    const units=cartUnitsForCampaign(rule),totalWeight=units.reduce((s,u)=>s+u.weight,0);
+    const uses=campaignMaxUses(rule,totalWeight);if(!uses)return;
+    const perUse=campaignEstimatedApplicationDiscount(rule,units,totalWeight);
+    const discount=Math.max(0,perUse*uses);
+    if(discount>0)applied.push({id:rule.id,name:rule.name||'Kampanya',discount:Number(discount.toFixed(2)),uses});
+  });
+
+  // Varsayılan güvenli sistem: aynı kapsam + aynı adet ağırlıkları içindeki kampanyalar
+  // aynı kampanya adetlerini iki kez kullanamaz. En yüksek indirimi veren 3+2 / 3+3 gibi dağılım seçilir.
+  const groups=new Map();
+  active.filter(r=>r.allowDoubleCount!==true).forEach(rule=>{
+    const key=campaignScopeSignature(rule);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(rule);
+  });
+  groups.forEach(rules=>{
+    optimizeExclusiveCampaignGroup(rules).forEach(x=>{
+      if(x.discount>0)applied.push({id:x.rule.id,name:x.rule.name||'Kampanya',discount:Number(x.discount.toFixed(2)),uses:x.count});
+    });
+  });
+
+  // Aynı kampanya birden fazla kez çalıştıysa sepette tek satırda topla.
+  const merged=[];
+  applied.forEach(a=>{
+    const found=merged.find(x=>x.id===a.id);
+    if(found){found.discount=Number((found.discount+a.discount).toFixed(2));found.uses=(found.uses||1)+(a.uses||1)}else merged.push({...a});
+  });
+  let remaining=subtotal;
+  merged.forEach(a=>{a.discount=Math.min(a.discount,Math.max(0,remaining));remaining-=a.discount});
+  const discount=Number(merged.reduce((s,a)=>s+a.discount,0).toFixed(2));
+  return {subtotal,discount,total:Math.max(0,Number((subtotal-discount).toFixed(2))),applied:merged,prompts};
 }
 function checkout(){
   if(!cart.length)return openDrawer('<div class="checkoutEmpty"><h2>Sepetiniz boş</h2><p>Beğendiğiniz ürünleri sepete ekleyerek siparişe başlayabilirsiniz.</p><button class="btn" onclick="closeDrawer()">Ürünlere Dön</button></div>');

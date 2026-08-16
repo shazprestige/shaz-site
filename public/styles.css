@@ -3261,3 +3261,75 @@ body.productDetailOpen{overflow:hidden!important}
 .campaignProductChoice img,.campaignProductNoImage{width:34px;height:34px;object-fit:contain;border-radius:6px;background:#f5f6f7;display:grid;place-items:center}
 .campaignProductChoice span:last-child{min-width:0;display:flex;flex-direction:column;gap:1px}.campaignProductChoice b{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.campaignProductChoice small{font-size:8px;color:#7b838d}
 @media(max-width:760px){.campaignScopeProductGrid{grid-template-columns:1fr}.campaignSelectedCategoryHead{align-items:flex-start;flex-direction:column}.campaignSelectedCategoryHead small{text-align:left}}
+
+/* ===== V105 — kampanya ürün adedi + kompakt güvenli seçim ===== */
+.campaignProductChoiceWrap{border:1px solid #e3e6ea;border-radius:10px;background:#fff;padding:6px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.campaignProductChoiceWrap.isExcluded{opacity:.62;background:#fafafa}
+.campaignProductChoiceWrap .campaignProductChoice{border:0!important;padding:0!important;background:transparent!important;min-width:0}
+.campaignUnitCount{display:flex;align-items:center;justify-content:space-between;gap:7px;font-size:10px;color:#626a76;padding:4px 2px 1px}
+.campaignUnitCount select{width:auto;min-width:70px;border:1px solid #d8dde4;border-radius:7px;background:#fff;padding:4px 5px;font-size:10px;font-weight:700;color:#222}
+.discountCampaignAdmin .setItemToggle{min-height:58px}
+@media(max-width:720px){.campaignUnitCount{font-size:9px}.campaignUnitCount select{min-width:64px;font-size:9px}}
+.copySelectAllGlobal{margin:8px 0 10px;padding:9px 11px;border:1px solid #d8dde4;border-radius:9px;background:#fafafa;font-weight:800}
+
+
+/* ===== V106 — yalnızca istenen PC ürün-detay birleşimi + slider ince ayarları ===== */
+/* Masaüstünde ürün detay başlığı drawer'ın tamamına sıfır birleşir. Mobil V105 görünümü korunur. */
+@media(min-width:701px){
+  .drawer.productDetailDrawer{
+    padding-top:0!important;
+  }
+  .drawer.productDetailDrawer .productDetailHead{
+    width:calc(100% + 40px)!important;
+    max-width:none!important;
+    margin-left:-20px!important;
+    margin-right:-20px!important;
+    margin-top:0!important;
+    border-top-left-radius:0!important;
+    border-top-right-radius:0!important;
+  }
+
+  /* ‹ › karakterlerinin optik merkezi font taban çizgisinden dolayı aşağı düşüyordu. */
+  .campaignArrow{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    line-height:1!important;
+    padding:0 0 4px!important;
+  }
+}
+
+/* Slider metinleri için yönetimden seçilebilir 5 dikey nokta.
+   Ayar seçilmezse V105'in mevcut akışı aynen çalışır. */
+.campaignSlider .campaignContent--customText{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  padding:0!important;
+  z-index:3!important;
+}
+.campaignSlider .campaignContent--customText .campaignTextPlaced{
+  position:absolute!important;
+  left:50%!important;
+  width:min(90%,760px)!important;
+  max-width:min(90%,760px)!important;
+  margin:0!important;
+  transform:translate(-50%,-50%)!important;
+  text-align:center!important;
+  z-index:4!important;
+}
+.campaignSlider .campaignContent--customText .campaignTextPos-top{top:16%!important}
+.campaignSlider .campaignContent--customText .campaignTextPos-uppermid{top:32%!important}
+.campaignSlider .campaignContent--customText .campaignTextPos-middle{top:50%!important}
+.campaignSlider .campaignContent--customText .campaignTextPos-lowermid{top:66%!important}
+.campaignSlider .campaignContent--customText .campaignTextPos-bottom{top:78%!important}
+.campaignSlider .campaignContent--customText .campaignBtn{
+  position:absolute!important;
+  left:50%!important;
+  bottom:38px!important;
+  transform:translateX(-50%)!important;
+  z-index:4!important;
+}
+@media(max-width:700px){
+  .campaignSlider .campaignContent--customText .campaignBtn{bottom:27px!important}
+}
