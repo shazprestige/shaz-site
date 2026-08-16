@@ -494,6 +494,7 @@ function openDrawer(html){
 function closeDrawer(){
   if(activeProductDetailId){activeProductDetailId='';activeProductDetailSource='catalog';clearProductRoute()}
   setProductDetailScrollLock(false);
+  document.body.classList.remove('shazKeyboardOpen');
   $('#drawer')?.classList.remove('productDetailDrawer');
   $('#overlay').classList.add('hidden');$('#drawer').classList.add('hidden');
 }
@@ -682,7 +683,7 @@ function productFeatureList(p){
   // böylece aynı içerik adları ikinci kez listelenmez.
   return [...new Set(manual)];
 }
-function soldOutRemaining(p){const raw=String(p?.soldOutUntil||'').trim();if(!p?.soldOutEnabled||!raw)return '';const t=Date.parse(raw);if(!Number.isFinite(t))return raw;const d=t-Date.now();if(d<=0)return 'Yakında yeniden stokta';const days=Math.floor(d/86400000),hrs=Math.floor((d%86400000)/3600000),mins=Math.floor((d%3600000)/60000);return `${days?days+' gün ':''}${hrs?hrs+' saat ':''}${!days&&mins?mins+' dk ':''}sonra yeniden stokta`;}
+function soldOutRemaining(p){const raw=String(p?.soldOutUntil||'').trim();if(!p?.soldOutEnabled||!raw)return '';const t=Date.parse(raw);if(!Number.isFinite(t))return raw;const d=t-Date.now();if(d<=0)return 'Yakında yeniden stokta';const days=Math.floor(d/86400000),hrs=Math.floor((d%86400000)/3600000),mins=Math.floor((d%3600000)/60000),secs=Math.floor((d%60000)/1000);return `${days?days+' gün ':''}${hrs?hrs+' saat ':''}${mins?mins+' dk ':''}${secs+' sn'} sonra yeniden stokta`;}
 function soldOutButtonHtml(p){return p?.soldOutEnabled?`<button class="btn detailAddBtn soldOutBtn" disabled><span>TÜKENDİ</span>${p.soldOutUntil?`<small data-soldout-id="${escapeAttr(p.id)}">${escapeHtml(soldOutRemaining(p))}</small>`:''}</button>`:`<button class="btn detailAddBtn" onclick="startProduct('${escapeAttr(p.id)}')">Sepete Ekle</button>`;}
 function openProductDetail(id,source='catalog'){
   const p=catalog.products.find(x=>x.id===id); if(!p)return;
@@ -1379,7 +1380,7 @@ function bindDrawerInputFocus(){
   const drawer=$('#drawer');if(!drawer)return;syncDrawerVisualViewport();
   if(!drawerViewportBound&&window.visualViewport){window.visualViewport.addEventListener('resize',syncDrawerVisualViewport,{passive:true});window.visualViewport.addEventListener('scroll',syncDrawerVisualViewport,{passive:true});drawerViewportBound=true}
   drawer.querySelectorAll('input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select').forEach(el=>{
-    el.addEventListener('focus',()=>{syncDrawerVisualViewport();setTimeout(()=>focusDrawerField(el),120);setTimeout(()=>focusDrawerField(el),320)},{passive:true});
+    el.addEventListener('focus',()=>{document.body.classList.add('shazKeyboardOpen');syncDrawerVisualViewport();setTimeout(()=>focusDrawerField(el),120);setTimeout(()=>focusDrawerField(el),320)},{passive:true});el.addEventListener('blur',()=>setTimeout(()=>{if(!drawer.querySelector('input:focus,textarea:focus,select:focus'))document.body.classList.remove('shazKeyboardOpen')},80),{passive:true});
   });
 }
 function addressStep(){
@@ -1395,7 +1396,7 @@ function addressStep(){
     <div class="checkoutScrollBody addressScrollBody">
       <div class="addressCompact addressCompactV114">
         <div class="field fieldWide">${addrInputInner('Ad Soyad *','fullName',c.fullName,'text','Adınızı ve soyadınızı yazın')}</div>
-        <div class="addressPair fieldWide">
+        <div class="addressPair phonePair fieldWide">
           <div class="field"><label><b>Telefon *</b><small class="fieldHelp">05xx xxx xx xx veya 5xx xxx xx xx</small></label><input class=formControl id=addr-phone type=tel inputmode=numeric autocomplete=tel value="${escapeAttr(c.phone||'')}" placeholder="05xx xxx xx xx"></div>
           <div class="field"><label><b>2. Telefon Numarası *</b><small class="fieldHelp">Size ulaşamamamız halinde kullanabileceğimiz ikinci numara zorunludur.</small></label><input class=formControl id=addr-extraPhone type=tel inputmode=numeric autocomplete=tel value="${escapeAttr(c.extraPhone||'')}" placeholder="05xx xxx xx xx"></div>
         </div>
@@ -1471,7 +1472,7 @@ function customerAddressText(c){
 function showAddressConfirmation(c){
   document.querySelector('.addressCheckModal')?.remove();
   const el=document.createElement('div');el.className='addressCheckModal';
-  el.innerHTML=`<div class="addressCheckCard"><button class="addressCheckX" onclick="this.closest('.addressCheckModal').remove()">×</button><span class="checkoutEyebrow">ADRES KONTROLÜ</span><h3>Bilgilerinizi kontrol edin</h3><p class="addressCheckHint">Yanlış veya eksik adres, kargonun gecikmesine neden olabilir.</p><div class="addressCheckData"><b>${escapeHtml(c.fullName)}</b><span>${escapeHtml(c.phone)}${c.extraPhone?` · 2. tel: ${escapeHtml(c.extraPhone)}`:''}</span><strong>${c.deliveryMode==='branch'?'📦 Şubeden teslim':'📍 Adrese teslim'}</strong><span>${escapeHtml(customerAddressText(c))}</span>${c.deliveryMode==='branch'?'<small>Şube adını Google Haritalar’dan kontrol ettiğinizden emin olun.</small>':''}</div><div class="addressCheckActions"><button class="pill" onclick="this.closest('.addressCheckModal').remove()">Düzenle</button><button class="btn" onclick="confirmAddressAndContinue()">Bilgiler doğru, devam et →</button></div></div>`;
+  el.innerHTML=`<div class="addressCheckCard"><button class="addressCheckX" onclick="this.closest('.addressCheckModal').remove()">×</button><span class="checkoutEyebrow">ADRES KONTROLÜ</span><h3>Bilgilerinizi kontrol edin</h3><p class="addressCheckHint">Adres bilgileriniz eksik veya hatalıysa kargonuz teslim edilemeden geri dönebilir.</p><div class="addressCheckData"><b>${escapeHtml(c.fullName)}</b><span>${escapeHtml(c.phone)}${c.extraPhone?` · 2. tel: ${escapeHtml(c.extraPhone)}`:''}</span><strong>${c.deliveryMode==='branch'?'📦 Şubeden teslim':'📍 Adrese teslim'}</strong><span>${escapeHtml(customerAddressText(c))}</span>${c.deliveryMode==='branch'?'<small>Şube adını Google Haritalar’dan kontrol ettiğinizden emin olun.</small>':''}</div><div class="addressCheckActions"><button class="pill" onclick="this.closest('.addressCheckModal').remove()">Düzenle</button><button class="btn" onclick="confirmAddressAndContinue()">Bilgiler doğru, devam et →</button></div></div>`;
   document.body.appendChild(el);
 }
 function confirmAddressAndContinue(){document.querySelector('.addressCheckModal')?.remove();continueAfterAddress();}
@@ -1882,3 +1883,6 @@ function finalizeUpsellAdd(p,r,before,write=null,restoreSpecial=false,baseSpecia
 function showUpsellAdded(p,before){const after=upsellCartTotal();openDrawer(`<div class="checkoutShell upsellAddedShell"><div class="wizardCard upsellAddedCard"><span class="checkoutEyebrow">ÜRÜNÜNÜZ SEPETE EKLENDİ</span><h2>${escapeHtml(p.name)}</h2><div class="upsellTotalChange"><span>Önceki toplam <b>${money(before)}</b></span><span>Güncel toplam <strong>${money(after)}</strong></span></div><div class="choiceStack"><button class="choiceBtn primary" onclick="showCheckoutUpsell(pendingUpsellRule)">Bir adet daha almak istiyorum</button><button class="choiceBtn" onclick="skipCheckoutUpsell()">Teslimat bilgilerine geç</button></div></div></div>`)}
 function skipCheckoutUpsell(){pendingUpsellRule=null;addressStep()}
 
+
+/* V118 — tükendi geri sayımı saniyelik canlı güncelleme */
+setInterval(()=>{document.querySelectorAll('[data-soldout-id]').forEach(el=>{const p=(catalog.products||[]).find(x=>x.id===el.dataset.soldoutId);if(p)el.textContent=soldOutRemaining(p)})},1000);

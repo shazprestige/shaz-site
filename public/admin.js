@@ -566,6 +566,12 @@ function categoryBlock(c){
     </div>
   </section>`;
 }
+function openAdminProductImage(productId){
+  const p=(catalog.products||[]).find(x=>x.id===productId);if(!p)return;
+  const img=p.image||productImages(p)[0]||'';if(!img)return alert('Bu üründe fotoğraf yok.');
+  document.querySelector('.adminImageModal')?.remove();
+  const m=document.createElement('div');m.className='adminImageModal';m.innerHTML=`<div class=adminImageModalCard><button type=button class=adminImageModalClose onclick="this.closest('.adminImageModal').remove()">×</button><img src="${attr(img)}" alt="${attr(p.name||'Ürün')}"><b>${esc(p.name||'Ürün')}</b></div>`;m.addEventListener('click',e=>{if(e.target===m)m.remove()});document.body.appendChild(m);
+}
 function productCompactRow(p){
   const i=catalog.products.findIndex(x=>x.id===p.id);
   const img=p.image||productImages(p)[0]||'';
@@ -581,6 +587,7 @@ function productCompactRow(p){
       </button>
       <div class=compactQuickActions>
         ${quickSub}
+        <button class=duplicateBtn type=button onclick="openAdminProductImage('${attr(p.id)}')">Büyüt</button>
         <button class=duplicateBtn type=button onclick="quickToggleProductHidden('${attr(p.id)}')">${p.hidden?'Göster':'Gizle'}</button>
         <button class=duplicateBtn onclick="duplicateProduct(${i})">⧉</button>
       </div>
@@ -962,7 +969,7 @@ function productCard(p,embedded=false){
     ${productSubcategoryField(p,i)}
 
     <div class="field photoAdminCompact"><label><b>Ürün fotoğrafları</b></label>
-      <div class=photoUploadRow><input id="prodFile${i}" data-preview-target="${attr(t('photo'))}" type=file accept="image/*" multiple><button class=smallBtn onclick="uploadProductImages(${i})">Fotoğraf Yükle</button></div>
+      <div class=photoUploadRow><input id="prodFile${i}" data-preview-target="${attr(t('photo'))}" type=file accept="image/*" multiple><button class=smallBtn onclick="uploadProductImages(${i})">Fotoğraf Yükle</button><button type=button class=smallBtn onclick="openAdminProductImage('${attr(p.id)}')">Fotoğrafı Büyüt</button></div>
       ${productGalleryAdmin(p,i)}
     </div>
 
@@ -1531,6 +1538,12 @@ function upsellProductChecks(rule,index,mode){
   const allOn=ps.length&&ps.every(p=>selected.has(p.id));
   return `<div class="upsellBulkRow"><button type="button" class=smallBtn onclick="setAllUpsellProducts(${index},'${mode}',${allOn?'false':'true'})">${allOn?'Tümünün seçimini kaldır':'Tümünü seç'}</button><small>${selected.size} ürün seçili</small></div><div class="campaignScopeProductGrid upsellProductGrid">${ps.map(p=>{const img=p.image||(p.images||[])[0]||'';return `<label class="campaignProductChoice upsellProductChoice"><input type=checkbox ${selected.has(p.id)?'checked':''} onchange="toggleUpsellProduct(${index},'${mode}','${attr(p.id)}',this.checked)">${img?`<img src="${attr(img)}" alt="">`:''}<span><b>${esc(p.name||'Ürün')}</b><small>${Number(p.price||0).toLocaleString('tr-TR')} TL</small></span></label>`}).join('')||'<div class=help>Bu kategoride ürün yok.</div>'}</div>`;
 }
+function upsellOfferProductsEditor(rule,index){
+  const ps=upsellProductsFor(rule,'offer'),selected=new Set(rule.offerProductIds||[]);rule.productPrices=rule.productPrices||{};
+  if(!rule.offerCategoryId)return '<div class=help>Önce önerilecek kategoriyi seç.</div>';
+  const allOn=ps.length&&ps.every(p=>selected.has(p.id));
+  return `<div class="upsellBulkRow"><button type="button" class=smallBtn onclick="setAllUpsellProducts(${index},'offer',${allOn?'false':'true'})">${allOn?'Tümünün seçimini kaldır':'Tümünü seç'}</button><small>${selected.size} ürün seçili</small></div><div class=upsellInlineBulk><input id="upsellBulkPrice-${index}" class=formControl type=number min=0 placeholder="Hepsine aynı fiyat"><button type=button class=smallBtn onclick="applyUpsellBulkPrice(${index})">Hepsine uygula</button></div><div class=upsellSelectPriceGrid>${ps.map(p=>{const img=p.image||(p.images||[])[0]||'',v=rule.productPrices[p.id]??rule.specialPrice??0;return `<div class=upsellSelectPriceRow><label class=upsellSelectMain><input type=checkbox ${selected.has(p.id)?'checked':''} onchange="toggleUpsellProduct(${index},'offer','${attr(p.id)}',this.checked)">${img?`<img src="${attr(img)}" alt="">`:''}<span><b>${esc(p.name||'Ürün')}</b><small>Normal: ${Number(p.price||0).toLocaleString('tr-TR')} TL</small></span></label><label class=upsellInlinePrice><span>Özel fiyat</span><input class=formControl type=number min=0 value="${attr(v)}" oninput="setUpsellProductPrice(${index},'${attr(p.id)}',this.value)"></label></div>`}).join('')||'<div class=help>Bu kategoride ürün yok.</div>'}</div>`;
+}
 function upsellPriceEditor(rule,index){
   const ps=upsellProductsFor(rule,'offer'),selected=new Set(rule.offerProductIds||[]),shown=(rule.offerMode||'all')==='all'?ps:ps.filter(p=>selected.has(p.id));rule.productPrices=rule.productPrices||{};
   if(!rule.offerCategoryId)return '';
@@ -1547,8 +1560,7 @@ function renderUpsells(openIndex=null){
     <div class=field><label><b>Önerilecek ürünler</b></label><select class=formControl onchange="catalog.checkoutUpsells[${i}].offerMode=this.value;upsellRerender(${i})"><option value=all ${(r.offerMode||'all')==='all'?'selected':''}>Kategorideki tüm ürünler</option><option value=selected ${r.offerMode==='selected'?'selected':''}>Sadece işaretlediğim ürünler</option></select></div>
     ${input('Varsayılan özel fiyat (TL)',`catalog.checkoutUpsells[${i}].specialPrice`,Number(r.specialPrice||0),'Ürün bazında ayrı fiyat girmezsen bu fiyat kullanılır.','.drawer','number')}</div>
     ${(r.triggerMode==='selected')?`<div class=campaignScopeBox><b>Tetikleyecek ürünleri seç</b>${upsellProductChecks(r,i,'trigger')}</div>`:''}
-    <div class=campaignScopeBox><b>Önerilecek ürünleri seç</b>${upsellProductChecks(r,i,'offer')}</div>
-    ${upsellPriceEditor(r,i)}
+    <div class=campaignScopeBox><b>Önerilecek ürünleri seç ve özel fiyatını gir</b>${upsellOfferProductsEditor(r,i)}</div>
   </div></details>`).join('');
   shell('Ekstra Ürün Önerileri','Müşteri “Teslimat ve Ödemeye Geç” dediğinde seçtiğin koşula göre son ürün önerisi gösterilir.',`<div class=panel><div class=campaignCreateRow><div><h2>Sepet Sonu Önerileri</h2><div class=help>Kategori, ürün ve ürün bazlı özel fiyatları ayrı ayrı yönetebilirsin.</div></div><button class=btn onclick=addUpsell()>+ Öneri Ekle</button></div></div>${cards||'<div class=panel><b>Henüz ekstra ürün önerisi yok.</b></div>'}`);
 }
