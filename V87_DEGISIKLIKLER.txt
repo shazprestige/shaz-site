@@ -1,0 +1,4 @@
+V87
+- Kendi Setini Oluştur kategori sıralaması native drag yerine yalnızca tutamaçtan çalışan pointer sürükleme sistemine geçirildi; sürükleme sırasında ekran yeniden render edilmez ve bölümden çıkılmaz.
+- Ana sayfadaki Kendi Setini Oluştur kartının üst yazısı, başlığı, açıklaması ve isteğe bağlı arka plan fotoğrafı yönetim panelinden ayarlanabilir hale getirildi.
+- Bunun dışında çalışan sistemlerde değişiklik yapılmadı.

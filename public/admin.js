@@ -285,13 +285,18 @@ function catalogGlobalTools(){
   catalog.builder.allowedCategories=Array.isArray(catalog.builder.allowedCategories)?catalog.builder.allowedCategories:[];
   catalog.builder.categoryOrder=Array.isArray(catalog.builder.categoryOrder)?catalog.builder.categoryOrder:[];
   catalog.builder.allowedProducts=(catalog.builder.allowedProducts&&typeof catalog.builder.allowedProducts==='object')?catalog.builder.allowedProducts:{};
+  catalog.builder.spotlight=(catalog.builder.spotlight&&typeof catalog.builder.spotlight==='object')?catalog.builder.spotlight:{};
+  if(catalog.builder.spotlight.eyebrow===undefined)catalog.builder.spotlight.eyebrow='KENDİ SETİNİ OLUŞTUR';
+  if(catalog.builder.spotlight.title===undefined)catalog.builder.spotlight.title='Setini sen seç.';
+  if(catalog.builder.spotlight.text===undefined)catalog.builder.spotlight.text='Ürünlerini bir araya getir, özel set fiyatını anında gör.';
+  if(catalog.builder.spotlight.imageUrl===undefined)catalog.builder.spotlight.imageUrl='';
   const pricing=catalog.personalizationPricing;
   const builderOrder=builderOrderedCategoryIds();
   const allowed=catalog.categories.filter(c=>c.id!=='tum'&&!isSetCategory(c.id)).map(c=>{
     const checked=(catalog.builder.allowedCategories||[]).includes(c.id);
     return `<label class=setItemToggle><span><b>${esc(c.name)}</b><small class=muted>Müşterinin kendi setini oluştururken seçebileceği kategori</small></span><input type=checkbox ${checked?'checked':''} onchange="toggleBuilderCategory('${attr(c.id)}',this.checked)"></label>`;
   }).join('');
-  const builderOrderHtml=builderOrder.length?builderOrder.map((id,pos)=>{const c=catalog.categories.find(x=>x.id===id);if(!c)return '';const products=builderAdminProductsForCategory(id);const explicit=Array.isArray(catalog.builder.allowedProducts?.[id]);const selected=explicit?catalog.builder.allowedProducts[id]:products.map(p=>p.id);return `<div class=builderOrderRow data-builder-category="${attr(id)}" ondragover="builderCategoryDragOver(event)" ondrop="builderCategoryDrop(event,'${attr(id)}')"><span class=builderDragHandle draggable=true title="Tut ve sürükle" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()" ondragstart="builderCategoryDragStart(event,'${attr(id)}')">⠿</span><span class=builderOrderText><b>${pos+1}. ${esc(c.name)}</b><small>Tutup sürükleyerek sırala</small></span><details class=builderProductPicker><summary>Ürünler <em>${selected.length}/${products.length}</em></summary><div class=builderMiniProductList>${products.length?products.map(p=>`<label class=builderMiniProduct><input type=checkbox ${selected.includes(p.id)?'checked':''} onchange="toggleBuilderProduct('${attr(id)}','${attr(p.id)}',this.checked)"><span>${esc(p.name)}</span></label>`).join(''):'<small>Bu kategoride uygun ürün yok.</small>'}</div></details></div>`}).join(''):'<div class=help>Önce yukarıdan en az bir kategori seç.</div>';
+  const builderOrderHtml=builderOrder.length?builderOrder.map((id,pos)=>{const c=catalog.categories.find(x=>x.id===id);if(!c)return '';const products=builderAdminProductsForCategory(id);const explicit=Array.isArray(catalog.builder.allowedProducts?.[id]);const selected=explicit?catalog.builder.allowedProducts[id]:products.map(p=>p.id);return `<div class=builderOrderRow data-builder-category="${attr(id)}"><span class=builderDragHandle title="Tut ve sürükle" onclick="event.preventDefault();event.stopPropagation()" onpointerdown="builderCategoryPointerDown(event,'${attr(id)}')">⠿</span><span class=builderOrderText><b>${pos+1}. ${esc(c.name)}</b><small>Tutup sürükleyerek sırala</small></span><details class=builderProductPicker><summary>Ürünler <em>${selected.length}/${products.length}</em></summary><div class=builderMiniProductList>${products.length?products.map(p=>`<label class=builderMiniProduct><input type=checkbox ${selected.includes(p.id)?'checked':''} onchange="toggleBuilderProduct('${attr(id)}','${attr(p.id)}',this.checked)"><span>${esc(p.name)}</span></label>`).join(''):'<small>Bu kategoride uygun ürün yok.</small>'}</div></details></div>`}).join(''):'<div class=help>Önce yukarıdan en az bir kategori seç.</div>';
   const categoryOptions=catalog.categories.filter(c=>c.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0)).map(c=>`<option value="${attr(c.id)}">${esc(c.name)}</option>`).join('');
   return `<div class="panel unifiedCatalogSettings">
     <details class=simpleAdminDetails><summary>Genel ürün / set ayarları <small>Ürünlerle ilgili ortak ayarlar</small></summary><div class=simpleDetailsBody>
@@ -301,7 +306,7 @@ function catalogGlobalTools(){
         ${input('3. ve sonrası','catalog.personalizationPricing.thirdPlus',pricing.thirdPlus,'Üçüncü ve sonraki her yazılı ürün için ücret.','.drawer','number')}
         ${input('Cüzdana fotoğraf işleme','catalog.walletPhotoFee',catalog.walletPhotoFee??25,'Fotoğraf işlemesi normal yazı ücretlerinden bağımsız ek ücrettir.','.drawer','number')}
       </div>
-      <details class=nestedAdminDetails><summary>Kendi Setini Oluştur kategorileri</summary><div class=setItemList>${allowed}</div><div class=help>Burada seçtiklerin yalnızca müşterinin “Kendi Setini Oluştur” akışında görünür.</div><div class=builderOrderBox><b>Müşteride gösterilecek sıra</b><div class=help>Soldaki ⠿ işaretinden tutup sürükle. Ürünler bölümünden o kategoride müşteriye hangi ürünlerin çıkacağını seçebilirsin.</div>${builderOrderHtml}</div></details>
+      <details class=nestedAdminDetails><summary>Kendi Setini Oluştur kategorileri</summary><div class=setItemList>${allowed}</div><div class=help>Burada seçtiklerin yalnızca müşterinin “Kendi Setini Oluştur” akışında görünür.</div><div class=builderOrderBox><b>Müşteride gösterilecek sıra</b><div class=help>Yalnızca soldaki ⠿ tutamacından tutup sürükle. Sıralama sırasında bu ekrandan çıkılmaz.</div>${builderOrderHtml}</div><div class=builderSpotlightAdmin><b>Ana sayfadaki “Kendi Setini Oluştur” alanı</b><div class=grid2>${input('Üst küçük yazı','catalog.builder.spotlight.eyebrow',catalog.builder.spotlight.eyebrow,'Örn. KENDİ SETİNİ OLUŞTUR','#builderSpotlight')}${input('Başlık','catalog.builder.spotlight.title',catalog.builder.spotlight.title,'Örn. Setini sen seç.','#builderSpotlight')}${textarea('Açıklama','catalog.builder.spotlight.text',catalog.builder.spotlight.text,'Kartta görünecek açıklama.','#builderSpotlight')}<div class=field><label><b>Arka plan fotoğrafı (isteğe bağlı)</b></label><input id=builderSpotlightFile type=file accept="image/*"><div class=builderSpotlightUploadRow><button type=button class=smallBtn onclick=uploadBuilderSpotlightImage()>Fotoğraf Yükle</button>${catalog.builder.spotlight.imageUrl?'<button type=button class=smallBtn onclick=removeBuilderSpotlightImage()>Fotoğrafı Kaldır</button>':''}</div><div class=help>Fotoğraf eklemezsen mevcut koyu tasarım aynen kalır.</div></div></div></div></details>
     </div></details>
     <details class=simpleAdminDetails><summary>Toplu ürün yükle <small>Birden fazla fotoğraf = ayrı ayrı ürün</small></summary><div class=simpleDetailsBody>
       <div class=grid2><div class=field><label><b>Hangi kategoriye yüklensin?</b></label><select id=bulkUploadCategory class=formControl>${categoryOptions}</select><div class=help>Örn. Saat seçip 20 fotoğraf yüklersen 20 ayrı saat ürünü oluşur.</div></div>
@@ -573,9 +578,51 @@ function builderOrderedCategoryIds(){
   const order=(catalog.builder.categoryOrder||[]).filter(id=>allowed.includes(id));allowed.forEach(id=>{if(!order.includes(id))order.push(id)});catalog.builder.categoryOrder=order;return order;
 }
 let builderDraggedCategoryId='';
-function builderCategoryDragStart(ev,id){ev.stopPropagation();builderDraggedCategoryId=id;try{ev.dataTransfer.effectAllowed='move';ev.dataTransfer.setData('text/plain',id)}catch(e){}}
-function builderCategoryDragOver(ev){ev.preventDefault();try{ev.dataTransfer.dropEffect='move'}catch(e){}}
-function builderCategoryDrop(ev,targetId){ev.preventDefault();const sourceId=builderDraggedCategoryId||(()=>{try{return ev.dataTransfer.getData('text/plain')}catch(e){return ''}})();builderDraggedCategoryId='';if(!sourceId||sourceId===targetId)return;const order=builderOrderedCategoryIds();const from=order.indexOf(sourceId),to=order.indexOf(targetId);if(from<0||to<0)return;order.splice(to,0,order.splice(from,1)[0]);catalog.builder.categoryOrder=order;changed('.builderCard');renderCatalog();}
+let builderPointerState=null;
+function builderCategoryPointerDown(ev,id){
+  if(ev.button!==undefined&&ev.button!==0)return;
+  ev.preventDefault();ev.stopPropagation();
+  const handle=ev.currentTarget,row=handle.closest('.builderOrderRow'),box=row?.parentElement;
+  if(!row||!box)return;
+  builderDraggedCategoryId=id;
+  builderPointerState={id,handle,row,box,startY:ev.clientY,moved:false};
+  row.classList.add('builderDragging');
+  try{handle.setPointerCapture(ev.pointerId)}catch(e){}
+  const move=e=>builderCategoryPointerMove(e);
+  const up=e=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',up);handle.removeEventListener('pointercancel',up);builderCategoryPointerUp(e)};
+  handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',up);handle.addEventListener('pointercancel',up);
+}
+function builderCategoryPointerMove(ev){
+  const st=builderPointerState;if(!st)return;ev.preventDefault();ev.stopPropagation();
+  if(Math.abs(ev.clientY-st.startY)>3)st.moved=true;
+  const rows=[...st.box.querySelectorAll('.builderOrderRow')].filter(x=>x!==st.row);
+  const over=rows.find(r=>{const b=r.getBoundingClientRect();return ev.clientY>=b.top&&ev.clientY<=b.bottom});
+  if(!over)return;
+  const b=over.getBoundingClientRect();
+  if(ev.clientY<b.top+b.height/2)st.box.insertBefore(st.row,over);else st.box.insertBefore(st.row,over.nextSibling);
+}
+function builderCategoryPointerUp(ev){
+  const st=builderPointerState;if(!st)return;ev.preventDefault();ev.stopPropagation();
+  st.row.classList.remove('builderDragging');
+  const order=[...st.box.querySelectorAll('.builderOrderRow')].map(r=>r.dataset.builderCategory).filter(Boolean);
+  catalog.builder.categoryOrder=order;
+  [...st.box.querySelectorAll('.builderOrderRow .builderOrderText b')].forEach((b,i)=>{b.textContent=(i+1)+'. '+b.textContent.replace(/^\d+\.\s*/, '')});
+  builderPointerState=null;builderDraggedCategoryId='';
+  changed('.builderCard');
+}
+// Eski dış çağrılar varsa güvenli biçimde etkisiz kalsın.
+function builderCategoryDragStart(ev,id){ev?.preventDefault?.();ev?.stopPropagation?.()}
+function builderCategoryDragOver(ev){ev?.preventDefault?.();ev?.stopPropagation?.()}
+function builderCategoryDrop(ev,targetId){ev?.preventDefault?.();ev?.stopPropagation?.()}
+async function uploadBuilderSpotlightImage(){
+  const f=document.getElementById('builderSpotlightFile')?.files?.[0];if(!f)return alert('Önce fotoğraf seç.');
+  const fd=new FormData();fd.append('files',f);
+  const r=await fetch('/api/upload',{method:'POST',body:fd}).then(x=>x.json());
+  if(!r.ok||!r.files?.[0])return alert(r.message||'Fotoğraf yüklenemedi.');
+  catalog.builder=catalog.builder||{};catalog.builder.spotlight=catalog.builder.spotlight||{};catalog.builder.spotlight.imageUrl=r.files[0].url;
+  changed('#builderSpotlight');renderCatalog();
+}
+function removeBuilderSpotlightImage(){catalog.builder=catalog.builder||{};catalog.builder.spotlight=catalog.builder.spotlight||{};catalog.builder.spotlight.imageUrl='';changed('#builderSpotlight');renderCatalog()}
 function builderAdminProductsForCategory(categoryId){return (catalog.products||[]).filter(p=>!p.hidden&&!p.isSet&&p.category!=='setler'&&p.category===categoryId&&p.setEligible!==false)}
 function toggleBuilderProduct(categoryId,productId,checked){
   catalog.builder=catalog.builder||{};catalog.builder.allowedProducts=(catalog.builder.allowedProducts&&typeof catalog.builder.allowedProducts==='object')?catalog.builder.allowedProducts:{};

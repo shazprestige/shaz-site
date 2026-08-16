@@ -50,6 +50,15 @@ function apply(){
   }
   if($('#heroTitle')) $('#heroTitle').textContent=settings.heroTitle||'Tarzına uygun saatini seç.';
   if($('#heroSubtitle')) $('#heroSubtitle').textContent=settings.heroSubtitle||'Saatini seç, setini kişiselleştir ve siparişini birkaç adımda tamamla.';
+  const spotlight=catalog.builder?.spotlight||{};
+  if($('#builderSpotlightEyebrow')) $('#builderSpotlightEyebrow').textContent=spotlight.eyebrow||'KENDİ SETİNİ OLUŞTUR';
+  if($('#builderSpotlightTitle')) $('#builderSpotlightTitle').textContent=spotlight.title||'Setini sen seç.';
+  if($('#builderSpotlightText')) $('#builderSpotlightText').textContent=spotlight.text||'Ürünlerini bir araya getir, özel set fiyatını anında gör.';
+  if($('#builderSpotlight')){
+    const img=String(spotlight.imageUrl||'').trim();
+    $('#builderSpotlight').classList.toggle('hasCustomImage',!!img);
+    $('#builderSpotlight').style.backgroundImage=img?`linear-gradient(90deg,rgba(10,14,20,.82),rgba(20,28,38,.58)),url("${img.replace(/"/g,'%22')}")`:'';
+  }
   if($('#wa')) $('#wa').href='https://wa.me/'+settings.whatsapp;
   if($('#ig')) $('#ig').href='https://ig.me/m/'+String(settings.instagram||'').replace(/^@/,'');
   if($('#cargoLink')) $('#cargoLink').href=settings.cargoTrackingUrl||'https://ebranch.araskargo.com.tr/';

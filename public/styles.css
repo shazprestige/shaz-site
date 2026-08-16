@@ -2588,3 +2588,12 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
   }
   .compactEditor .photoAdminCompact .adminGallery{grid-template-columns:repeat(auto-fill,minmax(58px,72px))!important}
 }
+
+
+/* v87: Kendi Setini Oluştur sıralama tutamacı ve düzenlenebilir ana sayfa kartı */
+.builderDragHandle{touch-action:none!important;-webkit-user-select:none!important;user-select:none!important}
+.builderOrderRow.builderDragging{opacity:.72!important;outline:2px solid #c39a59!important;outline-offset:1px!important;box-shadow:0 8px 20px rgba(0,0,0,.08)!important}
+.builderSpotlightAdmin{margin-top:14px;padding-top:12px;border-top:1px solid #e5e8ec}
+.builderSpotlightUploadRow{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.builderCard.hasCustomImage{background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
+.builderCard.hasCustomImage .builderSpotlightCopy{position:relative;z-index:1}
