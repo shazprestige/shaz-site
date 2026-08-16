@@ -1300,50 +1300,61 @@ function getBuilderSelectedProducts(){
 function getBuilderRule(count){
   return (catalog.builder?.pricingRules||[]).find(r=>Number(r.count)===Number(count));
 }
-function builderTotalFor(count){
-  const rule=getBuilderRule(count);
-  return rule?Number(rule.pricePerItem||0)*count:0;
+function builderPriceForProduct(product,count){
+  const map=catalog.builder?.productPricing?.[product?.id];
+  const key=String(count);
+  if(map&&Object.prototype.hasOwnProperty.call(map,key)){
+    const value=Number(map[key]);
+    return Number.isFinite(value)&&value>=0?value:null;
+  }
+  const fallback=getBuilderRule(count);
+  return fallback?Number(fallback.pricePerItem||0):null;
 }
 function builderCurrentPricing(){
   const selected=getBuilderSelectedProducts();
   const count=selected.length;
   const retail=selected.reduce((sum,p)=>sum+Number(p?.price||0),0);
-  const rule=getBuilderRule(count);
-  const total=rule?Number(rule.pricePerItem||0)*count:0;
-  return {selected,count,retail,rule,total,savings:rule?Math.max(0,retail-total):0};
+  const prices=selected.map(p=>({product:p,price:builderPriceForProduct(p,count)}));
+  const complete=count>0&&prices.every(x=>x.price!==null);
+  const total=complete?prices.reduce((sum,x)=>sum+Number(x.price||0),0):0;
+  return {selected,count,retail,prices,complete,total,savings:complete?Math.max(0,retail-total):0};
+}
+function builderTotalFor(count){
+  const snap=builderCurrentPricing();
+  return Number(count)===snap.count&&snap.complete?snap.total:0;
 }
 function builderPriceDockHtml(){
   const snap=builderCurrentPricing();
-  const priceHtml=snap.count?`<div class="builderDockPrice"><div><span>Şu anki setiniz</span><strong>${snap.rule?money(snap.total):'Fiyat tanımlı değil'}</strong></div>${snap.rule?`<small>Ayrı ayrı ${money(snap.retail)}${snap.savings>0?` · <b>${money(snap.savings)} avantaj</b>`:''}<br>Ürün sayısı arttıkça set birim fiyatı değişebilir.</small>`:`<small>${snap.count} ürün seçildi. Bu adet için fiyat kuralı tanımlandığında toplam burada görünür.</small>`}</div>`:`<div class="builderDockPrice"><div><span>Şu anki setiniz</span><strong>0 TL</strong></div><small>Bir ürün seçtiğiniz anda set toplamı burada güncellenir.</small></div>`;
+  const priceHtml=snap.count?`<div class="builderDockPrice"><div><span>Şu anki setiniz</span><strong>${snap.complete?money(snap.total):'Fiyat tanımlı değil'}</strong></div>${snap.complete?`<small>Ayrı ayrı ${money(snap.retail)}${snap.savings>0?` · <b>${money(snap.savings)} avantaj</b>`:''}<br>Ürün sayısı arttıkça ürünlerin set fiyatı değişebilir.</small>`:`<small>${snap.count} ürün seçildi. Seçili ürünlerden en az biri için bu adet fiyatı tanımlı değil.</small>`}</div>`:`<div class="builderDockPrice"><div><span>Şu anki setiniz</span><strong>0 TL</strong></div><small>Bir ürün seçtiğiniz anda set toplamı burada güncellenir.</small></div>`;
   const hasBack=customBuilder.index>0;
   return `<div class="builderStickyDock">${priceHtml}<div class="builderDockActions ${hasBack?'':'noBack'}">${hasBack?`<button class="builderDockBack" onclick="builderPrev()">← Geri</button>`:''}<button class="builderDockSkip" onclick="builderSkipCurrent()">Bu kategoriden ürün eklemek istemiyorum</button><button class="builderDockNext" onclick="builderNext()">${customBuilder.index===customBuilder.categories.length-1?'Seçimlerimi Gör':'Devam Et →'}</button></div></div>`;
 }
 function renderBuilderSelectionSummary(){
-  const selected=getBuilderSelectedProducts();
+  const pricing=builderCurrentPricing();
+  const selected=pricing.selected;
   const min=2;
   const valid=selected.length>=min;
-  const total=builderTotalFor(selected.length);
-  const rule=getBuilderRule(selected.length);
+  const total=pricing.total;
 
   openDrawer(`<div class=wizardHead><button class="pill backPill" onclick=builderBackToLastCategory()>← Geri</button><div><div class=wizardProgress>Seçim Özeti</div><h2>Setiniz</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
     <div class=wizardCard>
       <h3>Seçtiğiniz ürünler</h3>
-      <div class=builderSummaryItems>${selected.length?selected.map(p=>`
+      <div class=builderSummaryItems>${selected.length?selected.map(p=>{const setPrice=builderPriceForProduct(p,selected.length);return `
         <div class=builderSummaryItem>
           <div class=builderSummaryThumb>${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}">`:'⌚'}</div>
           <div class=builderSummaryInfo><b>${escapeHtml(p.name)}</b><small>${escapeHtml((catalog.categories.find(c=>c.id===p.category)||{}).name||p.category)}</small></div>
-          ${rule?`<div class="builderSummaryPrices"><del>${money(Number(p.price||0))}</del><strong>${money(Number(rule.pricePerItem||0))} set fiyatı</strong></div>`:''}
-        </div>`).join(''):'<div class=builderEmptyCategory>Henüz ürün seçmediniz.</div>'}</div>
+          ${setPrice!==null?`<div class="builderSummaryPrices"><del>${money(Number(p.price||0))}</del><strong>${money(setPrice)} set fiyatı</strong></div>`:''}
+        </div>`}).join(''):'<div class=builderEmptyCategory>Henüz ürün seçmediniz.</div>'}</div>
     </div>
     <div class=wizardCard>
       <div class=summaryLine><span>Seçilen ürün sayısı</span><span>${selected.length}</span></div>
       ${selected.length?`<div class="summaryLine builderRetailTotal"><span>Ayrı ayrı alınsaydı</span><span><del>${money(selected.reduce((sum,p)=>sum+Number(p.price||0),0))}</del></span></div>`:''}
-      ${rule&&selected.reduce((sum,p)=>sum+Number(p.price||0),0)>total?`<div class="summaryLine builderSavingsLine"><span>Set avantajı</span><span>-${money(selected.reduce((sum,p)=>sum+Number(p.price||0),0)-total)}</span></div>`:''}
-      <div class="summaryLine summaryTotal"><span>Set toplamı</span><span>${rule?money(total):'Fiyat tanımlı değil'}</span></div>
+      ${pricing.complete&&selected.reduce((sum,p)=>sum+Number(p.price||0),0)>total?`<div class="summaryLine builderSavingsLine"><span>Set avantajı</span><span>-${money(selected.reduce((sum,p)=>sum+Number(p.price||0),0)-total)}</span></div>`:''}
+      <div class="summaryLine summaryTotal"><span>Set toplamı</span><span>${pricing.complete?money(total):'Fiyat tanımlı değil'}</span></div>
     </div>
     ${!valid?`<div class=notice>Kendi setinizi oluşturmak için en az ${min} ürün seçmelisiniz.</div>`:''}
-    ${valid&&!rule?`<div class=notice>${selected.length} ürün için yönetim panelinde özel set fiyatı tanımlanmamış.</div>`:''}
-    <div class=builderNav><button class="btn secondary" onclick=builderEditSelections()>← Seçimleri Düzenle</button><button class=btn ${valid&&rule?'':'disabled'} onclick="${valid&&rule?'builderAskWrite()':"alert('Önce geçerli ürün sayısı ve fiyat kuralı gerekli.')"}">Devam Et</button></div>`);
+    ${valid&&!pricing.complete?`<div class=notice>${selected.length} ürünlük seçimde en az bir ürünün set fiyatı tanımlanmamış. Yönetim panelinden ürün bazlı fiyatları kontrol edin.</div>`:''}
+    <div class=builderNav><button class="btn secondary" onclick=builderEditSelections()>← Seçimleri Düzenle</button><button class=btn ${valid&&pricing.complete?'':'disabled'} onclick="${valid&&pricing.complete?'builderAskWrite()':"alert('Önce en az 2 ürün seçin ve bu adet için tüm seçili ürünlerin set fiyatını tanımlayın.')"}">Devam Et</button></div>`);
 }
 function builderEditSelections(){customBuilder.index=0;renderBuilderCategoryStep()}
 
@@ -1475,8 +1486,8 @@ async function finishBuilderWalletPhoto(button){
 }
 
 function renderBuilderFinalSummary(){
-  const selected=getBuilderSelectedProducts(),rule=getBuilderRule(selected.length);
-  const base=builderTotalFor(selected.length);
+  const pricing=builderCurrentPricing(),selected=pricing.selected;
+  const base=pricing.complete?pricing.total:0;
   const writeFee=(customBuilder.writes||[]).reduce((s,w)=>s+Number(w.fee||0),0);
   const photoFee=(customBuilder.photoCustomizations||[]).reduce((s,w)=>s+Number(w.fee||0),0);
   const total=base+writeFee+photoFee;
@@ -1493,7 +1504,7 @@ function renderBuilderFinalSummary(){
     <button class=btn onclick=builderAddToCart()>Setimi Sepete Ekle</button>`);
 }
 function builderAddToCart(){
-  const selected=getBuilderSelectedProducts(),base=builderTotalFor(selected.length),writeFee=(customBuilder.writes||[]).reduce((s,w)=>s+Number(w.fee||0),0),photoFee=(customBuilder.photoCustomizations||[]).reduce((s,w)=>s+Number(w.fee||0),0),total=base+writeFee+photoFee;
+  const pricing=builderCurrentPricing(),selected=pricing.selected,base=pricing.complete?pricing.total:0,writeFee=(customBuilder.writes||[]).reduce((s,w)=>s+Number(w.fee||0),0),photoFee=(customBuilder.photoCustomizations||[]).reduce((s,w)=>s+Number(w.fee||0),0),total=base+writeFee+photoFee;
   const customProduct={id:'custom-'+Date.now(),name:`Kendi Setim (${selected.length} ürün)`,price:total,stock:999,isSet:true};
   cart.push({product:customProduct,basePrice:base,qty:1,personalized:(customBuilder.writes||[]).length>0||(customBuilder.photoCustomizations||[]).length>0,builderItems:selected.map(p=>({id:p.id,name:p.name,category:p.category,image:mainProductImage(p)})),writes:customBuilder.writes||[],photoCustomizations:customBuilder.photoCustomizations||[]});
   updateCart();closeDrawer();toast('✓ Kendi setiniz sepete eklendi');

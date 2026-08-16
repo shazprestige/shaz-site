@@ -3158,3 +3158,82 @@ body.productDetailOpen{overflow:hidden!important}
   .drawer.productDetailDrawer .productDetailSubtitle{text-align:center!important}
   .drawer.productDetailDrawer .productDetailHeadActions{right:18px!important}
 }
+
+/* V101 — yalnızca istenen ürün detay birleşimi + yönetim ürün görünürlüğü + Kendi Setini Oluştur yönetimi */
+/* Ürün detayında sabit başlık ile ana görsel arasında beyaz şerit bırakma. */
+.drawer.productDetailDrawer .productDetailGallery{margin-top:0!important}
+.drawer.productDetailDrawer .productDetailGallery .productDetailMedia,
+.drawer.productDetailDrawer>.productDetailShell>.productDetailMedia{
+  margin-top:0!important;
+  border-top:0!important;
+  border-top-left-radius:0!important;
+  border-top-right-radius:0!important;
+}
+
+/* Yönetim ürün kartında isim hızlı görünür; aksiyonlar ismi ezmez. */
+.adminProductCompactHead{
+  grid-template-columns:18px minmax(0,1fr)!important;
+  align-items:center!important;
+}
+.adminProductCompactMain{grid-column:2;min-width:0!important}
+.compactQuickActions{
+  grid-column:2!important;
+  display:flex!important;
+  flex-wrap:wrap!important;
+  justify-content:flex-start!important;
+  align-items:center!important;
+  gap:4px!important;
+  min-width:0!important;
+}
+.compactMeta b{
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  line-height:1.18!important;
+  overflow-wrap:anywhere!important;
+}
+@media(max-width:900px){
+  .adminProductCompactHead{grid-template-columns:18px minmax(0,1fr)!important}
+  .compactQuickActions{grid-column:2!important}
+}
+
+/* Kendi Setini Oluştur ürün seçicisinde fotoğraf + isim birlikte görünür. */
+.builderMiniProductList{max-height:210px!important;gap:4px!important}
+.builderMiniProduct{display:grid!important;grid-template-columns:15px 34px minmax(0,1fr)!important;gap:6px!important;padding:4px!important;align-items:center!important}
+.builderMiniThumb{width:34px;height:30px;border-radius:5px;overflow:hidden;background:#eef0f2;display:grid;place-items:center;color:#8b9199;font-size:8px}
+.builderMiniThumb img{width:100%;height:100%;object-fit:contain;object-position:center;display:block}
+.builderMiniName{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.15!important;overflow-wrap:anywhere!important}
+
+/* Ürün bazlı özel set fiyatı yönetimi. Eski genel kurallar veri olarak sadece geriye dönük yedek kalır. */
+.builderPricingAdmin{margin-top:14px;padding-top:12px;border-top:1px solid #e5e8ec}
+.builderPricingTitle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px}
+.builderPricingTitle>span{font-size:9px;font-weight:800;color:#68717d;background:#f1f3f5;border:1px solid #e0e4e8;border-radius:999px;padding:4px 7px;white-space:nowrap}
+.builderPricingCats{display:flex;gap:5px;overflow-x:auto;padding:7px 1px 8px;scrollbar-width:thin}
+.builderPricingCat{border:1px solid #dfe3e8;background:#fff;border-radius:7px;padding:6px 9px;font-size:9px;font-weight:800;white-space:nowrap;cursor:pointer}
+.builderPricingCat.active{background:#111;color:#fff;border-color:#111}
+.builderPricingWorkspace{display:grid;grid-template-columns:minmax(180px,.8fr) minmax(0,1.35fr);gap:9px;align-items:start}
+.builderPricingProducts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:310px;overflow:auto;padding-right:2px}
+.builderPricingProduct{border:1px solid #e1e5e9;background:#fff;border-radius:8px;padding:5px;display:grid;grid-template-columns:44px minmax(0,1fr);gap:6px;align-items:center;text-align:left;cursor:pointer;min-width:0}
+.builderPricingProduct.active{border-color:#111;box-shadow:0 0 0 1px #111 inset}
+.builderPricingProductImg{width:44px;height:42px;border-radius:6px;background:#f1f3f5;overflow:hidden;display:grid;place-items:center;color:#8b9199;font-size:8px}
+.builderPricingProductImg img{width:100%;height:100%;object-fit:contain;object-position:center;display:block}
+.builderPricingProduct>span:last-child{min-width:0}
+.builderPricingProduct b{display:block;font-size:9.5px;line-height:1.15;overflow-wrap:anywhere}
+.builderPricingProduct small{display:block;margin-top:2px;color:#78808a;font-size:7.5px}
+.builderPricingEditor{min-width:0;border:1px solid #e1e5e9;background:#fafbfc;border-radius:9px;padding:8px}
+.builderPricingSelectedHead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.builderPricingSelectedHead>img{width:48px;height:48px;object-fit:contain;object-position:center;border-radius:7px;background:#fff;border:1px solid #e2e5e9}
+.builderPricingSelectedHead>div{min-width:0}.builderPricingSelectedHead b{display:block;font-size:11px}.builderPricingSelectedHead small{display:block;color:#737c87;font-size:8px;line-height:1.35;margin-top:2px}
+.builderProductPriceGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.builderProductPriceCell{display:grid;gap:3px;padding:6px;border:1px solid #e5e8eb;background:#fff;border-radius:7px;min-width:0}
+.builderProductPriceCell>span{font-size:8.5px;font-weight:850;color:#46505d}
+.builderProductPriceCell .formControl{min-height:31px!important;padding:5px 7px!important;font-size:10px!important}
+.builderProductPriceCell>small{font-size:7px;line-height:1.25;color:#838a93}
+@media(max-width:900px){
+  .builderPricingWorkspace{grid-template-columns:1fr}
+  .builderPricingProducts{grid-template-columns:repeat(3,minmax(0,1fr));max-height:220px}
+}
+@media(max-width:620px){
+  .builderPricingProducts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .builderProductPriceGrid{grid-template-columns:1fr 1fr}
+}
