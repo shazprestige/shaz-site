@@ -949,7 +949,7 @@
     {
       "id": "sepet-1786894220202-bxip",
       "name": "2 adet saat kampanyası",
-      "enabled": true,
+      "enabled": false,
       "scopeType": "category",
       "categoryIds": [
         "saatler"
