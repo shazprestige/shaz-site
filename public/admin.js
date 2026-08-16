@@ -37,6 +37,7 @@ async function load(){
   catalog=await fetch('/api/catalog').then(r=>r.json());
   catalog.walletPhotoFee=Number(catalog.walletPhotoFee??25);
   catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
+  catalog.checkoutUpsells=Array.isArray(catalog.checkoutUpsells)?catalog.checkoutUpsells:[];
   (catalog.products||[]).forEach(p=>{
     if(adminIsWalletProduct(p)&&p.walletPhotoEnabled===undefined)p.walletPhotoEnabled=true;
     if(p.writeEnabled===undefined){
@@ -59,7 +60,7 @@ async function load(){
   if(!['full','center','middle'].includes(settings.campaignMarqueePosition))settings.campaignMarqueePosition='full';
   settings.theme=settings.theme||{};
   const savedTab=sessionStorage.getItem('shazAdminTab')||'site';
-  show(['site','catalog','custom','discounts','orders'].includes(savedTab)?savedTab:'site');
+  show(['site','catalog','custom','discounts','upsells','orders'].includes(savedTab)?savedTab:'site');
   setTimeout(()=>{sendPreview();previewTo('header')},600);
 }
 async function saveAll(){
@@ -167,6 +168,7 @@ function show(tab){
   if(tab==='catalog')return renderCatalog();
   if(tab==='custom')return renderCatalog();
   if(tab==='discounts')return renderDiscountCampaigns();
+  if(tab==='upsells')return renderUpsells();
   if(tab==='orders')return renderOrders();
 }
 function campaignCategoryOptions(selected='tum'){
@@ -1512,3 +1514,34 @@ function formatTR(iso){
   try{return new Intl.DateTimeFormat('tr-TR',{timeZone:'Europe/Istanbul',dateStyle:'short',timeStyle:'medium'}).format(new Date(iso))}catch(e){return iso}
 }
 load();
+
+/* V115 - Sepet sonu ekstra ürün önerileri */
+function upsellCategoryOptions(selected=''){
+  return `<option value="">Kategori seç</option>`+(catalog.categories||[]).filter(c=>c.id!=='tum'&&!c.hidden).map(c=>`<option value="${attr(c.id)}" ${String(selected)===String(c.id)?'selected':''}>${esc(c.name||c.id)}</option>`).join('');
+}
+function upsellProductChecks(rule,index,mode){
+  const catId=mode==='trigger'?rule.triggerCategoryId:rule.offerCategoryId;
+  const key=mode==='trigger'?'triggerProductIds':'offerProductIds';
+  const selected=new Set(rule[key]||[]);
+  const ps=(catalog.products||[]).filter(p=>!p.hidden&&(!catId||p.category===catId));
+  if(!catId)return '<div class=help>Önce kategori seç.</div>';
+  return `<div class=campaignScopeProductGrid>${ps.map(p=>`<label class=campaignProductChoice><input type=checkbox ${selected.has(p.id)?'checked':''} onchange="toggleUpsellProduct(${index},'${mode}','${attr(p.id)}',this.checked)"><span><b>${esc(p.name||'Ürün')}</b><small>${Number(p.price||0).toLocaleString('tr-TR')} TL</small></span></label>`).join('')||'<div class=help>Bu kategoride ürün yok.</div>'}</div>`;
+}
+function renderUpsells(){
+  catalog.checkoutUpsells=Array.isArray(catalog.checkoutUpsells)?catalog.checkoutUpsells:[];
+  const cards=catalog.checkoutUpsells.map((r,i)=>`<details class="panel simpleAdminDetails"><summary><span>${esc(r.name||('Öneri '+(i+1)))}</span><small>${r.enabled!==false?'Aktif':'Kapalı'}</small></summary><div class=simpleDetailsBody>
+    <div class=campaignRuleHead><label class=setItemToggle><span><b>Öneri aktif</b><small class=muted>Kapalıyken müşteriye gösterilmez.</small></span><input type=checkbox ${r.enabled!==false?'checked':''} onchange="catalog.checkoutUpsells[${i}].enabled=this.checked;changed('.drawer')"></label><button class=dangerBtn onclick="removeUpsell(${i})">Öneriyi Sil</button></div>
+    <div class=grid2>${input('Yönetim adı',`catalog.checkoutUpsells[${i}].name`,r.name||'Yeni ekstra ürün önerisi','Sadece yönetimde ayırt etmek için.','.drawer')}
+    <div class=field><label><b>Müşteri hangi kategoriden ürün aldığında?</b></label><select class=formControl onchange="catalog.checkoutUpsells[${i}].triggerCategoryId=this.value;catalog.checkoutUpsells[${i}].triggerProductIds=[];renderUpsells()">${upsellCategoryOptions(r.triggerCategoryId||'')}</select><div class=help>Bu kategori tetikleyicidir.</div></div>
+    <div class=field><label><b>Bu kategoride hangi ürünler tetiklesin?</b></label><select class=formControl onchange="catalog.checkoutUpsells[${i}].triggerMode=this.value;renderUpsells()"><option value=all ${(r.triggerMode||'all')==='all'?'selected':''}>Kategorideki tüm ürünler</option><option value=selected ${r.triggerMode==='selected'?'selected':''}>Sadece işaretlediğim ürünler</option></select><div class=help>İstersen tüm kategori, istersen yalnız belirli modeller.</div></div>
+    <div class=field><label><b>Müşteriye hangi kategoriyi öner?</b></label><select class=formControl onchange="catalog.checkoutUpsells[${i}].offerCategoryId=this.value;catalog.checkoutUpsells[${i}].offerProductIds=[];renderUpsells()">${upsellCategoryOptions(r.offerCategoryId||'')}</select><div class=help>Örn. Gözlük.</div></div>
+    <div class=field><label><b>Önerilecek ürünler</b></label><select class=formControl onchange="catalog.checkoutUpsells[${i}].offerMode=this.value;renderUpsells()"><option value=all ${(r.offerMode||'all')==='all'?'selected':''}>Kategorideki tüm ürünler</option><option value=selected ${r.offerMode==='selected'?'selected':''}>Sadece işaretlediğim ürünler</option></select><div class=help>Fotoğraflarıyla müşterinin önüne çıkacak modeller.</div></div>
+    ${input('Müşteriye özel fiyat (TL)',`catalog.checkoutUpsells[${i}].specialPrice`,Number(r.specialPrice||0),'Bu fiyat öneri ekranından eklenen her ürün için geçerli olur. Normal ürün fiyatı üstü çizili gösterilir.','.drawer','number')}</div>
+    ${(r.triggerMode==='selected')?`<div class=campaignScopeBox><b>Tetikleyecek ürünleri seç</b>${upsellProductChecks(r,i,'trigger')}</div>`:''}
+    ${(r.offerMode==='selected')?`<div class=campaignScopeBox><b>Önerilecek ürünleri seç</b>${upsellProductChecks(r,i,'offer')}</div>`:''}
+  </div></details>`).join('');
+  shell('Ekstra Ürün Önerileri','Müşteri sepette “Teslimat ve Ödemeye Geç” dediği anda, seçtiğin koşula göre son bir ürün önerisi gösterilir.',`<div class=panel><div class=campaignCreateRow><div><h2>Sepet Sonu Önerileri</h2><div class=help>Hangi kategori/model satın alındığında hangi kategori/modellerin gösterileceğini ve müşteriye özel fiyatı tamamen sen belirlersin.</div></div><button class=btn onclick=addUpsell()>+ Öneri Ekle</button></div></div>${cards||'<div class=panel><b>Henüz ekstra ürün önerisi yok.</b></div>'}`);
+}
+function addUpsell(){catalog.checkoutUpsells=catalog.checkoutUpsells||[];catalog.checkoutUpsells.push({id:'upsell-'+Date.now(),name:'Yeni ekstra ürün önerisi',enabled:true,triggerCategoryId:'',triggerMode:'all',triggerProductIds:[],offerCategoryId:'',offerMode:'all',offerProductIds:[],specialPrice:0});renderUpsells()}
+function removeUpsell(i){if(confirm('Bu öneri silinsin mi?')){catalog.checkoutUpsells.splice(i,1);renderUpsells()}}
+function toggleUpsellProduct(i,mode,id,on){const r=catalog.checkoutUpsells[i],key=mode==='trigger'?'triggerProductIds':'offerProductIds';r[key]=r[key]||[];if(on&&!r[key].includes(id))r[key].push(id);if(!on)r[key]=r[key].filter(x=>x!==id);changed('.drawer')}

@@ -46,6 +46,7 @@ async function init(){
   settings=await fetch('/api/settings').then(r=>r.json());
   catalog=await fetch('/api/catalog').then(r=>r.json());
   catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
+  catalog.checkoutUpsells=Array.isArray(catalog.checkoutUpsells)?catalog.checkoutUpsells:[];
   (catalog.products||[]).forEach(p=>{
     if(p.writeEnabled===undefined){
       const n=String(((catalog.categories||[]).find(c=>c.id===p.category)||{}).name||p.category||'').toLocaleLowerCase('tr-TR')+' '+String(p.name||'').toLocaleLowerCase('tr-TR');
@@ -1278,7 +1279,7 @@ function checkout(){
   const campaign=calculateCartCampaigns(),itemCount=cart.reduce((n,x)=>n+Number(x.qty||1),0),next=campaign.prompts?.[0];
   openDrawer(`<div class="checkoutShell checkoutShell--cart"><div class="checkoutStickyTop"><div class="checkoutTop"><div><h2>Sepetiniz</h2><p>Ürünleri kontrol edin; ardından teslimat ve ödemeye geçin.</p></div><div class="checkoutTopActions"><button type="button" class="checkoutMiniAction" onclick="shareCartFromCheckout()"><span class="checkoutMiniIcon">⤴</span><small>Sepeti paylaş</small></button><button class="pill" onclick=closeDrawer()>Kapat</button></div></div><div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="closeDrawer()">← Alışverişe dön</button></div><div class="checkoutSteps"><span class="active">1 Sepet</span><span>2 Teslimat</span><span>3 Onay</span></div></div>
     <div class="checkoutScrollBody"><div class="cartToolbar"><span>${itemCount} ürün</span><button type="button" class="cartClearBtn" onclick="clearCartFromCheckout()">Sepeti boşalt</button></div><div class="checkoutProductPanel">${cart.map((x,i)=>cartItemSummary(x,i)).join('')}</div></div>
-    <div class="checkoutStickyBottom">${next?`<div class="campaignPromptBox campaignPromptBox--next"><b>${escapeHtml(next.name)}:</b> <strong>${next.remaining} ürün daha ekle</strong> → ${escapeHtml(next.benefit)} indirim kazan.</div>`:''}<div class="checkoutPriceBreakdown"><div><span>Ara toplam</span><strong>${money(campaign.subtotal)}</strong></div>${campaign.applied.map(x=>`<div class="checkoutDiscountLine"><span>${escapeHtml(x.name)}</span><strong>-${money(x.discount)}</strong></div>`).join('')}<div class="checkoutTotal"><span>Toplam</span><strong>${money(campaign.total)}</strong></div></div><button class="btn checkoutPrimary" onclick="addressStep()">Teslimat ve Ödemeye Geç →</button></div></div>`);
+    <div class="checkoutStickyBottom">${next?`<div class="campaignPromptBox campaignPromptBox--next"><b>${escapeHtml(next.name)}:</b> <strong>${next.remaining} ürün daha ekle</strong> → ${escapeHtml(next.benefit)} indirim kazan.</div>`:''}<div class="checkoutPriceBreakdown"><div><span>Ara toplam</span><strong>${money(campaign.subtotal)}</strong></div>${campaign.applied.map(x=>`<div class="checkoutDiscountLine"><span>${escapeHtml(x.name)}</span><strong>-${money(x.discount)}</strong></div>`).join('')}<div class="checkoutTotal"><span>Toplam</span><strong>${money(campaign.total)}</strong></div></div><button class="btn checkoutPrimary" onclick="proceedToAddressWithUpsell()">Teslimat ve Ödemeye Geç →</button></div></div>`);
 }
 let cartEditBackup=null;
 function openCartItemProduct(i){const x=cart[i];if(!x?.product?.id)return;openProductDetail(x.product.id,'cart')}
@@ -1318,17 +1319,20 @@ function cartItemSummary(x,i){
   }
   if(x.builderItems?.length)lines.push(`<div class=muted>Set içeriği: ${x.builderItems.map(p=>escapeHtml(p.name)).join(', ')}</div>`);
   const writes=x.writes||x.setCustomization?.writes||[];
-  if(writes.length){lines.push(`<div class=muted>Yazı: ${writes.map(w=>`${x.setCustomization?escapeHtml(w.item||'Ürün')+' · ':''}${w.position?escapeHtml(w.position)+' · ':''}“${escapeHtml(w.text||'')}”`).join('<br>')}</div>`);writes.forEach(w=>{if(Number(w.fee||0))priceLines.push(`<div><span>${x.setCustomization?'Kişiselleştirme · '+escapeHtml(w.item||'Ürün'):'Kişiselleştirme'}</span><strong>+${money(w.fee)}</strong></div>`)})}
+  if(writes.length){
+    writes.forEach(w=>{if(Number(w.fee||0))priceLines.push(`<div><span>${x.setCustomization?'Kişiselleştirme · '+escapeHtml(w.item||'Ürün'):'Kişiselleştirme'}${w.position?` · ${escapeHtml(w.position)}`:''}${w.text?` · “${escapeHtml(w.text)}”`:''}</span><strong>+${money(w.fee)}</strong></div>`)});
+  }
   const photos=x.photoCustomizations||x.setCustomization?.photoCustomizations||[];
-  if(photos.length){lines.push(`<div class=muted>Fotoğraf: ${photos.map(ph=>escapeHtml(ph.item||'Cüzdan')).join(', ')}</div>`);photos.forEach(ph=>{
+  if(photos.length){photos.forEach(ph=>{
     const slotFee=Number(ph.slotFee||0),extra=Number(ph.photoExtraFee??(Number(ph.fee||0)-slotFee));
-    if(slotFee)priceLines.push(`<div><span>Kişiselleştirme · ${escapeHtml(ph.item||'Cüzdan')}</span><strong>+${money(slotFee)}</strong></div>`);
+    if(slotFee)priceLines.push(`<div><span>Kişiselleştirme · ${escapeHtml(ph.item||'Cüzdan')}${ph.caption?` · “${escapeHtml(ph.caption)}”`:''}</span><strong>+${money(slotFee)}</strong></div>`);
     if(extra>0)priceLines.push(`<div><span>Fotoğraf işleme · ${escapeHtml(ph.item||'Cüzdan')}</span><strong>+${money(extra)}</strong></div>`);
-    else if(Number(ph.fee||0)>0)priceLines.push(`<div><span>Fotoğraf işleme · ${escapeHtml(ph.item||'Cüzdan')}</span><strong>+${money(ph.fee)}</strong></div>`);
+    else if(Number(ph.fee||0)>0&&!slotFee)priceLines.push(`<div><span>Fotoğraf işleme · ${escapeHtml(ph.item||'Cüzdan')}${ph.caption?` · “${escapeHtml(ph.caption)}”`:''}</span><strong>+${money(ph.fee)}</strong></div>`);
   })}
   const cartImg=mainProductImage(x.product)||(x.builderItems||[]).find(y=>y?.image)?.image||'';
   return `<div class="orderCartItem"><div class="cartItemMain cartItemClickable" onclick="openCartItemProduct(${i})">${cartImg?`<div class="cartItemThumb"><img src="${escapeAttr(cartImg)}" alt="${escapeAttr(x.product.name||'Ürün')}"></div>`:''}<div class="cartItemCopy"><b>${escapeHtml(x.product.name)}</b>${lines.join('')}${priceLines.length>1?`<div class="cartItemBreakdown">${priceLines.join('')}</div>`:''}</div><div class="cartItemRight"><strong>${money(x.product.price)}</strong><div class="cartItemActions"><button type="button" class="cartEditBtn" onclick="event.stopPropagation();editCartItem(${i})">Düzenle</button><button type="button" class="cartRemoveBtn" onclick="event.stopPropagation();removeCartItem(${i})">Kaldır</button></div></div></div></div>`;
 }
+
 function normalizeTRMobile(raw){
   const digits=String(raw||'').replace(/\D/g,'');
   if(/^5\d{9}$/.test(digits))return {ok:true,value:digits};
@@ -1338,42 +1342,81 @@ function normalizeTRMobile(raw){
 function phoneValidationMessage(label='Telefon numarası'){
   return `${label} eksik veya fazla. Lütfen numarayı kontrol edin.`;
 }
+const TR_PROVINCES=['Adana','Adıyaman','Afyonkarahisar','Ağrı','Aksaray','Amasya','Ankara','Antalya','Ardahan','Artvin','Aydın','Balıkesir','Bartın','Batman','Bayburt','Bilecik','Bingöl','Bitlis','Bolu','Burdur','Bursa','Çanakkale','Çankırı','Çorum','Denizli','Diyarbakır','Düzce','Edirne','Elazığ','Erzincan','Erzurum','Eskişehir','Gaziantep','Giresun','Gümüşhane','Hakkari','Hatay','Iğdır','Isparta','İstanbul','İzmir','Kahramanmaraş','Karabük','Karaman','Kars','Kastamonu','Kayseri','Kırıkkale','Kırklareli','Kırşehir','Kilis','Kocaeli','Konya','Kütahya','Malatya','Manisa','Mardin','Mersin','Muğla','Muş','Nevşehir','Niğde','Ordu','Osmaniye','Rize','Sakarya','Samsun','Siirt','Sinop','Sivas','Şanlıurfa','Şırnak','Tekirdağ','Tokat','Trabzon','Tunceli','Uşak','Van','Yalova','Yozgat','Zonguldak'];
+function trKey(v){return String(v||'').trim().toLocaleLowerCase('tr-TR').replace(/\s+/g,' ')}
+function canonicalProvince(v){const key=trKey(v);return TR_PROVINCES.find(x=>trKey(x)===key)||''}
+function stripAddressSuffix(v,type){
+  let s=String(v||'').trim();
+  const patterns=type==='neighborhood'?/\s+(mahallesi|mahalle|mah\.?|mh\.?)$/iu:type==='avenue'?/\s+(caddesi|cadde|cad\.?|cd\.?)$/iu:/\s+(sokağı|sokak|sok\.?|sk\.?)$/iu;
+  return s.replace(patterns,'').trim();
+}
+function addressPart(v,type){
+  const clean=stripAddressSuffix(v,type);
+  if(!clean)return '';
+  return `${clean} ${type==='neighborhood'?'MH.':type==='avenue'?'CD.':'SK.'}`;
+}
+function focusDrawerField(el){
+  if(!el)return;
+  const drawer=$('#drawer');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const topGuard=(drawer?.querySelector('.checkoutStickyTop,.wizardHead')?.getBoundingClientRect().height||0)+14;
+    const bottomGuard=(drawer?.querySelector('.checkoutStickyBottom,.wizardBottomAction')?.getBoundingClientRect().height||0)+18;
+    const r=el.getBoundingClientRect(),vh=window.visualViewport?.height||window.innerHeight;
+    if(r.top<topGuard||r.bottom>vh-bottomGuard)el.scrollIntoView({block:'center',behavior:'smooth'});
+  }));
+}
+function bindDrawerInputFocus(){
+  const drawer=$('#drawer');if(!drawer)return;
+  drawer.querySelectorAll('input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select').forEach(el=>{
+    el.addEventListener('focus',()=>focusDrawerField(el),{passive:true});
+  });
+}
 function addressStep(){
   checkoutState.payment=$('#pay')?.value||checkoutState.payment||'cod';
   const c=checkoutState.customer||{};
   const branch=c.deliveryMode==='branch';
-  openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">TESLİMAT BİLGİLERİ</span><h2>Siparişinizi nereye gönderelim?</h2><p>Size ulaşabilmemiz ve kargoyu doğru yere gönderebilmemiz için bilgileri girin.</p></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
-    <div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="checkout()">← Sepete dön</button><small>* zorunlu alan</small></div>
-    <div class="checkoutSteps"><span>1 Sepet</span><span class="active">2 Teslimat</span><span>3 Onay</span></div>
-    <div class="addressCompact">
-      ${addrInput('Ad Soyad *','fullName',c.fullName)}
-      <div class="field"><label><b>Telefon *</b><small class="fieldHelp">05xx xxx xx xx veya 5xx xxx xx xx</small></label><input class=formControl id=addr-phone type=tel inputmode=numeric autocomplete=tel value="${escapeAttr(c.phone||'')}" placeholder="05xx xxx xx xx"></div>
-      <div class="field fieldWide"><label><b>2. Telefon Numarası</b><small class="fieldHelp">Teslimatın sorunsuz gerçekleşmesi için ulaşılabilecek ikinci bir numara yazın; anne, baba, arkadaş vb. olabilir.</small></label><input class=formControl id=addr-extraPhone type=tel inputmode=numeric autocomplete=tel value="${escapeAttr(c.extraPhone||'')}" placeholder="Örn: 05xx xxx xx xx veya 5xx xxx xx xx"></div>
-
-      <label class="branchChoice fieldWide"><input id="addr-branchToggle" type="checkbox" ${branch?'checked':''} onchange="toggleBranchDelivery()"><span><b>Kargom Aras Kargo şubesine gelsin</b><small>Adrese değil, seçtiğiniz Aras Kargo şubesinden teslim alırsınız.</small></span></label>
-
-      ${addrInput('İl *','province',c.province)}
-      ${addrInput('İlçe *','district',c.district)}
-
-      <div id="homeAddressFields" class="addressModeFields fieldWide" style="${branch?'display:none':''}">
-        ${addrInput('Mahalle *','neighborhood',c.neighborhood)}
-        <div class="field fieldWide"><label><b>Tam adres *</b><small class="fieldHelp">Cadde/sokak, bina no, kat ve daire bilgilerini tek alana yazın.</small></label><textarea class=formControl id=addr-fullAddress rows=3 placeholder="Örn: Bağlarbaşı Mah. Atatürk Cad. No:12 Kat:2 Daire:5">${escapeHtml(c.fullAddress||c.avenue||'')}</textarea></div>
-      </div>
-
-      <div id="branchAddressFields" class="addressModeFields fieldWide" style="${branch?'':'display:none'}">
-        <div class="branchInfo">📍 <b>Aras Kargo şube adını net yazın.</b><br>Google Haritalar'dan kontrol edip şubenin tam adını girin. Aynı ilçede birden fazla şube olabilir.<br><span>Örnek: İstanbul / Kadıköy — Aras Kargo Kadıköy Şubesi</span></div>
-        <div class="field fieldWide"><label><b>Aras Kargo şube adı *</b></label><input class=formControl id=addr-branchName value="${escapeAttr(c.branchName||'')}" placeholder="Örn: Aras Kargo Kadıköy Şubesi"></div>
-      </div>
-
-      <div class="field fieldWide checkoutPaymentField"><label><b>Ödeme yöntemi *</b><small class="fieldHelp">Siparişiniz için ödeme tercihinizi seçin.</small></label><select id="pay" class="formControl"><option value="cod" ${checkoutState.payment==='cod'?'selected':''}>Kapıda ödeme</option><option value="online" ${checkoutState.payment==='online'?'selected':''}>Online ödeme</option></select></div>
-      <div class="field fieldWide"><label><b>Teslimat notu</b><small class="fieldHelp">İsterseniz kurye veya teslimat için kısa bir not ekleyin.</small></label><textarea class=formControl id=addr-note rows=2 placeholder="İsteğe bağlı">${escapeHtml(c.note||'')}</textarea></div>
+  openDrawer(`<div class="checkoutShell checkoutShell--address">
+    <div class="checkoutStickyTop addressStickyTop">
+      <div class="checkoutTop"><div><span class="checkoutEyebrow">TESLİMAT BİLGİLERİ</span><h2>Siparişinizi nereye gönderelim?</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+      <div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="checkout()">← Sepete dön</button><small>* zorunlu alan</small></div>
+      <div class="checkoutSteps"><span>1 Sepet</span><span class="active">2 Teslimat</span><span>3 Onay</span></div>
     </div>
-    <button class="btn checkoutPrimary" onclick="saveAddressAndContinue()">Bilgilerimi Kontrol Et →</button></div>`);
+    <div class="checkoutScrollBody addressScrollBody">
+      <div class="addressCompact addressCompactV114">
+        <div class="field fieldWide">${addrInputInner('Ad Soyad *','fullName',c.fullName,'text','Adınızı ve soyadınızı yazın')}</div>
+        <div class="addressPair fieldWide">
+          <div class="field"><label><b>Telefon *</b><small class="fieldHelp">05xx xxx xx xx veya 5xx xxx xx xx</small></label><input class=formControl id=addr-phone type=tel inputmode=numeric autocomplete=tel value="${escapeAttr(c.phone||'')}" placeholder="05xx xxx xx xx"></div>
+          <div class="field"><label><b>2. Telefon Numarası</b><small class="fieldHelp">İsteğe bağlı yedek numara</small></label><input class=formControl id=addr-extraPhone type=tel inputmode=numeric autocomplete=tel value="${escapeAttr(c.extraPhone||'')}" placeholder="05xx xxx xx xx"></div>
+        </div>
+        <label class="branchChoice fieldWide"><input id="addr-branchToggle" type="checkbox" ${branch?'checked':''} onchange="toggleBranchDelivery()"><span><b>Kargom Aras Kargo şubesine gelsin</b><small>Adrese değil, seçtiğiniz Aras Kargo şubesinden teslim alırsınız.</small></span></label>
+        <div class="addressPair fieldWide">
+          <div class="field">${addrInputInner('İl *','province',c.province,'text','Örn: İstanbul')}</div>
+          <div class="field">${addrInputInner('İlçe *','district',c.district,'text','Örn: Kadıköy')}</div>
+        </div>
+        <div id="homeAddressFields" class="addressModeFields fieldWide addressModeFieldsV114" style="${branch?'display:none':''}">
+          <div class="addressTriple">
+            <div class="field">${addrInputInner('Mahalle *','neighborhood',stripAddressSuffix(c.neighborhood,'neighborhood'),'text','Örn: Atatürk')}</div>
+            <div class="field">${addrInputInner('Cadde','avenue',stripAddressSuffix(c.avenue,'avenue'),'text','Örn: Bağdat')}</div>
+            <div class="field">${addrInputInner('Sokak','street',stripAddressSuffix(c.street,'street'),'text','Örn: Reşat')}</div>
+          </div>
+          <div class="field fieldWide"><label><b>Adres devamı *</b><small class="fieldHelp">Bina no, kat, daire ve gerekiyorsa site/apartman adını yazın.</small></label><textarea class=formControl id=addr-fullAddress rows=2 placeholder="Örn: No:12 Kat:2 Daire:5">${escapeHtml(c.fullAddress||'')}</textarea></div>
+        </div>
+        <div id="branchAddressFields" class="addressModeFields fieldWide" style="${branch?'':'display:none'}">
+          <div class="branchInfo">📍 <b>Aras Kargo şube adını net yazın.</b><br>Google Haritalar'dan kontrol edip şubenin tam adını girin.</div>
+          <div class="field fieldWide"><label><b>Aras Kargo şube adı *</b></label><input class=formControl id=addr-branchName value="${escapeAttr(c.branchName||'')}" placeholder="Örn: Aras Kargo Kadıköy Şubesi"></div>
+        </div>
+        <div class="field fieldWide checkoutPaymentField"><label><b>Ödeme yöntemi *</b></label><select id="pay" class="formControl"><option value="cod" ${checkoutState.payment==='cod'?'selected':''}>Kapıda ödeme</option><option value="online" ${checkoutState.payment==='online'?'selected':''}>Online ödeme</option></select></div>
+        <div class="field fieldWide"><label><b>Teslimat notu</b><small class="fieldHelp">İsteğe bağlı</small></label><textarea class=formControl id=addr-note rows=2 placeholder="Teslimat notu">${escapeHtml(c.note||'')}</textarea></div>
+      </div>
+    </div>
+    <div class="checkoutStickyBottom addressStickyBottom"><button class="btn checkoutPrimary" onclick="saveAddressAndContinue()">Bilgilerimi Kontrol Et →</button></div>
+  </div>`);
+  bindDrawerInputFocus();
 }
-
-function addrInput(label,id,value='',type='text'){
-  return `<div class=field><label><b>${label}</b></label><input class=formControl id="addr-${id}" type="${type}" value="${escapeAttr(value||'')}"></div>`;
+function addrInputInner(label,id,value='',type='text',placeholder=''){
+  return `<label><b>${label}</b></label><input class=formControl id="addr-${id}" type="${type}" value="${escapeAttr(value||'')}" ${placeholder?`placeholder="${escapeAttr(placeholder)}"`:''}>`;
 }
+function addrInput(label,id,value='',type='text'){return `<div class=field>${addrInputInner(label,id,value,type)}</div>`}
 function toggleBranchDelivery(){
   const on=!!$('#addr-branchToggle')?.checked;
   if($('#homeAddressFields')) $('#homeAddressFields').style.display=on?'none':'grid';
@@ -1383,39 +1426,43 @@ function saveAddressAndContinue(){
   checkoutState.payment=$('#pay')?.value||checkoutState.payment||'cod';
   const g=id=>($('#addr-'+id)?.value||'').trim();
   const branch=!!$('#addr-branchToggle')?.checked;
+  const fullName=g('fullName').replace(/\s+/g,' ').trim();
+  if(!fullName)return alert('Lütfen adınızı ve soyadınızı yazın.');
+  if(!fullName.includes(' '))return alert('Lütfen soyadınızı da yazın.');
+  const province=canonicalProvince(g('province'));
+  if(!province)return alert('İl bilgisi geçerli değil. Lütfen Türkiye’deki 81 ilden birini doğru yazın.');
   const primaryPhone=normalizeTRMobile(g('phone'));
   const extraRaw=g('extraPhone');
   const extraPhone=extraRaw?normalizeTRMobile(extraRaw):{ok:true,value:''};
   if(!primaryPhone.ok)return alert(phoneValidationMessage('Telefon numarası'));
   if(!extraPhone.ok)return alert(phoneValidationMessage('2. telefon numarası'));
   if(extraPhone.value && primaryPhone.value===extraPhone.value)return alert('İki telefon numarası aynı olamaz. Lütfen yedek olarak farklı bir telefon numarası girin.');
+  const neighborhood=branch?'Aras Kargo Şube Teslim':addressPart(g('neighborhood'),'neighborhood');
+  const avenue=branch?g('branchName'):addressPart(g('avenue'),'avenue');
+  const street=branch?'':addressPart(g('street'),'street');
   const customer={
-    fullName:g('fullName'),phone:primaryPhone.value,extraPhone:extraPhone.value,province:g('province'),district:g('district'),
-    deliveryMode:branch?'branch':'address', branchName:branch?g('branchName'):'',
-    neighborhood:branch?'Aras Kargo Şube Teslim':g('neighborhood'), fullAddress:branch?'':g('fullAddress'),
-    avenue:branch?g('branchName'):g('fullAddress'), street:'',buildingNo:'',floor:'',doorNo:'',placeType:'home',businessName:'',note:g('note')
+    fullName,phone:primaryPhone.value,extraPhone:extraPhone.value,province,district:g('district'),
+    deliveryMode:branch?'branch':'address',branchName:branch?g('branchName'):'',
+    neighborhood,avenue,street,fullAddress:branch?'':g('fullAddress'),
+    buildingNo:'',floor:'',doorNo:'',placeType:'home',businessName:'',note:g('note')
   };
-  if(!customer.fullName||!customer.phone||!customer.province||!customer.district)return alert('Lütfen * işaretli zorunlu alanları doldurun.');
+  if(!customer.phone||!customer.province||!customer.district)return alert('Lütfen * işaretli zorunlu alanları doldurun.');
   if(branch&&!customer.branchName)return alert('Teslim almak istediğiniz Aras Kargo şubesinin tam adını yazın.');
-  if(!branch&&(!customer.neighborhood||!customer.fullAddress))return alert('Mahalle ve tam adres alanlarını doldurun.');
+  if(!branch&&(!g('neighborhood')||!customer.fullAddress))return alert('Mahalle ve adres devamı alanlarını doldurun.');
   checkoutState.customer=customer;
   showAddressConfirmation(customer);
 }
 function customerAddressText(c){
-  if(c.deliveryMode==='branch') return `${c.province} / ${c.district} — ${c.branchName}`;
-  return `${c.neighborhood}, ${c.fullAddress} — ${c.district} / ${c.province}`;
+  if(c.deliveryMode==='branch')return `${c.province} / ${c.district} — ${c.branchName}`;
+  return [c.neighborhood,c.avenue,c.street,c.fullAddress].filter(Boolean).join(' ') + ` — ${c.district} / ${c.province}`;
 }
 function showAddressConfirmation(c){
   document.querySelector('.addressCheckModal')?.remove();
-  const el=document.createElement('div');
-  el.className='addressCheckModal';
+  const el=document.createElement('div');el.className='addressCheckModal';
   el.innerHTML=`<div class="addressCheckCard"><button class="addressCheckX" onclick="this.closest('.addressCheckModal').remove()">×</button><span class="checkoutEyebrow">ADRES KONTROLÜ</span><h3>Bilgilerinizi kontrol edin</h3><p class="addressCheckHint">Yanlış veya eksik adres, kargonun gecikmesine neden olabilir.</p><div class="addressCheckData"><b>${escapeHtml(c.fullName)}</b><span>${escapeHtml(c.phone)}${c.extraPhone?` · 2. tel: ${escapeHtml(c.extraPhone)}`:''}</span><strong>${c.deliveryMode==='branch'?'📦 Şubeden teslim':'📍 Adrese teslim'}</strong><span>${escapeHtml(customerAddressText(c))}</span>${c.deliveryMode==='branch'?'<small>Şube adını Google Haritalar’dan kontrol ettiğinizden emin olun.</small>':''}</div><div class="addressCheckActions"><button class="pill" onclick="this.closest('.addressCheckModal').remove()">Düzenle</button><button class="btn" onclick="confirmAddressAndContinue()">Bilgiler doğru, devam et →</button></div></div>`;
   document.body.appendChild(el);
 }
-function confirmAddressAndContinue(){
-  document.querySelector('.addressCheckModal')?.remove();
-  continueAfterAddress();
-}
+function confirmAddressAndContinue(){document.querySelector('.addressCheckModal')?.remove();continueAfterAddress();}
 function continueAfterAddress(){
   const hasPersonal=cart.some(x=>x.personalized);
   if(checkoutState.payment==='cod'&&hasPersonal){
@@ -1796,3 +1843,33 @@ function builderAddToCart(){
 }
 
 init();
+
+/* V115 - Teslimata geçmeden önce yönetilebilir ekstra ürün önerisi */
+let pendingUpsellRule=null;
+function cartHasUpsellTrigger(rule){
+  const ids=new Set(rule.triggerProductIds||[]);
+  return cart.some(x=>x?.product && x.product.category===rule.triggerCategoryId && ((rule.triggerMode||'all')==='all'||ids.has(x.product.id)));
+}
+function eligibleUpsellProducts(rule){
+  const ids=new Set(rule.offerProductIds||[]);
+  return (catalog.products||[]).filter(p=>!p.hidden&&Number(p.stock||0)!==0&&p.category===rule.offerCategoryId&&((rule.offerMode||'all')==='all'||ids.has(p.id)));
+}
+function findCheckoutUpsell(){
+  return (catalog.checkoutUpsells||[]).find(r=>r&&r.enabled!==false&&r.triggerCategoryId&&r.offerCategoryId&&Number(r.specialPrice||0)>=0&&cartHasUpsellTrigger(r)&&eligibleUpsellProducts(r).length);
+}
+function proceedToAddressWithUpsell(){
+  const r=findCheckoutUpsell();
+  if(!r)return addressStep();
+  pendingUpsellRule=r;showCheckoutUpsell(r);
+}
+function showCheckoutUpsell(r){
+  const ps=eligibleUpsellProducts(r),cat=(catalog.categories||[]).find(c=>c.id===r.offerCategoryId),special=Number(r.specialPrice||0);
+  openDrawer(`<div class="checkoutShell checkoutUpsellShell"><div class="checkoutStickyTop"><div class="checkoutTop"><div><span class="checkoutEyebrow">SİZE ÖZEL FIRSAT</span><h2>Setinize ekstra ${escapeHtml((cat?.name||'ürün').toLocaleLowerCase('tr-TR'))} eklemek ister misiniz?</h2><p>Yalnızca bu aşamada seçtiğiniz ürünleri özel fiyatla sepetinize ekleyebilirsiniz.</p></div></div><div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="checkout()">← Sepete dön</button></div></div><div class="checkoutScrollBody"><div class="checkoutUpsellGrid">${ps.map(p=>{const img=mainProductImage(p);return `<article class="checkoutUpsellCard">${img?`<img src="${escapeAttr(img)}" alt="${escapeAttr(p.name||'Ürün')}">`:''}<div class="checkoutUpsellInfo"><b>${escapeHtml(p.name||'Ürün')}</b><div class="checkoutUpsellPrices"><span class="checkoutUpsellOld">${money(p.price)}</span><strong>${money(special)}</strong></div><button class="btn" onclick="addCheckoutUpsell('${escapeAttr(p.id)}')">Sepete Ekle</button></div></article>`}).join('')}</div></div><div class="checkoutStickyBottom checkoutUpsellBottom"><button class="pill checkoutUpsellNo" onclick="skipCheckoutUpsell()">Hayır, istemiyorum</button></div></div>`);
+}
+function addCheckoutUpsell(productId){
+  const r=pendingUpsellRule,p=(catalog.products||[]).find(x=>x.id===productId);if(!r||!p)return;
+  const special=Math.max(0,Number(r.specialPrice||0));
+  cart.push({product:{...p,price:special},basePrice:special,qty:1,personalized:false,upsell:{ruleId:r.id,normalPrice:Number(p.price||0),specialPrice:special}});
+  updateCart();pendingUpsellRule=null;toast('✓ Özel fiyatlı ürün sepete eklendi');addressStep();
+}
+function skipCheckoutUpsell(){pendingUpsellRule=null;addressStep()}

@@ -3483,3 +3483,64 @@ body.productDetailOpen{overflow:hidden!important}
   .wizardBottomAction>.btn,.setRemovalActions>.btn,.wizardFinalAction>.btn{min-width:120px!important;padding:10px 13px!important}
   .removalSplitSummary .remainingList,.removalSplitSummary .removedList{padding:10px!important;font-size:11px!important;line-height:1.45!important}
 }
+
+
+/* ===== V114 — yalnızca mobil klavye görünürlüğü, wizard aksiyon aralığı, sepet ve adres düzeni ===== */
+/* Tüm telefonlarda form alanları en az 16px: mobil tarayıcıların odak yakınlaştırmasını engeller. */
+@media(max-width:900px){
+  .drawer input:not([type=checkbox]):not([type=radio]):not([type=file]),
+  .drawer textarea,.drawer select,.drawer .writeInput,.drawer .formControl{font-size:16px!important}
+}
+@supports(height:100dvh){
+  .drawer{height:calc(100dvh - var(--announce-h,25px))!important}
+}
+/* Klavye açıldığında odaklanan yazı alanının görünür kalabilmesi için gerçek kaydırma payı. */
+.drawer:has(input:focus),.drawer:has(textarea:focus),.drawer:has(select:focus){scroll-padding-top:92px!important;scroll-padding-bottom:180px!important}
+.writeItem:focus-within,.builderWriteCard:focus-within{scroll-margin-top:90px!important;scroll-margin-bottom:180px!important}
+
+/* Sabit alt buton içerikle birleşmez; küçük bir nefes alanı vardır. */
+.wizardBottomAction,.setRemovalActions,.wizardFinalAction{
+  margin-top:14px!important;
+  padding-top:10px!important;
+  border-top:1px solid #e1e5e9!important;
+}
+.wizardBottomAction>.btn,.setRemovalActions>.btn,.wizardFinalAction>.btn{
+  margin-top:0!important;
+}
+
+/* Teslimat ekranı: üst adımlar ve alt devam butonu sabit, orta alan kayar. */
+.checkoutShell--address{
+  height:100%!important;min-height:100%!important;
+  display:grid!important;grid-template-rows:auto minmax(0,1fr) auto!important;
+  overflow:hidden!important;padding:0!important;
+}
+.addressStickyTop{position:relative!important;padding:7px 12px 5px!important}
+.addressStickyTop .checkoutTop{margin:0 0 2px!important}
+.addressStickyTop .checkoutTop h2{font-size:21px!important;margin:1px 0!important}
+.addressStickyTop .checkoutBackRow{margin:0!important}
+.addressStickyTop .checkoutSteps{margin:4px 0 0!important}
+.addressScrollBody{padding:10px 14px 14px!important}
+.addressStickyBottom{position:relative!important;padding:8px 12px calc(8px + env(safe-area-inset-bottom))!important}
+.addressStickyBottom .checkoutPrimary{margin:0!important}
+.addressCompactV114{display:grid!important;grid-template-columns:1fr!important;gap:10px!important}
+.addressCompactV114 .field{margin:0!important}
+.addressPair{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important}
+.addressTriple{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+.addressModeFieldsV114{display:grid!important;grid-template-columns:1fr!important;gap:10px!important}
+@media(max-width:520px){
+  .addressPair{grid-template-columns:1fr 1fr!important}
+  .addressTriple{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .addressCompactV114 label b{font-size:12px!important}
+  .addressCompactV114 .fieldHelp{font-size:8.5px!important;line-height:1.2!important}
+  .addressCompactV114 .formControl{padding:10px 9px!important;min-width:0!important}
+  .addressTriple .formControl{padding-left:7px!important;padding-right:7px!important}
+}
+@media(max-width:370px){
+  .addressTriple{grid-template-columns:1fr 1fr!important}
+  .addressTriple .field:first-child{grid-column:1/-1}
+}
+
+/* Sepette kişiselleştirme ayrıntısı yalnız fiyat kırılımında görünür; tekrar metin satırı üretmez. */
+.cartItemBreakdown>div span{min-width:0!important;overflow-wrap:anywhere!important}
+/* V115 - checkout upsell */
+.checkoutUpsellGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:4px 0 18px}.checkoutUpsellCard{border:1px solid #ddd;border-radius:18px;overflow:hidden;background:#fff}.checkoutUpsellCard img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover}.checkoutUpsellInfo{padding:12px;display:grid;gap:10px}.checkoutUpsellPrices{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.checkoutUpsellOld{text-decoration:line-through;color:#8b8b8b}.checkoutUpsellPrices strong{font-size:1.18rem}.checkoutUpsellBottom{display:flex;justify-content:center}.checkoutUpsellNo{width:100%;min-height:48px}@media(max-width:600px){.checkoutUpsellGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.checkoutUpsellInfo{padding:10px}.checkoutUpsellInfo .btn{padding:11px 8px}.checkoutUpsellShell .checkoutTop h2{font-size:1.35rem}}
