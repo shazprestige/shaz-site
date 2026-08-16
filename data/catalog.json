@@ -940,7 +940,11 @@
       "productIds": [],
       "minQty": 3,
       "discountType": "fixed",
-      "discountValue": 500
+      "discountValue": 500,
+      "productUnitCounts": {},
+      "repeatable": true,
+      "maxApplications": 0,
+      "allowDoubleCount": false
     },
     {
       "id": "sepet-1786894220202-bxip",
@@ -958,7 +962,11 @@
         "urun-1786825421633-1-qpgw",
         "urun-1786825421633-0-33da",
         "urun-1786825421633-2-a94y"
-      ]
+      ],
+      "productUnitCounts": {},
+      "repeatable": true,
+      "maxApplications": 0,
+      "allowDoubleCount": false
     }
   ]
 }
