@@ -81,14 +81,22 @@
   "products": [
     {
       "id": "urun-1786741075329",
-      "name": "Yeni Ürün",
-      "description": "CAM VE KAUÇUK KARIŞIMIDIR",
-      "features": [],
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "description": "",
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "cuzdanlar",
-      "price": 150,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
-      "badge": "EN ÇOK SATAN",
+      "badge": "",
       "badgeColor": "orange",
       "image": "/uploads/1786741094421-2xuskg.jpg",
       "images": [
@@ -96,7 +104,7 @@
         "/uploads/1786842868172-slhz4a.jpeg"
       ],
       "hidden": false,
-      "setEligible": true,
+      "setEligible": false,
       "isSet": false,
       "setItems": [],
       "writePositions": [],
@@ -105,87 +113,222 @@
       "descriptionEditorWidth": 360,
       "descriptionWrapCh": 45,
       "featuresEditorWidth": 360,
-      "featuresWrapCh": 45
+      "featuresWrapCh": 45,
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "preferredWritePosition": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786749082450",
-      "name": "Yeni Ürün",
-      "description": "CAM VE KAUÇUK KARIŞIMIDIR",
-      "features": [],
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "description": "",
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "kategori-1786740581832",
-      "price": 150,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
-      "badge": "EN ÇOK SATAN",
+      "badge": "",
       "badgeColor": "orange",
       "image": "/uploads/1786749143198-3ow7ju.webp",
       "images": [
         "/uploads/1786749143198-3ow7ju.webp"
       ],
       "hidden": false,
-      "setEligible": true,
+      "setEligible": false,
       "isSet": false,
       "setItems": [],
       "writePositions": [],
-      "writeEnabled": true
+      "writeEnabled": true,
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "preferredWritePosition": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786751615679",
-      "name": "Yeni Ürün",
-      "description": "CAM VE KAUÇUK KARIŞIMIDIR",
-      "features": [],
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "description": "",
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "gozlukler",
-      "price": 150,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
-      "badge": "EN ÇOK SATAN",
+      "badge": "",
       "badgeColor": "orange",
       "image": "",
       "images": [],
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422547-0-9lk",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-1-ht9",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-2-j2f",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-3-7nu",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-4-zuw",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-5-hnv",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-6-n3r",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
-      "writeEnabled": true
+      "writeEnabled": true,
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "preferredWritePosition": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786800474541",
-      "name": "ZİPPO",
-      "description": "CAM VE KAUÇUK KARIŞIMIDIR",
-      "features": [],
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "description": "",
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "kategori-1786798033844",
-      "price": 150,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 5,
-      "badge": "EN ÇOK SATAN",
+      "badge": "",
       "badgeColor": "orange",
       "image": "",
       "images": [],
       "hidden": false,
-      "setEligible": true,
+      "setEligible": false,
       "isSet": false,
       "setItems": [],
       "writePositions": [],
-      "writeEnabled": false
+      "writeEnabled": true,
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "preferredWritePosition": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786817515929-2-ux88",
-      "name": "SHAZ - NOVA",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
       "description": "",
       "features": [
-        "Paslanma ve solmaya dayanıklı",
-        "Çelik kordon",
-        "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
-        "Safir çizilmelere dayanıklı cam",
-        "takvim",
-        "Ayarlanabilir kordon",
-        "Kasa çapı 32-36 mm",
-        "Kordon uzunluk 19 cm",
-        "Kordon genişlik 2 cm"
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
       ],
       "category": "saatler",
-      "price": 600,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -195,7 +338,7 @@
         "/uploads/1786817507308-mh5ma4.jpeg"
       ],
       "hidden": false,
-      "setEligible": true,
+      "setEligible": false,
       "isSet": false,
       "setItems": [],
       "writePositions": [],
@@ -208,25 +351,24 @@
       "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
       "shippingRibbonText": "Kargo Bedava",
-      "subtitle": "Erkek kol saati"
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786817515929-6-sr2c",
-      "name": "SHAZ - NOVA",
-      "description": "Erkek kol saati",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "description": "",
       "features": [
-        "Paslanma ve solmaya dayanıklı",
-        "Çelik kordon",
-        "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
-        "Safir çizilmelere dayanıklı cam",
-        "takvim",
-        "Ayarlanabilir kordon",
-        "Kasa çapı 32-36 mm",
-        "Kordon uzunluk 19 cm",
-        "Kordon genişlik 2 cm"
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
       ],
       "category": "saatler",
-      "price": 600,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -236,7 +378,7 @@
         "/uploads/1786817507430-hihchb.jpeg"
       ],
       "hidden": false,
-      "setEligible": true,
+      "setEligible": false,
       "isSet": false,
       "setItems": [],
       "writePositions": [],
@@ -247,25 +389,26 @@
       "descriptionWrapCh": 40,
       "featuresEditorWidth": 320,
       "featuresWrapCh": 40,
-      "shippingRibbonEnabled": true
+      "shippingRibbonEnabled": true,
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786817515929-8-eu1y",
-      "name": "SHAZ - NOVA",
-      "description": "Erkek kol saati",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "description": "",
       "features": [
-        "Paslanma ve solmaya dayanıklı",
-        "Çelik kordon",
-        "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
-        "Safir çizilmelere dayanıklı cam",
-        "takvim",
-        "Ayarlanabilir kordon",
-        "Kasa çapı 32-36 mm",
-        "Kordon uzunluk 19 cm",
-        "Kordon genişlik 2 cm"
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
       ],
       "category": "saatler",
-      "price": 600,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -275,7 +418,7 @@
         "/uploads/1786817507485-hpy7z3.jpeg"
       ],
       "hidden": false,
-      "setEligible": true,
+      "setEligible": false,
       "isSet": false,
       "setItems": [],
       "writePositions": [],
@@ -286,25 +429,26 @@
       "descriptionWrapCh": 40,
       "featuresEditorWidth": 320,
       "featuresWrapCh": 40,
-      "shippingRibbonEnabled": true
+      "shippingRibbonEnabled": true,
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786817515929-0-8z49",
-      "name": "SHAZ - NOVA",
-      "description": "Erkek kol saati",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "description": "",
       "features": [
-        "Paslanma ve solmaya dayanıklı",
-        "Çelik kordon",
-        "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
-        "Safir çizilmelere dayanıklı cam",
-        "takvim",
-        "Ayarlanabilir kordon",
-        "Kasa çapı 32-36 mm",
-        "Kordon uzunluk 19 cm",
-        "Kordon genişlik 2 cm"
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
       ],
       "category": "saatler",
-      "price": 600,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 5,
       "badge": "",
@@ -314,7 +458,7 @@
         "/uploads/1786817507098-a2yibz.jpeg"
       ],
       "hidden": false,
-      "setEligible": true,
+      "setEligible": false,
       "isSet": false,
       "setItems": [],
       "writePositions": [],
@@ -325,25 +469,26 @@
       "descriptionWrapCh": 40,
       "featuresEditorWidth": 320,
       "featuresWrapCh": 40,
-      "shippingRibbonEnabled": true
+      "shippingRibbonEnabled": true,
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786817515929-1-nrm5",
-      "name": "SHAZ - NOVA",
-      "description": "Erkek kol saati",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "description": "",
       "features": [
-        "Paslanma ve solmaya dayanıklı",
-        "Çelik kordon",
-        "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
-        "Safir çizilmelere dayanıklı cam",
-        "takvim",
-        "Ayarlanabilir kordon",
-        "Kasa çapı 32-36 mm",
-        "Kordon uzunluk 19 cm",
-        "Kordon genişlik 2 cm"
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
       ],
       "category": "saatler",
-      "price": 600,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -353,7 +498,7 @@
         "/uploads/1786817507192-al58os.jpeg"
       ],
       "hidden": false,
-      "setEligible": true,
+      "setEligible": false,
       "isSet": false,
       "setItems": [],
       "writePositions": [],
@@ -364,25 +509,26 @@
       "descriptionWrapCh": 40,
       "featuresEditorWidth": 320,
       "featuresWrapCh": 40,
-      "shippingRibbonEnabled": true
+      "shippingRibbonEnabled": true,
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786817515929-3-jj54",
-      "name": "SHAZ - NOVA",
-      "description": "Erkek kol saati",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "description": "",
       "features": [
-        "Paslanma ve solmaya dayanıklı",
-        "Çelik kordon",
-        "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
-        "Safir çizilmelere dayanıklı cam",
-        "takvim",
-        "Ayarlanabilir kordon",
-        "Kasa çapı 32-36 mm",
-        "Kordon uzunluk 19 cm",
-        "Kordon genişlik 2 cm"
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
       ],
       "category": "saatler",
-      "price": 600,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -392,7 +538,7 @@
         "/uploads/1786817507339-1p4yqi.jpeg"
       ],
       "hidden": false,
-      "setEligible": true,
+      "setEligible": false,
       "isSet": false,
       "setItems": [],
       "writePositions": [],
@@ -403,25 +549,26 @@
       "descriptionWrapCh": 40,
       "featuresEditorWidth": 320,
       "featuresWrapCh": 40,
-      "shippingRibbonEnabled": true
+      "shippingRibbonEnabled": true,
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786817515929-4-okmm",
-      "name": "SHAZ - NOVA",
-      "description": "Erkek kol saati",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "description": "",
       "features": [
-        "Paslanma ve solmaya dayanıklı",
-        "Çelik kordon",
-        "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
-        "Safir çizilmelere dayanıklı cam",
-        "takvim",
-        "Ayarlanabilir kordon",
-        "Kasa çapı 32-36 mm",
-        "Kordon uzunluk 19 cm",
-        "Kordon genişlik 2 cm"
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
       ],
       "category": "saatler",
-      "price": 600,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -431,7 +578,7 @@
         "/uploads/1786817507370-5ak8ox.jpeg"
       ],
       "hidden": false,
-      "setEligible": true,
+      "setEligible": false,
       "isSet": false,
       "setItems": [],
       "writePositions": [],
@@ -442,25 +589,26 @@
       "descriptionWrapCh": 40,
       "featuresEditorWidth": 320,
       "featuresWrapCh": 40,
-      "shippingRibbonEnabled": true
+      "shippingRibbonEnabled": true,
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786817515929-5-de8a",
-      "name": "SHAZ - NOVA",
-      "description": "Erkek kol saati",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "description": "",
       "features": [
-        "Paslanma ve solmaya dayanıklı",
-        "Çelik kordon",
-        "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
-        "Safir çizilmelere dayanıklı cam",
-        "takvim",
-        "Ayarlanabilir kordon",
-        "Kasa çapı 32-36 mm",
-        "Kordon uzunluk 19 cm",
-        "Kordon genişlik 2 cm"
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
       ],
       "category": "saatler",
-      "price": 600,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -470,7 +618,7 @@
         "/uploads/1786817507409-5ss3kw.jpeg"
       ],
       "hidden": false,
-      "setEligible": true,
+      "setEligible": false,
       "isSet": false,
       "setItems": [],
       "writePositions": [],
@@ -481,25 +629,26 @@
       "descriptionWrapCh": 40,
       "featuresEditorWidth": 320,
       "featuresWrapCh": 40,
-      "shippingRibbonEnabled": true
+      "shippingRibbonEnabled": true,
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786817515929-7-jcik",
-      "name": "SHAZ - NOVA",
-      "description": "Erkek kol saati",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "description": "",
       "features": [
-        "Paslanma ve solmaya dayanıklı",
-        "Çelik kordon",
-        "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
-        "Safir çizilmelere dayanıklı cam",
-        "takvim",
-        "Ayarlanabilir kordon",
-        "Kasa çapı 32-36 mm",
-        "Kordon uzunluk 19 cm",
-        "Kordon genişlik 2 cm"
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
       ],
       "category": "saatler",
-      "price": 600,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -509,7 +658,7 @@
         "/uploads/1786817507458-bbr386.jpeg"
       ],
       "hidden": false,
-      "setEligible": true,
+      "setEligible": false,
       "isSet": false,
       "setItems": [],
       "writePositions": [],
@@ -520,25 +669,26 @@
       "descriptionWrapCh": 40,
       "featuresEditorWidth": 320,
       "featuresWrapCh": 40,
-      "shippingRibbonEnabled": true
+      "shippingRibbonEnabled": true,
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786817515929-9-6j0k",
-      "name": "SHAZ - NOVA",
-      "description": "Erkek kol saati",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "description": "",
       "features": [
-        "Paslanma ve solmaya dayanıklı",
-        "Çelik kordon",
-        "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
-        "Safir çizilmelere dayanıklı cam",
-        "takvim",
-        "Ayarlanabilir kordon",
-        "Kasa çapı 32-36 mm",
-        "Kordon uzunluk 19 cm",
-        "Kordon genişlik 2 cm"
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
       ],
       "category": "saatler",
-      "price": 600,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -548,7 +698,7 @@
         "/uploads/1786817507510-gdnv74.jpeg"
       ],
       "hidden": false,
-      "setEligible": true,
+      "setEligible": false,
       "isSet": false,
       "setItems": [],
       "writePositions": [],
@@ -559,18 +709,23 @@
       "descriptionWrapCh": 40,
       "featuresEditorWidth": 320,
       "featuresWrapCh": 40,
-      "shippingRibbonEnabled": true
+      "shippingRibbonEnabled": true,
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786825421633-0-33da",
-      "name": "SHAZ - LUMA",
-      "description": "Kadın erkek çift saati",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "description": "",
       "features": [
-        "Paslanma ve solmaya dayanıklı",
-        "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
-        "Safir çizilmelere dayanıklı cam",
-        "takvim",
-        "Ayarlanabilir kordon"
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
       ],
       "category": "saatler",
       "price": 1000,
@@ -583,7 +738,7 @@
         "/uploads/1786825417042-pxm14k.jpeg"
       ],
       "hidden": false,
-      "setEligible": true,
+      "setEligible": false,
       "isSet": false,
       "setItems": [],
       "writePositions": [],
@@ -595,18 +750,23 @@
       "descriptionWrapCh": 40,
       "featuresEditorWidth": 320,
       "featuresWrapCh": 40,
-      "shippingRibbonEnabled": true
+      "shippingRibbonEnabled": true,
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786825421633-1-qpgw",
-      "name": "SHAZ - LUMA",
-      "description": "Kadın erkek çift saati",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "description": "",
       "features": [
-        "Paslanma ve solmaya dayanıklı",
-        "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
-        "Safir çizilmelere dayanıklı cam",
-        "takvim",
-        "Ayarlanabilir kordon"
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
       ],
       "category": "saatler",
       "price": 1000,
@@ -619,7 +779,7 @@
         "/uploads/1786825417439-b8ex0d.jpeg"
       ],
       "hidden": false,
-      "setEligible": true,
+      "setEligible": false,
       "isSet": false,
       "setItems": [],
       "writePositions": [],
@@ -631,18 +791,23 @@
       "descriptionWrapCh": 40,
       "featuresEditorWidth": 320,
       "featuresWrapCh": 40,
-      "shippingRibbonEnabled": true
+      "shippingRibbonEnabled": true,
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786825421633-2-a94y",
-      "name": "SHAZ - LUMA",
-      "description": "Kadın erkek çift saati",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "description": "",
       "features": [
-        "Paslanma ve solmaya dayanıklı",
-        "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
-        "Safir çizilmelere dayanıklı cam",
-        "takvim",
-        "Ayarlanabilir kordon"
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
       ],
       "category": "saatler",
       "price": 1000,
@@ -655,7 +820,7 @@
         "/uploads/1786825417547-px2pyr.jpeg"
       ],
       "hidden": false,
-      "setEligible": true,
+      "setEligible": false,
       "isSet": false,
       "setItems": [],
       "writePositions": [],
@@ -667,7 +832,10 @@
       "descriptionWrapCh": 40,
       "featuresEditorWidth": 320,
       "featuresWrapCh": 40,
-      "shippingRibbonEnabled": true
+      "shippingRibbonEnabled": true,
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-0-11aq",
@@ -803,12 +971,20 @@
     },
     {
       "id": "urun-1786899570443-1-1xl3",
-      "name": "Yeni Ürün 2",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -820,21 +996,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422546-0-1wr",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-1-ysi",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-2-vbk",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-3-45v",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-4-4sj",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-5-v3p",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-6-9zp",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-2-xly6",
-      "name": "Yeni Ürün 3",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -846,21 +1126,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422546-0-sll",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-1-bv9",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-2-sfk",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-3-zd9",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-4-xsh",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-5-13d",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-6-7vk",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-3-oxdi",
-      "name": "Yeni Ürün 4",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -872,21 +1256,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422546-0-3t9",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-1-o8j",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-2-17c",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-3-obh",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-4-6ex",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-5-gel",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-6-lqp",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-4-unxa",
-      "name": "Yeni Ürün 5",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -898,21 +1386,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422546-0-9ul",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-1-5su",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-2-whu",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-3-4nh",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-4-j60",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-5-bu0",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-6-4ly",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-5-w1vb",
-      "name": "Yeni Ürün 6",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -924,21 +1516,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422546-0-wvp",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-1-x6h",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-2-djx",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-3-lz9",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-4-r2m",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-5-bcp",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-6-7h1",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-6-90hj",
-      "name": "Yeni Ürün 7",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -950,21 +1646,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422546-0-9x1",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-1-byn",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-2-qyt",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-3-e9k",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-4-763",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-5-3s9",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-6-3vf",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-7-rtyx",
-      "name": "Yeni Ürün 8",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -976,21 +1776,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422546-0-nv3",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-1-bmn",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-2-m6n",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-3-5wg",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-4-5an",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-5-bje",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-6-84p",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-8-k3w3",
-      "name": "Yeni Ürün 9",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -1002,21 +1906,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422546-0-vui",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-1-rxw",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-2-l0o",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-3-ps6",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-4-ffs",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-5-kcn",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-6-lmf",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-9-k358",
-      "name": "Yeni Ürün 10",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -1028,21 +2036,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422546-0-jih",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-1-kom",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-2-zoe",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-3-y7t",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-4-kfb",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-5-s8d",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-6-643",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-10-zmhi",
-      "name": "Yeni Ürün 11",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -1054,21 +2166,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422546-0-bpf",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-1-typ",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-2-xrg",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-3-4ec",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-4-esw",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-5-877",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-6-h8j",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-11-j355",
-      "name": "Yeni Ürün 12",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -1080,21 +2296,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422546-0-mjb",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-1-wb2",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-2-jmm",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-3-6gi",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-4-mwg",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-5-yiy",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-6-xf5",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-12-xe9r",
-      "name": "Yeni Ürün 13",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -1106,21 +2426,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422546-0-igy",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-1-81e",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-2-hh7",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422546-3-wy5",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-4-s1x",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-5-mm9",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-6-ahx",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-13-m0w1",
-      "name": "Yeni Ürün 14",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -1132,21 +2556,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422547-0-syi",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-1-10q",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-2-6va",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-3-ogl",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-4-yzu",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-5-q7r",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-6-veg",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-14-hda4",
-      "name": "Yeni Ürün 15",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -1158,21 +2686,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422547-0-27y",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-1-c2i",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-2-ido",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-3-4g3",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-4-l3l",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-5-cdi",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-6-aj3",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-15-m6tq",
-      "name": "Yeni Ürün 16",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -1184,21 +2816,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422547-0-63j",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-1-9um",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-2-i2e",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-3-04j",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-4-zno",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-5-hy5",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-6-p8o",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-16-3bya",
-      "name": "Yeni Ürün 17",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -1210,21 +2946,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422547-0-cf5",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-1-jxb",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-2-b3r",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-3-zgb",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-4-2st",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-5-bxr",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-6-cpu",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-17-6ai3",
-      "name": "Yeni Ürün 18",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -1236,21 +3076,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422547-0-pza",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-1-3to",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-2-5e1",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-3-mjx",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-4-vwj",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-5-bjp",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-6-67w",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-18-pns9",
-      "name": "Yeni Ürün 19",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -1262,21 +3206,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422547-0-pai",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-1-q5x",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-2-k76",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-3-a2w",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-4-2iq",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-5-go1",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-6-th6",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-19-3hay",
-      "name": "Yeni Ürün 20",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -1288,21 +3336,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422547-0-noq",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-1-hib",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-2-e3m",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-3-8gz",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-4-tij",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-5-0nw",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-6-ctf",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-20-sb6i",
-      "name": "Yeni Ürün 21",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -1314,21 +3466,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422547-0-2dt",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-1-5ol",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-2-46j",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-3-w5k",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-4-r41",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-5-7yu",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-6-frq",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-21-cpwj",
-      "name": "Yeni Ürün 22",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -1340,21 +3596,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422547-0-dqp",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-1-t25",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-2-z8f",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-3-l8i",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-4-gxm",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-5-47a",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-6-khf",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-22-tprf",
-      "name": "Yeni Ürün 23",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -1366,21 +3726,125 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422547-0-lm8",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-1-xpm",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-2-nsc",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-3-gqj",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-4-72y",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-5-zed",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-6-f1g",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786899570443-23-0cio",
-      "name": "Yeni Ürün 24",
-      "subtitle": "",
+      "name": "SHAZ - ERKEK AKSESUAR SETİ",
+      "subtitle": "Saat, cüzdan, çakmak, tesbih, kemer, bileklik, set kutusu",
       "description": "",
-      "features": [],
+      "features": [
+        "Takvim göstergeli, çelik kordonlu quartz kol saati",
+        "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+        "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+        "Metal püsküllü, cam plastik karışımlı tesbih",
+        "Ayarlanabilir metal tokalı SHAZ kemer",
+        "Metal detaylı ayarlanabilir erkek bileklik",
+        "Özel bölmeli, premium set kutusu"
+      ],
       "category": "setler",
-      "price": 0,
+      "price": 1000,
       "oldPrice": 0,
       "stock": 0,
       "badge": "",
@@ -1392,12 +3856,108 @@
       "hidden": false,
       "setEligible": false,
       "isSet": true,
-      "setItems": [],
+      "setItems": [
+        {
+          "id": "setitem-1786901422547-0-vwn",
+          "productId": "",
+          "name": "Saat",
+          "type": "",
+          "removeDiscount": 400,
+          "writePositions": [
+            "Kordon",
+            "arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-1-21t",
+          "productId": "",
+          "name": "Ccüzdan",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-2-c16",
+          "productId": "",
+          "name": "Çakmak",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-3-6fc",
+          "productId": "",
+          "name": "Tesbih",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-4-qcx",
+          "productId": "",
+          "name": "Kemer",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Toka arkası yanı",
+            "Toka önü yanı"
+          ],
+          "preferredWritePosition": "Toka arkası yanı",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-5-7t5",
+          "productId": "",
+          "name": "Bileklik",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Arka yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true
+        },
+        {
+          "id": "setitem-1786901422547-6-4gp",
+          "productId": "",
+          "name": "Set kutusu",
+          "type": "",
+          "removeDiscount": 50,
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": false,
+          "walletPhotoEnabled": true
+        }
+      ],
       "writePositions": [],
       "preferredWritePosition": "",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "subcategoryId": ""
+      "subcategoryId": "",
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     }
   ],
   "builder": {
