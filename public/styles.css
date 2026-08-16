@@ -2756,3 +2756,67 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
   .builderPricingRow{grid-template-columns:1fr 1fr;gap:6px}
   .builderPricingRow>button{grid-column:1/-1;width:100%}
 }
+
+
+/* V91 — yalnızca Kendi Setini Oluştur üst sabit alanı ve seçim özeti fiyat hizası */
+.builderTopSticky{
+  position:sticky!important;
+  top:0!important;
+  z-index:24!important;
+  background:rgba(248,249,250,.985)!important;
+  margin:0 -20px 8px!important;
+  padding:0 20px 6px!important;
+  border-bottom:1px solid #e5e8ec!important;
+  box-shadow:0 5px 14px rgba(16,24,40,.045)!important;
+  backdrop-filter:blur(10px)!important;
+}
+.builderTopSticky>.wizardHead{
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:8px!important;
+  margin:0 0 8px!important;
+  padding:12px 0 2px!important;
+}
+.builderTopSticky>.wizardHead>div{min-width:0!important;text-align:center!important}
+.builderTopSticky>.wizardHead .wizardProgress{text-align:center!important;margin:0 auto 2px!important}
+.builderTopSticky>.wizardHead h2{text-align:center!important;margin:0!important;line-height:1.15!important}
+.builderTopSticky>.wizardHead .pill{white-space:nowrap!important}
+.builderTopSticky .builderStepMeta{margin-top:0!important}
+.builderTopSticky .builderProgressBar{margin-bottom:7px!important}
+.builderTopSticky .builderAllShownSticky{
+  position:static!important;
+  top:auto!important;
+  z-index:auto!important;
+  margin:5px auto 0!important;
+}
+.builderSummaryItem{
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr) auto!important;
+  align-items:center!important;
+  column-gap:11px!important;
+}
+.builderSummaryInfo{min-width:0!important}
+.builderSummaryPrices{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:9px!important;
+  white-space:nowrap!important;
+  margin:0!important;
+  text-align:right!important;
+}
+.builderSummaryPrices del{color:#8b919a!important}
+.builderSummaryPrices strong{color:#111!important}
+@media(max-width:700px){
+  .builderTopSticky{margin:0 -16px 7px!important;padding:0 14px 6px!important}
+  .builderTopSticky>.wizardHead{padding-left:0!important;padding-right:0!important}
+  .builderSummaryItem{grid-template-columns:52px minmax(0,1fr) auto!important;column-gap:9px!important}
+  .builderSummaryPrices{gap:7px!important;font-size:10px!important}
+  .builderSummaryPrices strong{font-size:10px!important}
+}
+@media(max-width:430px){
+  .builderSummaryItem{grid-template-columns:50px minmax(92px,1fr) auto!important;column-gap:7px!important}
+  .builderSummaryPrices{flex-direction:row!important;gap:5px!important}
+  .builderSummaryPrices del,.builderSummaryPrices strong{font-size:9px!important}
+}
