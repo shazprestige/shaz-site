@@ -38,7 +38,7 @@
     {
       "id": "gozlukler",
       "name": "Gözlükler",
-      "order": 7,
+      "order": 8,
       "hidden": false,
       "cover": "",
       "size": "small",
@@ -80,7 +80,7 @@
     {
       "id": "kategori-1786903369075",
       "name": "Bileklik",
-      "order": 9,
+      "order": 7,
       "hidden": false,
       "cover": "",
       "subcategories": []
