@@ -4011,13 +4011,17 @@
       "subcategoryId": "",
       "shippingRibbonEnabled": true,
       "shippingRibbonText": "Kargo Bedava",
-      "shippingRibbonColor": "#444444"
+      "shippingRibbonColor": "#444444",
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40
     },
     {
       "id": "urun-1786910492353-3-rxft",
       "name": "SHAZ - GÖZLÜK",
       "subtitle": "Erkek gözlük",
-      "description": "Siyah çerçeve · Füme/gradient cam · Gold detaylı · Dikdörtgen tasarım",
+      "description": "Siyah çerçeve · Siyah cam · Gold detaylı · Klasik tasarım",
       "features": [
         "Polarize",
         "UV200"
@@ -4046,7 +4050,11 @@
       "subcategoryId": "",
       "shippingRibbonEnabled": true,
       "shippingRibbonText": "Kargo Bedava",
-      "shippingRibbonColor": "#444444"
+      "shippingRibbonColor": "#444444",
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40
     },
     {
       "id": "urun-1786910492353-4-ukzz",
