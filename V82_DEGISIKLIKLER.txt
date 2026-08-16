@@ -1,0 +1,7 @@
+V82
+- Yalnızca ana ürün kartlarının görsel/bilgi oranı düzenlendi.
+- Ürün fotoğrafı kart içinde biraz daha aşağı uzatıldı.
+- Ürün adı ve açıklama alanı fotoğrafın altında daha dengeli konumlandı; fiyat ile açıklama arasındaki gereksiz boşluk azaltıldı.
+- Ürün ayarlarına ürün bazlı kısa şerit eklendi: göster/gizle, metin ve renk.
+- Şerit ürün kartındaki fotoğrafın alt kenarında Trendyol benzeri görünür.
+- Bunun dışında hiçbir sistem değiştirilmedi.

@@ -1,0 +1,6 @@
+V81
+- Yalnızca müşteri sitesindeki üst kategori şeridi düzenlendi.
+- Mobilde yatay devam eden kategorinin bir kısmı görünür kalacak şekilde boşluk/ölçüler ayarlandı.
+- İlk üç sıradaki kategori seçildiğinde şerit başlangıçta kalır.
+- Daha sağdaki bir kategori seçildiğinde seçili sekme şeridin merkezine/logonun altına doğru kayar ve sağdaki kategoriler görünür olur.
+- Ürün, fiyat, kampanya, sepet, favori, builder, admin, veri ve sunucu sistemlerine dokunulmadı.

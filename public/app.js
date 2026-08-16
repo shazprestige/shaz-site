@@ -200,6 +200,22 @@ function subcategoryChooserHtml(category){
 }
 function selectSubcategory(id){activeSubcategory=id||'';renderProducts($('#search')?.value||'');requestAnimationFrame(()=>document.querySelector('.subcategoryChooser')?.scrollIntoView({behavior:'smooth',block:'nearest'}))}
 
+function positionActiveCategoryTab(behavior='smooth'){
+  const nav=$('#catalogNav');
+  if(!nav)return;
+  const tabs=[...nav.querySelectorAll('.tab')];
+  const active=tabs.find(x=>x.classList.contains('active'));
+  if(!active)return;
+  const index=tabs.indexOf(active);
+  // İlk üç kategori başlangıçta sabit görünür. Daha sağdaki bir kategori
+  // seçildiğinde seçili kategori logonun altına/menünün merkezine doğru gelir
+  // ve sağdaki diğer kategoriler görünür hale gelir.
+  if(index<=2){nav.scrollTo({left:0,behavior});return}
+  const desired=active.offsetLeft-(nav.clientWidth-active.offsetWidth)/2;
+  const max=Math.max(0,nav.scrollWidth-nav.clientWidth);
+  nav.scrollTo({left:Math.max(0,Math.min(max,desired)),behavior});
+}
+
 function renderCategories(){
   const cats=[{id:'tum',name:'Tüm Ürünler',order:-1},...catalog.categories.filter(c=>!c.hidden&&c.id!=='tum')].sort((a,b)=>(a.order??0)-(b.order??0));
   const nav=$('#catalogNav');
@@ -208,6 +224,7 @@ function renderCategories(){
   nav.querySelectorAll('.tab').forEach(btn=>{
     btn.addEventListener('click',()=>setCategory(btn.dataset.categoryId,btn.dataset.categoryName,{scroll:true}));
   });
+  requestAnimationFrame(()=>positionActiveCategoryTab('auto'));
 }
 
 let categoryHubParentId='';
@@ -317,7 +334,8 @@ function renderProducts(filter=''){
     const name=p.name||'SHAZ Ürün';
     const desc=p.description?`<p class="productDescription" data-preview-field="description" style="--product-text-wrap:${Math.max(18,Number(p.descriptionWrapCh||52))}ch">${escapeHtml(p.description)}</p>`:'';
     const badgeColor=['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange';
-    return `<div class="card productCardLink" data-product-id="${escapeAttr(p.id)}" role="button" tabindex="0" onclick="openProductDetail('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProductDetail('${p.id}')}"><div class="photo" data-preview-field="photo">${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge badge-${badgeColor}" data-preview-field="badge">${escapeHtml(p.badge)}</span>`:''}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}</div></div>`;
+    const shippingRibbon=(p.shippingRibbonEnabled&&String(p.shippingRibbonText||'').trim())?`<div class="productShippingRibbon" style="--shipping-ribbon-color:${escapeAttr(p.shippingRibbonColor||'#444444')}">${escapeHtml(String(p.shippingRibbonText).trim())}</div>`:'';
+    return `<div class="card productCardLink" data-product-id="${escapeAttr(p.id)}" role="button" tabindex="0" onclick="openProductDetail('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProductDetail('${p.id}')}"><div class="photo" data-preview-field="photo">${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge badge-${badgeColor}" data-preview-field="badge">${escapeHtml(p.badge)}</span>`:''}${shippingRibbon}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}</div></div>`;
   }).join(''):`<div class="panel subcategoryEmpty"><b>Bu bölümde henüz ürün yok.</b></div>`;
   $('#productsList').innerHTML=chooser+cards;
 }
@@ -325,7 +343,7 @@ function updateFavoriteBadge(){if($('#favBadge'))$('#favBadge').textContent=favo
 function toggleFav(id,e){e?.stopPropagation();favorites.has(id)?favorites.delete(id):favorites.add(id);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));updateFavoriteBadge();renderProducts($('#search')?.value||'')}
 function removeFavorite(id){favorites.delete(id);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));updateFavoriteBadge();renderProducts($('#search')?.value||'');showFavorites()}
 function clearFavorites(){if(!favorites.size)return;favorites.clear();localStorage.setItem('shazFavs','[]');updateFavoriteBadge();renderProducts($('#search')?.value||'');showFavorites()}
-function showFavorites(){const ps=catalog.products.filter(p=>favorites.has(p.id));openDrawer(`<div class=wizardHead><h2>Favorilerim</h2><button class="pill" onclick=closeDrawer()>Kapat</button></div>${ps.length?`<div style="display:flex;justify-content:flex-end;margin:0 0 14px"><button class="pill" onclick="clearFavorites()">Favorileri Temizle</button></div>${ps.map(p=>`<div class=wizardCard><b>${escapeHtml(p.name)}</b><br>${money(p.price)}<br><br><div style="display:flex;gap:8px;flex-wrap:wrap"><button class=btn onclick="openProductDetail('${p.id}','favorites')">Ürünü İncele</button><button class="pill" onclick="removeFavorite('${p.id}')">Favoriden Kaldır</button></div></div>`).join('')}`:'Henüz favoriniz yok.'}`)}
+function showFavorites(){const ps=catalog.products.filter(p=>favorites.has(p.id));openDrawer(`<div class=wizardHead><h2>Favorilerim</h2><button class="pill" onclick=closeDrawer()>Kapat</button></div>${ps.length?`<div style="display:flex;justify-content:flex-end;margin:0 0 14px"><button class="pill" onclick="clearFavorites()">Favorileri Temizle</button></div>${ps.map(p=>{const img=mainProductImage(p);return `<div class=wizardCard><div style="display:grid;grid-template-columns:88px minmax(0,1fr);gap:14px;align-items:center"><button type="button" onclick="openProductDetail('${p.id}','favorites')" style="width:88px;height:88px;padding:0;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer" aria-label="${escapeAttr(p.name||'Ürün')} ürününü incele">${img?`<img src="${escapeAttr(img)}" alt="${escapeAttr(p.name||'Ürün')}" style="width:100%;height:100%;object-fit:contain;display:block">`:'⌚'}</button><div style="min-width:0"><b>${escapeHtml(p.name)}</b><br>${money(p.price)}</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class=btn onclick="openProductDetail('${p.id}','favorites')">Ürünü İncele</button><button class="pill" onclick="removeFavorite('${p.id}')">Favoriden Kaldır</button></div></div>`}).join('')}`:'Henüz favoriniz yok.'}`)}
 function openDrawer(html){$('#overlay').classList.remove('hidden');$('#drawer').classList.remove('hidden');$('#drawer').innerHTML=html}
 function closeDrawer(){$('#overlay').classList.add('hidden');$('#drawer').classList.add('hidden')}
 function toast(msg){const t=$('#toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
@@ -1063,13 +1081,15 @@ function getBuilderCategories(){
   return ordered.map(id=>catalog.categories.find(c=>c.id===id)).filter(Boolean).filter(c=>!c.hidden);
 }
 function getBuilderProducts(categoryId){
-  return catalog.products.filter(p=>
+  const eligible=catalog.products.filter(p=>
     !p.hidden &&
     !p.isSet &&
     p.category!=='setler' &&
     p.category===categoryId &&
     p.setEligible!==false
   );
+  const configured=catalog.builder?.allowedProducts?.[categoryId];
+  return Array.isArray(configured)?eligible.filter(p=>configured.includes(p.id)):eligible;
 }
 function builderBackFromCategory(){
   if(!customBuilder||customBuilder.index<=0){closeDrawer();return;}

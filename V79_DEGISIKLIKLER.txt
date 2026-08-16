@@ -1,0 +1,5 @@
+V79 — FAVORİLERDE ÜRÜN FOTOĞRAFI
+
+- Favorilerim ekranındaki her ürün kartına ürünün ana fotoğrafı eklendi.
+- Fotoğrafa tıklamak da Ürünü İncele ile aynı ürün detayını açar.
+- Başka hiçbir çalışan dosya değiştirilmedi.

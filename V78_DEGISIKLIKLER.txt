@@ -1,0 +1,5 @@
+V78
+- Kendi Setini Oluştur ürün kartları PC ve mobilde daha kompakt hale getirildi; görseller kırpılmadan görünür.
+- Yönetimde Kendi Setini Oluştur kategori sırası oklar yerine tut-sürükle ile ayarlanır.
+- Seçili her kategori için müşteriye gösterilecek ürünler küçük açılır listeden ayrı ayrı seçilebilir.
+- Diğer sistemlere dokunulmadı.

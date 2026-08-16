@@ -2225,3 +2225,129 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
 /* v77: urun listesinden hizli alt kategori secimi */
 .compactSubcategoryQuick{display:flex;align-items:center;gap:4px;border:1px solid #dfe3e7;border-radius:7px;padding:3px 5px;background:#fff;font-size:8px;color:#6d737b;white-space:nowrap}.compactSubcategoryQuick select{border:0;background:transparent;font-size:9px;max-width:115px;outline:0;padding:2px}.compactSubcategoryQuick span{font-size:8px}
 @media(max-width:900px){.compactSubcategoryQuick{max-width:150px}.compactSubcategoryQuick select{max-width:95px}}
+
+
+/* v78 — Kendi Setini Oluştur: kompakt ürünler + sürükle bırak kategori/ürün seçimi */
+@media(min-width:701px){
+  .builderProductGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:7px!important}
+  .builderProductPhoto{height:78px!important;padding:4px!important}
+  .builderProductBody{padding:5px 6px!important}
+  .builderProductBody b{font-size:10px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .builderProductBody small{font-size:8px!important}
+  .builderSelectMark{width:20px!important;height:20px!important;top:5px!important;right:5px!important;font-size:10px!important}
+}
+@media(max-width:700px){
+  .builderProductGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}
+  .builderProductPhoto{height:76px!important;padding:4px!important}
+  .builderProductBody{padding:5px 6px!important}
+  .builderProductBody b{font-size:10px!important}
+  .builderProductBody small{font-size:8px!important}
+}
+.builderOrderRow{display:grid!important;grid-template-columns:22px minmax(115px,1fr) minmax(130px,1.2fr)!important;align-items:center!important;gap:7px!important;padding:6px!important;border:1px solid #e7eaee!important;border-radius:8px!important;background:#fff!important;margin:5px 0!important}
+.builderOrderRow[draggable=true]{cursor:default}
+.builderDragHandle{font-size:18px;line-height:1;color:#7b8189;cursor:grab;user-select:none;text-align:center}.builderDragHandle:active{cursor:grabbing}
+.builderOrderText{min-width:0}.builderOrderText b{font-size:11px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.builderOrderText small{font-size:8px!important;color:#858b93!important}
+.builderProductPicker{margin:0!important;border:0!important;background:transparent!important;min-width:0}.builderProductPicker summary{cursor:pointer;font-size:10px;font-weight:800;list-style:none;border:1px solid #dfe3e8;border-radius:7px;padding:5px 7px;background:#fafbfc}.builderProductPicker summary::-webkit-details-marker{display:none}.builderProductPicker summary em{font-style:normal;color:#7d838b;font-weight:600;margin-left:3px}
+.builderMiniProductList{display:grid;grid-template-columns:1fr;gap:3px;max-height:150px;overflow:auto;padding:5px 1px 1px}.builderMiniProduct{display:flex;align-items:center;gap:5px;font-size:9px;padding:3px 4px;border-radius:5px;background:#f7f8f9;min-width:0}.builderMiniProduct input{width:13px!important;height:13px!important;flex:0 0 13px}.builderMiniProduct span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:900px){.builderOrderRow{grid-template-columns:22px 1fr!important}.builderProductPicker{grid-column:2}}
+
+/* ===== V80 — ürün rozeti yalnızca görsel oran düzeltmesi =====
+   Mevcut etiket metni ve renk sistemi korunur; daire küçülür, metin daha baskın kalır. */
+.badge{
+  width:46px!important;
+  height:46px!important;
+  max-width:46px!important;
+  padding:2px 0!important;
+  font-size:7.6px!important;
+  line-height:.94!important;
+  letter-spacing:.12px!important;
+  overflow:visible!important;
+  box-shadow:0 3px 9px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.28)!important;
+}
+.badge:after{inset:3px!important}
+.detailProductBadge{
+  width:54px!important;
+  height:54px!important;
+  max-width:54px!important;
+  padding:3px 0!important;
+  font-size:8.2px!important;
+}
+@media(max-width:520px){
+  .badge{
+    left:7px!important;
+    top:7px!important;
+    width:42px!important;
+    height:42px!important;
+    max-width:42px!important;
+    padding:1px 0!important;
+    font-size:7.1px!important;
+    line-height:.92!important;
+    letter-spacing:.08px!important;
+  }
+  .badge:after{inset:2px!important}
+  .detailProductBadge{
+    left:9px!important;
+    top:9px!important;
+    width:49px!important;
+    height:49px!important;
+    max-width:49px!important;
+    padding:2px 0!important;
+    font-size:7.8px!important;
+  }
+}
+
+
+/* v81: mobil üst kategori şeridi — devam eden kategoriyi belli et + seçileni merkeze taşı */
+@media(max-width:700px){
+  #catalogNav.tabs{
+    gap:14px!important;
+    padding-left:4px!important;
+    padding-right:30px!important;
+    scroll-padding-inline:4px 30px!important;
+    -webkit-overflow-scrolling:touch;
+  }
+  #catalogNav .tab{
+    max-width:none!important;
+    padding-left:5px!important;
+    padding-right:5px!important;
+  }
+  /* Sekmelerin toplam genişliği ekrana taşıyorsa sağdaki sıradaki kategorinin
+     birkaç harfi görünür; kullanıcı yatay kaydırma olduğunu fark eder. */
+  #catalogNav.tabs:after{content:"";flex:0 0 18px}
+}
+
+
+/* ===== V82 — yalnızca ürün kartı oranı + ürün bazlı kısa kargo şeridi ===== */
+/* Fotoğraf biraz daha derin; bilgi alanı aynı kart içinde daha aşağıdan başlar. */
+#productsList .productCardLink .photo{
+  aspect-ratio:6 / 5!important;
+}
+#productsList .productCardLink .info{
+  padding-top:13px!important;
+  padding-bottom:10px!important;
+}
+#productsList .productCardLink .info h3{margin-bottom:6px!important}
+#productsList .productCardLink .productDescription{
+  margin-bottom:5px!important;
+  min-height:0!important;
+}
+#productsList .productCardLink .price{margin-top:7px!important}
+.productShippingRibbon{
+  position:absolute;left:0;right:0;bottom:0;z-index:4;
+  min-height:22px;display:flex;align-items:center;justify-content:center;
+  padding:3px 8px;box-sizing:border-box;
+  background:var(--shipping-ribbon-color,#444);color:#fff;
+  font-size:9px;font-weight:800;line-height:1.15;letter-spacing:.1px;
+  text-align:center;box-shadow:0 -1px 0 rgba(255,255,255,.18) inset;
+}
+.shippingRibbonAdminToggle{display:flex;align-items:center;gap:6px;font-size:11px;margin:2px 0 6px}
+.shippingRibbonAdminToggle input{width:15px!important;height:15px!important}
+.shippingRibbonColorRow{display:flex;align-items:center;gap:7px;margin-top:6px;font-size:10px;color:#667085}
+.shippingRibbonColorRow input[type=color]{width:36px;height:28px;padding:1px;border:1px solid #dfe3e8;border-radius:6px;background:#fff}
+@media(max-width:520px){
+  #productsList .productCardLink .photo{aspect-ratio:1.17 / 1!important}
+  #productsList .productCardLink .info{padding-top:11px!important;padding-bottom:9px!important}
+  #productsList .productCardLink .productDescription{margin-bottom:4px!important}
+  #productsList .productCardLink .price{margin-top:6px!important}
+  .productShippingRibbon{min-height:19px;padding:2px 6px;font-size:8px}
+}

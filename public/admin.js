@@ -284,13 +284,14 @@ function catalogGlobalTools(){
   catalog.builder=catalog.builder||{allowedCategories:[],categoryOrder:[],pricingRules:[]};
   catalog.builder.allowedCategories=Array.isArray(catalog.builder.allowedCategories)?catalog.builder.allowedCategories:[];
   catalog.builder.categoryOrder=Array.isArray(catalog.builder.categoryOrder)?catalog.builder.categoryOrder:[];
+  catalog.builder.allowedProducts=(catalog.builder.allowedProducts&&typeof catalog.builder.allowedProducts==='object')?catalog.builder.allowedProducts:{};
   const pricing=catalog.personalizationPricing;
   const builderOrder=builderOrderedCategoryIds();
   const allowed=catalog.categories.filter(c=>c.id!=='tum'&&!isSetCategory(c.id)).map(c=>{
     const checked=(catalog.builder.allowedCategories||[]).includes(c.id);
     return `<label class=setItemToggle><span><b>${esc(c.name)}</b><small class=muted>Müşterinin kendi setini oluştururken seçebileceği kategori</small></span><input type=checkbox ${checked?'checked':''} onchange="toggleBuilderCategory('${attr(c.id)}',this.checked)"></label>`;
   }).join('');
-  const builderOrderHtml=builderOrder.length?builderOrder.map((id,pos)=>{const c=catalog.categories.find(x=>x.id===id);return c?`<div class=builderOrderRow><span><b>${pos+1}. ${esc(c.name)}</b><small>Müşteride ${pos+1}. adım</small></span><span class=builderOrderBtns><button type=button class=smallBtn onclick="moveBuilderCategory('${attr(id)}',-1)" ${pos===0?'disabled':''}>↑</button><button type=button class=smallBtn onclick="moveBuilderCategory('${attr(id)}',1)" ${pos===builderOrder.length-1?'disabled':''}>↓</button></span></div>`:''}).join(''):'<div class=help>Önce yukarıdan en az bir kategori seç.</div>';
+  const builderOrderHtml=builderOrder.length?builderOrder.map((id,pos)=>{const c=catalog.categories.find(x=>x.id===id);if(!c)return '';const products=builderAdminProductsForCategory(id);const explicit=Array.isArray(catalog.builder.allowedProducts?.[id]);const selected=explicit?catalog.builder.allowedProducts[id]:products.map(p=>p.id);return `<div class=builderOrderRow draggable=true data-builder-category="${attr(id)}" ondragstart="builderCategoryDragStart(event,'${attr(id)}')" ondragover="builderCategoryDragOver(event)" ondrop="builderCategoryDrop(event,'${attr(id)}')"><span class=builderDragHandle title="Tut ve sürükle">⠿</span><span class=builderOrderText><b>${pos+1}. ${esc(c.name)}</b><small>Tutup sürükleyerek sırala</small></span><details class=builderProductPicker><summary>Ürünler <em>${selected.length}/${products.length}</em></summary><div class=builderMiniProductList>${products.length?products.map(p=>`<label class=builderMiniProduct><input type=checkbox ${selected.includes(p.id)?'checked':''} onchange="toggleBuilderProduct('${attr(id)}','${attr(p.id)}',this.checked)"><span>${esc(p.name)}</span></label>`).join(''):'<small>Bu kategoride uygun ürün yok.</small>'}</div></details></div>`}).join(''):'<div class=help>Önce yukarıdan en az bir kategori seç.</div>';
   const categoryOptions=catalog.categories.filter(c=>c.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0)).map(c=>`<option value="${attr(c.id)}">${esc(c.name)}</option>`).join('');
   return `<div class="panel unifiedCatalogSettings">
     <details class=simpleAdminDetails><summary>Genel ürün / set ayarları <small>Ürünlerle ilgili ortak ayarlar</small></summary><div class=simpleDetailsBody>
@@ -300,7 +301,7 @@ function catalogGlobalTools(){
         ${input('3. ve sonrası','catalog.personalizationPricing.thirdPlus',pricing.thirdPlus,'Üçüncü ve sonraki her yazılı ürün için ücret.','.drawer','number')}
         ${input('Cüzdana fotoğraf işleme','catalog.walletPhotoFee',catalog.walletPhotoFee??25,'Fotoğraf işlemesi normal yazı ücretlerinden bağımsız ek ücrettir.','.drawer','number')}
       </div>
-      <details class=nestedAdminDetails><summary>Kendi Setini Oluştur kategorileri</summary><div class=setItemList>${allowed}</div><div class=help>Burada seçtiklerin yalnızca müşterinin “Kendi Setini Oluştur” akışında görünür.</div><div class=builderOrderBox><b>Müşteride gösterilecek sıra</b><div class=help>↑ ↓ ile ilk hangi kategori seçilsin, sonra hangisi gelsin ayarlayabilirsin.</div>${builderOrderHtml}</div></details>
+      <details class=nestedAdminDetails><summary>Kendi Setini Oluştur kategorileri</summary><div class=setItemList>${allowed}</div><div class=help>Burada seçtiklerin yalnızca müşterinin “Kendi Setini Oluştur” akışında görünür.</div><div class=builderOrderBox><b>Müşteride gösterilecek sıra</b><div class=help>Soldaki ⠿ işaretinden tutup sürükle. Ürünler bölümünden o kategoride müşteriye hangi ürünlerin çıkacağını seçebilirsin.</div>${builderOrderHtml}</div></details>
     </div></details>
     <details class=simpleAdminDetails><summary>Toplu ürün yükle <small>Birden fazla fotoğraf = ayrı ayrı ürün</small></summary><div class=simpleDetailsBody>
       <div class=grid2><div class=field><label><b>Hangi kategoriye yüklensin?</b></label><select id=bulkUploadCategory class=formControl>${categoryOptions}</select><div class=help>Örn. Saat seçip 20 fotoğraf yüklersen 20 ayrı saat ürünü oluşur.</div></div>
@@ -556,8 +557,16 @@ function builderOrderedCategoryIds(){
   const allowed=(catalog.builder.allowedCategories||[]).filter(id=>catalog.categories.some(c=>c.id===id));
   const order=(catalog.builder.categoryOrder||[]).filter(id=>allowed.includes(id));allowed.forEach(id=>{if(!order.includes(id))order.push(id)});catalog.builder.categoryOrder=order;return order;
 }
-function moveBuilderCategory(id,dir){
-  const order=builderOrderedCategoryIds(),i=order.indexOf(id),j=i+(dir<0?-1:1);if(i<0||j<0||j>=order.length)return;[order[i],order[j]]=[order[j],order[i]];catalog.builder.categoryOrder=order;changed('.builderCard');renderCatalog();
+let builderDraggedCategoryId='';
+function builderCategoryDragStart(ev,id){builderDraggedCategoryId=id;try{ev.dataTransfer.effectAllowed='move';ev.dataTransfer.setData('text/plain',id)}catch(e){}}
+function builderCategoryDragOver(ev){ev.preventDefault();try{ev.dataTransfer.dropEffect='move'}catch(e){}}
+function builderCategoryDrop(ev,targetId){ev.preventDefault();const sourceId=builderDraggedCategoryId||(()=>{try{return ev.dataTransfer.getData('text/plain')}catch(e){return ''}})();builderDraggedCategoryId='';if(!sourceId||sourceId===targetId)return;const order=builderOrderedCategoryIds();const from=order.indexOf(sourceId),to=order.indexOf(targetId);if(from<0||to<0)return;order.splice(to,0,order.splice(from,1)[0]);catalog.builder.categoryOrder=order;changed('.builderCard');renderCatalog();}
+function builderAdminProductsForCategory(categoryId){return (catalog.products||[]).filter(p=>!p.hidden&&!p.isSet&&p.category!=='setler'&&p.category===categoryId&&p.setEligible!==false)}
+function toggleBuilderProduct(categoryId,productId,checked){
+  catalog.builder=catalog.builder||{};catalog.builder.allowedProducts=(catalog.builder.allowedProducts&&typeof catalog.builder.allowedProducts==='object')?catalog.builder.allowedProducts:{};
+  const all=builderAdminProductsForCategory(categoryId).map(p=>p.id);let list=Array.isArray(catalog.builder.allowedProducts[categoryId])?[...catalog.builder.allowedProducts[categoryId]]:[...all];
+  if(checked){if(!list.includes(productId))list.push(productId)}else list=list.filter(id=>id!==productId);
+  catalog.builder.allowedProducts[categoryId]=list.filter(id=>all.includes(id));changed('.builderCard');
 }
 
 async function uploadCategoryCover(ci){
@@ -747,6 +756,12 @@ Paslanmaz çelik kasa"
           <option value="purple" ${p.badgeColor==='purple'?'selected':''}>Mor</option>
           <option value="red" ${p.badgeColor==='red'?'selected':''}>Kırmızı</option>
         </select>
+      </div>
+      <div class=field><label>Kart üzeri kısa şerit</label>
+        <label class=shippingRibbonAdminToggle><input type=checkbox ${p.shippingRibbonEnabled?'checked':''} onchange="catalog.products[${i}].shippingRibbonEnabled=this.checked;changed('.drawer')"> Göster</label>
+        <input class=formControl value="${attr(p.shippingRibbonText||'Kargo Bedava')}" placeholder="Örn: Kargo Bedava" oninput="catalog.products[${i}].shippingRibbonText=this.value;changed('.drawer')">
+        <div class=shippingRibbonColorRow><input type=color value="${attr(p.shippingRibbonColor||'#444444')}" oninput="catalog.products[${i}].shippingRibbonColor=this.value;changed('.drawer')"><span>Şerit rengi</span></div>
+        <div class=help>Yalnızca bu ürün kartının fotoğrafının alt kenarında görünür. Kapatırsan hiç gösterilmez.</div>
       </div>
     </div>
 

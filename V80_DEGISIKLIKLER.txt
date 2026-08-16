@@ -1,0 +1,8 @@
+SHAZ V80
+
+Yalnızca ürün kartlarındaki renkli yuvarlak etiketin görsel oranı düzenlendi.
+- Etiket dairesi küçültüldü.
+- Yazı boyutu yaklaşık aynı algıda tutuldu; küçük dairenin üzerinde daha belirgin görünür.
+- Mevcut turuncu/mor/kırmızı renk seçenekleri ve etiket metni sistemi değiştirilmedi.
+- Mobil ve masaüstü oranları ayrı ayarlandı.
+- Site işlevleri, yönetim paneli, ürün verileri, sipariş, sepet, kampanya, favori, alt kategori, Kendi Setini Oluştur ve Google E-Tablo kodlarına dokunulmadı.
