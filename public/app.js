@@ -961,7 +961,8 @@ function campaignProductMatches(rule,p){
   const scope=rule.scopeType||'category';
   if(scope==='all')return true;
   if(scope==='products')return (rule.productIds||[]).includes(p.id);
-  return (rule.categoryIds||[]).includes(p.category);
+  if(!(rule.categoryIds||[]).includes(p.category))return false;
+  return !(rule.excludedProductIds||[]).includes(p.id);
 }
 function cartUnitsForCampaign(rule){
   const units=[];

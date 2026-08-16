@@ -346,6 +346,12 @@ async function bulkCreateProductsFromPhotos(){
   finally{if(btn){btn.disabled=false;btn.textContent='Seçili Fotoğrafları Ayrı Ürünler Olarak Yükle'}}
 }
 
+function discountCampaignProductChoice(rule,index,p,mode='include'){
+  const image=p.image||p.images?.[0]||'';
+  const checked=mode==='exclude'?!(rule.excludedProductIds||[]).includes(p.id):(rule.productIds||[]).includes(p.id);
+  const handler=mode==='exclude'?`toggleDiscountCampaignCategoryProduct(${index},'${attr(p.id)}',this.checked)`:`toggleDiscountCampaignProduct(${index},'${attr(p.id)}',this.checked)`;
+  return `<label class="campaignProductChoice"><input type=checkbox ${checked?'checked':''} onchange="${handler}">${image?`<img src="${attr(image)}" alt="">`:'<span class=campaignProductNoImage>—</span>'}<span><b>${esc(p.name||'Ürün')}</b><small>${Number(p.price||0)} TL</small></span></label>`;
+}
 function discountCampaignScopeProducts(rule,index){
   const scope=rule.scopeType||'category';
   if(scope==='all')return '<div class=help>Bu kampanya sepetteki tüm ürünleri sayar.</div>';
@@ -353,11 +359,18 @@ function discountCampaignScopeProducts(rule,index){
     const groups=(catalog.categories||[]).filter(c=>c.id!=='tum').map(c=>{
       const ps=(catalog.products||[]).filter(p=>p.category===c.id);
       if(!ps.length)return '';
-      return `<details class="campaignScopeGroup"><summary>${esc(c.name||c.id)} <small>${ps.length} ürün</small></summary><div class="campaignScopeChoices">${ps.map(p=>`<label><input type=checkbox ${(rule.productIds||[]).includes(p.id)?'checked':''} onchange="toggleDiscountCampaignProduct(${index},'${attr(p.id)}',this.checked)"> ${esc(p.name)}</label>`).join('')}</div></details>`;
+      return `<details class="campaignScopeGroup"><summary>${esc(c.name||c.id)} <small>${ps.length} ürün</small></summary><div class="campaignScopeProductGrid">${ps.map(p=>discountCampaignProductChoice(rule,index,p,'include')).join('')}</div></details>`;
     }).join('');
     return `<div class=campaignScopeBox><b>Uygulanacak ürünler</b>${groups||'<div class=help>Ürün bulunamadı.</div>'}</div>`;
   }
-  return `<div class=campaignScopeBox><b>Uygulanacak kategoriler</b><div class=campaignScopeChoices>${(catalog.categories||[]).filter(c=>c.id!=='tum').map(c=>`<label><input type=checkbox ${(rule.categoryIds||[]).includes(c.id)?'checked':''} onchange="toggleDiscountCampaignCategory(${index},'${attr(c.id)}',this.checked)"> ${esc(c.name||c.id)}</label>`).join('')}</div></div>`;
+  const selected=new Set(rule.categoryIds||[]);
+  const categories=(catalog.categories||[]).filter(c=>c.id!=='tum');
+  const categoryChoices=categories.map(c=>`<label><input type=checkbox ${selected.has(c.id)?'checked':''} onchange="toggleDiscountCampaignCategory(${index},'${attr(c.id)}',this.checked)"> ${esc(c.name||c.id)}</label>`).join('');
+  const selectedGroups=categories.filter(c=>selected.has(c.id)).map(c=>{
+    const ps=(catalog.products||[]).filter(p=>p.category===c.id);
+    return `<div class="campaignSelectedCategory"><div class=campaignSelectedCategoryHead><b>${esc(c.name||c.id)}</b><small>${ps.length} ürün · istemediklerinin tikini kaldır</small></div>${ps.length?`<div class=campaignScopeProductGrid>${ps.map(p=>discountCampaignProductChoice(rule,index,p,'exclude')).join('')}</div>`:'<div class=help>Bu kategoride ürün bulunamadı.</div>'}</div>`;
+  }).join('');
+  return `<div class=campaignScopeBox><b>Uygulanacak kategoriler</b><div class=campaignScopeChoices>${categoryChoices}</div>${selectedGroups?`<div class=campaignCategoryProductPicker>${selectedGroups}</div>`:'<div class=help>Bir kategori seçtiğinde o kategorideki ürünler burada açılır; istemediğin modellerin tikini kaldırabilirsin.</div>'}</div>`;
 }
 function discountTypeHelp(rule){
   if(rule.discountType==='percent')return 'Eşiğe ulaşınca kampanyaya dahil ürünlerin toplamından bu yüzde düşer.';
@@ -386,7 +399,18 @@ function addDiscountCampaign(){
   renderDiscountCampaigns();
 }
 function removeDiscountCampaign(i){if(confirm('Bu kampanya silinsin mi?')){catalog.checkoutCampaigns.splice(i,1);renderDiscountCampaigns()}}
-function toggleDiscountCampaignCategory(i,id,on){const r=catalog.checkoutCampaigns[i];r.categoryIds=r.categoryIds||[];if(on&&!r.categoryIds.includes(id))r.categoryIds.push(id);if(!on)r.categoryIds=r.categoryIds.filter(x=>x!==id);changed('.drawer')}
+function toggleDiscountCampaignCategory(i,id,on){
+  const r=catalog.checkoutCampaigns[i];r.categoryIds=r.categoryIds||[];r.excludedProductIds=r.excludedProductIds||[];
+  if(on&&!r.categoryIds.includes(id))r.categoryIds.push(id);
+  if(!on){r.categoryIds=r.categoryIds.filter(x=>x!==id);const ids=new Set((catalog.products||[]).filter(p=>p.category===id).map(p=>p.id));r.excludedProductIds=r.excludedProductIds.filter(x=>!ids.has(x));}
+  changed('.drawer');preserveAdminViewport(()=>renderDiscountCampaigns());
+}
+function toggleDiscountCampaignCategoryProduct(i,id,on){
+  const r=catalog.checkoutCampaigns[i];r.excludedProductIds=r.excludedProductIds||[];
+  if(!on&&!r.excludedProductIds.includes(id))r.excludedProductIds.push(id);
+  if(on)r.excludedProductIds=r.excludedProductIds.filter(x=>x!==id);
+  changed('.drawer');
+}
 function toggleDiscountCampaignProduct(i,id,on){const r=catalog.checkoutCampaigns[i];r.productIds=r.productIds||[];if(on&&!r.productIds.includes(id))r.productIds.push(id);if(!on)r.productIds=r.productIds.filter(x=>x!==id);changed('.drawer')}
 
 let adminCategoryNavScrollLeft=0;
@@ -675,6 +699,8 @@ function builderPricingCountsForProduct(productId){
   catalog.builder=catalog.builder||{};
   const explicit=Object.keys(ensureBuilderProductPricing()[productId]||{}).map(Number).filter(n=>Number.isFinite(n)&&n>=2);
   const legacy=(catalog.builder?.pricingRules||[]).map(r=>Number(r.count)).filter(n=>Number.isFinite(n)&&n>=2);
+  const saved=(Array.isArray(catalog.builder.pricingCounts)?catalog.builder.pricingCounts:[]).map(Number).filter(n=>Number.isFinite(n)&&n>=2&&n<=50);
+  if(saved.length)return [...new Set([...saved,...explicit])].sort((a,b)=>a-b);
   const savedMax=Number(catalog.builder.pricingMaxCount||0);
   const maxBase=Math.max(7,builderPricingCategoryIds().length,...legacy,...explicit,savedMax);
   const max=Math.max(2,Math.min(50,maxBase));
@@ -685,7 +711,28 @@ function addBuilderPricingCount(){
   catalog.builder=catalog.builder||{};
   const counts=builderPricingCountsForProduct(adminBuilderPricingProduct);
   const current=Math.max(1,...counts);
-  catalog.builder.pricingMaxCount=Math.min(50,current+1);
+  const next=Math.min(50,current+1);
+  if(current>=50)return alert('En fazla 50 ürünlü set fiyatı tanımlayabilirsin.');
+  catalog.builder.pricingCounts=[...new Set([...counts,next])].sort((a,b)=>a-b);
+  catalog.builder.pricingMaxCount=Math.max(...catalog.builder.pricingCounts);
+  changed('.builderCard');
+  refreshBuilderProductPricingAdmin();
+}
+function removeBuilderPricingCount(count){
+  catalog.builder=catalog.builder||{};
+  const n=Number(count);
+  if(!Number.isFinite(n)||n<2)return;
+  if(!confirm(`${n} ürünlü set fiyat alanı kaldırılsın mı? Bu adede özel girdiğin ürün fiyatları da temizlenecek.`))return;
+  const counts=builderPricingCountsForProduct(adminBuilderPricingProduct).filter(x=>Number(x)!==n);
+  catalog.builder.pricingCounts=counts;
+  catalog.builder.pricingMaxCount=counts.length?Math.max(...counts):0;
+  const pricing=ensureBuilderProductPricing();
+  Object.keys(pricing).forEach(productId=>{
+    if(pricing[productId]&&typeof pricing[productId]==='object'){
+      delete pricing[productId][String(n)];
+      if(!Object.keys(pricing[productId]).length)delete pricing[productId];
+    }
+  });
   changed('.builderCard');
   refreshBuilderProductPricingAdmin();
 }
@@ -704,7 +751,7 @@ function renderBuilderProductPricingAdmin(){
     const counts=builderPricingCountsForProduct(selected.id);
     const productMap=pricing[selected.id]||{};
     const img=selected.image||productImages(selected)[0]||'';
-    editor=`<div class=builderPricingSelected><div class=builderPricingSelectedHead>${img?`<img src="${attr(img)}" alt="">`:''}<div><b>${esc(selected.name||'Yeni Ürün')}</b><small>Toplam sette kaç ürün olduğuna göre bu ürünün sete eklenecek fiyatını yaz.</small></div></div><div class=builderProductPriceGrid>${counts.map(count=>{const has=Object.prototype.hasOwnProperty.call(productMap,String(count));const own=has?Number(productMap[String(count)]):'';const single=Number(selected.price||0);return `<label class=builderProductPriceCell><span>${count} ürünlü sette</span><input class=formControl type=number min=0 step=1 value="${has?own:''}" placeholder="Tekli fiyat: ${single.toLocaleString('tr-TR')} TL" oninput="setBuilderProductPrice('${attr(selected.id)}',${count},this.value)"><small>${has?'Bu ürüne özel fiyat':`Boşsa tekli gerçek fiyat: ${single.toLocaleString('tr-TR')} TL`}</small></label>`}).join('')}<button type=button class="builderProductPriceCell builderPriceAddCell" onclick="addBuilderPricingCount()"><span>${Math.max(...counts)+1} ürünlü sette</span><b>＋</b><small>Yeni adet kuralı ekle</small></button></div></div>`;
+    editor=`<div class=builderPricingSelected><div class=builderPricingSelectedHead>${img?`<img src="${attr(img)}" alt="">`:''}<div><b>${esc(selected.name||'Yeni Ürün')}</b><small>Toplam sette kaç ürün olduğuna göre bu ürünün sete eklenecek fiyatını yaz.</small></div></div><div class=builderProductPriceGrid>${counts.map(count=>{const has=Object.prototype.hasOwnProperty.call(productMap,String(count));const own=has?Number(productMap[String(count)]):'';const single=Number(selected.price||0);return `<label class=builderProductPriceCell><span class=builderPriceCellHead><span>${count} ürünlü sette</span><button type=button class=builderPriceRemoveBtn title="${count} ürünlü alanı kaldır" aria-label="${count} ürünlü alanı kaldır" onclick="event.preventDefault();event.stopPropagation();removeBuilderPricingCount(${count})">×</button></span><input class=formControl type=number min=0 step=1 value="${has?own:''}" placeholder="Tekli fiyat: ${single.toLocaleString('tr-TR')} TL" oninput="setBuilderProductPrice('${attr(selected.id)}',${count},this.value)"><small>${has?'Bu ürüne özel fiyat':`Boşsa tekli gerçek fiyat: ${single.toLocaleString('tr-TR')} TL`}</small></label>`}).join('')}<button type=button class="builderProductPriceCell builderPriceAddCell" onclick="addBuilderPricingCount()"><span>${Math.max(...counts)+1} ürünlü sette</span><b>＋</b><small>Yeni adet kuralı ekle</small></button></div></div>`;
   }
   return `<div class=builderPricingAdmin id=builderProductPricingAdmin><div class=builderPricingTitle><b>Kendi Setini Oluştur özel fiyatları</b><span>Ürüne göre fiyatlandırma</span></div><div class=help>Önce kategori ve ürünü seç. Örneğin çakmak 3 ürünlü sette 100 TL, 5 ürünlü sette 15 TL olabilir. Bir adet için özel fiyatı boş bırakırsan o ürünün normal tekli satış fiyatı kullanılır.</div><div class=builderPricingCats>${catsHtml||'<span class=help>Önce Kendi Setini Oluştur için kategori aç.</span>'}</div><div class=builderPricingWorkspace><div class=builderPricingProducts>${productsHtml}</div><div class=builderPricingEditor>${editor}</div></div></div>`;
 }
