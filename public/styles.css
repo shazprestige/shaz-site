@@ -3005,3 +3005,19 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
   /* Masaüstü logo/marka bloğunu çok hafif aşağı al; mobil kurallara dokunma. */
   #brandLogo.logo{top:52%!important;}
 }
+
+/* V97 — yalnızca builder üst sabit alanını sıkılaştırma + masaüstü logo dikey hizası */
+/* Adım/seçim satırı ve ilerleme çubuğu biraz yukarı alınır; mobil/PC ortak builder davranışı dışında hiçbir alanı etkilemez. */
+.builderStickyStack .builderTopSticky>.wizardHead{
+  margin-bottom:4px!important;
+}
+.builderStickyStack .builderTopSticky .builderStepMeta{
+  margin:2px 0 8px!important;
+}
+.builderStickyStack .builderTopSticky .builderProgressBar{
+  margin:2px 0 3px!important;
+}
+@media(min-width:701px){
+  /* Siyah duyuru bandı görsel dengeyi yukarı çektiği için marka bloğunu yalnız masaüstünde hafifçe aşağı al. */
+  #brandLogo.logo{top:55%!important;}
+}
