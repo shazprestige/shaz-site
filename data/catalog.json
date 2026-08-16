@@ -829,19 +829,36 @@
       "saatler",
       "cuzdanlar",
       "kategori-1786740581832",
-      "kategori-1786798033844",
       "kategori-1786740619033",
-      "gozlukler"
+      "gozlukler",
+      "kategori-1786798033844"
     ],
     "allowSkip": true,
     "excludeSetProducts": true,
-    "allowedProducts": {},
+    "allowedProducts": {
+      "saatler": [
+        "urun-1786817515929-6-sr2c",
+        "urun-1786817515929-8-eu1y",
+        "urun-1786817515929-0-8z49",
+        "urun-1786817515929-1-nrm5",
+        "urun-1786817515929-3-jj54",
+        "urun-1786817515929-4-okmm",
+        "urun-1786817515929-5-de8a",
+        "urun-1786817515929-7-jcik",
+        "urun-1786817515929-9-6j0k",
+        "urun-1786825421633-0-33da",
+        "urun-1786825421633-1-qpgw",
+        "urun-1786825421633-2-a94y",
+        "urun-1786817515929-2-ux88"
+      ]
+    },
     "spotlight": {
       "eyebrow": "KENDİ SETİNİ OLUŞTUR",
       "title": "Setini sen seç.",
       "text": "Ürünlerini bir araya getir, özel set fiyatını anında gör.",
       "imageUrl": ""
-    }
+    },
+    "productPricing": {}
   },
   "personalizationPricing": {
     "first": 75,
@@ -862,6 +879,17 @@
       "minQty": 3,
       "discountType": "fixed",
       "discountValue": 500
+    },
+    {
+      "id": "sepet-1786894220202-bxip",
+      "name": "Yeni Kampanya",
+      "enabled": true,
+      "scopeType": "category",
+      "categoryIds": [],
+      "productIds": [],
+      "minQty": 3,
+      "discountType": "fixed",
+      "discountValue": 0
     }
   ]
 }

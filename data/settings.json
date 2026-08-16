@@ -56,7 +56,7 @@
   ],
   "cargoTrackingUrl": "https://ebranch.araskargo.com.tr/",
   "campaignMarqueeText": "• YENİ ÜRÜNLERİMİZİ KEŞFEDİN •",
-  "campaignMarqueePosition": "middle",
+  "campaignMarqueePosition": "full",
   "siteAnnouncement": {
     "enabled": false,
     "eyebrow": " ",
