@@ -2983,3 +2983,25 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
   .builderStickyStack .builderTopSticky{padding:0 14px 6px!important}
   .builderStickyStack .builderAllShownBar{padding:7px 12px 9px!important;border:0!important}
 }
+
+/* V96 — Builder etiketi başlığın içinde, ilerleme çubuğunun üstünde; masaüstü üst boşluğu ve logo hizası */
+.builderStickyStack .builderTopSticky .builderAllShownBar{
+  position:relative!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin:4px 0 5px!important;
+  padding:0!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+.builderStickyStack .builderTopSticky .builderAllShownSticky{
+  position:static!important;
+  margin:0 auto!important;
+}
+@media(min-width:701px){
+  /* Masaüstünde drawer'ın 18px üst padding'i sticky katmanın üstünde ürün uçlarını görünür bırakıyordu. */
+  .drawer:has(.builderScreen){padding-top:0!important;}
+  /* Masaüstü logo/marka bloğunu çok hafif aşağı al; mobil kurallara dokunma. */
+  #brandLogo.logo{top:52%!important;}
+}

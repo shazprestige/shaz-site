@@ -1177,9 +1177,9 @@ function renderBuilderCategoryStep(){
   const chosenCount=Object.values(customBuilder.selections).filter(Boolean).length;
 
   openDrawer(`<div class=builderScreen><div class=builderStickyStack><div class=builderTopSticky><div class=wizardHead><button class="pill backPill" onclick=builderBackFromCategory()>← Geri</button><div><div class=wizardProgress>Kendi Setini Oluştur</div><h2>${escapeHtml(cat.name)}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
+    <div class="builderAllShownBar"><div class="builderAllShown builderAllShownSticky">Tüm ${escapeHtml(cat.name)} gösteriliyor</div></div>
     <div class=builderStepMeta><span class=builderStepName>${customBuilder.index+1}. ADIM / ${total}</span><span class=builderChosen>${chosenCount} ürün seçildi</span></div>
-    <div class=builderProgressBar><div class=builderProgressFill style="width:${progress}%"></div></div></div>
-    <div class="builderAllShownBar"><div class="builderAllShown builderAllShownSticky">Tüm ${escapeHtml(cat.name)} gösteriliyor</div></div></div>
+    <div class=builderProgressBar><div class=builderProgressFill style="width:${progress}%"></div></div></div></div>
     <div class=wizardCard builderCategoryCard>
       <h3>${escapeHtml(cat.name)} kategorisinden hangisini setinize eklemek istersiniz?</h3>
       <p class=muted>Bu kategoride yalnızca normal tekli ürünler gösterilir. Hazır setler burada görünmez.</p>
