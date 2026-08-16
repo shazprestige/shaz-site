@@ -89,7 +89,7 @@
       "id": "kategori-1786907958898",
       "name": "Yeni Kategori",
       "order": 10,
-      "hidden": true,
+      "hidden": false,
       "cover": "",
       "subcategories": []
     }
