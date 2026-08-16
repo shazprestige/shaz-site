@@ -3907,10 +3907,10 @@
       "shippingRibbonColor": "#444444"
     },
     {
-      "id": "urun-1786910492353-0-cc9w",
-      "name": "SHAZ - GÖZLÜK",
+      "id": "urun-1786910492353-4-ukzz",
+      "name": "SHAZ - GÖZLÜK 4",
       "subtitle": "Erkek gözlük",
-      "description": "Siyah çerçeve · Füme/gradient cam · Gold detaylı · Dikdörtgen tasarım",
+      "description": "Siyah çerçeve · Siyah cam · Gold detaylı · Klasik tasarım",
       "features": [
         "Polarize",
         "UV200"
@@ -3921,9 +3921,9 @@
       "stock": 0,
       "badge": "",
       "badgeColor": "orange",
-      "image": "/uploads/1786910486678-qsepo2.jpeg",
+      "image": "/uploads/1786910487125-wtf0nj.jpeg",
       "images": [
-        "/uploads/1786910486678-qsepo2.jpeg"
+        "/uploads/1786910487125-wtf0nj.jpeg"
       ],
       "hidden": false,
       "setEligible": true,
@@ -3937,15 +3937,17 @@
       "writeEnabled": true,
       "walletPhotoEnabled": true,
       "subcategoryId": "",
-      "descriptionEditorWidth": 320,
-      "descriptionWrapCh": 40,
-      "featuresEditorWidth": 320,
-      "featuresWrapCh": 40,
-      "shippingRibbonEnabled": true
+      "shippingRibbonEnabled": true,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444",
+      "descriptionEditorWidth": 288,
+      "descriptionWrapCh": 36,
+      "featuresEditorWidth": 288,
+      "featuresWrapCh": 36
     },
     {
       "id": "urun-1786910492353-1-p6qf",
-      "name": "SHAZ - GÖZLÜK",
+      "name": "SHAZ - GÖZLÜK 2",
       "subtitle": "Erkek gözlük",
       "description": "Siyah çerçeve · Füme/gradient cam · Gold detaylı · Dikdörtgen tasarım",
       "features": [
@@ -3976,11 +3978,15 @@
       "subcategoryId": "",
       "shippingRibbonEnabled": true,
       "shippingRibbonText": "Kargo Bedava",
-      "shippingRibbonColor": "#444444"
+      "shippingRibbonColor": "#444444",
+      "descriptionEditorWidth": 288,
+      "descriptionWrapCh": 36,
+      "featuresEditorWidth": 288,
+      "featuresWrapCh": 36
     },
     {
       "id": "urun-1786910492353-2-zuew",
-      "name": "SHAZ - GÖZLÜK",
+      "name": "SHAZ - GÖZLÜK 3",
       "subtitle": "Erkek gözlük",
       "description": "Siyah çerçeve · Füme/gradient cam · Gold detaylı · Dikdörtgen tasarım",
       "features": [
@@ -4012,14 +4018,14 @@
       "shippingRibbonEnabled": true,
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
-      "descriptionEditorWidth": 320,
-      "descriptionWrapCh": 40,
-      "featuresEditorWidth": 320,
-      "featuresWrapCh": 40
+      "descriptionEditorWidth": 288,
+      "descriptionWrapCh": 36,
+      "featuresEditorWidth": 288,
+      "featuresWrapCh": 36
     },
     {
       "id": "urun-1786910492353-3-rxft",
-      "name": "SHAZ - GÖZLÜK",
+      "name": "SHAZ - GÖZLÜK 4",
       "subtitle": "Erkek gözlük",
       "description": "Siyah çerçeve · Siyah cam · Gold detaylı · Klasik tasarım",
       "features": [
@@ -4051,14 +4057,14 @@
       "shippingRibbonEnabled": true,
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
-      "descriptionEditorWidth": 320,
-      "descriptionWrapCh": 40,
-      "featuresEditorWidth": 320,
-      "featuresWrapCh": 40
+      "descriptionEditorWidth": 288,
+      "descriptionWrapCh": 36,
+      "featuresEditorWidth": 288,
+      "featuresWrapCh": 36
     },
     {
-      "id": "urun-1786910492353-4-ukzz",
-      "name": "SHAZ - GÖZLÜK",
+      "id": "urun-1786910492353-0-cc9w",
+      "name": "SHAZ - GÖZLÜK 5",
       "subtitle": "Erkek gözlük",
       "description": "Siyah çerçeve · Füme/gradient cam · Gold detaylı · Dikdörtgen tasarım",
       "features": [
@@ -4071,9 +4077,9 @@
       "stock": 0,
       "badge": "",
       "badgeColor": "orange",
-      "image": "/uploads/1786910487125-wtf0nj.jpeg",
+      "image": "/uploads/1786910486678-qsepo2.jpeg",
       "images": [
-        "/uploads/1786910487125-wtf0nj.jpeg"
+        "/uploads/1786910486678-qsepo2.jpeg"
       ],
       "hidden": false,
       "setEligible": true,
@@ -4087,9 +4093,11 @@
       "writeEnabled": true,
       "walletPhotoEnabled": true,
       "subcategoryId": "",
-      "shippingRibbonEnabled": true,
-      "shippingRibbonText": "Kargo Bedava",
-      "shippingRibbonColor": "#444444"
+      "descriptionEditorWidth": 288,
+      "descriptionWrapCh": 36,
+      "featuresEditorWidth": 288,
+      "featuresWrapCh": 36,
+      "shippingRibbonEnabled": true
     }
   ],
   "builder": {
