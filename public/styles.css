@@ -2680,3 +2680,51 @@ header{top:var(--announce-h,25px)!important;z-index:27!important}
 .productDetailHeadActions .productDetailClose{position:static!important;top:auto!important;right:auto!important}
 .productDetailTitle .wizardProgress{padding-right:150px!important}
 @media(max-width:520px){.productDetailTitle .wizardProgress{padding-right:138px!important}}
+
+/* ===== V89 — Kendi Setini Oluştur sabit kontrol/fiyat alanı + sepet görseli ===== */
+.builderCategoryCard{padding-bottom:12px!important}
+.builderAllShown{
+  display:flex!important;width:max-content!important;max-width:100%!important;
+  margin:12px auto 8px!important;justify-content:center!important;text-align:center!important;
+  background:#f2f3f5!important;border-color:#dfe3e8!important;color:#3f4854!important;
+  font-size:10.5px!important;padding:6px 10px!important
+}
+.builderStickyDock{
+  position:sticky;bottom:-20px;z-index:18;margin:14px -20px -20px;
+  padding:10px 20px calc(10px + env(safe-area-inset-bottom));
+  background:rgba(248,249,250,.97);border-top:1px solid #dfe3e8;
+  box-shadow:0 -8px 24px rgba(16,24,40,.08);backdrop-filter:blur(10px)
+}
+.builderDockPrice{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;padding:8px 10px;background:#fff;border:1px solid #e1e5e9;border-radius:10px}
+.builderDockPrice>div{display:flex;flex-direction:column;gap:1px;flex:0 0 auto}
+.builderDockPrice span{font-size:9px;color:#667085;font-weight:800}
+.builderDockPrice strong{font-size:17px;line-height:1.05;color:#111}
+.builderDockPrice small{font-size:8.5px;line-height:1.35;color:#667085;text-align:right;max-width:58%}
+.builderDockPrice small b{color:#157347}
+.builderDockActions{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(115px,.75fr);gap:6px}
+.builderDockActions button{border-radius:9px;min-height:38px;padding:7px 9px;font-size:9.5px;font-weight:850;cursor:pointer}
+.builderDockBack{border:1px solid #d7dce2;background:#fff;color:#222}
+.builderDockSkip{border:1px dashed #b7bec8;background:#fff;color:#4d5662}
+.builderDockNext{border:1px solid #111;background:#111;color:#fff}
+.builderSavingsLine span:last-child{color:#157347!important;font-weight:850}
+.favoritePhoto{border:0!important;padding:0!important;background:transparent!important}
+.favoritePhoto img{border:0!important;outline:0!important;border-radius:9px!important}
+.cartItemMain{align-items:center!important}
+.cartItemThumb{width:62px;height:62px;flex:0 0 62px;border-radius:10px;overflow:hidden;background:#f4f5f6;display:grid;place-items:center}
+.cartItemThumb img{width:100%;height:100%;object-fit:contain;object-position:center;display:block}
+.cartItemCopy{min-width:0;flex:1}
+@media(max-width:700px){
+  .builderStickyDock{bottom:0;margin:12px -16px -16px;padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+  .builderDockPrice{margin-bottom:6px;padding:7px 8px}
+  .builderDockPrice strong{font-size:16px}.builderDockPrice small{font-size:8px;max-width:62%}
+  .builderDockActions{grid-template-columns:auto minmax(0,1.15fr) minmax(92px,.75fr);gap:5px}
+  .builderDockActions button{min-height:36px;padding:6px 7px;font-size:8.5px}
+  .cartItemThumb{width:54px;height:54px;flex-basis:54px}
+}
+/* V89 düzeltme: seçim kontrolleri gerçekten ekranın altında sürekli görünür. */
+.builderStickyDock{position:fixed!important;right:0!important;bottom:0!important;width:min(680px,50vw)!important;margin:0!important;box-sizing:border-box!important}
+.builderCategoryCard{margin-bottom:142px!important}
+@media(max-width:700px){
+  .builderStickyDock{width:100%!important;right:0!important;bottom:0!important;margin:0!important}
+  .builderCategoryCard{margin-bottom:132px!important}
+}

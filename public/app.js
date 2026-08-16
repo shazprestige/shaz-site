@@ -959,7 +959,8 @@ function cartItemSummary(x,i){
   if(!x.setCustomization && writes.length) lines.push(`<div class=muted>Yazı: ${writes.map(w=>`${escapeHtml(w.item)} — ${escapeHtml(w.position)}: “${escapeHtml(w.text)}”`).join('<br>')}</div>`);
   const photos=x.photoCustomizations||x.setCustomization?.photoCustomizations||[];
   if(photos.length)lines.push(`<div class=muted>Fotoğraf işlemesi: ${photos.map(ph=>`${escapeHtml(ph.item||'Cüzdan')} (+${money(ph.fee||walletPhotoFee())})${ph.caption?` · ${ph.captionPosition==='above'?'üstünde':'altında'} “${escapeHtml(ph.caption)}”`:''}`).join('<br>')}</div>`);
-  return `<div class="orderCartItem"><div class="cartItemMain"><div><b>${escapeHtml(x.product.name)}</b>${lines.join('')}</div><div class="cartItemRight"><strong>${money(x.product.price)}</strong><button type="button" class="cartRemoveBtn" onclick="removeCartItem(${i})">Kaldır</button></div></div></div>`;
+  const cartImg=mainProductImage(x.product)||(x.builderItems||[]).find(y=>y?.image)?.image||'';
+  return `<div class="orderCartItem"><div class="cartItemMain">${cartImg?`<div class="cartItemThumb"><img src="${escapeAttr(cartImg)}" alt="${escapeAttr(x.product.name||'Ürün')}"></div>`:''}<div class="cartItemCopy"><b>${escapeHtml(x.product.name)}</b>${lines.join('')}</div><div class="cartItemRight"><strong>${money(x.product.price)}</strong><button type="button" class="cartRemoveBtn" onclick="removeCartItem(${i})">Kaldır</button></div></div></div>`;
 }
 
 function normalizeTRMobile(raw){
@@ -1178,21 +1179,17 @@ function renderBuilderCategoryStep(){
   openDrawer(`<div class=wizardHead><button class="pill backPill" onclick=builderBackFromCategory()>← Geri</button><div><div class=wizardProgress>Kendi Setini Oluştur</div><h2>${escapeHtml(cat.name)}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
     <div class=builderStepMeta><span class=builderStepName>${customBuilder.index+1}. ADIM / ${total}</span><span class=builderChosen>${chosenCount} ürün seçildi</span></div>
     <div class=builderProgressBar><div class=builderProgressFill style="width:${progress}%"></div></div>
-    <div class=wizardCard>
+    <div class=wizardCard builderCategoryCard>
       <h3>${escapeHtml(cat.name)} kategorisinden hangisini setinize eklemek istersiniz?</h3>
-      <div class="builderAllShown">Tüm ${escapeHtml(cat.name)} gösteriliyor</div>
       <p class=muted>Bu kategoride yalnızca normal tekli ürünler gösterilir. Hazır setler burada görünmez.</p>
+      <div class="builderAllShown">Tüm ${escapeHtml(cat.name)} gösteriliyor</div>
       ${products.length?`<div class=builderProductGrid>${products.map(p=>`
         <div class="builderProductCard ${selectedId===p.id?'selected':''}" onclick="builderChoose('${escapeAttr(cat.id)}','${escapeAttr(p.id)}')">
           <div class=builderProductPhoto>${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name)}">`:'⌚'}<span class=builderSelectMark></span></div>
           <div class=builderProductBody><b>${escapeHtml(p.name)}</b><small>${money(p.price)} tekli satış fiyatı</small><button type="button" class="builderInspectBtn" onclick="event.stopPropagation();builderInspectProduct('${escapeAttr(p.id)}')">Ürünü İncele</button></div>
         </div>`).join('')}</div>`:`<div class=builderEmptyCategory>Bu kategoride set oluşturmaya açık tekli ürün bulunmuyor.</div>`}
-      <button class=builderSkip onclick="builderSkipCurrent()">Bu kategoriden ürün eklemek istemiyorum</button>
     </div>
-    <div class=builderNav>
-      ${customBuilder.index>0?`<button class="btn secondary" onclick=builderPrev()>← Geri</button>`:''}
-      <button class=btn onclick=builderNext()>${customBuilder.index===total-1?'Seçimlerimi Gör':'Devam Et →'}</button>
-    </div>`);
+    ${builderPriceDockHtml()}`);
 }
 function builderChoose(categoryId,productId){
   customBuilder.selections[categoryId]=productId;
@@ -1222,6 +1219,19 @@ function builderTotalFor(count){
   const rule=getBuilderRule(count);
   return rule?Number(rule.pricePerItem||0)*count:0;
 }
+function builderCurrentPricing(){
+  const selected=getBuilderSelectedProducts();
+  const count=selected.length;
+  const retail=selected.reduce((sum,p)=>sum+Number(p?.price||0),0);
+  const rule=getBuilderRule(count);
+  const total=rule?Number(rule.pricePerItem||0)*count:0;
+  return {selected,count,retail,rule,total,savings:rule?Math.max(0,retail-total):0};
+}
+function builderPriceDockHtml(){
+  const snap=builderCurrentPricing();
+  const priceHtml=snap.count?`<div class="builderDockPrice"><div><span>Şu anki setiniz</span><strong>${snap.rule?money(snap.total):'Fiyat tanımlı değil'}</strong></div>${snap.rule?`<small>Tek tek ${money(snap.retail)}${snap.savings>0?` · <b>${money(snap.savings)} avantaj</b>`:''}<br>Ürün sayısı arttıkça set birim fiyatı değişebilir.</small>`:`<small>${snap.count} ürün seçildi. Bu adet için fiyat kuralı tanımlandığında toplam burada görünür.</small>`}</div>`:`<div class="builderDockPrice"><div><span>Şu anki setiniz</span><strong>0 TL</strong></div><small>Bir ürün seçtiğiniz anda set toplamı burada güncellenir.</small></div>`;
+  return `<div class="builderStickyDock">${priceHtml}<div class="builderDockActions">${customBuilder.index>0?`<button class="builderDockBack" onclick="builderPrev()">← Geri</button>`:''}<button class="builderDockSkip" onclick="builderSkipCurrent()">Bu kategoriden ürün eklemek istemiyorum</button><button class="builderDockNext" onclick="builderNext()">${customBuilder.index===customBuilder.categories.length-1?'Seçimlerimi Gör':'Devam Et →'}</button></div></div>`;
+}
 function renderBuilderSelectionSummary(){
   const selected=getBuilderSelectedProducts();
   const min=Number(catalog.builder?.minItems||1);
@@ -1241,7 +1251,8 @@ function renderBuilderSelectionSummary(){
     </div>
     <div class=wizardCard>
       <div class=summaryLine><span>Seçilen ürün sayısı</span><span>${selected.length}</span></div>
-      <div class=summaryLine><span>Minimum gerekli</span><span>${min}</span></div>
+      ${selected.length?`<div class=summaryLine><span>Tek tek alınsaydı</span><span>${money(selected.reduce((sum,p)=>sum+Number(p.price||0),0))}</span></div>`:''}
+      ${rule&&selected.reduce((sum,p)=>sum+Number(p.price||0),0)>total?`<div class="summaryLine builderSavingsLine"><span>Set avantajı</span><span>-${money(selected.reduce((sum,p)=>sum+Number(p.price||0),0)-total)}</span></div>`:''}
       ${rule?`<div class=summaryLine><span>Özel set ürün başı fiyatı</span><span>${money(rule.pricePerItem)}</span></div>`:''}
       <div class="summaryLine summaryTotal"><span>Set toplamı</span><span>${rule?money(total):'Fiyat tanımlı değil'}</span></div>
     </div>
