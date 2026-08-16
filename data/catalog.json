@@ -370,7 +370,7 @@
       "descriptionWrapCh": 53,
       "featuresEditorWidth": 420,
       "featuresWrapCh": 53,
-      "shippingRibbonEnabled": false,
+      "shippingRibbonEnabled": true,
       "shippingRibbonText": "Kargo Bedava"
     },
     {
