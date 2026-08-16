@@ -932,7 +932,7 @@
     {
       "id": "sepet-1786813845553-fakn",
       "name": "3 adet saat kampanyası",
-      "enabled": true,
+      "enabled": false,
       "scopeType": "all",
       "categoryIds": [
         "saatler"
@@ -944,12 +944,12 @@
       "productUnitCounts": {},
       "repeatable": true,
       "maxApplications": 2,
-      "allowDoubleCount": true
+      "allowDoubleCount": false
     },
     {
       "id": "sepet-1786894220202-bxip",
       "name": "2 adet saat kampanyası",
-      "enabled": false,
+      "enabled": true,
       "scopeType": "category",
       "categoryIds": [
         "saatler"
