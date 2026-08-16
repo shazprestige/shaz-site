@@ -297,6 +297,8 @@ function catalogGlobalTools(){
     return `<label class=setItemToggle><span><b>${esc(c.name)}</b><small class=muted>Müşterinin kendi setini oluştururken seçebileceği kategori</small></span><input type=checkbox ${checked?'checked':''} onchange="toggleBuilderCategory('${attr(c.id)}',this.checked)"></label>`;
   }).join('');
   const builderOrderHtml=builderOrder.length?builderOrder.map((id,pos)=>{const c=catalog.categories.find(x=>x.id===id);if(!c)return '';const products=builderAdminProductsForCategory(id);const explicit=Array.isArray(catalog.builder.allowedProducts?.[id]);const selected=explicit?catalog.builder.allowedProducts[id]:products.map(p=>p.id);return `<div class=builderOrderRow data-builder-category="${attr(id)}"><span class=builderDragHandle title="Tut ve sürükle" onclick="event.preventDefault();event.stopPropagation()" onpointerdown="builderCategoryPointerDown(event,'${attr(id)}')">⠿</span><span class=builderOrderText><b>${pos+1}. ${esc(c.name)}</b><small>Tutup sürükleyerek sırala</small></span><details class=builderProductPicker><summary>Ürünler <em>${selected.length}/${products.length}</em></summary><div class=builderMiniProductList>${products.length?products.map(p=>`<label class=builderMiniProduct><input type=checkbox ${selected.includes(p.id)?'checked':''} onchange="toggleBuilderProduct('${attr(id)}','${attr(p.id)}',this.checked)"><span>${esc(p.name)}</span></label>`).join(''):'<small>Bu kategoride uygun ürün yok.</small>'}</div></details></div>`}).join(''):'<div class=help>Önce yukarıdan en az bir kategori seç.</div>';
+  const builderPricingRules=(catalog.builder.pricingRules||[]).slice().sort((a,b)=>Number(a.count||0)-Number(b.count||0));
+  const builderPricingHtml=builderPricingRules.length?builderPricingRules.map((r,ri)=>`<div class=builderPricingRow><label><span>Ürün adedi</span><input class=formControl type=number min=1 value="${Number(r.count||1)}" onchange="updateBuilderPricingRule(${ri},'count',this.value)"></label><label><span>Ürün başı set fiyatı</span><input class=formControl type=number min=0 step=1 value="${Number(r.pricePerItem||0)}" onchange="updateBuilderPricingRule(${ri},'pricePerItem',this.value)"></label><button type=button class=smallBtn onclick="removeBuilderPricingRule(${ri})">Kaldır</button></div>`).join(''):'<div class=help>Henüz özel set fiyatı tanımlı değil. Örn. 1 ürün = 600 TL, 2 ürün = ürün başı 550 TL gibi kural ekleyebilirsin.</div>';
   const categoryOptions=catalog.categories.filter(c=>c.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0)).map(c=>`<option value="${attr(c.id)}">${esc(c.name)}</option>`).join('');
   return `<div class="panel unifiedCatalogSettings">
     <details class=simpleAdminDetails><summary>Genel ürün / set ayarları <small>Ürünlerle ilgili ortak ayarlar</small></summary><div class=simpleDetailsBody>
@@ -306,7 +308,7 @@ function catalogGlobalTools(){
         ${input('3. ve sonrası','catalog.personalizationPricing.thirdPlus',pricing.thirdPlus,'Üçüncü ve sonraki her yazılı ürün için ücret.','.drawer','number')}
         ${input('Cüzdana fotoğraf işleme','catalog.walletPhotoFee',catalog.walletPhotoFee??25,'Fotoğraf işlemesi normal yazı ücretlerinden bağımsız ek ücrettir.','.drawer','number')}
       </div>
-      <details class=nestedAdminDetails><summary>Kendi Setini Oluştur kategorileri</summary><div class=setItemList>${allowed}</div><div class=help>Burada seçtiklerin yalnızca müşterinin “Kendi Setini Oluştur” akışında görünür.</div><div class=builderOrderBox><b>Müşteride gösterilecek sıra</b><div class=help>Yalnızca soldaki ⠿ tutamacından tutup sürükle. Sıralama sırasında bu ekrandan çıkılmaz.</div>${builderOrderHtml}</div><div class=builderSpotlightAdmin><b>Ana sayfadaki “Kendi Setini Oluştur” alanı</b><div class=grid2>${input('Üst küçük yazı','catalog.builder.spotlight.eyebrow',catalog.builder.spotlight.eyebrow,'Örn. KENDİ SETİNİ OLUŞTUR','#builderSpotlight')}${input('Başlık','catalog.builder.spotlight.title',catalog.builder.spotlight.title,'Örn. Setini sen seç.','#builderSpotlight')}${textarea('Açıklama','catalog.builder.spotlight.text',catalog.builder.spotlight.text,'Kartta görünecek açıklama.','#builderSpotlight')}<div class=field><label><b>Arka plan fotoğrafı (isteğe bağlı)</b></label><input id=builderSpotlightFile type=file accept="image/*"><div class=builderSpotlightUploadRow><button type=button class=smallBtn onclick=uploadBuilderSpotlightImage()>Fotoğraf Yükle</button>${catalog.builder.spotlight.imageUrl?'<button type=button class=smallBtn onclick=removeBuilderSpotlightImage()>Fotoğrafı Kaldır</button>':''}</div><div class=help>Fotoğraf eklemezsen mevcut koyu tasarım aynen kalır.</div></div></div></div></details>
+      <details class=nestedAdminDetails><summary>Kendi Setini Oluştur kategorileri</summary><div class=setItemList>${allowed}</div><div class=help>Burada seçtiklerin yalnızca müşterinin “Kendi Setini Oluştur” akışında görünür.</div><div class=builderOrderBox><b>Müşteride gösterilecek sıra</b><div class=help>Yalnızca soldaki ⠿ tutamacından tutup sürükle. Sıralama sırasında bu ekrandan çıkılmaz.</div>${builderOrderHtml}</div><div class=builderPricingAdmin><b>Kendi Setini Oluştur özel fiyatları</b><div class=help>Seçilen toplam ürün adedine göre ürün başı özel set fiyatını belirle. Müşteride toplam otomatik hesaplanır.</div><div class=builderPricingList>${builderPricingHtml}</div><button type=button class=smallBtn onclick="addBuilderPricingRule()">+ Fiyat kuralı ekle</button></div><div class=builderSpotlightAdmin><b>Ana sayfadaki “Kendi Setini Oluştur” alanı</b><div class=grid2>${input('Üst küçük yazı','catalog.builder.spotlight.eyebrow',catalog.builder.spotlight.eyebrow,'Örn. KENDİ SETİNİ OLUŞTUR','#builderSpotlight')}${input('Başlık','catalog.builder.spotlight.title',catalog.builder.spotlight.title,'Örn. Setini sen seç.','#builderSpotlight')}${textarea('Açıklama','catalog.builder.spotlight.text',catalog.builder.spotlight.text,'Kartta görünecek açıklama.','#builderSpotlight')}<div class=field><label><b>Arka plan fotoğrafı (isteğe bağlı)</b></label><input id=builderSpotlightFile type=file accept="image/*"><div class=builderSpotlightUploadRow><button type=button class=smallBtn onclick=uploadBuilderSpotlightImage()>Fotoğraf Yükle</button>${catalog.builder.spotlight.imageUrl?'<button type=button class=smallBtn onclick=removeBuilderSpotlightImage()>Fotoğrafı Kaldır</button>':''}</div><div class=help>Fotoğraf eklemezsen mevcut koyu tasarım aynen kalır.</div></div></div></div></details>
     </div></details>
     <details class=simpleAdminDetails><summary>Toplu ürün yükle <small>Birden fazla fotoğraf = ayrı ayrı ürün</small></summary><div class=simpleDetailsBody>
       <div class=grid2><div class=field><label><b>Hangi kategoriye yüklensin?</b></label><select id=bulkUploadCategory class=formControl>${categoryOptions}</select><div class=help>Örn. Saat seçip 20 fotoğraf yüklersen 20 ayrı saat ürünü oluşur.</div></div>
@@ -614,6 +616,25 @@ function builderCategoryPointerUp(ev){
 function builderCategoryDragStart(ev,id){ev?.preventDefault?.();ev?.stopPropagation?.()}
 function builderCategoryDragOver(ev){ev?.preventDefault?.();ev?.stopPropagation?.()}
 function builderCategoryDrop(ev,targetId){ev?.preventDefault?.();ev?.stopPropagation?.()}
+function normalizedBuilderPricingRules(){
+  catalog.builder=catalog.builder||{};
+  catalog.builder.pricingRules=Array.isArray(catalog.builder.pricingRules)?catalog.builder.pricingRules:[];
+  catalog.builder.pricingRules=catalog.builder.pricingRules.map(r=>({count:Math.max(1,Number(r.count||1)),pricePerItem:Math.max(0,Number(r.pricePerItem||0))})).sort((a,b)=>a.count-b.count);
+  return catalog.builder.pricingRules;
+}
+function addBuilderPricingRule(){
+  const rules=normalizedBuilderPricingRules();
+  const next=rules.length?Math.max(...rules.map(r=>Number(r.count||0)))+1:1;
+  rules.push({count:next,pricePerItem:0});changed('.builderCard');renderCatalog();
+}
+function removeBuilderPricingRule(i){
+  const rules=normalizedBuilderPricingRules();rules.splice(i,1);changed('.builderCard');renderCatalog();
+}
+function updateBuilderPricingRule(i,key,value){
+  const rules=normalizedBuilderPricingRules();if(!rules[i])return;
+  rules[i][key]=key==='count'?Math.max(1,Number(value||1)):Math.max(0,Number(value||0));
+  rules.sort((a,b)=>a.count-b.count);changed('.builderCard');
+}
 async function uploadBuilderSpotlightImage(){
   const f=document.getElementById('builderSpotlightFile')?.files?.[0];if(!f)return alert('Önce fotoğraf seç.');
   const fd=new FormData();fd.append('files',f);

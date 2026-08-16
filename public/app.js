@@ -1179,10 +1179,10 @@ function renderBuilderCategoryStep(){
   openDrawer(`<div class=wizardHead><button class="pill backPill" onclick=builderBackFromCategory()>← Geri</button><div><div class=wizardProgress>Kendi Setini Oluştur</div><h2>${escapeHtml(cat.name)}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
     <div class=builderStepMeta><span class=builderStepName>${customBuilder.index+1}. ADIM / ${total}</span><span class=builderChosen>${chosenCount} ürün seçildi</span></div>
     <div class=builderProgressBar><div class=builderProgressFill style="width:${progress}%"></div></div>
+    <div class="builderAllShown builderAllShownSticky">Tüm ${escapeHtml(cat.name)} gösteriliyor</div>
     <div class=wizardCard builderCategoryCard>
       <h3>${escapeHtml(cat.name)} kategorisinden hangisini setinize eklemek istersiniz?</h3>
       <p class=muted>Bu kategoride yalnızca normal tekli ürünler gösterilir. Hazır setler burada görünmez.</p>
-      <div class="builderAllShown">Tüm ${escapeHtml(cat.name)} gösteriliyor</div>
       ${products.length?`<div class=builderProductGrid>${products.map(p=>`
         <div class="builderProductCard ${selectedId===p.id?'selected':''}" onclick="builderChoose('${escapeAttr(cat.id)}','${escapeAttr(p.id)}')">
           <div class=builderProductPhoto>${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name)}">`:'⌚'}<span class=builderSelectMark></span></div>
@@ -1192,7 +1192,7 @@ function renderBuilderCategoryStep(){
     ${builderPriceDockHtml()}`);
 }
 function builderChoose(categoryId,productId){
-  customBuilder.selections[categoryId]=productId;
+  customBuilder.selections[categoryId]=customBuilder.selections[categoryId]===productId?null:productId;
   renderBuilderCategoryStep();
 }
 function builderInspectProduct(productId){openProductDetail(productId,'builder')}
@@ -1229,8 +1229,9 @@ function builderCurrentPricing(){
 }
 function builderPriceDockHtml(){
   const snap=builderCurrentPricing();
-  const priceHtml=snap.count?`<div class="builderDockPrice"><div><span>Şu anki setiniz</span><strong>${snap.rule?money(snap.total):'Fiyat tanımlı değil'}</strong></div>${snap.rule?`<small>Tek tek ${money(snap.retail)}${snap.savings>0?` · <b>${money(snap.savings)} avantaj</b>`:''}<br>Ürün sayısı arttıkça set birim fiyatı değişebilir.</small>`:`<small>${snap.count} ürün seçildi. Bu adet için fiyat kuralı tanımlandığında toplam burada görünür.</small>`}</div>`:`<div class="builderDockPrice"><div><span>Şu anki setiniz</span><strong>0 TL</strong></div><small>Bir ürün seçtiğiniz anda set toplamı burada güncellenir.</small></div>`;
-  return `<div class="builderStickyDock">${priceHtml}<div class="builderDockActions">${customBuilder.index>0?`<button class="builderDockBack" onclick="builderPrev()">← Geri</button>`:''}<button class="builderDockSkip" onclick="builderSkipCurrent()">Bu kategoriden ürün eklemek istemiyorum</button><button class="builderDockNext" onclick="builderNext()">${customBuilder.index===customBuilder.categories.length-1?'Seçimlerimi Gör':'Devam Et →'}</button></div></div>`;
+  const priceHtml=snap.count?`<div class="builderDockPrice"><div><span>Şu anki setiniz</span><strong>${snap.rule?money(snap.total):'Fiyat tanımlı değil'}</strong></div>${snap.rule?`<small>Ayrı ayrı ${money(snap.retail)}${snap.savings>0?` · <b>${money(snap.savings)} avantaj</b>`:''}<br>Ürün sayısı arttıkça set birim fiyatı değişebilir.</small>`:`<small>${snap.count} ürün seçildi. Bu adet için fiyat kuralı tanımlandığında toplam burada görünür.</small>`}</div>`:`<div class="builderDockPrice"><div><span>Şu anki setiniz</span><strong>0 TL</strong></div><small>Bir ürün seçtiğiniz anda set toplamı burada güncellenir.</small></div>`;
+  const hasBack=customBuilder.index>0;
+  return `<div class="builderStickyDock">${priceHtml}<div class="builderDockActions ${hasBack?'':'noBack'}">${hasBack?`<button class="builderDockBack" onclick="builderPrev()">← Geri</button>`:''}<button class="builderDockSkip" onclick="builderSkipCurrent()">Bu kategoriden ürün eklemek istemiyorum</button><button class="builderDockNext" onclick="builderNext()">${customBuilder.index===customBuilder.categories.length-1?'Seçimlerimi Gör':'Devam Et →'}</button></div></div>`;
 }
 function renderBuilderSelectionSummary(){
   const selected=getBuilderSelectedProducts();
@@ -1246,14 +1247,13 @@ function renderBuilderSelectionSummary(){
       <div class=builderSummaryItems>${selected.length?selected.map(p=>`
         <div class=builderSummaryItem>
           <div class=builderSummaryThumb>${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}">`:'⌚'}</div>
-          <div class=builderSummaryInfo><b>${escapeHtml(p.name)}</b><small>${escapeHtml((catalog.categories.find(c=>c.id===p.category)||{}).name||p.category)}</small></div>
+          <div class=builderSummaryInfo><b>${escapeHtml(p.name)}</b><small>${escapeHtml((catalog.categories.find(c=>c.id===p.category)||{}).name||p.category)}</small>${rule?`<div class="builderSummaryPrices"><del>${money(Number(p.price||0))}</del><strong>${money(Number(rule.pricePerItem||0))} set fiyatı</strong></div>`:''}</div>
         </div>`).join(''):'<div class=builderEmptyCategory>Henüz ürün seçmediniz.</div>'}</div>
     </div>
     <div class=wizardCard>
       <div class=summaryLine><span>Seçilen ürün sayısı</span><span>${selected.length}</span></div>
-      ${selected.length?`<div class=summaryLine><span>Tek tek alınsaydı</span><span>${money(selected.reduce((sum,p)=>sum+Number(p.price||0),0))}</span></div>`:''}
+      ${selected.length?`<div class="summaryLine builderRetailTotal"><span>Ayrı ayrı alınsaydı</span><span><del>${money(selected.reduce((sum,p)=>sum+Number(p.price||0),0))}</del></span></div>`:''}
       ${rule&&selected.reduce((sum,p)=>sum+Number(p.price||0),0)>total?`<div class="summaryLine builderSavingsLine"><span>Set avantajı</span><span>-${money(selected.reduce((sum,p)=>sum+Number(p.price||0),0)-total)}</span></div>`:''}
-      ${rule?`<div class=summaryLine><span>Özel set ürün başı fiyatı</span><span>${money(rule.pricePerItem)}</span></div>`:''}
       <div class="summaryLine summaryTotal"><span>Set toplamı</span><span>${rule?money(total):'Fiyat tanımlı değil'}</span></div>
     </div>
     ${!valid?`<div class=notice>Bu seti tamamlamak için en az ${min}, en fazla ${max} ürün seçmelisiniz.</div>`:''}
