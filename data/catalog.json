@@ -943,8 +943,8 @@
       "discountValue": 500,
       "productUnitCounts": {},
       "repeatable": true,
-      "maxApplications": 0,
-      "allowDoubleCount": false
+      "maxApplications": 2,
+      "allowDoubleCount": true
     },
     {
       "id": "sepet-1786894220202-bxip",
