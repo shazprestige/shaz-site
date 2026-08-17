@@ -47,6 +47,8 @@ async function init(){
   catalog=await fetch('/api/catalog').then(r=>r.json());
   catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
   catalog.checkoutUpsells=Array.isArray(catalog.checkoutUpsells)?catalog.checkoutUpsells:[];
+  catalog.builder=(catalog.builder&&typeof catalog.builder==='object')?catalog.builder:{};
+  if(catalog.builder.enabled===undefined)catalog.builder.enabled=false;
   (catalog.products||[]).forEach(p=>{
     if(p.writeEnabled===undefined){
       const n=String(((catalog.categories||[]).find(c=>c.id===p.category)||{}).name||p.category||'').toLocaleLowerCase('tr-TR')+' '+String(p.name||'').toLocaleLowerCase('tr-TR');
@@ -424,8 +426,8 @@ function renderProducts(filter=''){
     const badgeColor=['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange';
     const shippingRibbonText=p.shippingRibbonText===undefined?'Kargo Bedava':String(p.shippingRibbonText||'');
     const shippingRibbon=(p.shippingRibbonEnabled&&shippingRibbonText.trim())?`<div class="productShippingRibbon" style="--shipping-ribbon-color:${escapeAttr(p.shippingRibbonColor||'#444444')}">${escapeHtml(shippingRibbonText.trim())}</div>`:'';
-    return `<div class="card productCardLink" data-product-id="${escapeAttr(p.id)}" role="button" tabindex="0" onclick="openProductDetail('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProductDetail('${p.id}')}"><div class="photo" data-preview-field="photo">${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge badge-${badgeColor}" data-preview-field="badge"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:''}${shippingRibbon}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div>${settings.productStockVisible?`<div class="muted" data-preview-field="stock">Stok: ${Number(p.stock||0)}</div>`:''}</div></div>`;
-  }).join(''):`<div class="panel subcategoryEmpty"><b>Bu bölümde henüz ürün yok.</b></div>`;
+    return `<div class="card productCardLink" data-product-id="${escapeAttr(p.id)}" role="button" tabindex="0" onclick="openProductDetail('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProductDetail('${p.id}')}"><div class="photo" data-preview-field="photo">${mainProductImage(p)?`<img src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(name)}">`:'⌚'}${p.badge?`<span class="badge badge-${badgeColor}" data-preview-field="badge"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:''}${shippingRibbon}<button class="fav" data-preview-field="favorite" onclick="toggleFav('${p.id}',event)">${favorites.has(p.id)?'♥':'♡'}</button></div><div class="info"><h3 data-preview-field="name">${escapeHtml(name)}</h3>${desc}<div class="price"><span data-preview-field="price">${money(p.price)}</span> ${p.oldPrice?`<span class="old" data-preview-field="oldPrice">${money(p.oldPrice)}</span>`:''}</div></div></div>`;
+  }).join(''):(q?`<div class="panel subcategoryEmpty"><b>Bu bölümde henüz ürün yok.</b></div>`:`<div class="panel subcategoryEmpty"><b>Çok yakında ürünler burada olacak.</b><p>Şimdilik diğer kategorilerden alışverişinize devam edebilirsiniz. Anlayışınız için teşekkür eder, keyifli alışverişler dileriz. ☺️</p></div>`);
   $('#productsList').innerHTML=chooser+cards;
   persistCatalogView();
   requestAnimationFrame(()=>{syncSubcategoryStickyOffset();positionActiveSubcategoryTab('auto')});
@@ -492,6 +494,7 @@ function openDrawer(html){
     // Klavye davranışı yalnız adres ekranında değil, drawer içindeki TÜM yazı alanlarında çalışır.
     // Böylece set kişiselleştirme/yazı ekranlarında da alttaki katalog klavye arkasından görünmez.
     bindDrawerInputFocus();
+    bindDrawerScrollGuard();
   });
 }
 function closeDrawer(){
@@ -1374,9 +1377,43 @@ function focusDrawerField(el){
 }
 function syncDrawerVisualViewport(){
   const drawer=$('#drawer'),vv=window.visualViewport;if(!drawer)return;
-  const h=Math.round(vv?.height||window.innerHeight),top=Math.round(vv?.offsetTop||0);
+  const keyboardOpen=document.body.classList.contains('shazKeyboardOpen');
+  // Klavye kapalıyken visualViewport.offsetTop'u drawer konumuna taşımıyoruz.
+  // iOS hızlı kaydırmada bu değer anlık değiştiği için sabit üst/alt alanlar zıplıyordu.
+  if(!keyboardOpen){
+    drawer.style.removeProperty('--shaz-vvh');
+    drawer.style.setProperty('--shaz-vvtop','0px');
+    return;
+  }
+  const h=Math.max(240,Math.round(vv?.height||window.innerHeight));
+  const top=Math.max(0,Math.round(vv?.offsetTop||0));
   drawer.style.setProperty('--shaz-vvh',h+'px');drawer.style.setProperty('--shaz-vvtop',top+'px');
   const active=drawer.querySelector('input:focus,textarea:focus,select:focus');if(active)setTimeout(()=>focusDrawerField(active),40);
+}
+function bindDrawerScrollGuard(){
+  const drawer=$('#drawer');if(!drawer)return;
+  const scrollEl=drawer.querySelector('.checkoutScrollBody')||drawer;
+  if(scrollEl.dataset.shazScrollGuard==='1')return;
+  scrollEl.dataset.shazScrollGuard='1';
+  let lastY=0;
+  const nudgeFromEdge=()=>{
+    const max=Math.max(0,scrollEl.scrollHeight-scrollEl.clientHeight);
+    if(max<=2)return;
+    if(scrollEl.scrollTop<=0)scrollEl.scrollTop=1;
+    else if(scrollEl.scrollTop>=max)scrollEl.scrollTop=max-1;
+  };
+  scrollEl.addEventListener('touchstart',e=>{
+    if(e.touches?.length!==1)return;
+    lastY=e.touches[0].clientY;nudgeFromEdge();
+  },{passive:true});
+  scrollEl.addEventListener('touchmove',e=>{
+    if(e.touches?.length!==1)return;
+    const y=e.touches[0].clientY,dy=y-lastY;lastY=y;
+    const max=Math.max(0,scrollEl.scrollHeight-scrollEl.clientHeight);
+    if(max<=1)return;
+    const atTop=scrollEl.scrollTop<=0,atBottom=scrollEl.scrollTop>=max;
+    if((atTop&&dy>0)||(atBottom&&dy<0))e.preventDefault();
+  },{passive:false});
 }
 let drawerViewportBound=false;
 function bindDrawerInputFocus(){
@@ -1388,7 +1425,9 @@ function bindDrawerInputFocus(){
     el.addEventListener('pointerdown',beforeKeyboard,{passive:true});
     el.addEventListener('touchstart',beforeKeyboard,{passive:true});
     el.addEventListener('focus',()=>{document.body.classList.add('shazKeyboardOpen');syncDrawerVisualViewport();setTimeout(()=>focusDrawerField(el),120);setTimeout(()=>focusDrawerField(el),320)},{passive:true});
-    el.addEventListener('blur',()=>setTimeout(()=>{if(!drawer.querySelector('input:focus,textarea:focus,select:focus'))document.body.classList.remove('shazKeyboardOpen')},120),{passive:true});
+    el.addEventListener('blur',()=>setTimeout(()=>{
+      if(!drawer.querySelector('input:focus,textarea:focus,select:focus')){document.body.classList.remove('shazKeyboardOpen');syncDrawerVisualViewport()}
+    },120),{passive:true});
   });
 }
 function addressStep(){
@@ -1597,6 +1636,9 @@ function builderBackFromFinalSummary(){
 }
 
 function openBuilder(){
+  if(catalog.builder?.enabled===false){
+    return openDrawer(`<div class=builderUnavailableShell><div class=wizardHead><button class="pill backPill" onclick=closeDrawer()>← Geri</button><div><div class=wizardProgress>ÇOK YAKINDA</div><h2>Kendi Setini Oluştur</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div><div class=builderUnavailableCard><h3>Kendi setinizi dilediğiniz gibi oluşturabileceksiniz.</h3><p>Çok yakında burası hizmetinizde olacak. Anlayışınız için teşekkür eder, keyifli alışverişler dileriz. ☺️</p><button type=button class=btn onclick=closeDrawer()>Alışverişe Devam Et</button></div></div>`);
+  }
   const cats=getBuilderCategories();
   if(!cats.length){
     return openDrawer(`<div class=wizardHead><button class="pill backPill" onclick=closeDrawer()>← Geri</button><h2>Kendi Setini Oluştur</h2><button class=pill onclick=closeDrawer()>Kapat</button></div><div class=builderEmptyCategory>Şu anda set oluşturma için açık kategori bulunmuyor.</div>`);

@@ -38,6 +38,8 @@ async function load(){
   catalog.walletPhotoFee=Number(catalog.walletPhotoFee??25);
   catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
   catalog.checkoutUpsells=Array.isArray(catalog.checkoutUpsells)?catalog.checkoutUpsells:[];
+  catalog.builder=(catalog.builder&&typeof catalog.builder==='object')?catalog.builder:{};
+  if(catalog.builder.enabled===undefined)catalog.builder.enabled=false;
   (catalog.products||[]).forEach(p=>{
     if(adminIsWalletProduct(p)&&p.walletPhotoEnabled===undefined)p.walletPhotoEnabled=true;
     if(p.soldOutEnabled===undefined)p.soldOutEnabled=false;
@@ -62,7 +64,7 @@ async function load(){
   if(!['full','center','middle'].includes(settings.campaignMarqueePosition))settings.campaignMarqueePosition='full';
   settings.theme=settings.theme||{};
   const savedTab=sessionStorage.getItem('shazAdminTab')||'site';
-  show(['site','catalog','custom','discounts','upsells','orders'].includes(savedTab)?savedTab:'site');
+  show(['site','catalog','custom','discounts','upsells','orders','builderAccess'].includes(savedTab)?savedTab:'site');
   setTimeout(()=>{sendPreview();previewTo('header')},600);
 }
 async function saveAll(){
@@ -171,8 +173,29 @@ function show(tab){
   if(tab==='custom')return renderCatalog();
   if(tab==='discounts')return renderDiscountCampaigns();
   if(tab==='upsells')return renderUpsells();
+  if(tab==='builderAccess')return renderBuilderAccessSettings();
   if(tab==='orders')return renderOrders();
 }
+function renderBuilderAccessSettings(){
+  catalog.builder=(catalog.builder&&typeof catalog.builder==='object')?catalog.builder:{};
+  if(catalog.builder.enabled===undefined)catalog.builder.enabled=false;
+  const enabled=catalog.builder.enabled!==false;
+  const previewTarget='#builderSpotlight';
+  shell('Kendi Setini Oluştur','Bu bölüm yalnızca Kendi Setini Oluştur alanının müşteriye açık mı, geçici olarak kapalı mı olacağını yönetir.',`
+    <div class="panel builderAccessAdmin">
+      <label class=setItemToggle data-preview-target="${previewTarget}">
+        <span><b>Kendi Setini Oluştur özelliği müşteriye açık</b><small class=muted>Açıkken mevcut set oluşturma akışı aynen çalışır. Kapalıyken müşteriye geçici bilgilendirme ekranı gösterilir.</small></span>
+        <input type=checkbox ${enabled?'checked':''} onchange="catalog.builder.enabled=this.checked;changed('${previewTarget}');renderBuilderAccessSettings()">
+      </label>
+      <div class="builderAccessStatus ${enabled?'isOpen':'isClosed'}">
+        <b>${enabled?'Şu anda açık':'Şu anda geçici olarak kapalı'}</b>
+        <span>${enabled?'Müşteri Kendi Setini Oluştur alanına girip mevcut akışı kullanabilir.':'Müşteri alana tıkladığında “çok yakında” bilgilendirmesini görür ve Alışverişe Devam Et ile mağazaya döner.'}</span>
+      </div>
+      ${!enabled?`<div class=builderAccessPreview><span class=gold>ÇOK YAKINDA</span><h3>Kendi setinizi dilediğiniz gibi oluşturabileceksiniz.</h3><p>Çok yakında burası hizmetinizde olacak. Anlayışınız için teşekkür eder, keyifli alışverişler dileriz. ☺️</p><button type=button class=btn disabled>Alışverişe Devam Et</button></div>`:''}
+    </div>`);
+  requestAnimationFrame(()=>previewTo(previewTarget,true));
+}
+
 function campaignCategoryOptions(selected='tum'){
   const seen=new Set();
   const cats=[{id:'tum',name:'Tüm Ürünler'},...(catalog.categories||[]).filter(c=>!c.hidden&&c.id!=='tum')];
@@ -310,6 +333,7 @@ async function uploadCampaignBulk(){
 function catalogGlobalTools(){
   catalog.personalizationPricing=catalog.personalizationPricing||{first:75,second:50,thirdPlus:25};
   catalog.builder=catalog.builder||{allowedCategories:[],categoryOrder:[],pricingRules:[]};
+  if(catalog.builder.enabled===undefined)catalog.builder.enabled=false;
   catalog.builder.allowedCategories=Array.isArray(catalog.builder.allowedCategories)?catalog.builder.allowedCategories:[];
   catalog.builder.categoryOrder=Array.isArray(catalog.builder.categoryOrder)?catalog.builder.categoryOrder:[];
   catalog.builder.allowedProducts=(catalog.builder.allowedProducts&&typeof catalog.builder.allowedProducts==='object')?catalog.builder.allowedProducts:{};
@@ -909,32 +933,32 @@ function moveProductWithinCategory(productId,direction){
 }
 function productDragStart(e,id){
   adminDraggedProduct=id;
-  e.currentTarget?.closest('.adminProductCompact')?.classList.add('dragging');
-  if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id)}
+  const card=e.currentTarget?.closest('.adminProductCompact');
+  card?.classList.add('dragging');
+  if(e.dataTransfer){
+    e.dataTransfer.effectAllowed='move';
+    e.dataTransfer.setData('text/plain',id);
+    try{e.dataTransfer.setData('application/x-shaz-product',id)}catch(_){ }
+  }
 }
 function productDragOver(e,id){
   if(!adminDraggedProduct||adminDraggedProduct===id)return;
-  e.preventDefault();
+  e.preventDefault();e.stopPropagation();
   if(e.dataTransfer)e.dataTransfer.dropEffect='move';
   document.querySelectorAll('.adminProductCompact.dragOver').forEach(x=>x.classList.remove('dragOver'));
   e.currentTarget?.classList.add('dragOver');
 }
 function productDrop(e,targetId){
-  e.preventDefault();
-  const sourceId=adminDraggedProduct||(e.dataTransfer?.getData('text/plain')||'');
-  const source=(catalog.products||[]).find(p=>p.id===sourceId);
-  const target=(catalog.products||[]).find(p=>p.id===targetId);
-  if(!source||!target||sourceId===targetId||source.category!==target.category)return productDragEnd(e);
-  const targetEl=e.currentTarget;
-  const r=targetEl?.getBoundingClientRect();
-  const after=!!r && ((Math.abs(e.clientY-(r.top+r.height/2))>r.height*.28)?e.clientY>r.top+r.height/2:e.clientX>r.left+r.width/2);
-  const from=catalog.products.findIndex(p=>p.id===sourceId);
-  if(from<0)return productDragEnd(e);
-  const [moved]=catalog.products.splice(from,1);
-  let to=catalog.products.findIndex(p=>p.id===targetId);
-  if(to<0){catalog.products.splice(from,0,moved);return productDragEnd(e)}
-  if(after)to++;
-  catalog.products.splice(to,0,moved);
+  e.preventDefault();e.stopPropagation();
+  const sourceId=adminDraggedProduct||(e.dataTransfer?.getData('application/x-shaz-product')||e.dataTransfer?.getData('text/plain')||'');
+  const products=catalog.products||[];
+  const from=products.findIndex(p=>p.id===sourceId),to=products.findIndex(p=>p.id===targetId);
+  if(from<0||to<0||from===to)return productDragEnd(e);
+  const source=products[from],target=products[to];
+  if(!source||!target||source.category!==target.category)return productDragEnd(e);
+  // İki sütunlu yönetim görünümünde bırakılan kartla birebir yer değiştirir.
+  // Önce/sonra tahmini kullanılmadığı için ürün yanlış aralığa sıçramaz.
+  [products[from],products[to]]=[products[to],products[from]];
   adminDraggedProduct=null;
   changed('#products');
   renderCatalog();

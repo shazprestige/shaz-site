@@ -3626,3 +3626,78 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}button,a,[role=button],
     background:#f6f7f8!important;overflow:hidden!important;
   }
 }
+
+/* ===== V120 — hızlı kaydırma sabitleme + yönetimde büyük ürün görseli + net yer değiştirme ===== */
+/* Sepette üst/alt sabit alanlar artık kaydırılan yüzeyin parçası değildir.
+   Sadece ortadaki ürün listesi hareket eder; hızlı flick/lastik etkisi başlık ve alt özeti sürükleyemez. */
+.drawer:has(.checkoutShell--cart){overflow:hidden!important;overscroll-behavior:none!important}
+.checkoutShell--cart{height:100%!important;min-height:0!important;grid-template-rows:auto minmax(0,1fr) auto!important;overflow:hidden!important}
+.checkoutShell--cart>.checkoutStickyTop{
+  position:relative!important;top:auto!important;bottom:auto!important;align-self:stretch!important;
+  transform:translateZ(0)!important;backface-visibility:hidden!important;
+}
+.checkoutShell--cart>.checkoutScrollBody{
+  height:auto!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;
+  overscroll-behavior-y:none!important;overscroll-behavior-x:none!important;touch-action:pan-y!important;
+  -webkit-overflow-scrolling:touch!important;contain:layout paint!important;
+}
+.checkoutShell--cart>.checkoutStickyBottom{
+  position:relative!important;top:auto!important;bottom:auto!important;align-self:stretch!important;
+  transform:translateZ(0)!important;backface-visibility:hidden!important;
+}
+/* Teslimat ve öneri ekranlarında da yalnız kendi orta gövdesi kayar. */
+.drawer:has(.checkoutShell--address),.drawer:has(.checkoutUpsellShell){overscroll-behavior:none!important}
+.addressScrollBody,.checkoutUpsellShell>.checkoutScrollBody{overscroll-behavior-y:none!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch!important}
+
+/* Yönetim: kartı açmadan model fotoğrafı gerçekten ayırt edilebilecek boyutta ve kırpılmadan görünür. */
+@media(min-width:901px){
+  .adminProductCompactHead{padding:7px!important;gap:7px!important}
+  .adminProductCompactMain{gap:8px!important;align-items:center!important}
+  .compactThumb{width:76px!important;height:62px!important;flex:0 0 76px!important;border-radius:8px!important;background:#f3f4f5!important}
+  .compactThumb img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;display:block!important}
+  .compactMeta b{font-size:10.5px!important;line-height:1.15!important}
+  .compactMeta small{font-size:8.3px!important;line-height:1.15!important;margin-top:2px!important}
+  .compactEdit{font-size:8.5px!important;white-space:nowrap!important}
+  .compactQuickActions{justify-content:flex-end!important;margin-top:-2px!important}
+  .compactQuickActions .duplicateBtn{padding:5px 6px!important;font-size:8px!important;line-height:1.05!important}
+}
+/* Sürüklenen ürünün bırakılacağı kart daha belirgin görünür. */
+.adminProductCompact.dragOver{outline:2px solid #111!important;outline-offset:2px!important;background:#f8f9fa!important}
+.productDragHandle{touch-action:none!important}
+
+
+/* ===== V121 — yalnızca istenen fotoğraf kontrolü, Kendi Setini Oluştur kapatma ekranı ve boş kategori mesajı ===== */
+/* Yönetimde ürün fotoğrafı alanında Fotoğrafı Büyüt butonu hiçbir genişlikte arkada kalmasın. */
+.compactEditor .photoUploadRow{
+  display:grid!important;
+  grid-template-columns:minmax(150px,1fr) auto auto!important;
+  gap:5px!important;
+  align-items:center!important;
+  max-width:100%!important;
+  overflow:visible!important;
+}
+.compactEditor .photoUploadRow input[type=file]{
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+}
+.compactEditor .photoUploadRow .smallBtn{display:inline-flex!important;align-items:center!important;justify-content:center!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:1!important}
+@media(max-width:700px){
+  .compactEditor .photoUploadRow{grid-template-columns:1fr 1fr!important}
+  .compactEditor .photoUploadRow input[type=file]{grid-column:1/-1!important}
+}
+
+.builderUnavailableShell{min-height:100%;background:#f6f7f8}
+.builderUnavailableCard{margin:18px auto;padding:24px;max-width:620px;border:1px solid #e4ded2;border-radius:22px;background:#fff;text-align:center;box-shadow:0 8px 24px #00000008}
+.builderUnavailableCard h3{font-size:clamp(24px,4vw,38px);line-height:1.12;margin:0 0 12px}
+.builderUnavailableCard p{max-width:520px;margin:0 auto 20px;color:#687080;font-size:16px;line-height:1.55}
+.builderUnavailableCard .btn{width:min(100%,320px);margin:0 auto}
+.subcategoryEmpty{max-width:720px;margin:28px auto!important;text-align:center!important;padding:26px!important}
+.subcategoryEmpty b{display:block;font-size:20px;margin-bottom:8px}
+.subcategoryEmpty p{margin:0;color:#687080;line-height:1.55}
+.builderAccessAdmin{max-width:760px}
+.builderAccessStatus{margin-top:14px;padding:14px 16px;border-radius:12px;display:flex;gap:5px;flex-direction:column;border:1px solid #d9dee5;background:#f8fafc}
+.builderAccessStatus.isOpen{border-color:#cfe8d7;background:#f3fbf5}.builderAccessStatus.isClosed{border-color:#ecdcb9;background:#fff9ed}
+.builderAccessStatus span{color:#687080;font-size:13px;line-height:1.45}
+.builderAccessPreview{margin-top:14px;padding:20px;border:1px solid #e4ded2;border-radius:14px;background:#fff;text-align:center}
+.builderAccessPreview h3{margin:6px 0 8px}.builderAccessPreview p{margin:0 auto 14px;max-width:560px;color:#687080}.builderAccessPreview .btn{max-width:260px;margin:auto}
