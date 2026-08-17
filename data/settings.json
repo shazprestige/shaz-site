@@ -132,7 +132,7 @@
     }
   ],
   "cargoTrackingUrl": "https://ebranch.araskargo.com.tr/",
-  "campaignMarqueeText": "• YENİ ÜRÜNLERİMİZİ KEŞFEDİN •",
+  "campaignMarqueeText": "SHAZ’I KEŞFET • KOLEKSİYONU İNCELE •",
   "campaignMarqueePosition": "full",
   "siteAnnouncement": {
     "enabled": false,
@@ -144,5 +144,6 @@
   "paymentMethods": {
     "cod": true,
     "online": false
-  }
+  },
+  "campaignMarqueeOffset": 29
 }
