@@ -1,5 +1,133 @@
 [
   {
+    "id": "SHZ13",
+    "createdAt": "2026-08-17T11:06:34.842Z",
+    "createdAtTR": "17.08.2026 14:06:34",
+    "status": "new",
+    "statusUpdatedAt": "2026-08-17T11:06:34.842Z",
+    "requestId": "cce62844-7f9f-4f01-86bb-0fe07e5eccdd",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786910492353-4-ukzz",
+          "name": "SHAZ - GÖZLÜK 1",
+          "subtitle": "Erkek gözlük",
+          "description": "Siyah çerçeve · Siyah cam · Gold detaylı · Klasik tasarım",
+          "features": [
+            "Polarize",
+            "UV200"
+          ],
+          "category": "gozlukler",
+          "price": 350,
+          "oldPrice": 0,
+          "stock": 1,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786910487125-wtf0nj.jpeg",
+          "images": [
+            "/uploads/1786910487125-wtf0nj.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Sol gözlük sapı",
+            "Sağ gözlük sapı"
+          ],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": true,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "descriptionEditorWidth": 290,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 290,
+          "featuresWrapCh": 36,
+          "soldOutEnabled": false,
+          "soldOutUntil": ""
+        },
+        "qty": 1,
+        "personalized": false
+      },
+      {
+        "product": {
+          "id": "urun-1786910492353-4-ukzz",
+          "name": "SHAZ - GÖZLÜK 1",
+          "subtitle": "Erkek gözlük",
+          "description": "Siyah çerçeve · Siyah cam · Gold detaylı · Klasik tasarım",
+          "features": [
+            "Polarize",
+            "UV200"
+          ],
+          "category": "gozlukler",
+          "price": 350,
+          "oldPrice": 0,
+          "stock": 1,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786910487125-wtf0nj.jpeg",
+          "images": [
+            "/uploads/1786910487125-wtf0nj.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Sol gözlük sapı",
+            "Sağ gözlük sapı"
+          ],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": true,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "descriptionEditorWidth": 290,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 290,
+          "featuresWrapCh": 36,
+          "soldOutEnabled": false,
+          "soldOutUntil": ""
+        },
+        "qty": 1,
+        "personalized": false
+      }
+    ],
+    "customer": {
+      "fullName": "ad soyad",
+      "phone": "5384316141",
+      "extraPhone": "5353134108",
+      "province": "İstanbul",
+      "district": "akak",
+      "deliveryMode": "branch",
+      "branchName": "sjwjsj",
+      "neighborhood": "skak MH.",
+      "avenue": "skaka CD.",
+      "street": "akakal SK.",
+      "fullAddress": "skwkskmwns",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": ""
+    },
+    "payment": "online",
+    "personalApproval": null,
+    "shippingNoticeAccepted": true,
+    "subtotal": 700,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 700
+  },
+  {
     "id": "SHZ12",
     "createdAt": "2026-08-17T00:05:10.320Z",
     "createdAtTR": "17.08.2026 03:05:10",
