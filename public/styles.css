@@ -3889,3 +3889,75 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 @media(max-width:520px){.categoryTile .categoryTileText,.categoryTile.hasCover .categoryTileText{padding:15px 8px 12px 12px!important}}
 @media(max-width:390px){.categoryHubGrid{gap:9px!important;padding:14px 10px 28px!important}.categoryTile{min-height:112px!important}.categoryTile .categoryTileText,.categoryTile.hasCover .categoryTileText{padding:15px 6px 12px 12px!important}.categoryTileText b{font-size:15px!important}}
 .paymentUnavailable{display:flex;align-items:center;color:#8a2f2f;background:#fff5f5}
+
+
+/* ===== V128 — yalnız slider kayan yazısı + Site Ayarları UX ===== */
+/* Slider üst yazısı: daha küçük, premium ve mobilde taşmadan okunur. */
+.campaignGlobalMarquee{
+  top:calc(9px + var(--campaign-marquee-offset,0px))!important;
+  left:0!important;right:0!important;width:100%!important;
+  color:#fff!important;white-space:nowrap!important;overflow:hidden!important;
+  font-size:clamp(13px,1.65vw,20px)!important;
+  font-weight:650!important;letter-spacing:.09em!important;line-height:1.25!important;
+  text-transform:uppercase!important;text-shadow:0 1px 8px rgba(0,0,0,.72)!important;
+  transform:none!important;border-radius:0!important;
+}
+.campaignGlobalMarquee .campaignMarqueeTrack{
+  display:flex!important;flex-wrap:nowrap!important;width:max-content!important;min-width:max-content!important;
+  gap:0!important;padding:0!important;animation:none!important;will-change:transform!important;
+}
+.campaignGlobalMarquee .campaignMarqueeCopy{
+  display:block!important;flex:0 0 auto!important;padding-right:2.2em!important;white-space:nowrap!important;
+}
+@media(max-width:520px){
+  .campaignGlobalMarquee{
+    top:calc(7px + var(--campaign-marquee-offset,0px))!important;
+    font-size:13px!important;font-weight:650!important;letter-spacing:.075em!important;
+  }
+  .campaignGlobalMarquee .campaignMarqueeCopy{padding-right:1.8em!important}
+}
+
+/* Site Ayarları: mevcut kayıt anahtarları korunur; yalnız yerleşim/gruplama iyileştirilir. */
+.settingsHub{display:grid;gap:12px}
+.settingsHub>.settingsGroup{margin:0!important;border-radius:14px!important}
+.settingsGroup>summary{padding:13px 15px!important}
+.settingsGroup>summary small{white-space:normal;text-align:right;line-height:1.25}
+.settingsBody{padding:0 15px 15px!important}
+.settingsBody.grid2{padding-top:12px!important}
+.settingsSectionHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.settingsSectionHead h3{margin:0 0 3px;font-size:16px}.settingsSectionHead p{margin:0;color:#667085;font-size:11px;line-height:1.4}
+.sliderMarqueeAdminCard{border:1px solid #e1e5ea;border-radius:12px;padding:14px;background:#fbfcfd;margin-bottom:12px}
+.sliderMarqueeGrid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(240px,.85fr);gap:12px;align-items:end}
+.marqueePositionField{min-width:0}.marqueeRange{padding:0!important;height:34px!important;accent-color:#111}
+.rangeLabels{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;color:#667085;font-size:10px;margin:4px 0 2px}
+.rangeLabels span:last-child{text-align:right}.rangeLabels output{font-weight:800;color:#111;background:#f0f2f4;border-radius:999px;padding:3px 8px;min-width:46px;text-align:center}
+.compactSliderAdmin{display:grid;gap:10px}.compactSliderAdmin .campaignBulkUpload{margin:0}
+.sliderItemsDetails{margin:0!important}.sliderItemsDetails>summary{display:flex;align-items:center;justify-content:space-between;gap:10px}.sliderItemsDetails>summary small{color:#667085;font-weight:600}
+.sliderCardsWrap{padding:12px}.sliderCardsWrap>.campaignAdmin:last-child{margin-bottom:0}
+.settingsHub .fieldWide{grid-column:1/-1}
+@media(min-width:1100px){
+  .settingsHub{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+  .settingsHub>.sliderSettingsGroup{grid-column:1/-1}
+  .settingsHub>.announcementAdmin{grid-column:span 1}
+}
+@media(max-width:760px){
+  .sliderMarqueeGrid{grid-template-columns:1fr}
+  .settingsGroup>summary{align-items:flex-start}.settingsGroup>summary small{max-width:42%}
+  .settingsBody.grid2,.settingsBody .grid2{grid-template-columns:1fr!important}
+  .settingsHub .fieldWide{grid-column:1}
+}
+
+/* V128 ek koruma: önceki kayan yazı yerleşimi seçenekleri silinmedi. */
+.campaignGlobalMarquee--center{
+  left:50%!important;right:auto!important;width:min(72%,680px)!important;
+  top:calc(9px + var(--campaign-marquee-offset,0px))!important;
+  transform:translateX(-50%)!important;border-radius:8px!important;
+}
+.campaignGlobalMarquee--middle{
+  left:0!important;right:0!important;width:100%!important;
+  top:calc(50% + var(--campaign-marquee-offset,0px))!important;
+  transform:translateY(-50%)!important;border-radius:0!important;
+}
+@media(max-width:520px){
+  .campaignGlobalMarquee--center{width:78%!important;top:calc(7px + var(--campaign-marquee-offset,0px))!important}
+}

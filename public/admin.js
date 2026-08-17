@@ -57,11 +57,16 @@ async function load(){
     if(!c.targetCategory)c.targetCategory='tum';
     if(!c.buttonText)c.buttonText='ÜRÜNLERİ GÖR';
   });
-  // V45: üst kayan yazı artık slayta değil sliderın tamamına bağlı tek ayardır.
+  // Slider üst kayan yazı: eski varsayılan metni yeni SHAZ metnine güvenli biçimde taşı.
+  const sliderMarqueeDefault='SHAZ’I KEŞFET • KOLEKSİYONU İNCELE •';
   if(settings.campaignMarqueeText===undefined){
-    settings.campaignMarqueeText=(settings.campaignCards.find(c=>c.marqueeText)?.marqueeText)||'';
+    settings.campaignMarqueeText=(settings.campaignCards.find(c=>c.marqueeText)?.marqueeText)||sliderMarqueeDefault;
   }
+  const marqueeNormalized=String(settings.campaignMarqueeText||'').toLocaleLowerCase('tr-TR').replace(/[’']/g,"'").trim();
+  if(!marqueeNormalized || marqueeNormalized.includes('yeni ürünlerimizi keşfedin')) settings.campaignMarqueeText=sliderMarqueeDefault;
   if(!['full','center','middle'].includes(settings.campaignMarqueePosition))settings.campaignMarqueePosition='full';
+  if(!Number.isFinite(Number(settings.campaignMarqueeOffset)))settings.campaignMarqueeOffset=0;
+  settings.campaignMarqueeOffset=Math.max(-4,Math.min(48,Number(settings.campaignMarqueeOffset)||0));
   settings.theme=settings.theme||{};
   settings.paymentMethods=(settings.paymentMethods&&typeof settings.paymentMethods==='object')?settings.paymentMethods:{};
   if(settings.paymentMethods.cod===undefined)settings.paymentMethods.cod=true;
@@ -307,55 +312,99 @@ function renderSite(){
       <div class=grid2>
         ${input('Başlık',`settings.campaignCards[${i}].title`,c.title||'','Fotoğrafın üzerindeki büyük yazı.',contentTarget)}
         ${input('Kısa açıklama',`settings.campaignCards[${i}].subtitle`,c.subtitle||'','Başlığın altındaki kısa yazı.',contentTarget)}
-        <div class=field><label><b>Başlık konumu</b></label><select class=formControl data-preview-target='${attr(contentTarget)}' onchange="settings.campaignCards[${i}].titlePosition=this.value;changed(this.dataset.previewTarget)">${campaignTextPositionOptions(c.titlePosition||'')}</select><div class=help>En üst, üst-orta arası, tam orta, orta-alt arası veya en alt konumlarından birini seçebilirsin.</div></div>
-        <div class=field><label><b>Kısa açıklama konumu</b></label><select class=formControl data-preview-target='${attr(contentTarget)}' onchange="settings.campaignCards[${i}].subtitlePosition=this.value;changed(this.dataset.previewTarget)">${campaignTextPositionOptions(c.subtitlePosition||'')}</select><div class=help>Kısa açıklamayı başlıktan bağımsız olarak farklı bir yüksekliğe taşıyabilirsin.</div></div>
+        <div class=field><label><b>Başlık konumu</b></label><select class=formControl data-preview-target='${attr(contentTarget)}' onchange="settings.campaignCards[${i}].titlePosition=this.value;changed(this.dataset.previewTarget)">${campaignTextPositionOptions(c.titlePosition||'')}</select><div class=help>Başlığın slider üzerindeki dikey yerini seç.</div></div>
+        <div class=field><label><b>Kısa açıklama konumu</b></label><select class=formControl data-preview-target='${attr(contentTarget)}' onchange="settings.campaignCards[${i}].subtitlePosition=this.value;changed(this.dataset.previewTarget)">${campaignTextPositionOptions(c.subtitlePosition||'')}</select><div class=help>Kısa açıklamanın dikey yerini seç.</div></div>
         ${input('Başlık yazı boyutu (px)',`settings.campaignCards[${i}].titleFontSize`,c.titleFontSize||'','Boş/0 bırakırsan mevcut otomatik boyut kullanılır.',contentTarget,'number')}
         ${input('Kısa açıklama yazı boyutu (px)',`settings.campaignCards[${i}].subtitleFontSize`,c.subtitleFontSize||'','Boş/0 bırakırsan mevcut otomatik boyut kullanılır.',contentTarget,'number')}
         ${input('Buton yazısı',`settings.campaignCards[${i}].buttonText`,c.buttonText||'ÜRÜNLERİ GÖR','Örn: Ürünleri Gör, Keşfet, Setlere Bak.',buttonTarget)}
-        <div class=field><label><b>Buton nereye gitsin?</b></label><select class=formControl data-preview-target='${attr(buttonTarget)}' onchange="settings.campaignCards[${i}].targetCategory=this.value;changed(this.dataset.previewTarget)">${campaignCategoryOptions(c.targetCategory||'tum')}</select><div class=help>Sadece sitendeki kategorilerden seç. Müşteri butona basınca o kategori açılır.</div></div>
+        <div class=field><label><b>Buton nereye gitsin?</b></label><select class=formControl data-preview-target='${attr(buttonTarget)}' onchange="settings.campaignCards[${i}].targetCategory=this.value;changed(this.dataset.previewTarget)">${campaignCategoryOptions(c.targetCategory||'tum')}</select><div class=help>Müşteri butona basınca açılacak kategoriyi seç.</div></div>
       </div>
     </div>`;
   }).join('');
-  shell('Site Ayarları','Sık kullandığın ayarlar burada. Slider bölümü özellikle sade tutuldu.',
-  `<div class=panel><h2>Üst Alan</h2>
-    ${input('En üstte akan yazı','settings.campaignText',settings.campaignText||'','Siyah ince şeritte akan metin.','.announce')}
-    ${input('Ana başlık','settings.heroTitle',settings.heroTitle||'','Slider alanının altındaki ana başlık.','.hero h1')}
-    ${input('Slogan','settings.heroSubtitle',settings.heroSubtitle||'','Ana başlığın altındaki slogan.','.hero p')}
-    ${input('WhatsApp numarası','settings.whatsapp',settings.whatsapp||'','Yeşil iletişim butonu.','.contactBtn.wa')}
-    ${input('Instagram kullanıcı adı','settings.instagram',settings.instagram||'','Siyah iletişim butonu.','.contactBtn.ig')}
-    ${input('Kargom Nerede bağlantısı','settings.cargoTrackingUrl',settings.cargoTrackingUrl||'https://ebranch.araskargo.com.tr/','Üstteki paket ikonunun açacağı resmi Aras Kargo sayfası.','.cargoAction')}
-  </div>
-  <details class="panel simpleAdminDetails announcementAdmin"><summary>Duyuru Panosu <small>Siteye girince müşterinin önüne çıkar</small></summary><div class="simpleDetailsBody">
-    <label class=setItemToggle data-preview-target=".siteAnnouncement"><span><b>Duyuruyu göster</b><small class=muted>Kapalıysa müşterinin karşısına çıkmaz.</small></span><input type=checkbox ${settings.siteAnnouncement?.enabled?'checked':''} onchange="settings.siteAnnouncement.enabled=this.checked;changed('.siteAnnouncement')"></label>
-    <div class=grid2>
-      ${input('Üst küçük başlık','settings.siteAnnouncement.eyebrow',settings.siteAnnouncement?.eyebrow||'DUYURU','Örn: KAMPANYA, BUGÜNE ÖZEL.','.siteAnnouncement')}
-      ${input('Ana duyuru başlığı','settings.siteAnnouncement.title',settings.siteAnnouncement?.title||'','Müşterinin ilk gördüğü büyük başlık.','.siteAnnouncement')}
-    </div>
-    ${textarea('Duyuru metni','settings.siteAnnouncement.text',settings.siteAnnouncement?.text||'','Kampanya veya bilgilendirme metnini buraya yaz.','.siteAnnouncement')}
-    ${input('Kapat butonu yazısı','settings.siteAnnouncement.buttonText',settings.siteAnnouncement?.buttonText||'Kapat','Örn: Kapat, Alışverişe Devam Et.','.siteAnnouncementButton')}
-    <div class=help><b>Müşteride nerede görünür?</b> Site ilk açıldığında ekranın ortasında çıkar. Müşteri kapattıktan sonra sitede normal şekilde devam eder.</div>
-  </div></details>
-  <div class="panel grid2"><h2 style="grid-column:1/-1">Renkler</h2>
-    ${input('Site arka planı','settings.theme.surface',settings.theme.surface||'#ffffff','Tüm sitenin ana zemin rengi.','body','color')}
-    ${input('Altın vurgu','settings.theme.accent',settings.theme.accent||'#c39a59','Başlık ve küçük vurgu alanları.','.hero','color')}
-  </div>
-  <div class="panel campaignSliderAdminIntro">
-    <div><h2>Ana Fotoğraf Sliderı</h2><div class=help>Fotoğraflar otomatik olarak <b>3 saniyede bir</b> değişir. En fazla <b>10 fotoğrafı</b> aynı anda ekleyebilirsin.</div></div>
-    <div class=campaignBulkUpload><input id=campaignBulkFiles type=file accept="image/*" multiple><button class=btn onclick=uploadCampaignBulk()>Seçtiğim Fotoğrafları Slayt Olarak Ekle</button></div>
-    <div class=campaignGlobalSettings>
-      ${input('Slider üst kayan yazı','settings.campaignMarqueeText',settings.campaignMarqueeText||'','Bu tek yazı bütün fotoğraflarda aynı kalır; fotoğraf değişse de kendi halinde akmaya devam eder.','.campaignGlobalMarquee')}
-      <div class=field><label><b>Kayan yazı konumu</b></label><select class=formControl data-preview-target=".campaignGlobalMarquee" onchange="settings.campaignMarqueePosition=this.value;changed(this.dataset.previewTarget)"><option value="full" ${!['center','middle'].includes(settings.campaignMarqueePosition)?'selected':''}>Üstte tam şerit</option><option value="center" ${settings.campaignMarqueePosition==='center'?'selected':''}>Üst ortada</option><option value="middle" ${settings.campaignMarqueePosition==='middle'?'selected':''}>Tam ortada</option></select><div class=help>“Tam ortada” seçersen kayan yazı reklam görselinin orta hizasında akar.</div></div>
-    </div>
-    <div class=help>Her slaytta sadece fotoğraf, başlık, kısa açıklama ve buton hedefi var. Kayan yazı tek ayardır.</div>
-  </div>
-  ${campaigns||'<div class=panel><b>Henüz slider fotoğrafı yok.</b><div class=help>Yukarıdan fotoğraf seçip ekle.</div></div>'}
-  <div class=panel><h2>Sipariş Sonu Yazıları</h2>
-    ${textarea('Kişiye özel ürün onay metni','settings.personalizedNotice',settings.personalizedNotice||'','Yazılı kapıda ödeme siparişinde çıkar.','.drawer')}
-    ${textarea('Kargo bilgilendirme metni','settings.shippingNotice',settings.shippingNotice||'','Sipariş oluşturulmadan hemen önce çıkar.','.drawer')}
-    ${input('Sipariş tamamlandı başlığı','settings.successTitle',settings.successTitle||'','Son ekrandaki başlık.','.drawer')}
-    ${input('Sipariş teşekkür yazısı','settings.successMessage',settings.successMessage||'','Son ekrandaki mesaj.','.drawer')}
+
+  const marqueeOffset=Math.max(-4,Math.min(48,Number(settings.campaignMarqueeOffset)||0));
+  shell('Site Ayarları','Ayarlar işlevleri değiştirilmeden daha düzenli gruplandı. İhtiyacın olan bölümü açıp düzenleyebilirsin.',
+  `<div class="settingsHub">
+    <details class="panel simpleAdminDetails settingsGroup">
+      <summary>Ana Sayfa <small>Başlık, slogan ve üst şerit</small></summary>
+      <div class="simpleDetailsBody settingsBody grid2">
+        ${input('En üstte akan yazı','settings.campaignText',settings.campaignText||'','Siyah ince şeritte akan metin.','.announce')}
+        ${input('Ana başlık','settings.heroTitle',settings.heroTitle||'','Slider alanının altındaki ana başlık.','.hero h1')}
+        ${input('Slogan','settings.heroSubtitle',settings.heroSubtitle||'','Ana başlığın altındaki slogan.','.hero p')}
+      </div>
+    </details>
+
+    <details class="panel simpleAdminDetails settingsGroup sliderSettingsGroup" open>
+      <summary>Slider / Reklam Alanı <small>10 görsel ve kayan yazı</small></summary>
+      <div class="simpleDetailsBody settingsBody">
+        <div class="sliderMarqueeAdminCard">
+          <div class="settingsSectionHead"><div><h3>Slider üst kayan yazı</h3><p>Fotoğraflar değişse de bu yazı kesintisiz akmaya devam eder.</p></div></div>
+          <div class="sliderMarqueeGrid">
+            <div class=field><label><b>Kayan yazı metni</b></label><input class=formControl data-preview-target=".campaignGlobalMarquee" type=text value="${attr(settings.campaignMarqueeText||'')}" oninput="settings.campaignMarqueeText=this.value;changed(this.dataset.previewTarget)"><div class=help>Önerilen biçim: SHAZ’I KEŞFET • KOLEKSİYONU İNCELE •</div></div>
+            <div class="field marqueePositionField">
+              <label><b>Kayan yazı yerleşimi</b></label>
+              <select class=formControl data-preview-target=".campaignGlobalMarquee" onchange="settings.campaignMarqueePosition=this.value;changed(this.dataset.previewTarget)"><option value="full" ${settings.campaignMarqueePosition==='full'?'selected':''}>Üstte tam genişlik</option><option value="center" ${settings.campaignMarqueePosition==='center'?'selected':''}>Üstte ortalanmış dar alan</option><option value="middle" ${settings.campaignMarqueePosition==='middle'?'selected':''}>Slider ortası</option></select>
+              <div class=help>Mevcut yerleşim seçeneği korunmuştur.</div>
+            </div>
+            <div class="field marqueePositionField">
+              <label><b>Dikey ince ayar</b></label>
+              <div class=rangeLabels><span>Yukarı</span><output id=marqueeOffsetOutput>${marqueeOffset>0?'+'+marqueeOffset:marqueeOffset}px</output><span>Aşağı</span></div>
+              <input class="formControl marqueeRange" data-preview-target=".campaignGlobalMarquee" type=range min="-4" max="48" step="1" value="${marqueeOffset}" oninput="settings.campaignMarqueeOffset=Number(this.value);document.getElementById('marqueeOffsetOutput').textContent=(this.value>0?'+':'')+this.value+'px';changed(this.dataset.previewTarget)">
+              <div class=help>Seçili yerleşimi güvenli sınırlar içinde biraz yukarı veya aşağı taşı.</div>
+            </div>
+          </div>
+        </div>
+        <div class="campaignSliderAdminIntro compactSliderAdmin">
+          <div class=settingsSectionHead><div><h3>Ana Fotoğraf Sliderı</h3><p>Fotoğraflar mevcut sistemde olduğu gibi yaklaşık 3 saniyede bir değişir.</p></div></div>
+          <div class=campaignBulkUpload><input id=campaignBulkFiles type=file accept="image/*" multiple><button class=btn onclick=uploadCampaignBulk()>Seçtiğim Fotoğrafları Slayt Olarak Ekle</button></div>
+          <details class="nestedAdminDetails sliderItemsDetails"><summary>Slider görsellerini düzenle <small>${cards.length} slayt</small></summary><div class=sliderCardsWrap>${campaigns||'<div class=panel><b>Henüz slider fotoğrafı yok.</b><div class=help>Yukarıdan fotoğraf seçip ekle.</div></div>'}</div></details>
+        </div>
+      </div>
+    </details>
+
+    <details class="panel simpleAdminDetails settingsGroup announcementAdmin">
+      <summary>Duyuru Panosu <small>Siteye girince çıkan bilgilendirme</small></summary><div class="simpleDetailsBody settingsBody">
+        <label class=setItemToggle data-preview-target=".siteAnnouncement"><span><b>Duyuruyu göster</b><small class=muted>Kapalıysa müşterinin karşısına çıkmaz.</small></span><input type=checkbox ${settings.siteAnnouncement?.enabled?'checked':''} onchange="settings.siteAnnouncement.enabled=this.checked;changed('.siteAnnouncement')"></label>
+        <div class=grid2>
+          ${input('Üst küçük başlık','settings.siteAnnouncement.eyebrow',settings.siteAnnouncement?.eyebrow||'DUYURU','Örn: KAMPANYA, BUGÜNE ÖZEL.','.siteAnnouncement')}
+          ${input('Ana duyuru başlığı','settings.siteAnnouncement.title',settings.siteAnnouncement?.title||'','Müşterinin ilk gördüğü büyük başlık.','.siteAnnouncement')}
+        </div>
+        ${textarea('Duyuru metni','settings.siteAnnouncement.text',settings.siteAnnouncement?.text||'','Kampanya veya bilgilendirme metnini buraya yaz.','.siteAnnouncement')}
+        ${input('Kapat butonu yazısı','settings.siteAnnouncement.buttonText',settings.siteAnnouncement?.buttonText||'Kapat','Örn: Kapat, Alışverişe Devam Et.','.siteAnnouncementButton')}
+      </div>
+    </details>
+
+    <details class="panel simpleAdminDetails settingsGroup">
+      <summary>İletişim <small>WhatsApp, Instagram ve kargo bağlantısı</small></summary>
+      <div class="simpleDetailsBody settingsBody grid2">
+        ${input('WhatsApp numarası','settings.whatsapp',settings.whatsapp||'','Yeşil iletişim butonu.','.contactBtn.wa')}
+        ${input('Instagram kullanıcı adı','settings.instagram',settings.instagram||'','Instagram iletişim butonu.','.contactBtn.ig')}
+        <div class=fieldWide>${input('Kargom Nerede bağlantısı','settings.cargoTrackingUrl',settings.cargoTrackingUrl||'https://ebranch.araskargo.com.tr/','Üstteki paket ikonunun açacağı resmi Aras Kargo sayfası.','.cargoAction')}</div>
+      </div>
+    </details>
+
+    <details class="panel simpleAdminDetails settingsGroup">
+      <summary>Görünüm <small>Site renkleri</small></summary>
+      <div class="simpleDetailsBody settingsBody grid2">
+        ${input('Site arka planı','settings.theme.surface',settings.theme.surface||'#ffffff','Tüm sitenin ana zemin rengi.','body','color')}
+        ${input('Altın vurgu','settings.theme.accent',settings.theme.accent||'#c39a59','Başlık ve küçük vurgu alanları.','.hero','color')}
+      </div>
+    </details>
+
+    <details class="panel simpleAdminDetails settingsGroup">
+      <summary>Sipariş <small>Sipariş sonu bilgilendirme metinleri</small></summary>
+      <div class="simpleDetailsBody settingsBody">
+        <div class=grid2>
+          ${textarea('Kişiye özel ürün onay metni','settings.personalizedNotice',settings.personalizedNotice||'','Yazılı kapıda ödeme siparişinde çıkar.','.drawer')}
+          ${textarea('Kargo bilgilendirme metni','settings.shippingNotice',settings.shippingNotice||'','Sipariş oluşturulmadan hemen önce çıkar.','.drawer')}
+          ${input('Sipariş tamamlandı başlığı','settings.successTitle',settings.successTitle||'','Son ekrandaki başlık.','.drawer')}
+          ${input('Sipariş teşekkür yazısı','settings.successMessage',settings.successMessage||'','Son ekrandaki mesaj.','.drawer')}
+        </div>
+      </div>
+    </details>
   </div>`);
 }
+
 function addCampaign(imageUrl=''){
   settings.campaignCards=settings.campaignCards||[];
   settings.campaignCards.push({id:'kampanya-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),enabled:true,order:settings.campaignCards.length+1,imageUrl,title:'Yeni ürünlerimizi keşfedin.',subtitle:'Yeni koleksiyona göz atın.',buttonText:'ÜRÜNLERİ GÖR',targetCategory:'tum',overlayOpacity:28});

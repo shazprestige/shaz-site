@@ -172,8 +172,11 @@ function renderCampaignCards(){
   const cards=(settings.campaignCards||[]).filter(x=>x.enabled!==false&&x.imageUrl).sort((a,b)=>(a.order||0)-(b.order||0));
   if(!cards.length){wrap.innerHTML='';return}
   if(campaignSliderIndex>=cards.length)campaignSliderIndex=0;
-  const marquee=String(settings.campaignMarqueeText||'').trim();
+  const rawMarquee=String(settings.campaignMarqueeText||'').trim();
+  const oldDefaultMarquee=rawMarquee.toLocaleLowerCase('tr-TR').replace(/[’']/g,"'").includes('yeni ürünlerimizi keşfedin');
+  const marquee=(rawMarquee && !oldDefaultMarquee)?rawMarquee:'SHAZ’I KEŞFET • KOLEKSİYONU İNCELE •';
   const marqueePos=['center','middle'].includes(settings.campaignMarqueePosition)?settings.campaignMarqueePosition:'full';
+  const marqueeOffset=Math.max(-4,Math.min(48,Number(settings.campaignMarqueeOffset)||0));
   wrap.innerHTML=`<section class="campaignSlider" id="campaignSlider" aria-label="Kampanyalar">
     <div class="campaignSlides">${cards.map((c,i)=>{
       const op=Math.min(.75,Math.max(0,Number(c.overlayOpacity??28)/100));
@@ -195,7 +198,7 @@ function renderCampaignCards(){
           ${c.buttonText?`<button class="campaignBtn" type="button" data-campaign-target="${escapeAttr(c.targetCategory||'tum')}">${escapeHtml(c.buttonText)}</button>`:''}
         </div>
       </article>`}).join('')}</div>
-    ${marquee?`<div class="campaignGlobalMarquee campaignGlobalMarquee--${marqueePos}"><div class="campaignMarqueeTrack">${Array.from({length:12},(_,n)=>`<span class="campaignMarqueeCopy"${n?` aria-hidden="true"`:''}>${escapeHtml(marquee)}</span>`).join('')}</div></div>`:''}
+    ${marquee?`<div class="campaignGlobalMarquee campaignGlobalMarquee--${marqueePos}" style="--campaign-marquee-offset:${marqueeOffset}px"><div class="campaignMarqueeTrack">${Array.from({length:14},(_,n)=>`<span class="campaignMarqueeCopy"${n?` aria-hidden="true"`:''}>${escapeHtml(marquee)}</span>`).join('')}</div></div>`:''}
     ${cards.length>1?`<button class="campaignArrow campaignPrev" type="button" aria-label="Önceki fotoğraf">‹</button><button class="campaignArrow campaignNext" type="button" aria-label="Sonraki fotoğraf">›</button><div class="campaignDots">${cards.map((_,i)=>`<button type="button" class="campaignDot ${i===campaignSliderIndex?'isActive':''}" data-slide-dot="${i}" aria-label="${i+1}. fotoğraf"></button>`).join('')}</div>`:''}
   </section>`;
   wrap.querySelectorAll('[data-campaign-target]').forEach(btn=>btn.addEventListener('click',()=>goToCampaignTarget(btn.dataset.campaignTarget)));
