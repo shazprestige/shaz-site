@@ -1,5 +1,88 @@
 [
   {
+    "id": "SHZ14",
+    "createdAt": "2026-08-17T11:07:38.798Z",
+    "createdAtTR": "17.08.2026 14:07:38",
+    "status": "new",
+    "statusUpdatedAt": "2026-08-17T11:07:38.798Z",
+    "requestId": "cc204128-e183-4c77-a86f-f8869321f4fb",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786910492353-4-ukzz",
+          "name": "SHAZ - GÖZLÜK 1",
+          "subtitle": "Erkek gözlük",
+          "description": "Siyah çerçeve · Siyah cam · Gold detaylı · Klasik tasarım",
+          "features": [
+            "Polarize",
+            "UV200"
+          ],
+          "category": "gozlukler",
+          "price": 350,
+          "oldPrice": 0,
+          "stock": 1,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786910487125-wtf0nj.jpeg",
+          "images": [
+            "/uploads/1786910487125-wtf0nj.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Sol gözlük sapı",
+            "Sağ gözlük sapı"
+          ],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": true,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "descriptionEditorWidth": 290,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 290,
+          "featuresWrapCh": 36,
+          "soldOutEnabled": false,
+          "soldOutUntil": ""
+        },
+        "qty": 1,
+        "personalized": false
+      }
+    ],
+    "customer": {
+      "fullName": "ad aotad",
+      "phone": "5384316141",
+      "extraPhone": "5351334108",
+      "province": "Burdur",
+      "district": "dksk",
+      "deliveryMode": "branch",
+      "branchName": "dısjdjj",
+      "neighborhood": "dksk MH.",
+      "avenue": "rkrk CD.",
+      "street": "fkskd SK.",
+      "fullAddress": "dkskskkwsk",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": ""
+    },
+    "payment": "online",
+    "personalApproval": null,
+    "shippingNoticeAccepted": true,
+    "subtotal": 350,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 350
+  },
+  {
     "id": "SHZ13",
     "createdAt": "2026-08-17T11:06:34.842Z",
     "createdAtTR": "17.08.2026 14:06:34",
