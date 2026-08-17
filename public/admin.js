@@ -189,11 +189,46 @@ function adminSoldOutRemainingText(p){
 function localDateTimeValue(ms){const d=new Date(ms),pad=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;}
 function setSoldOutUntil(productId,value){const p=(catalog.products||[]).find(x=>x.id===productId);if(!p)return;p.soldOutEnabled=true;p.soldOutUntil=value||'';changed('#products');renderSoldOutPanel();}
 function addSoldOutDays(productId,days){const p=(catalog.products||[]).find(x=>x.id===productId);if(!p)return;const parsed=Date.parse(String(p.soldOutUntil||''));const base=Number.isFinite(parsed)&&parsed>Date.now()?parsed:Date.now();p.soldOutEnabled=true;p.soldOutUntil=localDateTimeValue(base+(Number(days)||0)*86400000);changed('#products');renderSoldOutPanel();}
-function openSoldOutProduct(productId){const p=(catalog.products||[]).find(x=>x.id===productId);if(!p)return;adminOpenCategory=p.category;adminOpenProduct=p.id;adminProductSearch='';try{sessionStorage.setItem('shazAdminCategory',p.category);sessionStorage.setItem('shazAdminTab','catalog')}catch(_){}show('catalog');requestAnimationFrame(()=>document.getElementById('admin-product-'+p.id)?.scrollIntoView({behavior:'smooth',block:'center'}));}
+function openSoldOutProduct(productId){
+  const p=(catalog.products||[]).find(x=>x.id===productId);if(!p)return;
+  const validCategory=(catalog.categories||[]).some(c=>c.id===p.category)?p.category:'tum';
+  adminOpenCategory=validCategory;adminOpenProduct=p.id;adminProductSearch='';
+  try{sessionStorage.setItem('shazAdminCategory',validCategory);sessionStorage.setItem('shazAdminTab','catalog')}catch(_){}
+  show('catalog');
+  const focus=()=>{
+    const el=document.getElementById('admin-product-'+p.id);
+    if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('soldOutOpenedProduct');setTimeout(()=>el.classList.remove('soldOutOpenedProduct'),1400);}
+  };
+  requestAnimationFrame(()=>requestAnimationFrame(focus));
+  setTimeout(focus,180);
+}
+function openSoldOutImage(productId){openAdminProductImage(productId)}
+function toggleSoldOutDateEditor(productId){
+  const row=document.querySelector(`[data-soldout-admin-id="${CSS.escape(String(productId))}"]`);if(!row)return;
+  const editor=row.querySelector('.soldOutPanelControls');if(!editor)return;
+  const willOpen=editor.hidden;document.querySelectorAll('.soldOutPanelControls').forEach(x=>x.hidden=true);editor.hidden=!willOpen;
+  if(willOpen){const input=editor.querySelector('input[type="datetime-local"]');setTimeout(()=>{try{input?.showPicker?.()}catch(_){input?.focus()}},20);}
+}
+function soldOutRowClick(e,productId){
+  if(e.target.closest('button,input,select,label,a'))return;
+  openSoldOutProduct(productId);
+}
 function renderSoldOutPanel(){
   const products=(catalog.products||[]).filter(p=>p.soldOutEnabled);
-  const rows=products.map(p=>{const img=p.image||productImages(p)[0]||'',cat=adminCategoryName(p)||'Kategori yok';return `<div class="soldOutPanelRow" data-soldout-admin-id="${attr(p.id)}"><div class="soldOutPanelProduct">${img?`<img src="${attr(img)}" alt="${attr(p.name||'Ürün')}">`:''}<div><b>${esc(p.name||'Ürün')}</b><small>${esc(cat)}</small></div></div><div class="soldOutPanelCountdown"><b>${esc(adminSoldOutRemainingText(p))}</b><small>${p.soldOutUntil?esc(String(p.soldOutUntil).replace('T',' ')):'Yeniden stok zamanı girilmemiş.'}</small></div><div class="soldOutPanelControls"><input class=formControl type=datetime-local value="${attr(p.soldOutUntil||'')}" onchange="setSoldOutUntil('${attr(p.id)}',this.value)"><div class=soldOutDayButtons><button type=button class=smallBtn onclick="addSoldOutDays('${attr(p.id)}',1)">+1 gün</button><button type=button class=smallBtn onclick="addSoldOutDays('${attr(p.id)}',5)">+5 gün</button></div></div><button type=button class=smallBtn onclick="openSoldOutProduct('${attr(p.id)}')">Ürünü Aç</button></div>`}).join('');
-  shell('Tükendi / Süreli Ürünler','“Tükendi” işareti açık ürünleri, kalan sürelerini ve yeniden stok tarihlerini tek yerde yönetirsin.',`<div class="panel soldOutPanel"><div class=soldOutPanelHead><b>${products.length} ürün işaretli</b><span>Tarih alanından doğrudan seçebilir veya +1 / +5 gün ile süreyi uzatabilirsin.</span></div><div class=soldOutPanelList>${rows||'<div class=emptyAdmin>Şu anda “Tükendi” işaretli ürün yok.</div>'}</div></div>`);
+  const rows=products.map(p=>{
+    const img=p.image||productImages(p)[0]||'',cat=adminCategoryName(p)||'Kategori yok';
+    return `<div class="soldOutPanelRow" data-soldout-admin-id="${attr(p.id)}" onclick="soldOutRowClick(event,'${attr(p.id)}')" title="Ürünün yönetim ekranını aç">
+      <div class="soldOutPanelProduct">${img?`<img src="${attr(img)}" alt="${attr(p.name||'Ürün')}">`:''}<div><b>${esc(p.name||'Ürün')}</b><small>${esc(cat)}</small></div></div>
+      <div class="soldOutPanelCountdown"><b>${esc(adminSoldOutRemainingText(p))}</b><small>${p.soldOutUntil?esc(String(p.soldOutUntil).replace('T',' ')):'Yeniden stok zamanı girilmemiş.'}</small></div>
+      <div class="soldOutPanelControls" hidden><input data-soldout-date-id="${attr(p.id)}" class=formControl type=datetime-local value="${attr(p.soldOutUntil||'')}" onchange="setSoldOutUntil('${attr(p.id)}',this.value)"><div class=soldOutDayButtons><button type=button class=smallBtn onclick="addSoldOutDays('${attr(p.id)}',1)">+1 gün</button><button type=button class=smallBtn onclick="addSoldOutDays('${attr(p.id)}',5)">+5 gün</button></div></div>
+      <div class=soldOutPanelActions>
+        <button type=button class=smallBtn onclick="toggleSoldOutDateEditor('${attr(p.id)}')">Tarih Ayarla</button>
+        <button type=button class=smallBtn onclick="openSoldOutImage('${attr(p.id)}')">Büyüt</button>
+        <button type=button class=smallBtn onclick="openSoldOutProduct('${attr(p.id)}')">Ürünü Aç</button>
+      </div>
+    </div>`
+  }).join('');
+  shell('Tükendi / Süreli Ürünler','“Tükendi” işareti açık ürünleri, kalan sürelerini ve yeniden stok tarihlerini tek yerde yönetirsin.',`<div class="panel soldOutPanel"><div class=soldOutPanelHead><b>${products.length} ürün işaretli</b><span>Satıra tıklayarak ürünü açabilir; Tarih, +1 gün ve +5 gün ile yeniden stok zamanını yönetebilirsin.</span></div><div class=soldOutPanelList>${rows||'<div class=emptyAdmin>Şu anda “Tükendi” işaretli ürün yok.</div>'}</div></div>`);
   clearInterval(window.__soldOutAdminTimer);window.__soldOutAdminTimer=setInterval(()=>{document.querySelectorAll('[data-soldout-admin-id]').forEach(row=>{const p=(catalog.products||[]).find(x=>x.id===row.dataset.soldoutAdminId),b=row.querySelector('.soldOutPanelCountdown b');if(p&&b)b.textContent=adminSoldOutRemainingText(p)})},1000);
 }
 function renderBuilderAccessSettings(){
@@ -949,6 +984,7 @@ function moveProductWithinCategory(productId,direction){
 }
 function productDragStart(e,id){
   adminDraggedProduct=id;
+  document.addEventListener('dragover',adminProductDragViewport);
   const card=e.currentTarget?.closest('.adminProductCompact');
   card?.classList.add('dragging');
   if(e.dataTransfer){
@@ -957,9 +993,19 @@ function productDragStart(e,id){
     try{e.dataTransfer.setData('application/x-shaz-product',id)}catch(_){ }
   }
 }
+function adminProductDragViewport(e){if(adminDraggedProduct)adminProductDragAutoScroll(e)}
+function adminProductDragAutoScroll(e){
+  const edge=150,maxStep=12,y=Number(e.clientY||0),h=window.innerHeight||document.documentElement.clientHeight||800;
+  let step=0;if(y<edge)step=-Math.max(3,Math.round((edge-y)/edge*maxStep));else if(y>h-edge)step=Math.max(3,Math.round((y-(h-edge))/edge*maxStep));
+  if(!step)return;
+  const content=document.querySelector('.simpleAdmin .content');
+  const canScrollContent=content&&content.scrollHeight>content.clientHeight+2;
+  if(canScrollContent)content.scrollTop+=step;else window.scrollBy(0,step);
+}
 function productDragOver(e,id){
   if(!adminDraggedProduct||adminDraggedProduct===id)return;
   e.preventDefault();e.stopPropagation();
+  adminProductDragAutoScroll(e);
   if(e.dataTransfer)e.dataTransfer.dropEffect='move';
   document.querySelectorAll('.adminProductCompact.dragOver').forEach(x=>x.classList.remove('dragOver'));
   e.currentTarget?.classList.add('dragOver');
@@ -981,6 +1027,7 @@ function productDrop(e,targetId){
 }
 function productDragEnd(e){
   adminDraggedProduct=null;
+  document.removeEventListener('dragover',adminProductDragViewport);
   document.querySelectorAll('.adminProductCompact.dragging,.adminProductCompact.dragOver').forEach(x=>x.classList.remove('dragging','dragOver'));
 }
 
