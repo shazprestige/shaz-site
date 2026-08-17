@@ -37,7 +37,7 @@ function persistCatalogView(){
 }
 function syncCatalogViewControls(){
   const c=activeCategory==='tum'?null:(catalog.categories||[]).find(x=>x.id===activeCategory&&!x.hidden);
-  if($('#catalogTitle'))$('#catalogTitle').textContent=c?.name||catalog.allProductsCategory?.name||'Tüm Ürünler';
+  if($('#catalogTitle'))$('#catalogTitle').textContent=c?.name||'Tüm Ürünler';
   if($('#sortProducts'))$('#sortProducts').value=productSort;
 }
 
@@ -347,8 +347,7 @@ function renderCategoryHub(){
     return;
   }
   categoryHubHead('Kategoriler','Tüm kategoriler');
-  const allCfg=catalog.allProductsCategory||{};
-  const cats=[{id:'tum',name:allCfg.name||'Tüm Ürünler',cover:allCfg.cover||'',allProducts:true},...catalog.categories.filter(c=>!c.hidden&&c.id!=='tum').sort((a,b)=>(a.order??0)-(b.order??0))];
+  const cats=[{id:'tum',name:'Tüm Ürünler',cover:catalog.allProductsCover||'',allProducts:true},...catalog.categories.filter(c=>!c.hidden&&c.id!=='tum').sort((a,b)=>(a.order??0)-(b.order??0))];
   wrap.innerHTML=cats.map(c=>`<button class="categoryTile ${c.cover?'hasCover':''} ${c.allProducts?'allProductsTile':''}" ${c.cover?`style="--cat-cover:url('${escapeAttr(c.cover)}')"`:''} onclick="chooseCategoryFromHub('${escapeAttr(c.id)}','${escapeAttr(c.name)}')"><div class="categoryTileText"><b>${escapeHtml(c.name)}</b><span>${c.allProducts?'Tümünü gör →':'Ürünleri gör →'}</span></div><div class="categoryTileMedia">${c.cover?`<img src="${escapeAttr(c.cover)}" alt="${escapeAttr(c.name)}">`:`<span class="categoryPlaceholder">${c.allProducts?'TÜ':escapeHtml((c.name||'?').slice(0,1))}</span>`}</div></button>`).join('');
 }
 function chooseCategoryFromHub(id,name){
@@ -489,15 +488,12 @@ function openDrawer(html){
   if(!isProductDetail&&activeProductDetailId){activeProductDetailId='';activeProductDetailSource='catalog';clearProductRoute()}
   setProductDetailScrollLock(isProductDetail);
   const drawer=$('#drawer');
-  const isAddress=markup.includes('checkoutShell--address');
-  const useInternalAddressTicker=isAddress&&settings.header?.showTopStrip!==false;
   drawer?.classList.toggle('productDetailDrawer',isProductDetail);
   drawer?.classList.remove('drawerCartMode','drawerAddressMode','drawerUpsellMode','drawerWizardMode');
   if(markup.includes('checkoutShell--cart'))drawer?.classList.add('drawerCartMode');
-  else if(isAddress)drawer?.classList.add('drawerAddressMode');
+  else if(markup.includes('checkoutShell--address'))drawer?.classList.add('drawerAddressMode');
   else if(markup.includes('checkoutUpsellShell'))drawer?.classList.add('drawerUpsellMode');
   else if(markup.includes('wizardHead'))drawer?.classList.add('drawerWizardMode');
-  document.body.classList.toggle('drawerAddressTickerMode',useInternalAddressTicker);
   document.body.classList.add('drawerOpen');
   document.documentElement.classList.add('drawerOpen');
   $('#overlay').classList.remove('hidden');drawer.classList.remove('hidden');drawer.innerHTML=html;
@@ -512,7 +508,7 @@ function openDrawer(html){
 function closeDrawer(){
   if(activeProductDetailId){activeProductDetailId='';activeProductDetailSource='catalog';clearProductRoute()}
   setProductDetailScrollLock(false);
-  document.body.classList.remove('shazKeyboardOpen','drawerOpen','drawerAddressTickerMode');
+  document.body.classList.remove('shazKeyboardOpen','drawerOpen');
   document.documentElement.classList.remove('drawerOpen');
   $('#drawer')?.classList.remove('productDetailDrawer','drawerCartMode','drawerAddressMode','drawerUpsellMode','drawerWizardMode');
   $('#overlay').classList.add('hidden');$('#drawer').classList.add('hidden');
@@ -648,7 +644,7 @@ window.addEventListener('message',e=>{
     // Ürün görünür değilse önizlemeyi Tüm Ürünler'e al.
     if(!el && target && target.includes('[data-product-id=')){
       activeCategory='tum';
-      if($('#catalogTitle')) $('#catalogTitle').textContent=catalog.allProductsCategory?.name||'Tüm Ürünler';
+      if($('#catalogTitle')) $('#catalogTitle').textContent='Tüm Ürünler';
       renderCategories();
       renderProducts($('#search')?.value||'');
       el=document.querySelector(target);
@@ -1450,20 +1446,11 @@ function bindDrawerInputFocus(){
     },120),{passive:true});
   });
 }
-function checkoutDrawerAnnounceHtml(){
-  if(settings.header?.showTopStrip===false)return '';
-  const text=String(settings.campaignText||'').trim();
-  if(!text)return '<div class=checkoutDrawerAnnounce></div>';
-  const copy=escapeHtml(text);
-  return `<div class=checkoutDrawerAnnounce><div class=track><span class=marqueeCopy>${copy}</span><span class=marqueeCopy aria-hidden=true>${copy}</span></div></div>`;
-}
 function addressStep(){
   checkoutState.payment=$('#pay')?.value||checkoutState.payment||'cod';
   const c=checkoutState.customer||{};
   const branch=c.deliveryMode==='branch';
-  const hasTopStrip=settings.header?.showTopStrip!==false;
-  openDrawer(`<div class="checkoutShell checkoutShell--address ${hasTopStrip?'hasDrawerAnnounce':''}">
-    ${checkoutDrawerAnnounceHtml()}
+  openDrawer(`<div class="checkoutShell checkoutShell--address">
     <div class="checkoutStickyTop addressStickyTop">
       <div class="checkoutTop"><div><span class="checkoutEyebrow">TESLİMAT BİLGİLERİ</span><h2>Siparişinizi nereye gönderelim?</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
       <div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="checkout()">← Sepete dön</button><small>* zorunlu alan</small></div>
