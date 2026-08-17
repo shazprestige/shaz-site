@@ -483,11 +483,19 @@ function setProductDetailScrollLock(on){
   document.documentElement.classList.toggle('productDetailOpen',!!on);
 }
 function openDrawer(html){
-  const isProductDetail=String(html||'').includes('productDetailShell');
+  const markup=String(html||'');
+  const isProductDetail=markup.includes('productDetailShell');
   if(!isProductDetail&&activeProductDetailId){activeProductDetailId='';activeProductDetailSource='catalog';clearProductRoute()}
   setProductDetailScrollLock(isProductDetail);
   const drawer=$('#drawer');
   drawer?.classList.toggle('productDetailDrawer',isProductDetail);
+  drawer?.classList.remove('drawerCartMode','drawerAddressMode','drawerUpsellMode','drawerWizardMode');
+  if(markup.includes('checkoutShell--cart'))drawer?.classList.add('drawerCartMode');
+  else if(markup.includes('checkoutShell--address'))drawer?.classList.add('drawerAddressMode');
+  else if(markup.includes('checkoutUpsellShell'))drawer?.classList.add('drawerUpsellMode');
+  else if(markup.includes('wizardHead'))drawer?.classList.add('drawerWizardMode');
+  document.body.classList.add('drawerOpen');
+  document.documentElement.classList.add('drawerOpen');
   $('#overlay').classList.remove('hidden');drawer.classList.remove('hidden');drawer.innerHTML=html;
   requestAnimationFrame(()=>{
     drawer.querySelectorAll('input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select').forEach(el=>{if(!el.style.fontSize)el.style.fontSize='16px'});
@@ -500,8 +508,9 @@ function openDrawer(html){
 function closeDrawer(){
   if(activeProductDetailId){activeProductDetailId='';activeProductDetailSource='catalog';clearProductRoute()}
   setProductDetailScrollLock(false);
-  document.body.classList.remove('shazKeyboardOpen');
-  $('#drawer')?.classList.remove('productDetailDrawer');
+  document.body.classList.remove('shazKeyboardOpen','drawerOpen');
+  document.documentElement.classList.remove('drawerOpen');
+  $('#drawer')?.classList.remove('productDetailDrawer','drawerCartMode','drawerAddressMode','drawerUpsellMode','drawerWizardMode');
   $('#overlay').classList.add('hidden');$('#drawer').classList.add('hidden');
 }
 function closeProductDetail(source=activeProductDetailSource||'catalog'){
@@ -1414,6 +1423,13 @@ function bindDrawerScrollGuard(){
     const atTop=scrollEl.scrollTop<=0,atBottom=scrollEl.scrollTop>=max;
     if((atTop&&dy>0)||(atBottom&&dy<0))e.preventDefault();
   },{passive:false});
+  // iOS momentum scroll, parmak bırakıldıktan sonra da sınırın dışına esnemeye çalışabilir.
+  // Kaydırılan orta alanı 1px içeride tutarak üst/alt sabit katmanın lastik gibi sürüklenmesini kesiyoruz.
+  let clampRaf=0;
+  scrollEl.addEventListener('scroll',()=>{
+    if(clampRaf)return;
+    clampRaf=requestAnimationFrame(()=>{clampRaf=0;nudgeFromEdge()});
+  },{passive:true});
 }
 let drawerViewportBound=false;
 function bindDrawerInputFocus(){

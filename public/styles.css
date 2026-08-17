@@ -3701,3 +3701,109 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}button,a,[role=button],
 .builderAccessStatus span{color:#687080;font-size:13px;line-height:1.45}
 .builderAccessPreview{margin-top:14px;padding:20px;border:1px solid #e4ded2;border-radius:14px;background:#fff;text-align:center}
 .builderAccessPreview h3{margin:6px 0 8px}.builderAccessPreview p{margin:0 auto 14px;max-width:560px;color:#687080}.builderAccessPreview .btn{max-width:260px;margin:auto}
+
+
+/* ===== V122 — yalnızca sepet hızlı kaydırma kilidi + yönetim set görseli büyütme ===== */
+/* Drawer açıkken arka sayfa artık hiç kaymaz. iOS hızlı flick sırasında siyah duyuru şeridinin
+   ve sepet başlığının birlikte aşağı/yukarı esnemesini engellemek için kök kaydırmayı kilitliyoruz. */
+html.drawerOpen,body.drawerOpen{
+  overflow:hidden!important;
+  overscroll-behavior:none!important;
+  width:100%!important;
+  max-width:100%!important;
+}
+body.drawerOpen #announceWrap{
+  position:fixed!important;
+  top:0!important;left:0!important;right:0!important;
+  width:100%!important;
+  z-index:1000000!important;
+  transform:translate3d(0,0,0)!important;
+  backface-visibility:hidden!important;
+}
+/* Sepette yalnız orta ürün listesi kaydırılır. Drawer ve üst/alt blok kaydırma yüzeyi değildir. */
+.drawer.drawerCartMode{
+  position:fixed!important;
+  top:var(--announce-h,25px)!important;
+  bottom:0!important;
+  height:auto!important;
+  max-height:none!important;
+  overflow:hidden!important;
+  overscroll-behavior:none!important;
+  transform:translate3d(0,0,0)!important;
+  backface-visibility:hidden!important;
+}
+.drawer.drawerCartMode>.checkoutShell--cart{
+  height:100%!important;
+  min-height:0!important;
+  max-height:100%!important;
+  display:grid!important;
+  grid-template-rows:auto minmax(0,1fr) auto!important;
+  overflow:hidden!important;
+  overscroll-behavior:none!important;
+}
+.drawer.drawerCartMode .checkoutStickyTop,
+.drawer.drawerCartMode .checkoutStickyBottom{
+  position:relative!important;
+  top:auto!important;bottom:auto!important;
+  transform:translate3d(0,0,0)!important;
+  backface-visibility:hidden!important;
+  contain:layout paint!important;
+}
+.drawer.drawerCartMode .checkoutScrollBody{
+  min-height:0!important;
+  height:auto!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior:none!important;
+  -webkit-overflow-scrolling:auto!important;
+  touch-action:pan-y!important;
+  contain:strict!important;
+}
+@media(max-width:900px){
+  .drawer.drawerCartMode{
+    top:var(--announce-h,25px)!important;
+    height:auto!important;
+    max-height:none!important;
+  }
+}
+
+/* Yönetim ürün listesi: fotoğrafı diğer kontrollere bindirmeden aşağı doğru büyüt.
+   Kartın kendi yüksekliği fotoğrafla birlikte artar; isim ve butonların üzerine çıkmaz. */
+@media(min-width:901px){
+  .adminProductCompactHead{
+    min-height:100px!important;
+    align-items:stretch!important;
+    padding:8px!important;
+    gap:8px!important;
+  }
+  .adminProductCompactMain{
+    min-height:84px!important;
+    align-items:flex-start!important;
+    gap:9px!important;
+  }
+  .compactThumb{
+    width:96px!important;
+    height:84px!important;
+    flex:0 0 96px!important;
+    align-self:stretch!important;
+    border-radius:9px!important;
+    background:#f3f4f5!important;
+  }
+  .compactThumb img{
+    width:100%!important;
+    height:100%!important;
+    object-fit:contain!important;
+    object-position:center!important;
+    display:block!important;
+  }
+  .compactMeta{padding-top:3px!important;min-width:0!important}
+  .compactMeta b{font-size:10.5px!important;line-height:1.18!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+  .compactEdit{padding-top:3px!important;align-self:flex-start!important}
+  .compactQuickActions{
+    align-self:end!important;
+    justify-content:flex-end!important;
+    flex-wrap:wrap!important;
+    max-width:118px!important;
+    gap:4px!important;
+  }
+}
