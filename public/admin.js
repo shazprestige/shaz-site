@@ -63,6 +63,9 @@ async function load(){
   }
   if(!['full','center','middle'].includes(settings.campaignMarqueePosition))settings.campaignMarqueePosition='full';
   settings.theme=settings.theme||{};
+  settings.paymentMethods=(settings.paymentMethods&&typeof settings.paymentMethods==='object')?settings.paymentMethods:{};
+  if(settings.paymentMethods.cod===undefined)settings.paymentMethods.cod=true;
+  if(settings.paymentMethods.online===undefined)settings.paymentMethods.online=true;
   const savedTab=sessionStorage.getItem('shazAdminTab')||'site';
   show(['site','catalog','custom','discounts','upsells','orders','builderAccess','soldout'].includes(savedTab)?savedTab:'site');
   setTimeout(()=>{sendPreview();previewTo('header')},600);
@@ -234,17 +237,30 @@ function renderSoldOutPanel(){
 function renderBuilderAccessSettings(){
   catalog.builder=(catalog.builder&&typeof catalog.builder==='object')?catalog.builder:{};
   if(catalog.builder.enabled===undefined)catalog.builder.enabled=false;
+  settings.paymentMethods=(settings.paymentMethods&&typeof settings.paymentMethods==='object')?settings.paymentMethods:{};
+  if(settings.paymentMethods.cod===undefined)settings.paymentMethods.cod=true;
+  if(settings.paymentMethods.online===undefined)settings.paymentMethods.online=true;
   const enabled=catalog.builder.enabled!==false;
+  const codEnabled=settings.paymentMethods.cod!==false;
+  const onlineEnabled=settings.paymentMethods.online!==false;
   const previewTarget='#builderSpotlight';
-  shell('Kendi Setini Oluştur','Bu bölüm yalnızca Kendi Setini Oluştur alanının müşteriye açık mı, geçici olarak kapalı mı olacağını yönetir.',`
+  shell('Açma / Kapama','Müşteriye açık olacak ana özellikleri ve ödeme yöntemlerini tek yerden açıp kapatabilirsin.',`
     <div class="panel builderAccessAdmin">
       <label class=setItemToggle data-preview-target="${previewTarget}">
-        <span><b>Kendi Setini Oluştur özelliği müşteriye açık</b><small class=muted>Açıkken mevcut set oluşturma akışı aynen çalışır. Kapalıyken müşteriye geçici bilgilendirme ekranı gösterilir.</small></span>
+        <span><b>Kendi Setini Oluştur</b><small class=muted>Açıkken mevcut set oluşturma akışı çalışır. Kapalıyken müşteriye geçici bilgilendirme ekranı gösterilir.</small></span>
         <input type=checkbox ${enabled?'checked':''} onchange="catalog.builder.enabled=this.checked;changed('${previewTarget}');renderBuilderAccessSettings()">
       </label>
+      <label class=setItemToggle data-preview-target=".checkoutPaymentField">
+        <span><b>Kapıda ödeme</b><small class=muted>Kapalıysa müşteri ödeme yöntemi olarak Kapıda ödeme seçeneğini göremez.</small></span>
+        <input type=checkbox ${codEnabled?'checked':''} onchange="settings.paymentMethods.cod=this.checked;changed('.checkoutPaymentField');renderBuilderAccessSettings()">
+      </label>
+      <label class=setItemToggle data-preview-target=".checkoutPaymentField">
+        <span><b>Online ödeme</b><small class=muted>Kapalıysa müşteri ödeme yöntemi olarak Online ödeme seçeneğini göremez.</small></span>
+        <input type=checkbox ${onlineEnabled?'checked':''} onchange="settings.paymentMethods.online=this.checked;changed('.checkoutPaymentField');renderBuilderAccessSettings()">
+      </label>
       <div class="builderAccessStatus ${enabled?'isOpen':'isClosed'}">
-        <b>${enabled?'Şu anda açık':'Şu anda geçici olarak kapalı'}</b>
-        <span>${enabled?'Müşteri Kendi Setini Oluştur alanına girip mevcut akışı kullanabilir.':'Müşteri alana tıkladığında “çok yakında” bilgilendirmesini görür ve Alışverişe Devam Et ile mağazaya döner.'}</span>
+        <b>Kendi Setini Oluştur: ${enabled?'Açık':'Kapalı'}</b>
+        <span>Kapıda ödeme: <b>${codEnabled?'Açık':'Kapalı'}</b> · Online ödeme: <b>${onlineEnabled?'Açık':'Kapalı'}</b></span>
       </div>
       ${!enabled?`<div class=builderAccessPreview><span class=gold>ÇOK YAKINDA</span><h3>Kendi setinizi dilediğiniz gibi oluşturabileceksiniz.</h3><p>Çok yakında burası hizmetinizde olacak. Anlayışınız için teşekkür eder, keyifli alışverişler dileriz. ☺️</p><button type=button class=btn disabled>Alışverişe Devam Et</button></div>`:''}
     </div>`);

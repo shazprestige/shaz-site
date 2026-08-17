@@ -3843,3 +3843,49 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 
 /* Ürün sürüklerken kart üst/alt kenara yaklaştırıldığında yönetim sayfası yavaşça akar. */
 .adminProductCompact.dragging{cursor:grabbing!important}
+
+
+/* v127 — Kategori kartlarının SADECE görünümü v122 ölçülerine döndürüldü.
+   categoryHub'ın güncel kaydırma/sabit alan davranışına dokunulmaz. */
+.categoryHubGrid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:12px!important;
+  padding:18px 14px 32px!important;
+  max-width:760px!important;
+  margin:0 auto!important;
+  width:100%!important;
+}
+.categoryTile,.categoryTile.hasCover{
+  min-height:128px!important;
+  border-radius:10px!important;
+  background:#f1f2f3!important;
+  isolation:auto!important;
+}
+.categoryTile:before,.categoryTile:after,.categoryTile.hasCover:before,.categoryTile.hasCover:after{display:none!important}
+.categoryTile .categoryTileText,.categoryTile.hasCover .categoryTileText{
+  position:relative!important;z-index:2!important;
+  flex:0 0 50%!important;width:50%!important;
+  padding:18px 12px 14px 16px!important;
+  background:#f1f2f3!important;
+}
+.categoryTileText b{font-size:17px!important;line-height:1.15!important;font-weight:650!important}
+.categoryTileText span{font-size:10px!important;margin-top:8px!important}
+.categoryTile .categoryTileMedia,.categoryTile.hasCover .categoryTileMedia{
+  position:absolute!important;inset:0 0 0 auto!important;
+  width:50%!important;height:100%!important;min-width:0!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  overflow:hidden!important;border-left:1px solid #e1e3e6!important;background:#eef0f2!important;
+}
+.categoryTile .categoryTileMedia img,.categoryTile.hasCover .categoryTileMedia img{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  object-fit:cover!important;object-position:center!important;display:block!important;
+  filter:none!important;transform:none!important;opacity:1!important;
+  -webkit-mask-image:none!important;mask-image:none!important;
+}
+.categoryTile.hasCover .categoryTileText b,.categoryTile.hasCover .categoryTileText span{text-shadow:none!important}
+.categoryTile:not(.hasCover) .categoryTileMedia{margin:0!important}
+.categoryTile .categoryPlaceholder{margin:0!important}
+@media(min-width:700px){.categoryHubGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}.categoryTile{min-height:150px!important}}
+@media(max-width:520px){.categoryTile .categoryTileText,.categoryTile.hasCover .categoryTileText{padding:15px 8px 12px 12px!important}}
+@media(max-width:390px){.categoryHubGrid{gap:9px!important;padding:14px 10px 28px!important}.categoryTile{min-height:112px!important}.categoryTile .categoryTileText,.categoryTile.hasCover .categoryTileText{padding:15px 6px 12px 12px!important}.categoryTileText b{font-size:15px!important}}
+.paymentUnavailable{display:flex;align-items:center;color:#8a2f2f;background:#fff5f5}

@@ -49,6 +49,9 @@ async function init(){
   catalog.checkoutUpsells=Array.isArray(catalog.checkoutUpsells)?catalog.checkoutUpsells:[];
   catalog.builder=(catalog.builder&&typeof catalog.builder==='object')?catalog.builder:{};
   if(catalog.builder.enabled===undefined)catalog.builder.enabled=false;
+  settings.paymentMethods=(settings.paymentMethods&&typeof settings.paymentMethods==='object')?settings.paymentMethods:{};
+  if(settings.paymentMethods.cod===undefined)settings.paymentMethods.cod=true;
+  if(settings.paymentMethods.online===undefined)settings.paymentMethods.online=true;
   (catalog.products||[]).forEach(p=>{
     if(p.writeEnabled===undefined){
       const n=String(((catalog.categories||[]).find(c=>c.id===p.category)||{}).name||p.category||'').toLocaleLowerCase('tr-TR')+' '+String(p.name||'').toLocaleLowerCase('tr-TR');
@@ -1480,7 +1483,7 @@ function addressStep(){
           <div class="branchInfo">📍 <b>Aras Kargo şube adını net yazın.</b><br>Google Haritalar'dan kontrol edip şubenin tam adını girin.</div>
           <div class="field fieldWide"><label><b>Aras Kargo şube adı *</b></label><input class=formControl id=addr-branchName value="${escapeAttr(c.branchName||'')}" placeholder="Örn: Aras Kargo Kadıköy Şubesi"></div>
         </div>
-        <div class="field fieldWide checkoutPaymentField"><label><b>Ödeme yöntemi *</b></label><select id="pay" class="formControl"><option value="cod" ${checkoutState.payment==='cod'?'selected':''}>Kapıda ödeme</option><option value="online" ${checkoutState.payment==='online'?'selected':''}>Online ödeme</option></select></div>
+        <div class="field fieldWide checkoutPaymentField"><label><b>Ödeme yöntemi *</b></label>${(()=>{const cod=settings.paymentMethods?.cod!==false,online=settings.paymentMethods?.online!==false;const available=[...(cod?['cod']:[]),...(online?['online']:[])];if(!available.includes(checkoutState.payment))checkoutState.payment=available[0]||'';if(!available.length)return '<div class="formControl paymentUnavailable">Şu anda aktif ödeme yöntemi bulunmuyor.</div>';return `<select id="pay" class="formControl">${cod?`<option value="cod" ${checkoutState.payment==='cod'?'selected':''}>Kapıda ödeme</option>`:''}${online?`<option value="online" ${checkoutState.payment==='online'?'selected':''}>Online ödeme</option>`:''}</select>`})()}</div>
         <div class="field fieldWide"><label><b>Teslimat notu</b><small class="fieldHelp">İsteğe bağlı</small></label><textarea class=formControl id=addr-note rows=2 placeholder="Teslimat notu">${escapeHtml(c.note||'')}</textarea></div>
       </div>
     </div>
@@ -1497,7 +1500,9 @@ function toggleBranchDelivery(){
   if($('#branchAddressFields')) $('#branchAddressFields').style.display=on?'grid':'none';
 }
 function saveAddressAndContinue(){
-  checkoutState.payment=$('#pay')?.value||checkoutState.payment||'cod';
+  const availablePayments=[...(settings.paymentMethods?.cod!==false?['cod']:[]),...(settings.paymentMethods?.online!==false?['online']:[])];
+  if(!availablePayments.length)return alert('Şu anda kullanılabilir bir ödeme yöntemi bulunmuyor.');
+  checkoutState.payment=$('#pay')?.value||availablePayments[0];
   const g=id=>($('#addr-'+id)?.value||'').trim();
   const branch=!!$('#addr-branchToggle')?.checked;
   const fullName=g('fullName').replace(/\s+/g,' ').trim();
