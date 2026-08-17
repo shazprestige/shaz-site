@@ -4179,7 +4179,12 @@
       },
       "repeatable": true,
       "maxApplications": 3,
-      "allowDoubleCount": false
+      "allowDoubleCount": false,
+      "excludedProductIds": [
+        "urun-1786825421633-1-qpgw",
+        "urun-1786825421633-0-33da",
+        "urun-1786825421633-2-a94y"
+      ]
     },
     {
       "id": "sepet-1786894220202-bxip",
