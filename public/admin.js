@@ -68,7 +68,7 @@ async function load(){
   if(!['full','center','middle'].includes(settings.campaignMarqueePosition))settings.campaignMarqueePosition='full';
   settings.theme=settings.theme||{};
   const savedTab=sessionStorage.getItem('shazAdminTab')||'site';
-  show(['site','catalog','custom','discounts','upsells','orders','builderAccess'].includes(savedTab)?savedTab:'site');
+  show(['site','catalog','custom','discounts','upsells','orders','builderAccess','soldout'].includes(savedTab)?savedTab:'site');
   setTimeout(()=>{sendPreview();previewTo('header')},600);
 }
 async function saveAll(){
@@ -178,6 +178,7 @@ function show(tab){
   if(tab==='discounts')return renderDiscountCampaigns();
   if(tab==='upsells')return renderUpsells();
   if(tab==='builderAccess')return renderBuilderAccessSettings();
+  if(tab==='soldout')return renderSoldOutPage();
   if(tab==='orders')return renderOrders();
 }
 function renderBuilderAccessSettings(){
@@ -519,10 +520,22 @@ function refreshAdminSoldOutTimes(){
   });
 }
 function startAdminSoldOutTicker(){clearInterval(adminSoldOutTimer);refreshAdminSoldOutTimes();adminSoldOutTimer=setInterval(refreshAdminSoldOutTimes,1000)}
+function renderSoldOutPage(){
+  shell('Tükendi / Süreli Ürünler','Tükendi işareti açık ürünleri ve varsa kalan sürelerini tek ekranda görürsün.',renderSoldOutOverview());
+  requestAnimationFrame(()=>startAdminSoldOutTicker());
+}
 function openSoldOutProduct(productId){
   const p=(catalog.products||[]).find(x=>x.id===productId);if(!p)return;
-  adminOpenCategory=p.category;adminOpenProduct=p.id;adminProductSearch='';try{sessionStorage.setItem('shazAdminCategory',p.category)}catch(_){};
-  renderCatalog();requestAnimationFrame(()=>document.getElementById('admin-product-'+p.id)?.scrollIntoView({behavior:'smooth',block:'center'}));
+  adminOpenCategory=p.category;adminOpenProduct=p.id;adminProductSearch='';
+  try{sessionStorage.setItem('shazAdminCategory',p.category);sessionStorage.setItem('shazAdminTab','catalog')}catch(_){};
+  show('catalog');
+  let tries=0;
+  const focusProduct=()=>{
+    const el=document.getElementById('admin-product-'+p.id);
+    if(el){el.scrollIntoView({behavior:'smooth',block:'center'});return;}
+    if(++tries<8)setTimeout(focusProduct,60);
+  };
+  requestAnimationFrame(focusProduct);
 }
 function allProductsCategoryBlock(){
   const cfg=catalog.allProductsCategory||{name:'Tüm Ürünler',cover:''};
@@ -553,7 +566,7 @@ function renderCatalog(){
     return `<button class="categoryJumpBtn ${adminOpenCategory===c.id?'active':''}" draggable="true" data-category-drag-id="${attr(c.id)}" onclick="jumpAdminCategory('${attr(c.id)}')" ondragstart="categoryDragStart(event,'${attr(c.id)}')" ondragover="categoryDragOver(event,'${attr(c.id)}')" ondrop="categoryDrop(event,'${attr(c.id)}')" ondragend="categoryDragEnd(event)"><span class=categoryDragGrip aria-hidden=true>⠿</span>${esc(c.name)} <span>${count}</span></button>`;
   }).join('');
   const active=cats.find(c=>c.id===adminOpenCategory);
-  let html=catalogGlobalTools()+renderSoldOutOverview()+`<div class="panel catalogControlPanel">
+  let html=catalogGlobalTools()+`<div class="panel catalogControlPanel">
     <div class=campaignAdminHead><div><h2>Kategoriler & Ürünler</h2><div class=help>Kategori seç; yalnızca o kategorinin ürünleri açılır. “Tüm Ürünler” kutusunun kapak fotoğrafını da buradan yönetebilirsin. Diğer kategori sıralarını değiştirmek için başlıklarını sürükleyip bırak.</div></div><div class=catalogHeadActions><div class=adminProductSearch><input class=formControl value="${attr(adminProductSearch)}" placeholder="Bu kategoride ürün ara..." oninput="filterAdminProducts(this.value)"></div><button class=btn style="max-width:160px" onclick=addCategory()>＋ Kategori Ekle</button></div></div>
     <div class=catalogToolbar>
       <div class=categoryQuickNav>${nav}</div>
