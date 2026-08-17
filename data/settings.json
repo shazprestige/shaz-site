@@ -47,7 +47,7 @@
       "order": 2,
       "imageUrl": "/uploads/1786731900575-bzcc48.jpeg",
       "title": "",
-      "subtitle": "SHAZ ayrıcalığıyla stilini tamamla.",
+      "subtitle": "Prestij, detaylarda saklıdır",
       "buttonText": "ÜRÜNLERİ GÖR",
       "targetCategory": "tum",
       "marqueeText": "YENİ ÜRÜNLERİMİZİ KEŞFEDİN",
@@ -59,7 +59,7 @@
       "order": 3,
       "imageUrl": "/uploads/1786967506591-kzt48o.jpeg",
       "title": "",
-      "subtitle": "",
+      "subtitle": "Tarzını bir adım öne taşı",
       "buttonText": "ÜRÜNLERİ GÖR",
       "targetCategory": "tum",
       "overlayOpacity": 28
@@ -70,7 +70,7 @@
       "order": 4,
       "imageUrl": "/uploads/1786967506759-h26r81.jpeg",
       "title": "",
-      "subtitle": "",
+      "subtitle": " Sıradanlıktan bir adım öte",
       "buttonText": "ÜRÜNLERİ GÖR",
       "targetCategory": "tum",
       "overlayOpacity": 28
@@ -81,7 +81,7 @@
       "order": 5,
       "imageUrl": "/uploads/1786967506834-2rizoj.jpeg",
       "title": "",
-      "subtitle": "",
+      "subtitle": "Tarzını şansa bırakma",
       "buttonText": "ÜRÜNLERİ GÖR",
       "targetCategory": "tum",
       "overlayOpacity": 28
@@ -92,7 +92,7 @@
       "order": 6,
       "imageUrl": "/uploads/1786967506892-25uovm.jpeg",
       "title": "",
-      "subtitle": "",
+      "subtitle": "Küçük detaylar, büyük farklar",
       "buttonText": "ÜRÜNLERİ GÖR",
       "targetCategory": "tum",
       "overlayOpacity": 28
@@ -103,7 +103,7 @@
       "order": 7,
       "imageUrl": "/uploads/1786967506968-8untf8.jpeg",
       "title": "",
-      "subtitle": "",
+      "subtitle": "Kendine yakışanı seç",
       "buttonText": "ÜRÜNLERİ GÖR",
       "targetCategory": "tum",
       "overlayOpacity": 28
@@ -114,7 +114,7 @@
       "order": 8,
       "imageUrl": "/uploads/1786967507012-g8dz2h.jpeg",
       "title": "",
-      "subtitle": "",
+      "subtitle": "Bakışları detaylara çevir",
       "buttonText": "ÜRÜNLERİ GÖR",
       "targetCategory": "tum",
       "overlayOpacity": 28
@@ -125,29 +125,7 @@
       "order": 9,
       "imageUrl": "/uploads/1786967507038-d465sr.jpeg",
       "title": "",
-      "subtitle": "",
-      "buttonText": "ÜRÜNLERİ GÖR",
-      "targetCategory": "tum",
-      "overlayOpacity": 28
-    },
-    {
-      "id": "kampanya-1786967516178-7-unwh",
-      "enabled": true,
-      "order": 10,
-      "imageUrl": "/uploads/1786967507055-471su1.jpeg",
-      "title": "",
-      "subtitle": "",
-      "buttonText": "ÜRÜNLERİ GÖR",
-      "targetCategory": "tum",
-      "overlayOpacity": 28
-    },
-    {
-      "id": "kampanya-1786967516178-8-1nlu",
-      "enabled": true,
-      "order": 11,
-      "imageUrl": "/uploads/1786967507074-6wapmr.jpeg",
-      "title": "",
-      "subtitle": "",
+      "subtitle": "Özel günlere özel seçimler",
       "buttonText": "ÜRÜNLERİ GÖR",
       "targetCategory": "tum",
       "overlayOpacity": 28
