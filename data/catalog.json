@@ -437,8 +437,10 @@
       "stock": 5,
       "badge": "",
       "badgeColor": "orange",
-      "image": "",
-      "images": [],
+      "image": "/uploads/1786926816775-sla852.jpeg",
+      "images": [
+        "/uploads/1786926816775-sla852.jpeg"
+      ],
       "hidden": false,
       "setEligible": true,
       "isSet": false,
