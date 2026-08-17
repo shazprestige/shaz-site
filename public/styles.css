@@ -3582,3 +3582,47 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}button,a,[role=button],
 .adminImageModal{position:fixed;inset:0;z-index:9999999;background:rgba(0,0,0,.78);display:grid;place-items:center;padding:24px}.adminImageModalCard{position:relative;width:min(720px,94vw);max-height:90vh;background:#fff;border-radius:16px;padding:14px;display:grid;gap:10px}.adminImageModalCard img{width:100%;max-height:76vh;object-fit:contain;border-radius:10px;background:#f4f4f4}.adminImageModalCard b{text-align:center}.adminImageModalClose{position:absolute;right:20px;top:20px;width:42px;height:42px;border:0;border-radius:50%;background:#fff;font-size:28px;box-shadow:0 3px 14px #0003;cursor:pointer}
 .upsellInlineBulk{display:flex;justify-content:flex-end;gap:8px;margin:8px 0 12px}.upsellInlineBulk input{width:180px}.upsellSelectPriceGrid{display:grid;gap:8px}.upsellSelectPriceRow{display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:10px;align-items:center;padding:9px;border:1px solid #e5e7eb;border-radius:11px;background:#fff}.upsellSelectMain{display:grid;grid-template-columns:auto 52px minmax(0,1fr);gap:9px;align-items:center;min-width:0}.upsellSelectMain img{width:52px;height:52px;object-fit:cover;border-radius:8px}.upsellSelectMain span{min-width:0}.upsellSelectMain b{display:block;overflow-wrap:anywhere}.upsellSelectMain small{display:block;margin-top:3px}.upsellInlinePrice{display:grid;gap:4px;font-size:11px}.upsellInlinePrice input{width:100%;min-width:0}
 @media(max-width:700px){.upsellSelectPriceRow{grid-template-columns:minmax(0,1fr) 110px}.upsellSelectMain{grid-template-columns:auto 44px minmax(0,1fr)}.upsellSelectMain img{width:44px;height:44px}.upsellInlineBulk input{width:140px}}
+
+/* ===== V119 — klavye arka planı, öneri scroll sınırı ve telefon açıklaması ===== */
+@media(max-width:900px){
+  /* Klavye açılırken drawer dışındaki katalog tamamen saklanır.
+     iOS'un yarı saydam klavyesinin arkasında ürün kartlarının görünmesini bu katmanda keser. */
+  body.shazKeyboardOpen{background:#fff!important}
+  body.shazKeyboardOpen>#announceWrap,
+  body.shazKeyboardOpen>#stickyHeader,
+  body.shazKeyboardOpen>#campaignCards,
+  body.shazKeyboardOpen>#categoryHub,
+  body.shazKeyboardOpen>.hero,
+  body.shazKeyboardOpen>#products,
+  body.shazKeyboardOpen>.floating,
+  body.shazKeyboardOpen>#siteAnnouncement{visibility:hidden!important}
+  body.shazKeyboardOpen>#overlay{visibility:visible!important;display:block!important;background:#fff!important;opacity:1!important}
+  body.shazKeyboardOpen>#drawer{visibility:visible!important;background:#fff!important}
+
+  /* İlk telefon yardımını iki satıra böl; iki telefon kutusu yine aynı hizada kalır. */
+  .phonePair .field>label{min-height:58px!important}
+  .phonePair .fieldHelp.phoneHelp{line-height:1.15!important}
+
+  /* Öneri ekranında yalnız orta ürün listesi kayar.
+     Başlık ve Hayır butonu kendi sabit bölgelerinden içerik geçirmez. */
+  .drawer:has(.checkoutUpsellShell){overflow:hidden!important}
+  .checkoutUpsellShell{
+    height:100%!important;min-height:0!important;
+    display:grid!important;grid-template-rows:auto minmax(0,1fr) auto!important;
+    overflow:hidden!important;background:#f6f7f8!important;padding:0!important;
+  }
+  .checkoutUpsellShell>.checkoutStickyTop{
+    position:relative!important;top:auto!important;z-index:20!important;
+    background:#f6f7f8!important;overflow:hidden!important;
+  }
+  .checkoutUpsellShell>.checkoutScrollBody{
+    position:relative!important;height:auto!important;min-height:0!important;
+    overflow-y:auto!important;overflow-x:hidden!important;
+    overscroll-behavior-y:contain!important;-webkit-overflow-scrolling:touch!important;
+    padding-top:10px!important;padding-bottom:14px!important;background:#f6f7f8!important;
+  }
+  .checkoutUpsellShell>.checkoutStickyBottom{
+    position:relative!important;bottom:auto!important;z-index:20!important;
+    background:#f6f7f8!important;overflow:hidden!important;
+  }
+}

@@ -489,6 +489,9 @@ function openDrawer(html){
   $('#overlay').classList.remove('hidden');drawer.classList.remove('hidden');drawer.innerHTML=html;
   requestAnimationFrame(()=>{
     drawer.querySelectorAll('input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select').forEach(el=>{if(!el.style.fontSize)el.style.fontSize='16px'});
+    // Klavye davranışı yalnız adres ekranında değil, drawer içindeki TÜM yazı alanlarında çalışır.
+    // Böylece set kişiselleştirme/yazı ekranlarında da alttaki katalog klavye arkasından görünmez.
+    bindDrawerInputFocus();
   });
 }
 function closeDrawer(){
@@ -1380,7 +1383,12 @@ function bindDrawerInputFocus(){
   const drawer=$('#drawer');if(!drawer)return;syncDrawerVisualViewport();
   if(!drawerViewportBound&&window.visualViewport){window.visualViewport.addEventListener('resize',syncDrawerVisualViewport,{passive:true});window.visualViewport.addEventListener('scroll',syncDrawerVisualViewport,{passive:true});drawerViewportBound=true}
   drawer.querySelectorAll('input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select').forEach(el=>{
-    el.addEventListener('focus',()=>{document.body.classList.add('shazKeyboardOpen');syncDrawerVisualViewport();setTimeout(()=>focusDrawerField(el),120);setTimeout(()=>focusDrawerField(el),320)},{passive:true});el.addEventListener('blur',()=>setTimeout(()=>{if(!drawer.querySelector('input:focus,textarea:focus,select:focus'))document.body.classList.remove('shazKeyboardOpen')},80),{passive:true});
+    const beforeKeyboard=()=>document.body.classList.add('shazKeyboardOpen');
+    // iOS klavyeyi açmadan hemen önce arka planı gizle; focus anını beklemek bazı cihazlarda geç kalıyordu.
+    el.addEventListener('pointerdown',beforeKeyboard,{passive:true});
+    el.addEventListener('touchstart',beforeKeyboard,{passive:true});
+    el.addEventListener('focus',()=>{document.body.classList.add('shazKeyboardOpen');syncDrawerVisualViewport();setTimeout(()=>focusDrawerField(el),120);setTimeout(()=>focusDrawerField(el),320)},{passive:true});
+    el.addEventListener('blur',()=>setTimeout(()=>{if(!drawer.querySelector('input:focus,textarea:focus,select:focus'))document.body.classList.remove('shazKeyboardOpen')},120),{passive:true});
   });
 }
 function addressStep(){
@@ -1397,7 +1405,7 @@ function addressStep(){
       <div class="addressCompact addressCompactV114">
         <div class="field fieldWide">${addrInputInner('Ad Soyad *','fullName',c.fullName,'text','Adınızı ve soyadınızı yazın')}</div>
         <div class="addressPair phonePair fieldWide">
-          <div class="field"><label><b>Telefon *</b><small class="fieldHelp">05xx xxx xx xx veya 5xx xxx xx xx</small></label><input class=formControl id=addr-phone type=tel inputmode=numeric autocomplete=tel value="${escapeAttr(c.phone||'')}" placeholder="05xx xxx xx xx"></div>
+          <div class="field"><label><b>Telefon *</b><small class="fieldHelp phoneHelp">05xx xxx xx xx veya<br>5xx xxx xx xx</small></label><input class=formControl id=addr-phone type=tel inputmode=numeric autocomplete=tel value="${escapeAttr(c.phone||'')}" placeholder="05xx xxx xx xx"></div>
           <div class="field"><label><b>2. Telefon Numarası *</b><small class="fieldHelp">Size ulaşamamamız halinde kullanabileceğimiz ikinci numara zorunludur.</small></label><input class=formControl id=addr-extraPhone type=tel inputmode=numeric autocomplete=tel value="${escapeAttr(c.extraPhone||'')}" placeholder="05xx xxx xx xx"></div>
         </div>
         <label class="branchChoice fieldWide"><input id="addr-branchToggle" type="checkbox" ${branch?'checked':''} onchange="toggleBranchDelivery()"><span><b>Kargom Aras Kargo şubesine gelsin</b><small>Adrese değil, seçtiğiniz Aras Kargo şubesinden teslim alırsınız.</small></span></label>
@@ -1423,7 +1431,6 @@ function addressStep(){
     </div>
     <div class="checkoutStickyBottom addressStickyBottom"><button class="btn checkoutPrimary" onclick="saveAddressAndContinue()">Bilgilerimi Kontrol Et →</button></div>
   </div>`);
-  bindDrawerInputFocus();
 }
 function addrInputInner(label,id,value='',type='text',placeholder=''){
   return `<label><b>${label}</b></label><input class=formControl id="addr-${id}" type="${type}" value="${escapeAttr(value||'')}" ${placeholder?`placeholder="${escapeAttr(placeholder)}"`:''}>`;
