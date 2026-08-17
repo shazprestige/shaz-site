@@ -555,7 +555,7 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": true,
-      "soldOutUntil": "2026-08-24T03:34"
+      "soldOutUntil": "2026-08-25T03:34"
     },
     {
       "id": "urun-1786817515929-9-6j0k",
@@ -602,7 +602,7 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": true,
-      "soldOutUntil": "2026-08-24T03:35"
+      "soldOutUntil": "2026-08-25T03:35"
     },
     {
       "id": "urun-1786825421633-0-33da",
@@ -2102,7 +2102,7 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": true,
-      "soldOutUntil": "2026-08-24T04:31",
+      "soldOutUntil": "2026-08-25T04:31",
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
@@ -2238,7 +2238,7 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": true,
-      "soldOutUntil": "",
+      "soldOutUntil": "2026-08-24T14:23",
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
@@ -2376,7 +2376,7 @@
       "featuresWrapCh": 36,
       "shippingRibbonEnabled": true,
       "soldOutEnabled": true,
-      "soldOutUntil": "2026-08-23T02:47"
+      "soldOutUntil": "2026-08-25T02:47"
     },
     {
       "id": "urun-1786899570443-1-1xl3",
