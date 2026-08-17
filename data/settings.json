@@ -52,6 +52,105 @@
       "targetCategory": "tum",
       "marqueeText": "YENİ ÜRÜNLERİMİZİ KEŞFEDİN",
       "overlayOpacity": 28
+    },
+    {
+      "id": "kampanya-1786967516178-0-sxqm",
+      "enabled": true,
+      "order": 3,
+      "imageUrl": "/uploads/1786967506591-kzt48o.jpeg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "ÜRÜNLERİ GÖR",
+      "targetCategory": "tum",
+      "overlayOpacity": 28
+    },
+    {
+      "id": "kampanya-1786967516178-1-b3g5",
+      "enabled": true,
+      "order": 4,
+      "imageUrl": "/uploads/1786967506759-h26r81.jpeg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "ÜRÜNLERİ GÖR",
+      "targetCategory": "tum",
+      "overlayOpacity": 28
+    },
+    {
+      "id": "kampanya-1786967516178-2-rskb",
+      "enabled": true,
+      "order": 5,
+      "imageUrl": "/uploads/1786967506834-2rizoj.jpeg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "ÜRÜNLERİ GÖR",
+      "targetCategory": "tum",
+      "overlayOpacity": 28
+    },
+    {
+      "id": "kampanya-1786967516178-3-tiao",
+      "enabled": true,
+      "order": 6,
+      "imageUrl": "/uploads/1786967506892-25uovm.jpeg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "ÜRÜNLERİ GÖR",
+      "targetCategory": "tum",
+      "overlayOpacity": 28
+    },
+    {
+      "id": "kampanya-1786967516178-4-3947",
+      "enabled": true,
+      "order": 7,
+      "imageUrl": "/uploads/1786967506968-8untf8.jpeg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "ÜRÜNLERİ GÖR",
+      "targetCategory": "tum",
+      "overlayOpacity": 28
+    },
+    {
+      "id": "kampanya-1786967516178-5-r0j1",
+      "enabled": true,
+      "order": 8,
+      "imageUrl": "/uploads/1786967507012-g8dz2h.jpeg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "ÜRÜNLERİ GÖR",
+      "targetCategory": "tum",
+      "overlayOpacity": 28
+    },
+    {
+      "id": "kampanya-1786967516178-6-qnwh",
+      "enabled": true,
+      "order": 9,
+      "imageUrl": "/uploads/1786967507038-d465sr.jpeg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "ÜRÜNLERİ GÖR",
+      "targetCategory": "tum",
+      "overlayOpacity": 28
+    },
+    {
+      "id": "kampanya-1786967516178-7-unwh",
+      "enabled": true,
+      "order": 10,
+      "imageUrl": "/uploads/1786967507055-471su1.jpeg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "ÜRÜNLERİ GÖR",
+      "targetCategory": "tum",
+      "overlayOpacity": 28
+    },
+    {
+      "id": "kampanya-1786967516178-8-1nlu",
+      "enabled": true,
+      "order": 11,
+      "imageUrl": "/uploads/1786967507074-6wapmr.jpeg",
+      "title": "",
+      "subtitle": "",
+      "buttonText": "ÜRÜNLERİ GÖR",
+      "targetCategory": "tum",
+      "overlayOpacity": 28
     }
   ],
   "cargoTrackingUrl": "https://ebranch.araskargo.com.tr/",
