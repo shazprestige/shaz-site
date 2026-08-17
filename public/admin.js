@@ -9,6 +9,7 @@ let adminOpenCampaignId=sessionStorage.getItem('shazAdminOpenCampaign')||'';
 let setBulkDraft={};
 let currentPreviewTarget=null;
 let previewFocusToken=0;
+let adminSoldOutTimer=null;
 function preserveAdminViewport(fn){
   const x=window.scrollX,y=window.scrollY;
   fn();
@@ -40,6 +41,9 @@ async function load(){
   catalog.checkoutUpsells=Array.isArray(catalog.checkoutUpsells)?catalog.checkoutUpsells:[];
   catalog.builder=(catalog.builder&&typeof catalog.builder==='object')?catalog.builder:{};
   if(catalog.builder.enabled===undefined)catalog.builder.enabled=false;
+  catalog.allProductsCategory=(catalog.allProductsCategory&&typeof catalog.allProductsCategory==='object')?catalog.allProductsCategory:{};
+  if(!catalog.allProductsCategory.name)catalog.allProductsCategory.name='Tüm Ürünler';
+  if(catalog.allProductsCategory.cover===undefined)catalog.allProductsCategory.cover='';
   (catalog.products||[]).forEach(p=>{
     if(adminIsWalletProduct(p)&&p.walletPhotoEnabled===undefined)p.walletPhotoEnabled=true;
     if(p.soldOutEnabled===undefined)p.soldOutEnabled=false;
@@ -482,27 +486,87 @@ function toggleDiscountCampaignProduct(i,id,on){const r=catalog.checkoutCampaign
 function setDiscountCampaignProductUnits(i,id,value){const r=catalog.checkoutCampaigns[i];if(!r)return;r.productUnitCounts=r.productUnitCounts||{};r.productUnitCounts[id]=Math.max(1,Math.min(10,Number(value||1)));changed('.drawer')}
 
 let adminCategoryNavScrollLeft=0;
+function adminSoldOutRemainingText(p){
+  if(!p?.soldOutEnabled)return '';
+  const raw=String(p.soldOutUntil||'').trim();
+  if(!raw)return 'Süre belirtilmedi';
+  const t=Date.parse(raw);if(!Number.isFinite(t))return raw;
+  const d=t-Date.now();if(d<=0)return 'Süre doldu';
+  const days=Math.floor(d/86400000),hrs=Math.floor((d%86400000)/3600000),mins=Math.floor((d%3600000)/60000),secs=Math.floor((d%60000)/1000);
+  return `${days?days+' gün ':''}${hrs?hrs+' saat ':''}${mins?mins+' dk ':''}${secs} sn`;
+}
+function adminSoldOutDateText(p){
+  const raw=String(p?.soldOutUntil||'').trim();if(!raw)return 'Yeniden stok zamanı girilmemiş';
+  const t=Date.parse(raw);if(!Number.isFinite(t))return raw;
+  try{return new Intl.DateTimeFormat('tr-TR',{dateStyle:'short',timeStyle:'short'}).format(new Date(t))}catch(_){return raw}
+}
+function renderSoldOutOverview(){
+  const items=(catalog.products||[]).filter(p=>p.soldOutEnabled);
+  const rows=items.map(p=>{
+    const img=p.image||productImages(p)[0]||'',cat=adminCategoryName(p);
+    return `<div class=soldOutOverviewRow data-admin-soldout-id="${attr(p.id)}" data-admin-soldout-until="${attr(p.soldOutUntil||'')}">
+      <div class=soldOutOverviewProduct>${img?`<img src="${attr(img)}" alt="">`:''}<span><b>${esc(p.name||'Ürün')}</b><small>${esc(cat||'Kategori')}</small></span></div>
+      <div class=soldOutOverviewTime><strong class=adminSoldOutRemaining>${esc(adminSoldOutRemainingText(p))}</strong><small>${esc(adminSoldOutDateText(p))}</small></div>
+      <button type=button class=smallBtn onclick="openSoldOutProduct('${attr(p.id)}')">Ürünü aç</button>
+    </div>`;
+  }).join('');
+  return `<div class="panel soldOutOverview"><div class=soldOutOverviewHead><div><h2>Tükendi / Süreli Ürünler</h2><div class=help>“Tükendi” işareti açık olan ürünleri ve varsa kalan sürelerini tek yerde görürsün.</div></div><span class=soldOutOverviewCount>${items.length} ürün</span></div>${items.length?`<div class=soldOutOverviewList>${rows}</div>`:'<div class=emptyAdmin>Şu anda “Tükendi” olarak işaretlenmiş ürün yok.</div>'}</div>`;
+}
+function refreshAdminSoldOutTimes(){
+  document.querySelectorAll('[data-admin-soldout-id]').forEach(row=>{
+    const p=(catalog.products||[]).find(x=>x.id===row.dataset.adminSoldoutId);const el=row.querySelector('.adminSoldOutRemaining');
+    if(p&&el)el.textContent=adminSoldOutRemainingText(p);
+  });
+}
+function startAdminSoldOutTicker(){clearInterval(adminSoldOutTimer);refreshAdminSoldOutTimes();adminSoldOutTimer=setInterval(refreshAdminSoldOutTimes,1000)}
+function openSoldOutProduct(productId){
+  const p=(catalog.products||[]).find(x=>x.id===productId);if(!p)return;
+  adminOpenCategory=p.category;adminOpenProduct=p.id;adminProductSearch='';try{sessionStorage.setItem('shazAdminCategory',p.category)}catch(_){};
+  renderCatalog();requestAnimationFrame(()=>document.getElementById('admin-product-'+p.id)?.scrollIntoView({behavior:'smooth',block:'center'}));
+}
+function allProductsCategoryBlock(){
+  const cfg=catalog.allProductsCategory||{name:'Tüm Ürünler',cover:''};
+  return `<section class="categoryAdminBlock open allProductsAdminBlock" id=admin-cat-tum>
+    <div class=categoryAdminHeader><div class=categoryHeaderMain><span><h2>${esc(cfg.name||'Tüm Ürünler')}</h2><span class=help>Kategoriler ekranındaki ilk “Tüm Ürünler” kutusu</span></span></div></div>
+    <div class=categoryAdminBody><details class=categorySettingsDetails open><summary>Tüm Ürünler kutusu ayarları</summary>
+      <div class="grid2 compactCategorySettings">
+        ${input('Başlık','catalog.allProductsCategory.name',cfg.name||'Tüm Ürünler','Müşterinin Kategoriler ekranındaki ilk kutuda görünür.','#categoryHub')}
+        <div class=field><label><b>Kapak fotoğrafı</b></label><input id=allProductsCatFile type=file accept="image/*"><button class=smallBtn onclick=uploadAllProductsCover()>Fotoğrafı Yükle</button><div class=help>Bu görsel “Tüm Ürünler” kutusunda görünür.</div>${cfg.cover?`<img src="${attr(cfg.cover)}" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px">`:''}</div>
+      </div>
+    </details></div>
+  </section>`;
+}
+async function uploadAllProductsCover(){
+  const f=$('#allProductsCatFile')?.files?.[0];if(!f)return alert('Kapak fotoğrafı seç.');
+  const fd=new FormData();fd.append('files',f);const r=await fetch('/api/upload',{method:'POST',body:fd}).then(x=>x.json());
+  if(!r.ok||!r.files?.[0])return alert(r.message||'Fotoğraf yüklenemedi.');
+  catalog.allProductsCategory=catalog.allProductsCategory||{name:'Tüm Ürünler',cover:''};catalog.allProductsCategory.cover=r.files[0].url;
+  await fetch('/api/admin/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({settings,catalog})});changed('#categoryHub');renderCatalog();
+}
 function renderCatalog(){
   const cats=catalog.categories.filter(c=>c.id!=='tum').sort((a,b)=>(a.order||0)-(b.order||0));
-  if(!adminOpenCategory||!cats.some(c=>c.id===adminOpenCategory))adminOpenCategory=cats[0]?.id||null;
-  const nav=cats.map(c=>{
+  if(!adminOpenCategory||(adminOpenCategory!=='tum'&&!cats.some(c=>c.id===adminOpenCategory)))adminOpenCategory='tum';
+  const allCfg=catalog.allProductsCategory||{name:'Tüm Ürünler',cover:''};
+  const allNav=`<button class="categoryJumpBtn ${adminOpenCategory==='tum'?'active':''} allProductsAdminTab" onclick="jumpAdminCategory('tum')"><span class=categoryDragGrip aria-hidden=true>◎</span>${esc(allCfg.name||'Tüm Ürünler')} <span>${(catalog.products||[]).length}</span></button>`;
+  const nav=allNav+cats.map(c=>{
     const count=catalog.products.filter(p=>p.category===c.id).length;
     return `<button class="categoryJumpBtn ${adminOpenCategory===c.id?'active':''}" draggable="true" data-category-drag-id="${attr(c.id)}" onclick="jumpAdminCategory('${attr(c.id)}')" ondragstart="categoryDragStart(event,'${attr(c.id)}')" ondragover="categoryDragOver(event,'${attr(c.id)}')" ondrop="categoryDrop(event,'${attr(c.id)}')" ondragend="categoryDragEnd(event)"><span class=categoryDragGrip aria-hidden=true>⠿</span>${esc(c.name)} <span>${count}</span></button>`;
   }).join('');
   const active=cats.find(c=>c.id===adminOpenCategory);
-  let html=catalogGlobalTools()+`<div class="panel catalogControlPanel">
-    <div class=campaignAdminHead><div><h2>Kategoriler & Ürünler</h2><div class=help>Kategori seç; yalnızca o kategorinin ürünleri açılır. Sıralamayı değiştirmek için kategori başlıklarını sürükleyip bırak.</div></div><div class=catalogHeadActions><div class=adminProductSearch><input class=formControl value="${attr(adminProductSearch)}" placeholder="Bu kategoride ürün ara..." oninput="filterAdminProducts(this.value)"></div><button class=btn style="max-width:160px" onclick=addCategory()>＋ Kategori Ekle</button></div></div>
+  let html=catalogGlobalTools()+renderSoldOutOverview()+`<div class="panel catalogControlPanel">
+    <div class=campaignAdminHead><div><h2>Kategoriler & Ürünler</h2><div class=help>Kategori seç; yalnızca o kategorinin ürünleri açılır. “Tüm Ürünler” kutusunun kapak fotoğrafını da buradan yönetebilirsin. Diğer kategori sıralarını değiştirmek için başlıklarını sürükleyip bırak.</div></div><div class=catalogHeadActions><div class=adminProductSearch><input class=formControl value="${attr(adminProductSearch)}" placeholder="Bu kategoride ürün ara..." oninput="filterAdminProducts(this.value)"></div><button class=btn style="max-width:160px" onclick=addCategory()>＋ Kategori Ekle</button></div></div>
     <div class=catalogToolbar>
       <div class=categoryQuickNav>${nav}</div>
     </div>
   </div>`;
-  html+=active?categoryBlock(active):'<div class=panel>Henüz kategori yok.</div>';
+  html+=adminOpenCategory==='tum'?allProductsCategoryBlock():(active?categoryBlock(active):'<div class=panel>Henüz kategori yok.</div>');
   shell('Kategoriler & Ürünler','Bir ürünün içine girdiğinde fotoğraf, açıklama, fiyat, stok, etiket, kişiselleştirme ve hazır set içeriği dahil tüm ayarlarını aynı yerde yönetirsin.',html);
   requestAnimationFrame(()=>{
     initProductTextLayoutEditors();
     const nav=document.querySelector('.categoryQuickNav');
     if(nav)nav.scrollLeft=adminCategoryNavScrollLeft;
     positionActiveAdminCategoryTab('auto');
+    startAdminSoldOutTicker();
   });
 }
 function categoryDragStart(e,id){
