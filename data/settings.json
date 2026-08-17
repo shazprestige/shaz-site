@@ -65,7 +65,7 @@
     "buttonText": "Kapat"
   },
   "paymentMethods": {
-    "cod": false,
+    "cod": true,
     "online": false
   }
 }
