@@ -44,6 +44,7 @@ async function load(){
     if(adminIsWalletProduct(p)&&p.walletPhotoEnabled===undefined)p.walletPhotoEnabled=true;
     if(p.soldOutEnabled===undefined)p.soldOutEnabled=false;
     if(p.soldOutUntil===undefined)p.soldOutUntil='';
+    if(!['circle','rect'].includes(p.badgeShape))p.badgeShape='circle';
     if(p.writeEnabled===undefined){
       const n=adminNormalizedTR(adminCategoryName(p)+' '+(p?.name||''));
       p.writeEnabled=!(n.includes('tesb')||n.includes('tesp'));
@@ -382,31 +383,19 @@ function renderSite(){
           <label><b>Duyuru yazı boyutları</b></label>
           <div class="announcementSizeGrid">
             <div class="announcementSizeControl">
-              <label>Başlık</label>
-              <div class="announcementStepper">
-                <button type=button onclick="settings.siteAnnouncement.titleFontSize=Math.max(14,Number(settings.siteAnnouncement.titleFontSize||30)-1);renderSite();changed('.siteAnnouncement')">−</button>
-                <input class=formControl data-preview-target=".siteAnnouncement" type=number min=14 max=32 step=1 value="${Number(settings.siteAnnouncement?.titleFontSize||30)}" oninput="settings.siteAnnouncement.titleFontSize=Math.max(14,Math.min(32,Number(this.value)||30));changed(this.dataset.previewTarget)">
-                <button type=button onclick="settings.siteAnnouncement.titleFontSize=Math.min(32,Number(settings.siteAnnouncement.titleFontSize||30)+1);renderSite();changed('.siteAnnouncement')">+</button>
-              </div>
+              <div class="announcementRangeHead"><label>Başlık</label><output id="announcementTitleSizeOutput">${Number(settings.siteAnnouncement?.titleFontSize||30)}px</output></div>
+              <input class="announcementSizeRange" data-preview-target=".siteAnnouncement" type=range min=14 max=32 step=1 value="${Number(settings.siteAnnouncement?.titleFontSize||30)}" oninput="settings.siteAnnouncement.titleFontSize=Number(this.value);document.getElementById('announcementTitleSizeOutput').textContent=this.value+'px';changed(this.dataset.previewTarget)">
             </div>
             <div class="announcementSizeControl">
-              <label>Açıklama</label>
-              <div class="announcementStepper">
-                <button type=button onclick="settings.siteAnnouncement.textFontSize=Math.max(12,Number(settings.siteAnnouncement.textFontSize||14)-1);renderSite();changed('.siteAnnouncement')">−</button>
-                <input class=formControl data-preview-target=".siteAnnouncement" type=number min=12 max=24 step=1 value="${Number(settings.siteAnnouncement?.textFontSize||14)}" oninput="settings.siteAnnouncement.textFontSize=Math.max(12,Math.min(24,Number(this.value)||14));changed(this.dataset.previewTarget)">
-                <button type=button onclick="settings.siteAnnouncement.textFontSize=Math.min(24,Number(settings.siteAnnouncement.textFontSize||14)+1);renderSite();changed('.siteAnnouncement')">+</button>
-              </div>
+              <div class="announcementRangeHead"><label>Açıklama</label><output id="announcementTextSizeOutput">${Number(settings.siteAnnouncement?.textFontSize||14)}px</output></div>
+              <input class="announcementSizeRange" data-preview-target=".siteAnnouncement" type=range min=12 max=24 step=1 value="${Number(settings.siteAnnouncement?.textFontSize||14)}" oninput="settings.siteAnnouncement.textFontSize=Number(this.value);document.getElementById('announcementTextSizeOutput').textContent=this.value+'px';changed(this.dataset.previewTarget)">
             </div>
             <div class="announcementSizeControl">
-              <label>Kapat butonu</label>
-              <div class="announcementStepper">
-                <button type=button onclick="settings.siteAnnouncement.buttonFontSize=Math.max(12,Number(settings.siteAnnouncement.buttonFontSize||14)-1);renderSite();changed('.siteAnnouncement')">−</button>
-                <input class=formControl data-preview-target=".siteAnnouncement" type=number min=12 max=22 step=1 value="${Number(settings.siteAnnouncement?.buttonFontSize||14)}" oninput="settings.siteAnnouncement.buttonFontSize=Math.max(12,Math.min(22,Number(this.value)||14));changed(this.dataset.previewTarget)">
-                <button type=button onclick="settings.siteAnnouncement.buttonFontSize=Math.min(22,Number(settings.siteAnnouncement.buttonFontSize||14)+1);renderSite();changed('.siteAnnouncement')">+</button>
-              </div>
+              <div class="announcementRangeHead"><label>Kapat butonu</label><output id="announcementButtonSizeOutput">${Number(settings.siteAnnouncement?.buttonFontSize||14)}px</output></div>
+              <input class="announcementSizeRange" data-preview-target=".siteAnnouncement" type=range min=12 max=22 step=1 value="${Number(settings.siteAnnouncement?.buttonFontSize||14)}" oninput="settings.siteAnnouncement.buttonFontSize=Number(this.value);document.getElementById('announcementButtonSizeOutput').textContent=this.value+'px';changed(this.dataset.previewTarget)">
             </div>
           </div>
-          <div class=help>Başlık, açıklama ve Kapat butonunun yazı boyutunu ayrı ayrı değiştir; canlı önizlemede anında görünür.</div>
+          <div class=help>Sürgüyü sağa/sola çekerek yazı boyutunu değiştir; canlı önizlemede anında görünür.</div>
         </div>
         ${input('Kapat butonu yazısı','settings.siteAnnouncement.buttonText',settings.siteAnnouncement?.buttonText||'Kapat','Örn: Kapat, Alışverişe Devam Et.','.siteAnnouncementButton')}
       </div>
@@ -593,6 +582,39 @@ function discountTypeHelp(rule){
   if(rule.discountType==='bundlePrice')return 'Örn. minimum 3 ve değer 1300 ise, kampanyaya uyan ilk 3 ürünün kampanya toplamı 1300 TL olur.';
   return 'Eşiğe ulaşınca sepet toplamından bu TL tutarı bir kez düşer.';
 }
+
+function shippingRibbonProductsPanel(){
+  const products=(catalog.products||[]);
+  const allOn=products.length>0&&products.every(p=>!!p.shippingRibbonEnabled);
+  const groups=(catalog.categories||[]).filter(c=>c.id!=='tum').sort((x,y)=>(x.order||0)-(y.order||0)).map(c=>{
+    const ps=products.filter(p=>p.category===c.id);
+    if(!ps.length)return '';
+    return `<details class="shippingCampaignCategory"><summary>${esc(c.name)} <small>${ps.filter(p=>p.shippingRibbonEnabled).length}/${ps.length} açık</small></summary><div class="shippingCampaignProductGrid">${ps.map(p=>{const img=p.image||productImages(p)[0]||'';return `<label class="shippingCampaignProduct ${p.shippingRibbonEnabled?'active':''}"><input type=checkbox ${p.shippingRibbonEnabled?'checked':''} onchange="setShippingRibbonForProduct('${attr(p.id)}',this.checked)">${img?`<img src="${attr(img)}" alt="">`:''}<span><b>${esc(p.name||'Ürün')}</b><small>${p.shippingRibbonEnabled?'Kargo Bedava açık':'Kapalı'}</small></span></label>`}).join('')}</div></details>`;
+  }).join('');
+  return `<details class="panel simpleAdminDetails shippingCampaignAdmin"><summary>Kargo Bedava <small>Ürün kartı şeridi</small></summary><div class=simpleDetailsBody>
+    <div class=shippingCampaignMaster><div><b>Tüm ürünler</b><small>Tek tuşla bütün ürünlerde Kargo Bedava şeridini aç/kapat.</small></div><label class="adminSwitch"><input type=checkbox ${allOn?'checked':''} onchange="setShippingRibbonForAll(this.checked)"><i></i></label></div>
+    <div class=help>İstersen aşağıdan kategori kategori açıp ürünleri tek tek seçebilirsin. Mevcut şerit yazısı ve rengi korunur.</div>
+    <div class=shippingCampaignGroups>${groups||'<div class=emptyAdmin>Ürün bulunamadı.</div>'}</div>
+  </div></details>`;
+}
+function setShippingRibbonForProduct(id,on){
+  const p=(catalog.products||[]).find(x=>x.id===id);if(!p)return;
+  p.shippingRibbonEnabled=!!on;
+  if(p.shippingRibbonText===undefined)p.shippingRibbonText='Kargo Bedava';
+  if(!p.shippingRibbonColor)p.shippingRibbonColor='#444444';
+  changed(`[data-product-id="${id}"]`);
+  renderDiscountCampaigns();
+}
+function setShippingRibbonForAll(on){
+  (catalog.products||[]).forEach(p=>{
+    p.shippingRibbonEnabled=!!on;
+    if(p.shippingRibbonText===undefined)p.shippingRibbonText='Kargo Bedava';
+    if(!p.shippingRibbonColor)p.shippingRibbonColor='#444444';
+  });
+  changed('#products');
+  renderDiscountCampaigns();
+}
+
 function renderDiscountCampaigns(){
   catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
   catalog.checkoutCampaigns.forEach(r=>{r.productUnitCounts=r.productUnitCounts||{};if(r.repeatable===undefined)r.repeatable=false;if(r.maxApplications===undefined||Number(r.maxApplications)<1)r.maxApplications=1;if(r.allowDoubleCount===undefined)r.allowDoubleCount=false;});
@@ -611,7 +633,7 @@ function renderDiscountCampaigns(){
     ${discountCampaignScopeProducts(r,i)}
     <div class=campaignRuleNote><b>Nasıl hesaplanır?</b> Aynı ürünleri başka kampanyada tekrar say seçeneği kapalıysa sistem ürünleri kampanyalar arasında paylaştırır ve müşteriye en yüksek toplam indirimi veren geçerli kombinasyonu seçer. Örnek: 3 ürün varsa 3’lü kampanya, 5 ürün varsa 3+2, 6 ürün varsa 3+3 veya 2+2+2 seçeneklerinden daha avantajlı olan uygulanır. Tekrar uygulanabilsin açıksa aynı kampanya da belirlediğin üst sınıra kadar birden fazla kez çalışır.</div>
   </div></details>`).join('');
-  shell('Kampanyalar','Sepet indirimi kuralları burada. Her kampanya kapalı kutu halinde durur; açıp yalnızca o kampanyayı düzenlersin.',`<div class=panel><div class=campaignCreateRow><div><h2>Sepet Kampanyaları</h2><div class=help>Ürünleri kategori/model bazında seçebilir, bir ürünün kampanyada 1/2/3… adet sayılmasını belirleyebilir ve kampanyaların üst üste binmesini engelleyebilirsin.</div></div><button class=btn onclick=addDiscountCampaign()>+ Kampanya Ekle</button></div><div class=campaignRuleNote>Varsayılan güvenli davranış: aynı uygun ürünler iki ayrı kampanyada tekrar sayılmaz. İstersen kampanya içinden bunu özellikle açabilirsin.</div></div>${cards||'<div class=panel><b>Henüz sepet kampanyası yok.</b><div class=help>“Kampanya Ekle” ile ilk kampanyanı oluştur.</div></div>'}`);
+  shell('Kampanyalar','Sepet indirimi kuralları ve Kargo Bedava ürün etiketi burada yönetilir.',`${shippingRibbonProductsPanel()}<div class=panel><div class=campaignCreateRow><div><h2>Sepet Kampanyaları</h2><div class=help>Ürünleri kategori/model bazında seçebilir, bir ürünün kampanyada 1/2/3… adet sayılmasını belirleyebilir ve kampanyaların üst üste binmesini engelleyebilirsin.</div></div><button class=btn onclick=addDiscountCampaign()>+ Kampanya Ekle</button></div><div class=campaignRuleNote>Varsayılan güvenli davranış: aynı uygun ürünler iki ayrı kampanyada tekrar sayılmaz. İstersen kampanya içinden bunu özellikle açabilirsin.</div></div>${cards||'<div class=panel><b>Henüz sepet kampanyası yok.</b><div class=help>“Kampanya Ekle” ile ilk kampanyanı oluştur.</div></div>'}`);
 }
 function rerenderDiscountCampaigns(id){
   if(id){adminOpenCampaignId=id;try{sessionStorage.setItem('shazAdminOpenCampaign',id)}catch(_){}}
@@ -779,18 +801,31 @@ function productCompactRow(p){
       <span class=productDragHandle draggable="true" title="Tut ve sürükle" ondragstart="productDragStart(event,'${attr(p.id)}')" ondragend="productDragEnd(event)">⠿</span>
       <button class=adminProductCompactMain onclick="toggleAdminProduct('${attr(p.id)}')">
         <span class=compactThumb>${img?`<img src="${attr(img)}">`:'Fotoğraf yok'}</span>
-        <span class=compactMeta><b>${esc(p.name||'Yeni Ürün')}</b><small>₺${Number(p.price||0).toLocaleString('tr-TR')}${p.isSet?' · Hazır set':''}</small></span>
+        <span class=compactMeta>
+          <b>${esc(p.name||'Yeni Ürün')}</b>
+          ${p.subtitle?`<small class=compactSubtitle>${esc(p.subtitle)}</small>`:''}
+          <small>₺${Number(p.price||0).toLocaleString('tr-TR')}${p.isSet?' · Hazır set':''}</small>
+        </span>
         <span class=compactEdit>${open?'Kapat':'Düzenle'}</span>
       </button>
       <div class=compactQuickActions>
+        <label class=compactInternalCode title="Ürün Kodu (Müşteriye Gösterilmez)"><span>Kod</span><input value="${attr(p.internalCode||'')}" placeholder="SAAT-1" onclick="event.stopPropagation()" oninput="catalog.products[${i}].internalCode=this.value;changed('#products')"></label>
         ${quickSub}
+        <button class="duplicateBtn ${p.soldOutEnabled?'quickSoldOutOn':''}" type=button onclick="quickToggleSoldOut('${attr(p.id)}')">${p.soldOutEnabled?'Tükendi':'Satışta'}</button>
         <button class=duplicateBtn type=button onclick="openAdminProductImage('${attr(p.id)}')">Büyüt</button>
         <button class=duplicateBtn type=button onclick="quickToggleProductHidden('${attr(p.id)}')">${p.hidden?'Göster':'Gizle'}</button>
-        <button class=duplicateBtn onclick="duplicateProduct(${i})">⧉</button>
+        <button class=duplicateBtn type=button onclick="duplicateProduct(${i})">⧉</button>
       </div>
     </div>
     ${open?`<div class=compactEditor>${productCard(p,true)}</div>`:''}
   </div>`;
+}
+function quickToggleSoldOut(id){
+  const p=(catalog.products||[]).find(x=>x.id===id);if(!p)return;
+  p.soldOutEnabled=!p.soldOutEnabled;
+  if(!p.soldOutEnabled)p.soldOutUntil='';
+  changed(`[data-product-id="${id}"]`);
+  renderCatalog();
 }
 function productCompactSubcategorySelect(p,i){
   const c=catalog.categories.find(x=>x.id===p.category),subs=categorySubcategories(c);if(!subs.length)return '';
@@ -1242,11 +1277,12 @@ Paslanmaz çelik kasa"
           <option value="red" ${p.badgeColor==='red'?'selected':''}>Kırmızı</option>
         </select>
       </div>
-      <div class=field><label>Kart üzeri kısa şerit</label>
-        <label class=shippingRibbonAdminToggle><input data-preview-target="${attr(root)}" type=checkbox ${p.shippingRibbonEnabled?'checked':''} onchange="catalog.products[${i}].shippingRibbonEnabled=this.checked;changed(this.dataset.previewTarget)"> Göster</label>
-        <input class=formControl data-preview-target="${attr(root)}" value="${attr(p.shippingRibbonText||'Kargo Bedava')}" placeholder="Örn: Kargo Bedava" oninput="catalog.products[${i}].shippingRibbonText=this.value;changed(this.dataset.previewTarget)">
-        <div class=shippingRibbonColorRow><input data-preview-target="${attr(root)}" type=color value="${attr(p.shippingRibbonColor||'#444444')}" oninput="catalog.products[${i}].shippingRibbonColor=this.value;changed(this.dataset.previewTarget)"><span>Şerit rengi</span></div>
-        <div class=help>Yalnızca bu ürün kartının fotoğrafının alt kenarında görünür. Değişiklik yaptığında sağdaki müşteri önizlemesinde anında bu ürün kartı gösterilir.</div>
+      <div class=field><label>Etiket biçimi</label>
+        <select class=formControl data-preview-target="${attr(t('badge'))}" onchange="catalog.products[${i}].badgeShape=this.value;changed(this.dataset.previewTarget)">
+          <option value="circle" ${(p.badgeShape||'circle')==='circle'?'selected':''}>Yuvarlak</option>
+          <option value="rect" ${p.badgeShape==='rect'?'selected':''}>Küçük dikdörtgen</option>
+        </select>
+        <div class=help>Dikdörtgen seçersen etiket sol üstte küçük ve naif görünür; genişliği yazıya göre otomatik uzar.</div>
       </div>
     </div>
 
