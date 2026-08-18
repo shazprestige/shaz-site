@@ -3974,7 +3974,7 @@
     },
     {
       "id": "urun-1786910492353-4-ukzz",
-      "name": "SHAZ - GÖZLÜK 1",
+      "name": "SHAZ - GÖZLÜK",
       "subtitle": "Erkek gözlük",
       "description": "Siyah çerçeve · Siyah cam · Gold detaylı · Klasik tasarım",
       "features": [
@@ -4010,11 +4010,12 @@
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "internalCode": "G 1"
     },
     {
       "id": "urun-1786910492353-1-p6qf",
-      "name": "SHAZ - GÖZLÜK 2",
+      "name": "SHAZ - GÖZLÜK",
       "subtitle": "Erkek gözlük",
       "description": "Siyah çerçeve · Siyah cam · Metal detaylı · Köşeli tasarım",
       "features": [
@@ -4045,16 +4046,17 @@
       "shippingRibbonEnabled": true,
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
-      "descriptionEditorWidth": 290,
+      "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
-      "featuresEditorWidth": 290,
+      "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "internalCode": "2"
     },
     {
       "id": "urun-1786910492353-2-zuew",
-      "name": "SHAZ - GÖZLÜK 3",
+      "name": "SHAZ - GÖZLÜK",
       "subtitle": "Erkek gözlük",
       "description": "Siyah çerçeve · Siyah cam · Metal detaylı · Pilot tasarım",
       "features": [
@@ -4090,11 +4092,12 @@
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "internalCode": "3"
     },
     {
       "id": "urun-1786910492353-3-rxft",
-      "name": "SHAZ - GÖZLÜK 4",
+      "name": "SHAZ - GÖZLÜK",
       "subtitle": "Erkek gözlük",
       "description": "Siyah çerçeve · Siyah cam · Metal detaylı · Dikdörtgen tasarım",
       "features": [
@@ -4125,16 +4128,17 @@
       "shippingRibbonEnabled": true,
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
-      "descriptionEditorWidth": 290,
+      "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
-      "featuresEditorWidth": 290,
+      "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "internalCode": "4"
     },
     {
       "id": "urun-1786910492353-0-cc9w",
-      "name": "SHAZ - GÖZLÜK 5",
+      "name": "SHAZ - GÖZLÜK",
       "subtitle": "Erkek gözlük",
       "description": "Siyah çerçeve · Füme/gradient cam · Gold detaylı · Dikdörtgen tasarım",
       "features": [
@@ -4162,13 +4166,14 @@
       "writeEnabled": true,
       "walletPhotoEnabled": true,
       "subcategoryId": "",
-      "descriptionEditorWidth": 290,
+      "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
-      "featuresEditorWidth": 290,
+      "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
       "shippingRibbonEnabled": true,
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "internalCode": "5"
     }
   ],
   "builder": {
