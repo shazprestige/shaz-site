@@ -391,7 +391,8 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
   const lines=[];
   (o.items||[]).forEach(x=>{
     const name=x.product?.name||'Ürün';
-    let line=name;
+    const internalCode=String(x.product?.internalCode||'').trim();
+    let line=internalCode?`${name} | ${internalCode}`:name;
     if(x.setCustomization){
       const removed=(x.setCustomization.removedIds||[])
         .map(id=>(x.product?.setItems||[]).find(s=>s.id===id)?.name)

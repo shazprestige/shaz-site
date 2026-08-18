@@ -19,7 +19,7 @@ let campaignSliderTimer=0,campaignSliderIndex=0,campaignTouchStartX=null;
 let checkoutState={payment:'cod',customer:null,requestId:null};
 let orderSubmitting=false;
 let adminPreviewMode=false;
-let activeProductDetailId='',activeProductDetailSource='catalog';
+let activeProductDetailId='',activeProductDetailSource='catalog',activeProductDetailScrollY=0,productHistoryClosing=false;
 const $=s=>document.querySelector(s);
 const money=n=>Number(n||0).toLocaleString('tr-TR')+' TL';
 
@@ -64,6 +64,7 @@ async function init(){
   favorites=new Set([...favorites].filter(id=>(catalog.products||[]).some(p=>p.id===id&&!p.hidden)));
   try{localStorage.setItem('shazFavs',JSON.stringify([...favorites]))}catch(_){}
   syncCatalogViewControls();
+  ensureProductHistoryBase();
   apply(); renderCampaignCards(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart(); bindFloatingContacts(); renderSiteAnnouncement();
   const sharedProductId=new URLSearchParams(location.search).get('product');
   if(sharedProductId&&catalog.products.some(p=>p.id===sharedProductId)) setTimeout(()=>openProductDetail(sharedProductId,'shared'),0);
@@ -71,7 +72,23 @@ async function init(){
   if(new URLSearchParams(location.search).get('sharedCart')||new URLSearchParams(location.search).get('s'))setTimeout(()=>openSharedCartFromUrl(),40);
 }
 function bindCore(){
-  if($('#overlay')) $('#overlay').onclick=closeDrawer;
+  if($('#overlay')) $('#overlay').onclick=()=>activeProductDetailId?closeProductDetail():closeDrawer();
+  if(!window._shazProductPopBound){
+    window._shazProductPopBound=true;
+    window.addEventListener('popstate',e=>{
+      const routeId=productRouteId();
+      if(activeProductDetailId&&!routeId){
+        const src=activeProductDetailSource,restoreY=e.state?.shazScrollY??activeProductDetailScrollY;
+        productHistoryClosing=false;
+        finalizeProductDetailClose(src,restoreY);
+        return;
+      }
+      if(routeId&&routeId!==activeProductDetailId&&catalog.products.some(p=>p.id===routeId)){
+        productHistoryClosing=false;
+        openProductDetail(routeId,'route');
+      }
+    });
+  }
   if($('#search')) $('#search').oninput=e=>renderProducts(e.target.value);
   if($('#favLink')) $('#favLink').onclick=e=>{e.preventDefault();showFavorites()};
   if($('#cartBtn')) $('#cartBtn').onclick=checkout;
@@ -540,14 +557,26 @@ async function shareProduct(id){
   }
 }
 function productRouteId(){return new URLSearchParams(location.search).get('product')||''}
-function setProductRoute(id,mode='replace'){
+function setProductRoute(id,mode='replace',extraState={}){
   if(adminPreviewMode||new URLSearchParams(location.search).get('adminpreview')==='1')return;
   const u=new URL(location.href);
   if(id)u.searchParams.set('product',id);else u.searchParams.delete('product');
-  const state={...(history.state||{}),shazProduct:id||null};
+  const state={...(history.state||{}),...extraState,shazProduct:id||null};
   history[mode==='push'?'pushState':'replaceState'](state,'',u.pathname+u.search+u.hash);
 }
-function clearProductRoute(){if(productRouteId())setProductRoute('','replace')}
+function clearProductRoute(){if(productRouteId())setProductRoute('','replace',{shazProductPushed:false})}
+function finalizeProductDetailClose(source=activeProductDetailSource||'catalog',restoreY=activeProductDetailScrollY){
+  activeProductDetailId='';activeProductDetailSource='catalog';setProductDetailScrollLock(false);
+  if(source==='favorites'){showFavorites();return}
+  if(source==='builder'){builderReturnFromDetail();return}
+  closeDrawer();
+  if(Number.isFinite(Number(restoreY)))requestAnimationFrame(()=>window.scrollTo({top:Number(restoreY),left:0,behavior:'auto'}));
+}
+function ensureProductHistoryBase(){
+  if(adminPreviewMode||new URLSearchParams(location.search).get('adminpreview')==='1')return;
+  const st=history.state||{};
+  if(!st.shazBase)history.replaceState({...st,shazBase:true,shazScrollY:window.scrollY||0},'',location.href);
+}
 function setProductDetailScrollLock(on){
   document.body.classList.toggle('productDetailOpen',!!on);
   document.documentElement.classList.toggle('productDetailOpen',!!on);
@@ -584,10 +613,15 @@ function closeDrawer(){
   $('#overlay').classList.add('hidden');$('#drawer').classList.add('hidden');
 }
 function closeProductDetail(source=activeProductDetailSource||'catalog'){
-  activeProductDetailId='';activeProductDetailSource='catalog';clearProductRoute();setProductDetailScrollLock(false);
-  if(source==='favorites')return showFavorites();
-  if(source==='builder')return builderReturnFromDetail();
-  closeDrawer();
+  if(!activeProductDetailId)return closeDrawer();
+  const restoreY=activeProductDetailScrollY;
+  if(!adminPreviewMode&&history.state?.shazProductPushed&&productRouteId()){
+    productHistoryClosing=true;
+    history.back();
+    return;
+  }
+  clearProductRoute();
+  finalizeProductDetailClose(source,restoreY);
 }
 function toast(msg){const t=$('#toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
 function personalizationFeeAt(i){return i===0?Number(catalog.personalizationPricing?.first||75):i===1?Number(catalog.personalizationPricing?.second||50):Number(catalog.personalizationPricing?.thirdPlus||25)}
@@ -772,9 +806,16 @@ function soldOutRemaining(p){const raw=String(p?.soldOutUntil||'').trim();if(!p?
 function soldOutButtonHtml(p){return p?.soldOutEnabled?`<button class="btn detailAddBtn soldOutBtn" disabled><span>TÜKENDİ</span>${p.soldOutUntil?`<small data-soldout-id="${escapeAttr(p.id)}">${escapeHtml(soldOutRemaining(p))}</small>`:''}</button>`:`<button class="btn detailAddBtn" onclick="startProduct('${escapeAttr(p.id)}')">Sepete Ekle</button>`;}
 function openProductDetail(id,source='catalog'){
   const p=catalog.products.find(x=>x.id===id); if(!p)return;
+  const wasOpen=!!activeProductDetailId;
+  if(!wasOpen)activeProductDetailScrollY=window.scrollY||document.documentElement.scrollTop||0;
   activeProductDetailId=id;activeProductDetailSource=source;
-  if(source==='shared'||source==='route'){if(productRouteId()!==id)setProductRoute(id,'replace')}
-  else if(productRouteId()!==id)setProductRoute(id,'replace');
+  if(source==='shared'||source==='route'){
+    if(productRouteId()!==id)setProductRoute(id,'replace',{shazBase:true,shazProductPushed:false,shazScrollY:activeProductDetailScrollY});
+  }else if(productRouteId()!==id){
+    ensureProductHistoryBase();
+    history.replaceState({...history.state,shazBase:true,shazScrollY:activeProductDetailScrollY,shazProduct:null,shazProductPushed:false},'',location.pathname+location.search+location.hash);
+    setProductRoute(id,'push',{shazBase:true,shazProductPushed:true,shazScrollY:activeProductDetailScrollY});
+  }
   const features=productFeatureList(p);
   const positions=Array.isArray(p.writePositions)?p.writePositions.filter(Boolean):[];
   const infoBlocks=[];
@@ -805,8 +846,8 @@ function openProductImageViewer(){
   if(!img?.src)return;
   const viewer=document.createElement('div');
   viewer.className='productImageViewer';
-  viewer.innerHTML=`<button class="imageViewerClose" type="button" aria-label="Kapat">×</button><img src="${escapeAttr(img.src)}" alt="${escapeAttr(img.alt||'Ürün fotoğrafı')}">`;
-  viewer.addEventListener('click',e=>{if(e.target===viewer||e.target.closest('.imageViewerClose'))viewer.remove()});
+  viewer.innerHTML=`<img src="${escapeAttr(img.src)}" alt="${escapeAttr(img.alt||'Ürün fotoğrafı')}">`;
+  viewer.addEventListener('click',e=>{if(e.target===viewer)viewer.remove()});
   document.body.appendChild(viewer);
 }
 

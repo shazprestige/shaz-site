@@ -741,7 +741,7 @@ function productCompactRow(p){
       <span class=productDragHandle draggable="true" title="Tut ve sürükle" ondragstart="productDragStart(event,'${attr(p.id)}')" ondragend="productDragEnd(event)">⠿</span>
       <button class=adminProductCompactMain onclick="toggleAdminProduct('${attr(p.id)}')">
         <span class=compactThumb>${img?`<img src="${attr(img)}">`:'Fotoğraf yok'}</span>
-        <span class=compactMeta><b>${esc(p.name||'Yeni Ürün')}</b><small>₺${Number(p.price||0).toLocaleString('tr-TR')} · Stok ${Number(p.stock||0)}${p.isSet?' · Hazır set':''}</small></span>
+        <span class=compactMeta><b>${esc(p.name||'Yeni Ürün')}</b><small>₺${Number(p.price||0).toLocaleString('tr-TR')}${p.isSet?' · Hazır set':''}</small></span>
         <span class=compactEdit>${open?'Kapat':'Düzenle'}</span>
       </button>
       <div class=compactQuickActions>
@@ -1132,6 +1132,11 @@ function productCard(p,embedded=false){
       <input class=formControl data-preview-target="${attr(t('name'))}" value="${attr(p.name)}"
         oninput="catalog.products[${i}].name=this.value;changed(this.dataset.previewTarget)">
     </div>
+    <div class="field productInternalCodeField"><label><b>Ürün Kodu (Müşteriye Gösterilmez)</b></label>
+      <input class=formControl value="${attr(p.internalCode||'')}" placeholder="Örn: SAAT-1, SET-7, CUZDAN-1"
+        oninput="catalog.products[${i}].internalCode=this.value;changed('#products')">
+      <div class=help>Yalnızca yönetim sipariş kaydında ve mevcut Excel/E-Tablo ürün bilgisi içinde görünür. Müşteriye gösterilmez.</div>
+    </div>
     <div class="field productSubtitleField"><label><b>Ürün alt başlığı</b></label>
       <input class=formControl value="${attr(p.subtitle||'')}" placeholder="Örn: Erkek kol saati · Yeni koleksiyon"
         oninput="catalog.products[${i}].subtitle=this.value;changed(this.dataset.previewTarget)" data-preview-target="${attr(root)}">
@@ -1186,10 +1191,6 @@ Paslanmaz çelik kasa"
       <div class=field><label>Eski fiyat</label>
         <input class=formControl data-preview-target="${attr(t('oldPrice'))}" type=number value="${Number(p.oldPrice||0)}"
           oninput="catalog.products[${i}].oldPrice=Number(this.value);changed(this.dataset.previewTarget)">
-      </div>
-      <div class=field><label>Stok</label>
-        <input class=formControl data-preview-target="${attr(t('stock'))}" type=number value="${Number(p.stock||0)}"
-          oninput="catalog.products[${i}].stock=Number(this.value);changed(this.dataset.previewTarget)">
       </div>
       <div class=field><label>Ürün etiketi</label>
         <input class=formControl data-preview-target="${attr(t('badge'))}" value="${attr(p.badge||'')}" placeholder="Örn: Sınırlı stok, En çok satan"
@@ -1374,7 +1375,7 @@ function isSetCategory(categoryId){
 function addProduct(categoryId){
   const id='urun-'+Date.now();
   const readySet=isSetCategory(categoryId);
-  catalog.products.push({id,name:'Yeni Ürün',subtitle:'',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:'',images:[],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[],preferredWritePosition:'',writeEnabled:true,walletPhotoEnabled:true,subcategoryId:''});
+  catalog.products.push({id,name:'Yeni Ürün',internalCode:'',subtitle:'',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:'',images:[],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[],preferredWritePosition:'',writeEnabled:true,walletPhotoEnabled:true,subcategoryId:''});
   adminOpenCategory=categoryId;adminProductSearch='';adminOpenProduct=id;
   changed('#products');renderCatalog();
   setTimeout(()=>document.getElementById('admin-product-'+id)?.scrollIntoView({behavior:'smooth',block:'nearest'}),80);
@@ -1672,7 +1673,9 @@ function orderCard(o){
 }
 function orderItemDetails(x){
   const name=x.product?.name||'Ürün';
-  let d=`<div class=orderLine><b>${esc(name)}</b> — ₺${Number(x.product?.price||0).toLocaleString('tr-TR')}`;
+  const internalCode=String(x.product?.internalCode||'').trim();
+  const adminName=internalCode?`${name} | ${internalCode}`:name;
+  let d=`<div class=orderLine><b>${esc(adminName)}</b> — ₺${Number(x.product?.price||0).toLocaleString('tr-TR')}`;
 
   // Hazır setin içindeki tüm parçaları tekrar yazmıyoruz.
   // Yalnızca müşteri bir parça çıkardıysa gösteriyoruz.

@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap");
 
 *{box-sizing:border-box}
 :root{--ink:#10131a;--gold:#c39a59;--paper:#f6f7f8;--card:#fff;--line:#e6e8eb;--green:#25a85a}
@@ -4011,3 +4012,114 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 .recommendedOrderRow .compactThumb{width:46px;height:46px}
 .recommendedOrderBtns{display:flex;gap:4px}
 .cartProductNote{margin-top:6px;padding:7px 9px;background:#fff9e9;border:1px solid #ead9ad;border-radius:8px;font-size:12px;color:#5d4b26}
+
+
+/* ===== v130 — yalnız istenen görünüm düzeltmeleri ===== */
+/* Sıralama ikonunda emoji yok; sade alt/üst ok. */
+.catalogSortIcon{width:21px;height:21px;display:inline-grid;place-items:center;flex:0 0 21px}
+.catalogSortIcon svg{width:21px;height:21px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* Sıralama / Filtreleme alanını üstten-alttan daha kompakt tut. */
+.catalogToolsBar{gap:12px!important;margin-bottom:14px!important}
+.catalogToolBtn{min-height:40px!important;padding:7px 10px!important;line-height:1.1!important}
+.catalogToolIcon{font-size:18px!important}
+
+/* Açılır sıralama ekranında ve temel geri/kapat kontrollerinde iOS'un mavi buton rengini kullanma. */
+.catalogChoiceRow,.catalogChoiceRow.active,.catalogChoiceHead button,.categoryBack,.checkoutBackBtn,.pill,.favoritesClose,.productDetailClose{color:#111!important}
+.catalogChoiceRow{font-weight:400!important}
+.catalogChoiceRow.active{font-weight:800!important}
+
+/* Fotoğraflı kategori kartları arasında net boşluk; 1:1 oran ve mevcut akış korunur. */
+.categoryHubGrid{gap:14px!important;padding-left:14px!important;padding-right:14px!important}
+.categoryTile .categoryTileText span,.categoryTile.hasCover .categoryTileText span{white-space:nowrap!important;display:block!important;width:max-content!important;max-width:100%!important}
+@media(max-width:390px){.categoryHubGrid{gap:12px!important;padding-left:12px!important;padding-right:12px!important}.categoryTile .categoryTileText span,.categoryTile.hasCover .categoryTileText span{font-size:11px!important}}
+
+
+/* ===== v131 — yalnız istenen ürün kartı / detay tipografisi ve kargo şeridi ===== */
+/* Ürün fotoğrafı büyütme ekranında ayrı X yok; görsel dışındaki karanlık alana dokunmak kapatır. */
+.imageViewerClose{display:none!important}
+
+/* Kargo bandını daha zarif yap; kart/görsel/grid ölçülerine dokunma. */
+.productShippingRibbon{
+  min-height:18px!important;
+  padding:2px 7px!important;
+  font-size:8px!important;
+  font-weight:600!important;
+  line-height:1.1!important;
+  letter-spacing:.45px!important;
+}
+@media(max-width:520px){
+  .productShippingRibbon{
+    min-height:17px!important;
+    padding:2px 6px!important;
+    font-size:7.7px!important;
+    font-weight:600!important;
+    letter-spacing:.42px!important;
+  }
+}
+
+/* Ürün kartı: yalnız isim ve fiyat tipografisi/boşlukları. */
+#productsList .productCardLink .info h3{
+  font-family:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important;
+  font-size:14px!important;
+  font-weight:700!important;
+  line-height:1.2!important;
+  letter-spacing:0!important;
+  text-align:left!important;
+  margin:8px 0 4px!important;
+  min-height:34px!important;
+  display:-webkit-box!important;
+  -webkit-box-orient:vertical!important;
+  -webkit-line-clamp:2!important;
+  overflow:hidden!important;
+  word-break:normal!important;
+  overflow-wrap:normal!important;
+  hyphens:none!important;
+}
+#productsList .productCardLink .price{
+  font-size:15px!important;
+  font-weight:700!important;
+  line-height:18px!important;
+  margin-top:0!important;
+}
+
+/* Ürün detay başlığı: Archivo, 20/24, en fazla iki satır. */
+.productDetailTitle h2{
+  font-family:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important;
+  font-size:20px!important;
+  font-weight:600!important;
+  line-height:24px!important;
+  letter-spacing:0!important;
+  display:-webkit-box!important;
+  -webkit-box-orient:vertical!important;
+  -webkit-line-clamp:2!important;
+  overflow:hidden!important;
+  word-break:normal!important;
+  overflow-wrap:normal!important;
+  hyphens:none!important;
+  margin:0!important;
+}
+.productDetailTitle{min-width:0!important;flex:1 1 auto!important}
+.productDetailHeadActions{flex:0 0 auto!important}
+
+/* v131 kesin tipografi override: önceki yüksek özgüllüklü ürün detay kurallarını yalnız başlık için geçersiz kılar. */
+#productsList .productCardLink .info{padding-top:8px!important}
+#productsList .productCardLink .info h3{margin:0 0 4px!important}
+.drawer.productDetailDrawer .productDetailTitle h2{
+  font-family:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important;
+  font-size:20px!important;
+  font-weight:600!important;
+  line-height:24px!important;
+  letter-spacing:0!important;
+  text-align:left!important;
+  display:-webkit-box!important;
+  -webkit-box-orient:vertical!important;
+  -webkit-line-clamp:2!important;
+  overflow:hidden!important;
+  word-break:normal!important;
+  overflow-wrap:normal!important;
+  hyphens:none!important;
+}
+@media(min-width:701px){
+  .drawer.productDetailDrawer .productDetailTitle h2{font-size:20px!important;line-height:24px!important;text-align:center!important}
+}

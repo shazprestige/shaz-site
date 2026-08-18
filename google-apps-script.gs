@@ -318,7 +318,8 @@ function orderDetails_(o) {
   const lines = [];
   (o.items || []).forEach(x => {
     const name = x.product && x.product.name ? x.product.name : 'Ürün';
-    let line = name;
+    const internalCode = String((x.product && x.product.internalCode) || '').trim();
+    let line = internalCode ? (name + ' | ' + internalCode) : name;
 
     // Hazır seti parçalara ayırmıyoruz; yalnızca çıkarılan varsa ekliyoruz.
     if (x.setCustomization) {
