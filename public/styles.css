@@ -3961,3 +3961,53 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 @media(max-width:520px){
   .campaignGlobalMarquee--center{width:78%!important;top:calc(7px + var(--campaign-marquee-offset,0px))!important}
 }
+
+
+/* v129: yalnız istenen katalog araçları / kategori kartları / ürün notu */
+.catalogToolsBar{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:760px;margin:0 auto 18px;padding:0 2px}
+.catalogToolBtn{min-height:48px;border:1px solid #d7d9dc;background:#fff;color:#111;font:inherit;font-weight:650;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer}
+.catalogToolIcon{font-size:20px;line-height:1}
+.catalogChoiceOverlay{position:fixed;inset:0;z-index:1000000;background:rgba(0,0,0,.34);display:flex;align-items:flex-end;justify-content:center;padding:18px}
+.catalogChoiceCard{width:min(100%,520px);background:#fff;border-radius:18px 18px 12px 12px;padding:12px;box-shadow:0 18px 60px #0003}
+.catalogChoiceHead{display:flex;justify-content:space-between;align-items:center;padding:8px 8px 12px;font-size:18px}
+.catalogChoiceHead button{border:0;background:#f1f2f4;width:34px;height:34px;border-radius:50%;font-size:22px}
+.catalogChoiceRow{width:100%;border:0;border-top:1px solid #eceef0;background:#fff;text-align:left;padding:16px 12px;font-size:16px;cursor:pointer}
+.catalogChoiceRow.active{font-weight:800}
+.stockFilterRow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 10px;font-size:17px;cursor:pointer}
+.stockFilterRow input{position:absolute;opacity:0;pointer-events:none}
+.stockFilterRow i{width:52px;height:30px;border-radius:18px;background:#d4d8de;position:relative;transition:.18s}
+.stockFilterRow i:after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 5px #0003;transition:.18s}
+.stockFilterRow input:checked+i{background:#27c96f}.stockFilterRow input:checked+i:after{transform:translateX(22px)}
+
+.productNoteTrigger{display:block;width:calc(100% - 32px);margin:14px auto 94px;border:1px solid #d9d2c3;background:#fffdf8;border-radius:14px;padding:14px 16px;text-align:left;font-weight:750;cursor:pointer}
+.productNoteOverlay{position:fixed;inset:0;z-index:1000001;background:rgba(10,12,16,.55);display:grid;place-items:center;padding:22px}
+.productNotePaper{width:min(92vw,440px);min-height:360px;background:linear-gradient(#fffef8,#fbf5e7);border:1px solid #e2d4b9;border-radius:16px;box-shadow:0 22px 65px #0005;padding:26px;position:relative}
+.productNotePaper:before{content:"";position:absolute;inset:82px 26px 74px;background:repeating-linear-gradient(to bottom,transparent 0,transparent 31px,#ddd4c4 32px);pointer-events:none}
+.productNoteClose{position:absolute;right:15px;top:14px;border:0;background:transparent;font-size:28px}
+.productNoteLabel{font-size:11px;letter-spacing:.24em;color:#a37c3d;font-weight:800}
+.productNotePaper h3{margin:8px 0 18px;font-family:Georgia,"Times New Roman",serif;font-size:23px}
+.productNotePaper textarea{position:relative;z-index:1;width:100%;height:205px;resize:none;border:0;outline:0;background:transparent;font:18px/32px Georgia,"Times New Roman",serif;color:#252525}
+.productNoteSave{position:relative;z-index:2;margin-top:14px}
+
+/* Fotoğraflı kategori merkezi: 1:1, görsel tam dolu */
+.categoryHubGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;padding:18px 14px 32px!important}
+.categoryTile,.categoryTile.hasCover{aspect-ratio:1/1!important;min-height:0!important;border-radius:12px!important;background:#eceeef!important;display:block!important;position:relative!important;overflow:hidden!important}
+.categoryTile .categoryTileMedia,.categoryTile.hasCover .categoryTileMedia{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;display:block!important}
+.categoryTile .categoryTileMedia img,.categoryTile.hasCover .categoryTileMedia img{width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important}
+.categoryTile .categoryTileText,.categoryTile.hasCover .categoryTileText{position:absolute!important;left:0!important;right:0!important;bottom:0!important;z-index:5!important;padding:28px 14px 13px!important;flex:none!important;background:linear-gradient(transparent,rgba(0,0,0,.68))!important;color:#fff!important}
+.categoryTile .categoryTileText b,.categoryTile.hasCover .categoryTileText b{font-size:18px!important;line-height:1.15!important;color:#fff!important;text-shadow:0 1px 2px #0008!important}
+.categoryTile .categoryTileText span,.categoryTile.hasCover .categoryTileText span{font-size:12px!important;color:#fff!important;margin-top:5px!important;text-shadow:0 1px 2px #0008!important}
+.categoryTile:not(.hasCover) .categoryTileMedia{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;display:grid!important;place-items:center!important;margin:0!important}
+.categoryTile .categoryPlaceholder{margin:0!important}
+@media(min-width:700px){.categoryHubGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:390px){.categoryHubGrid{gap:9px!important;padding:14px 10px 28px!important}.categoryTile .categoryTileText b{font-size:16px!important}}
+
+/* Özel set kapağı gerçek görsel yüklenmeden yanlış/boş tasarım göstermesin */
+#builderSpotlight.builderImagePending{visibility:hidden}
+
+.recommendedOrderAdmin{margin-top:14px}
+.recommendedOrderList{display:grid;gap:7px;margin-top:10px}
+.recommendedOrderRow{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:9px;border:1px solid #e3e6ea;border-radius:9px;padding:7px;background:#fff}
+.recommendedOrderRow .compactThumb{width:46px;height:46px}
+.recommendedOrderBtns{display:flex;gap:4px}
+.cartProductNote{margin-top:6px;padding:7px 9px;background:#fff9e9;border:1px solid #ead9ad;border-radius:8px;font-size:12px;color:#5d4b26}

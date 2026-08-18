@@ -678,7 +678,26 @@ function toggleAdminProduct(id){
   if(adminOpenProduct)requestAnimationFrame(()=>document.getElementById('admin-product-'+id)?.scrollIntoView({behavior:'smooth',block:'nearest'}));
 }
 
-function allProductsCategoryBlock(){const cover=catalog.allProductsCover||'';return `<section class="categoryAdminBlock open" id="admin-cat-tum"><div class=categoryAdminHeader><div class=categoryHeaderMain><span><h2>Tüm Ürünler</h2><span class=help>Bu kart müşteri tarafındaki Kategoriler ekranının ilk kutusudur.</span></span></div></div><div class=categoryAdminBody><div class="panel allProductsCoverAdmin"><div class=field><label><b>Tüm Ürünler kapak fotoğrafı</b></label><input id=allProductsCoverFile type=file accept="image/*"><button type=button class=smallBtn onclick=uploadAllProductsCover()>Fotoğrafı Yükle</button><div class=help>Yüklediğin görsel yalnızca “Tüm Ürünler” kategori kartında görünür.</div>${cover?`<img src="${attr(cover)}" class=allProductsCoverPreview>`:''}</div></div></div></section>`;}
+function normalizedRecommendedOrder(){
+  const ids=(catalog.products||[]).map(p=>p.id);
+  const saved=Array.isArray(catalog.recommendedProductOrder)?catalog.recommendedProductOrder.filter(id=>ids.includes(id)):[];
+  ids.forEach(id=>{if(!saved.includes(id))saved.push(id)});
+  catalog.recommendedProductOrder=saved;
+  return saved;
+}
+function moveRecommendedProduct(id,dir){
+  const order=normalizedRecommendedOrder(),i=order.indexOf(id),j=i+dir;
+  if(i<0||j<0||j>=order.length)return;
+  [order[i],order[j]]=[order[j],order[i]];
+  catalog.recommendedProductOrder=order;changed('#products');renderCatalog();
+}
+function recommendedOrderAdminHtml(){
+  const order=normalizedRecommendedOrder();
+  return `<div class="panel recommendedOrderAdmin"><div class=campaignAdminHead><div><b>Önerilen ürün sıralaması</b><div class=help>Müşteri “Önerilen sıralama” seçtiğinde ürünler burada belirlediğin sırada görünür.</div></div></div>
+    <div class=recommendedOrderList>${order.map((id,pos)=>{const p=(catalog.products||[]).find(x=>x.id===id);if(!p)return '';const img=p.image||productImages(p)[0]||'';return `<div class=recommendedOrderRow><span class=compactThumb>${img?`<img src="${attr(img)}">`:''}</span><b>${esc(p.name||'Ürün')}</b><span class=recommendedOrderBtns><button type=button class=smallBtn onclick="moveRecommendedProduct('${attr(id)}',-1)" ${pos===0?'disabled':''}>↑</button><button type=button class=smallBtn onclick="moveRecommendedProduct('${attr(id)}',1)" ${pos===order.length-1?'disabled':''}>↓</button></span></div>`}).join('')}</div>
+  </div>`;
+}
+function allProductsCategoryBlock(){const cover=catalog.allProductsCover||'';return `<section class="categoryAdminBlock open" id="admin-cat-tum"><div class=categoryAdminHeader><div class=categoryHeaderMain><span><h2>Tüm Ürünler</h2><span class=help>Bu kart müşteri tarafındaki Kategoriler ekranının ilk kutusudur.</span></span></div></div><div class=categoryAdminBody><div class="panel allProductsCoverAdmin"><div class=field><label><b>Tüm Ürünler kapak fotoğrafı</b></label><input id=allProductsCoverFile type=file accept="image/*"><button type=button class=smallBtn onclick=uploadAllProductsCover()>Fotoğrafı Yükle</button><div class=help>Yüklediğin görsel yalnızca “Tüm Ürünler” kategori kartında görünür.</div>${cover?`<img src="${attr(cover)}" class=allProductsCoverPreview>`:''}</div></div>${recommendedOrderAdminHtml()}</div></section>`;}
 async function uploadAllProductsCover(){const f=document.getElementById('allProductsCoverFile')?.files?.[0];if(!f)return alert('Önce bir fotoğraf seç.');const fd=new FormData();fd.append('files',f);const r=await fetch('/api/upload',{method:'POST',body:fd}).then(x=>x.json());if(!r.ok||!r.files?.[0])return alert(r.message||'Fotoğraf yüklenemedi.');catalog.allProductsCover=r.files[0].url;await fetch('/api/admin/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({settings,catalog})});changed('#categoryHub');renderCatalog();}
 function categoryBlock(c){
   const ci=catalog.categories.findIndex(x=>x.id===c.id);

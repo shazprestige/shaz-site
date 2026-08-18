@@ -407,6 +407,7 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
       }).filter(Boolean);
       if(writeText.length) line+=` | Yazı: ${writeText.join(' | ')}`;
     }
+    if(String(x.productNote||'').trim()) line+=` | Ürün notu: ${String(x.productNote).trim()}`;
     const photos=x.photoCustomizations||x.setCustomization?.photoCustomizations||[];
     if(photos.length){
       const photoText=photos.map(ph=>{

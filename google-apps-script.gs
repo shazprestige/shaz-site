@@ -339,6 +339,8 @@ function orderDetails_(o) {
       line += ' | Yazı: ' + w.join(' | ');
     }
 
+    if (String(x.productNote || '').trim()) line += ' | Ürün notu: ' + String(x.productNote).trim();
+
     const photos = x.photoCustomizations || (x.setCustomization && x.setCustomization.photoCustomizations) || [];
     if (photos.length) {
       const p = photos.map(a => {
