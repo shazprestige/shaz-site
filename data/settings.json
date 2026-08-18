@@ -136,9 +136,9 @@
   "campaignMarqueePosition": "full",
   "siteAnnouncement": {
     "enabled": true,
-    "eyebrow": " ",
-    "title": "İNDİRİM 🥳",
-    "text": "3 ADET SAAT SADECE 1299 TL\n16.08.2026 GECESİ SAAT 00:00'A KADAR GEÇERLİDİR !",
+    "eyebrow": "TÜM ALIMLARDA KARGO ÜCRETSİZ",
+    "title": "",
+    "text": "TÜM SAATLER İÇİN 2'Lİ VE 3'LÜ ALIMLAR KAMPANYADA",
     "buttonText": "Kapat"
   },
   "paymentMethods": {
