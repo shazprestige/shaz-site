@@ -98,7 +98,6 @@ function bindCore(){
   if($('#filterProductsBtn')) $('#filterProductsBtn').onclick=openFilterPanel;
   if($('#categoryMenuBtn')) $('#categoryMenuBtn').onclick=openCategoryHub;
   if($('#categoryHubClose')) $('#categoryHubClose').onclick=closeCategoryHub;
-  if($('#siteAnnouncementClose')) $('#siteAnnouncementClose').onclick=closeSiteAnnouncement;
   window.addEventListener('resize',()=>{syncSubcategoryStickyOffset();positionActiveCategoryTab('auto');positionActiveSubcategoryTab('auto')},{passive:true});
   if($('#siteAnnouncementButton')) $('#siteAnnouncementButton').onclick=closeSiteAnnouncement;
 }
@@ -137,21 +136,39 @@ function apply(){
   if($('#ig')) $('#ig').href='https://ig.me/m/'+String(settings.instagram||'').replace(/^@/,'');
   if($('#cargoLink')) $('#cargoLink').href=settings.cargoTrackingUrl||'https://ebranch.araskargo.com.tr/';
 }
+function announcementSignature(cfg={}){
+  const raw=[cfg.eyebrow||'',cfg.title||'',cfg.text||'',cfg.buttonText||'',cfg.titleFontSize||30,cfg.textFontSize||14,cfg.buttonFontSize||14].join('|');
+  let h=2166136261;
+  for(let i=0;i<raw.length;i++){h^=raw.charCodeAt(i);h=Math.imul(h,16777619)}
+  return (h>>>0).toString(36);
+}
 function renderSiteAnnouncement(force=false){
   const wrap=$('#siteAnnouncement'); if(!wrap)return;
   const cfg=settings.siteAnnouncement||{};
   if(cfg.enabled===false||(!cfg.title&&!cfg.text)){wrap.classList.add('hidden');return}
   const isPreview=new URLSearchParams(location.search).get('adminpreview')==='1';
-  if(!force && !isPreview && sessionStorage.getItem('shazAnnouncementClosed')==='1'){wrap.classList.add('hidden');return}
+  const signature=announcementSignature(cfg);
+  if(!force && !isPreview && sessionStorage.getItem('shazAnnouncementClosed:'+signature)==='1'){wrap.classList.add('hidden');return}
+  const titleSize=Math.max(14,Math.min(32,Number(cfg.titleFontSize)||30));
+  const textSize=Math.max(12,Math.min(24,Number(cfg.textFontSize)||14));
+  const buttonSize=Math.max(12,Math.min(22,Number(cfg.buttonFontSize)||14));
+  wrap.style.setProperty('--announcement-title-size',titleSize+'px');
+  wrap.style.setProperty('--announcement-text-size',textSize+'px');
+  wrap.style.setProperty('--announcement-button-size',buttonSize+'px');
   if($('#siteAnnouncementEyebrow')) $('#siteAnnouncementEyebrow').textContent=cfg.eyebrow||'DUYURU';
   if($('#siteAnnouncementTitle')) $('#siteAnnouncementTitle').textContent=cfg.title||'Duyuru';
   if($('#siteAnnouncementText')) $('#siteAnnouncementText').textContent=cfg.text||'';
   if($('#siteAnnouncementButton')) $('#siteAnnouncementButton').textContent=cfg.buttonText||'Kapat';
+  wrap.dataset.announcementSignature=signature;
   wrap.classList.remove('hidden');
 }
 function closeSiteAnnouncement(){
-  $('#siteAnnouncement')?.classList.add('hidden');
-  if(new URLSearchParams(location.search).get('adminpreview')!=='1')sessionStorage.setItem('shazAnnouncementClosed','1');
+  const wrap=$('#siteAnnouncement');
+  wrap?.classList.add('hidden');
+  if(new URLSearchParams(location.search).get('adminpreview')!=='1'){
+    const sig=wrap?.dataset?.announcementSignature||announcementSignature(settings.siteAnnouncement||{});
+    sessionStorage.setItem('shazAnnouncementClosed:'+sig,'1');
+  }
 }
 
 function renderLoopingMarquee(el,text){
@@ -501,7 +518,7 @@ function renderProducts(filter=''){
   if(category&&subs.length){
     list=list.filter(x=>activeSubcategory?x.subcategoryId===activeSubcategory:!x.subcategoryId);
   }
-  if(productStockOnly) list=list.filter(x=>Number(x.stock||0)>0 && !x.soldOutEnabled);
+  if(productStockOnly) list=list.filter(x=>!x.soldOutEnabled);
   if(productSort==='recommended') list=[...list].sort((a,b)=>recommendedOrderIndex(a.id)-recommendedOrderIndex(b.id));
   if(productSort==='priceAsc') list=[...list].sort((a,b)=>Number(a.price||0)-Number(b.price||0));
   if(productSort==='priceDesc') list=[...list].sort((a,b)=>Number(b.price||0)-Number(a.price||0));
@@ -2030,7 +2047,7 @@ function renderBuilderFinalSummary(){
 }
 function builderAddToCart(){
   const pricing=builderCurrentPricing(),selected=pricing.selected,base=pricing.complete?pricing.total:0,writeFee=(customBuilder.writes||[]).reduce((s,w)=>s+Number(w.fee||0),0),photoFee=(customBuilder.photoCustomizations||[]).reduce((s,w)=>s+Number(w.fee||0),0),total=base+writeFee+photoFee;
-  const customProduct={id:'custom-'+Date.now(),name:`Kendi Setim (${selected.length} ürün)`,price:total,stock:999,isSet:true};
+  const customProduct={id:'custom-'+Date.now(),name:`Kendi Setim (${selected.length} ürün)`,price:total,isSet:true};
   cart.push({product:customProduct,basePrice:base,qty:1,personalized:(customBuilder.writes||[]).length>0||(customBuilder.photoCustomizations||[]).length>0,builderItems:selected.map(p=>({id:p.id,name:p.name,category:p.category,image:mainProductImage(p)})),writes:customBuilder.writes||[],photoCustomizations:customBuilder.photoCustomizations||[]});
   updateCart();closeDrawer();toast('✓ Kendi setiniz sepete eklendi');
 }

@@ -50,7 +50,15 @@ async function load(){
     }
   });
   settings.campaignCards=settings.campaignCards||[];
-  settings.siteAnnouncement=settings.siteAnnouncement||{enabled:false,eyebrow:'DUYURU',title:'',text:'',buttonText:'Kapat'};
+  settings.siteAnnouncement=settings.siteAnnouncement||{enabled:false,eyebrow:'DUYURU',title:'',text:'',buttonText:'Kapat',fontScale:100};
+  if(!Number.isFinite(Number(settings.siteAnnouncement.fontScale)))settings.siteAnnouncement.fontScale=100;
+  settings.siteAnnouncement.fontScale=Math.max(80,Math.min(130,Number(settings.siteAnnouncement.fontScale)||100));
+  if(!Number.isFinite(Number(settings.siteAnnouncement.titleFontSize)))settings.siteAnnouncement.titleFontSize=30;
+  if(!Number.isFinite(Number(settings.siteAnnouncement.textFontSize)))settings.siteAnnouncement.textFontSize=14;
+  if(!Number.isFinite(Number(settings.siteAnnouncement.buttonFontSize)))settings.siteAnnouncement.buttonFontSize=14;
+  settings.siteAnnouncement.titleFontSize=Math.max(14,Math.min(32,Number(settings.siteAnnouncement.titleFontSize)||30));
+  settings.siteAnnouncement.textFontSize=Math.max(12,Math.min(24,Number(settings.siteAnnouncement.textFontSize)||14));
+  settings.siteAnnouncement.buttonFontSize=Math.max(12,Math.min(22,Number(settings.siteAnnouncement.buttonFontSize)||14));
   settings.campaignCards.forEach((c,i)=>{
     if(c.enabled===undefined)c.enabled=true;
     if(!c.id)c.id='kampanya-'+Date.now()+'-'+i;
@@ -370,6 +378,36 @@ function renderSite(){
           ${input('Ana duyuru başlığı','settings.siteAnnouncement.title',settings.siteAnnouncement?.title||'','Müşterinin ilk gördüğü büyük başlık.','.siteAnnouncement')}
         </div>
         ${textarea('Duyuru metni','settings.siteAnnouncement.text',settings.siteAnnouncement?.text||'','Kampanya veya bilgilendirme metnini buraya yaz.','.siteAnnouncement')}
+        <div class="field">
+          <label><b>Duyuru yazı boyutları</b></label>
+          <div class="announcementSizeGrid">
+            <div class="announcementSizeControl">
+              <label>Başlık</label>
+              <div class="announcementStepper">
+                <button type=button onclick="settings.siteAnnouncement.titleFontSize=Math.max(14,Number(settings.siteAnnouncement.titleFontSize||30)-1);renderSite();changed('.siteAnnouncement')">−</button>
+                <input class=formControl data-preview-target=".siteAnnouncement" type=number min=14 max=32 step=1 value="${Number(settings.siteAnnouncement?.titleFontSize||30)}" oninput="settings.siteAnnouncement.titleFontSize=Math.max(14,Math.min(32,Number(this.value)||30));changed(this.dataset.previewTarget)">
+                <button type=button onclick="settings.siteAnnouncement.titleFontSize=Math.min(32,Number(settings.siteAnnouncement.titleFontSize||30)+1);renderSite();changed('.siteAnnouncement')">+</button>
+              </div>
+            </div>
+            <div class="announcementSizeControl">
+              <label>Açıklama</label>
+              <div class="announcementStepper">
+                <button type=button onclick="settings.siteAnnouncement.textFontSize=Math.max(12,Number(settings.siteAnnouncement.textFontSize||14)-1);renderSite();changed('.siteAnnouncement')">−</button>
+                <input class=formControl data-preview-target=".siteAnnouncement" type=number min=12 max=24 step=1 value="${Number(settings.siteAnnouncement?.textFontSize||14)}" oninput="settings.siteAnnouncement.textFontSize=Math.max(12,Math.min(24,Number(this.value)||14));changed(this.dataset.previewTarget)">
+                <button type=button onclick="settings.siteAnnouncement.textFontSize=Math.min(24,Number(settings.siteAnnouncement.textFontSize||14)+1);renderSite();changed('.siteAnnouncement')">+</button>
+              </div>
+            </div>
+            <div class="announcementSizeControl">
+              <label>Kapat butonu</label>
+              <div class="announcementStepper">
+                <button type=button onclick="settings.siteAnnouncement.buttonFontSize=Math.max(12,Number(settings.siteAnnouncement.buttonFontSize||14)-1);renderSite();changed('.siteAnnouncement')">−</button>
+                <input class=formControl data-preview-target=".siteAnnouncement" type=number min=12 max=22 step=1 value="${Number(settings.siteAnnouncement?.buttonFontSize||14)}" oninput="settings.siteAnnouncement.buttonFontSize=Math.max(12,Math.min(22,Number(this.value)||14));changed(this.dataset.previewTarget)">
+                <button type=button onclick="settings.siteAnnouncement.buttonFontSize=Math.min(22,Number(settings.siteAnnouncement.buttonFontSize||14)+1);renderSite();changed('.siteAnnouncement')">+</button>
+              </div>
+            </div>
+          </div>
+          <div class=help>Başlık, açıklama ve Kapat butonunun yazı boyutunu ayrı ayrı değiştir; canlı önizlemede anında görünür.</div>
+        </div>
         ${input('Kapat butonu yazısı','settings.siteAnnouncement.buttonText',settings.siteAnnouncement?.buttonText||'Kapat','Örn: Kapat, Alışverişe Devam Et.','.siteAnnouncementButton')}
       </div>
     </details>
@@ -504,7 +542,7 @@ async function bulkCreateProductsFromPhotos(){
     const start=catalog.products.filter(p=>p.category===categoryId).length;
     (r.files||[]).forEach((f,n)=>{
       const id='urun-'+Date.now()+'-'+n+'-'+Math.random().toString(36).slice(2,6);
-      catalog.products.push({id,name:`Yeni Ürün ${start+n+1}`,subtitle:'',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:f.url,images:[f.url],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[],preferredWritePosition:'',writeEnabled:true,walletPhotoEnabled:true,subcategoryId:''});
+      catalog.products.push({id,name:`Yeni Ürün ${start+n+1}`,subtitle:'',description:'',features:[],category:categoryId,price:0,oldPrice:0,badge:'',badgeColor:'orange',image:f.url,images:[f.url],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[],preferredWritePosition:'',writeEnabled:true,walletPhotoEnabled:true,subcategoryId:''});
       if(status)status.textContent=`${n+1} / ${(r.files||[]).length} ürün hazırlandı.`;
     });
     const saved=await fetch('/api/admin/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({settings,catalog})}).then(x=>x.json());
@@ -1375,7 +1413,7 @@ function isSetCategory(categoryId){
 function addProduct(categoryId){
   const id='urun-'+Date.now();
   const readySet=isSetCategory(categoryId);
-  catalog.products.push({id,name:'Yeni Ürün',internalCode:'',subtitle:'',description:'',features:[],category:categoryId,price:0,oldPrice:0,stock:0,badge:'',badgeColor:'orange',image:'',images:[],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[],preferredWritePosition:'',writeEnabled:true,walletPhotoEnabled:true,subcategoryId:''});
+  catalog.products.push({id,name:'Yeni Ürün',internalCode:'',subtitle:'',description:'',features:[],category:categoryId,price:0,oldPrice:0,badge:'',badgeColor:'orange',image:'',images:[],hidden:false,setEligible:!readySet,isSet:readySet,setItems:[],writePositions:[],preferredWritePosition:'',writeEnabled:true,walletPhotoEnabled:true,subcategoryId:''});
   adminOpenCategory=categoryId;adminProductSearch='';adminOpenProduct=id;
   changed('#products');renderCatalog();
   setTimeout(()=>document.getElementById('admin-product-'+id)?.scrollIntoView({behavior:'smooth',block:'nearest'}),80);
