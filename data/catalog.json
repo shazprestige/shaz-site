@@ -4130,8 +4130,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "soldOutEnabled": true,
-      "soldOutUntil": "2026-08-24T23:02"
+      "soldOutEnabled": false,
+      "soldOutUntil": ""
     },
     {
       "id": "urun-1786910492353-3-rxft",
