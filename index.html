@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>SHAZ</title>
-<link rel="stylesheet" href="/styles.css?v=70">
+<link rel="stylesheet" href="/styles.css?v=128">
 </head>
 <body>
 <div class="announce" id="announceWrap"><div class="track" id="campaign"></div></div>
@@ -42,7 +42,7 @@
   <h1 id="heroTitle"></h1>
   <div class="rule"></div>
   <p id="heroSubtitle"></p>
-  <div class="builderCard" id="builderSpotlight">
+  <div class="builderCard builderImagePending" id="builderSpotlight">
     <div class="builderSpotlightCopy"><span class="gold" id="builderSpotlightEyebrow">KENDİ SETİNİ OLUŞTUR</span><h3 id="builderSpotlightTitle">Setini sen seç.</h3><p id="builderSpotlightText">Ürünlerini bir araya getir, özel set fiyatını anında gör.</p></div>
     <button class="arrow" id="builderSpotlightBtn">→</button>
   </div>
@@ -50,7 +50,10 @@
 
 <section class="section" id="products">
   <div class="sectionHead"><h2 id="catalogTitle">Tüm Ürünler</h2></div>
-  <div class="tools sortTools"><label class="sortLabel" for="sortProducts">Sırala</label><select class="tool sortSelect" id="sortProducts" aria-label="Ürünleri sırala"><option value="priceAsc">Fiyat: Düşükten yükseğe</option><option value="priceDesc">Fiyat: Yüksekten düşüğe</option></select></div>
+  <div class="catalogToolsBar">
+    <button type="button" class="catalogToolBtn" id="sortProductsBtn" aria-label="Sıralama seçeneklerini aç"><span class="catalogToolIcon catalogSortIcon" aria-hidden="true"><svg viewBox="0 0 20 20" focusable="false"><path d="M6 3v12M3.5 5.5 6 3l2.5 2.5M14 17V5M11.5 14.5 14 17l2.5-2.5"/></svg></span><span>Sıralama</span></button>
+    <button type="button" class="catalogToolBtn" id="filterProductsBtn" aria-label="Filtreleme seçeneklerini aç"><span class="catalogToolIcon">☷</span><span>Filtreleme</span></button>
+  </div>
   <input id="search" class="search" placeholder="Ürün ara" style="display:none">
   <div class="grid products" id="productsList"></div>
 </section>
@@ -63,7 +66,6 @@
 
 <div class="siteAnnouncement hidden" id="siteAnnouncement" role="dialog" aria-modal="true" aria-labelledby="siteAnnouncementTitle">
   <div class="siteAnnouncementCard">
-    <button class="siteAnnouncementClose" id="siteAnnouncementClose" type="button" aria-label="Duyuruyu kapat">×</button>
     <div class="siteAnnouncementEyebrow" id="siteAnnouncementEyebrow">DUYURU</div>
     <h2 id="siteAnnouncementTitle"></h2>
     <p id="siteAnnouncementText"></p>
@@ -74,6 +76,6 @@
 <div id="toast" class="toast"></div>
 <div class="overlay hidden" id="overlay"></div>
 <div class="drawer hidden" id="drawer"></div>
-<script src="/app.js?v=70"></script>
+<script src="/app.js?v=132"></script>
 </body>
 </html>

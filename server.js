@@ -112,6 +112,22 @@ const registerLoginFailure=key=>{
 const readJson=(name,fallback)=>{try{return JSON.parse(fs.readFileSync(path.join(dataDir,name),'utf8'))}catch(e){return fallback}};
 const writeJson=(name,data)=>fs.writeFileSync(path.join(dataDir,name),JSON.stringify(data,null,2),'utf8');
 
+const stripLegacyStockRecords=catalog=>{
+  if(!catalog||typeof catalog!=='object')return catalog;
+  const products=Array.isArray(catalog.products)?catalog.products:[];
+  for(const product of products){if(product&&typeof product==='object'&&Object.prototype.hasOwnProperty.call(product,'stock'))delete product.stock}
+  return catalog;
+};
+// Eski stok sayıları artık kullanılmıyor; stok durumu yalnız “Tükendi” işaretinden yönetilir.
+try{
+  const catalogPath=path.join(dataDir,'catalog.json');
+  if(fs.existsSync(catalogPath)){
+    const current=readJson('catalog.json',{categories:[],products:[],builder:{}});
+    const hadStock=(current.products||[]).some(p=>p&&Object.prototype.hasOwnProperty.call(p,'stock'));
+    if(hadStock)writeJson('catalog.json',stripLegacyStockRecords(current));
+  }
+}catch(e){console.warn('Eski stok kayıtları temizlenemedi:',e.message)}
+
 const normalizeTRMobile=value=>{
   const digits=String(value||'').replace(/\D/g,'');
   if(/^5\d{9}$/.test(digits))return digits;
@@ -338,12 +354,12 @@ app.get('/api/shared-cart/:id',(req,res)=>{
 });
 
 app.get('/api/settings',(req,res)=>res.json(readJson('settings.json',{})));
-app.get('/api/catalog',(req,res)=>res.json(readJson('catalog.json',{categories:[],products:[],builder:{}})));
+app.get('/api/catalog',(req,res)=>res.json(stripLegacyStockRecords(readJson('catalog.json',{categories:[],products:[],builder:{}}))));
 
 app.post('/api/admin/state',requireAdmin,async(req,res)=>{
   try{
     if(req.body.settings)writeJson('settings.json',req.body.settings);
-    if(req.body.catalog)writeJson('catalog.json',req.body.catalog);
+    if(req.body.catalog)writeJson('catalog.json',stripLegacyStockRecords(req.body.catalog));
     let github={ok:false,skipped:true};
     if(githubEnabled())github=await persistStateToGithub();
     res.json({ok:true,github});
@@ -353,7 +369,7 @@ app.post('/api/admin/state',requireAdmin,async(req,res)=>{
   }
 });
 app.post('/api/settings',requireAdmin,(req,res)=>{writeJson('settings.json',req.body);res.json({ok:true})});
-app.post('/api/catalog',requireAdmin,(req,res)=>{writeJson('catalog.json',req.body);res.json({ok:true})});
+app.post('/api/catalog',requireAdmin,(req,res)=>{writeJson('catalog.json',stripLegacyStockRecords(req.body));res.json({ok:true})});
 app.get('/api/storage/status',requireAdmin,(req,res)=>res.json({
   githubEnabled:githubEnabled(),repo:githubEnabled()?GITHUB_REPO:'',branch:GITHUB_BRANCH,
   mode:githubEnabled()?'github':'local'
