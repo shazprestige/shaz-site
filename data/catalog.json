@@ -4044,9 +4044,9 @@
       "shippingRibbonEnabled": true,
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
-      "descriptionEditorWidth": 290,
+      "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
-      "featuresEditorWidth": 290,
+      "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
       "soldOutEnabled": false,
       "soldOutUntil": ""
@@ -4126,12 +4126,12 @@
       "shippingRibbonEnabled": true,
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
-      "descriptionEditorWidth": 290,
+      "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
-      "featuresEditorWidth": 290,
+      "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutEnabled": true,
+      "soldOutUntil": "2026-08-24T23:02"
     },
     {
       "id": "urun-1786910492353-3-rxft",
