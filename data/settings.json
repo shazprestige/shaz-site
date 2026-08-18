@@ -135,7 +135,7 @@
   "campaignMarqueeText": "SHAZ’I KEŞFET • KOLEKSİYONU İNCELE •",
   "campaignMarqueePosition": "full",
   "siteAnnouncement": {
-    "enabled": true,
+    "enabled": false,
     "eyebrow": "TÜM ALIMLARDA KARGO ÜCRETSİZ",
     "title": " ",
     "text": "TÜM SAATLER İÇİN 2'Lİ VE 3'LÜ ALIMLAR KAMPANYADA",
