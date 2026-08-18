@@ -565,8 +565,8 @@
       "category": "saatler",
       "price": 600,
       "oldPrice": 0,
-      "badge": "",
-      "badgeColor": "orange",
+      "badge": "TÜKENDİ",
+      "badgeColor": "red",
       "image": "/uploads/1786817507510-gdnv74.jpeg",
       "images": [
         "/uploads/1786817507510-gdnv74.jpeg"

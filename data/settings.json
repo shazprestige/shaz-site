@@ -139,7 +139,11 @@
     "eyebrow": "TÜM ALIMLARDA KARGO ÜCRETSİZ",
     "title": " ",
     "text": "TÜM SAATLER İÇİN 2'Lİ VE 3'LÜ ALIMLAR KAMPANYADA",
-    "buttonText": "Kapat"
+    "buttonText": "Kapat",
+    "fontScale": 100,
+    "titleFontSize": 30,
+    "textFontSize": 14,
+    "buttonFontSize": 14
   },
   "paymentMethods": {
     "cod": true,
