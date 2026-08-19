@@ -137,7 +137,7 @@
     },
     {
       "id": "urun-1786817515929-5-de8a",
-      "name": "SHAZ - NOVA 2",
+      "name": "SHAZ - NOVA",
       "description": "",
       "features": [
         "Paslanma ve solmaya dayanıklı",
@@ -181,7 +181,7 @@
       "soldOutEnabled": false,
       "soldOutUntil": "",
       "badgeShape": "circle",
-      "internalCode": "SHAZ"
+      "internalCode": "SHAZ 2"
     },
     {
       "id": "urun-1786817515929-3-jj54",
