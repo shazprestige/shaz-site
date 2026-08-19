@@ -4649,3 +4649,227 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
     min-width:0!important;
   }
 }
+
+/* ===== V138 — yalnız filtre dokunma geri bildirimi / TÜKENDİ ölçüsü / fotoğraflı kategori ekranı ===== */
+/* 1) Filtreleme > Stoktakiler: iOS/Android dokunma sırasında satırın tamamında gri vurgu oluşmasın. */
+.stockFilterRow,
+.stockFilterRow *{
+  -webkit-tap-highlight-color:transparent!important;
+}
+.stockFilterRow{
+  background:#fff!important;
+  outline:none!important;
+  box-shadow:none!important;
+  user-select:none!important;
+  -webkit-user-select:none!important;
+  touch-action:manipulation!important;
+}
+.stockFilterRow:active,
+.stockFilterRow:focus,
+.stockFilterRow:focus-within{
+  background:#fff!important;
+  outline:none!important;
+  box-shadow:none!important;
+}
+
+/* 2) Ürün detayında üst-sol TÜKENDİ rozeti gösterilmez; alt satın alma alanı tek kaynak olarak kalır. */
+.soldOutVisualBadge--detail{display:none!important}
+
+/* Mobil kartlarda küçük TÜKENDİ etiketi daha zarif; masaüstü ölçülerine dokunulmaz. */
+@media(max-width:700px){
+  #productsList .soldOutVisualBadge{
+    padding:3px 6px!important;
+    font-size:7px!important;
+    line-height:1!important;
+    letter-spacing:.055em!important;
+  }
+
+  /* Tarihli ve tarihsiz TÜKENDİ alanları mobilde aynı satın alma genişliği/yüksekliği kullanır. */
+  .productDetailBottomBar .soldOutBtn,
+  .productDetailBottomBar .soldOutBtn--plain,
+  .productDetailBottomBar .soldOutBtn--timed{
+    flex:1!important;
+    width:auto!important;
+    min-width:0!important;
+    min-height:48px!important;
+    padding:10px 14px!important;
+    align-items:center!important;
+    justify-content:center!important;
+    text-align:center!important;
+  }
+}
+
+/* Tarihsiz TÜKENDİ yazısı kırmızı alanın tam merkezinde kalır. */
+.productDetailBottomBar .soldOutBtn--plain{
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+}
+
+/* PC: mevcut kırmızı çerçeve/ölçü korunur; yalnız TÜKENDİ metni ortalanır, hafif büyür ve harf aralığı açılır. */
+@media(min-width:701px){
+  .productDetailBottomBar .soldOutBtn{
+    align-items:center!important;
+    justify-content:center!important;
+    text-align:center!important;
+  }
+  .productDetailBottomBar .soldOutBtn span{
+    display:block!important;
+    width:100%!important;
+    text-align:center!important;
+    font-size:12px!important;
+    line-height:1.05!important;
+    letter-spacing:.10em!important;
+  }
+}
+
+/* 3) Hamburger sonrası fotoğraflı kategori alanı: eski üst üste binen görünümün yerine
+      bağımsız kare kartlardan oluşan temiz grid. Yalnız bu alanı etkiler. */
+.categoryHubGrid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  grid-auto-flow:row!important;
+  grid-auto-rows:auto!important;
+  align-items:start!important;
+  align-content:start!important;
+  column-gap:14px!important;
+  row-gap:14px!important;
+  width:100%!important;
+  max-width:760px!important;
+  height:auto!important;
+  min-height:0!important;
+  margin:0 auto!important;
+  padding:16px 16px 32px!important;
+  background:#fff!important;
+  box-sizing:border-box!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+}
+.categoryHubGrid>.categoryTile,
+.categoryHubGrid>.categoryTile.hasCover{
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  display:block!important;
+  position:relative!important;
+  width:100%!important;
+  min-width:0!important;
+  height:auto!important;
+  min-height:0!important;
+  aspect-ratio:1/1!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  outline-offset:0!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+  contain:paint!important;
+  background:#eceeef!important;
+  box-sizing:border-box!important;
+  text-align:left!important;
+}
+.categoryHubGrid>.categoryTile::before,
+.categoryHubGrid>.categoryTile::after,
+.categoryHubGrid>.categoryTile .categoryTileMedia::before,
+.categoryHubGrid>.categoryTile .categoryTileMedia::after{
+  content:none!important;
+  display:none!important;
+}
+.categoryHubGrid>.categoryTile .categoryTileMedia,
+.categoryHubGrid>.categoryTile.hasCover .categoryTileMedia{
+  position:absolute!important;
+  inset:0!important;
+  z-index:1!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  background:#eceeef!important;
+  box-sizing:border-box!important;
+}
+.categoryHubGrid>.categoryTile .categoryTileMedia img,
+.categoryHubGrid>.categoryTile.hasCover .categoryTileMedia img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  margin:0!important;
+  padding:0!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  transform:none!important;
+  filter:none!important;
+}
+.categoryHubGrid>.categoryTile .categoryTileText,
+.categoryHubGrid>.categoryTile.hasCover .categoryTileText{
+  position:absolute!important;
+  left:0!important;
+  right:0!important;
+  bottom:0!important;
+  z-index:2!important;
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:34px 12px 12px!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  color:#fff!important;
+  background:linear-gradient(to top,rgba(0,0,0,.58) 0%,rgba(0,0,0,.22) 46%,rgba(0,0,0,0) 100%)!important;
+}
+.categoryHubGrid>.categoryTile .categoryTileText b,
+.categoryHubGrid>.categoryTile.hasCover .categoryTileText b{
+  display:block!important;
+  margin:0!important;
+  color:#fff!important;
+  font-size:17px!important;
+  line-height:1.15!important;
+  font-weight:700!important;
+  text-align:left!important;
+  text-shadow:0 1px 2px rgba(0,0,0,.35)!important;
+}
+.categoryHubGrid>.categoryTile .categoryTileText span,
+.categoryHubGrid>.categoryTile.hasCover .categoryTileText span{
+  display:block!important;
+  width:auto!important;
+  max-width:100%!important;
+  margin:5px 0 0!important;
+  color:#fff!important;
+  font-size:11px!important;
+  line-height:1.2!important;
+  white-space:nowrap!important;
+  text-align:left!important;
+  text-shadow:0 1px 2px rgba(0,0,0,.35)!important;
+}
+.categoryHubGrid>.categoryTile:not(.hasCover) .categoryTileMedia{
+  display:grid!important;
+  place-items:center!important;
+}
+.categoryHubGrid>.categoryTile .categoryPlaceholder{margin:0!important}
+
+@media(min-width:700px){
+  .categoryHubGrid{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    column-gap:18px!important;
+    row-gap:18px!important;
+    padding:18px 18px 34px!important;
+  }
+}
+@media(max-width:390px){
+  .categoryHubGrid{
+    column-gap:12px!important;
+    row-gap:12px!important;
+    padding-left:14px!important;
+    padding-right:14px!important;
+  }
+  .categoryHubGrid>.categoryTile .categoryTileText,
+  .categoryHubGrid>.categoryTile.hasCover .categoryTileText{padding:30px 10px 10px!important}
+  .categoryHubGrid>.categoryTile .categoryTileText b,
+  .categoryHubGrid>.categoryTile.hasCover .categoryTileText b{font-size:15px!important}
+  .categoryHubGrid>.categoryTile .categoryTileText span,
+  .categoryHubGrid>.categoryTile.hasCover .categoryTileText span{font-size:10.5px!important}
+}
