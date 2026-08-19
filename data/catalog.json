@@ -563,7 +563,7 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": true,
-      "soldOutUntil": "2026-08-25T03:34",
+      "soldOutUntil": "",
       "badgeShape": "rect",
       "internalCode": "SHAZ 10"
     },
