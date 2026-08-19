@@ -896,7 +896,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 1"
     },
     {
       "id": "urun-1786899570443-22-tprf",
@@ -1028,11 +1029,12 @@
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "descriptionEditorWidth": 288,
-      "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
-      "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
+      "badgeShape": "circle",
+      "internalCode": "SET 2"
     },
     {
       "id": "urun-1786899570443-21-cpwj",
@@ -1164,11 +1166,12 @@
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "descriptionEditorWidth": 288,
-      "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
-      "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
+      "badgeShape": "circle",
+      "internalCode": "SET 3"
     },
     {
       "id": "urun-1786899570443-20-sb6i",
@@ -1300,11 +1303,12 @@
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "descriptionEditorWidth": 288,
-      "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
-      "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
+      "badgeShape": "circle",
+      "internalCode": "SET 4"
     },
     {
       "id": "urun-1786899570443-19-3hay",
@@ -1440,7 +1444,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 5"
     },
     {
       "id": "urun-1786899570443-14-hda4",
@@ -1576,7 +1581,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 6"
     },
     {
       "id": "urun-1786899570443-13-m0w1",
@@ -1712,7 +1718,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 7"
     },
     {
       "id": "urun-1786899570443-17-6ai3",
@@ -1848,7 +1855,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 8"
     },
     {
       "id": "urun-1786899570443-15-m6tq",
@@ -1984,7 +1992,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 9"
     },
     {
       "id": "urun-1786899570443-10-zmhi",
@@ -2120,7 +2129,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 10"
     },
     {
       "id": "urun-1786899570443-18-pns9",
@@ -2256,7 +2266,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 11"
     },
     {
       "id": "urun-1786899570443-0-11aq",
@@ -2390,7 +2401,8 @@
       "shippingRibbonEnabled": true,
       "soldOutEnabled": true,
       "soldOutUntil": "2026-08-25T02:47",
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 12"
     },
     {
       "id": "urun-1786899570443-1-1xl3",
@@ -2526,7 +2538,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 13"
     },
     {
       "id": "urun-1786899570443-2-xly6",
@@ -2662,7 +2675,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 14"
     },
     {
       "id": "urun-1786899570443-5-w1vb",
@@ -2798,7 +2812,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 15"
     },
     {
       "id": "urun-1786899570443-4-unxa",
@@ -2934,7 +2949,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 16"
     },
     {
       "id": "urun-1786899570443-8-k3w3",
@@ -3070,7 +3086,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 17"
     },
     {
       "id": "urun-1786899570443-7-rtyx",
@@ -3206,7 +3223,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 18"
     },
     {
       "id": "urun-1786899570443-3-oxdi",
@@ -3342,7 +3360,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 19"
     },
     {
       "id": "urun-1786899570443-11-j355",
@@ -3478,7 +3497,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 20"
     },
     {
       "id": "urun-1786899570443-16-3bya",
@@ -3614,7 +3634,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 21"
     },
     {
       "id": "urun-1786899570443-9-k358",
@@ -3750,7 +3771,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 22"
     },
     {
       "id": "urun-1786899570443-12-xe9r",
@@ -3886,7 +3908,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 23"
     },
     {
       "id": "urun-1786899570443-6-90hj",
@@ -4022,7 +4045,8 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SET 24"
     },
     {
       "id": "urun-1786910492353-4-ukzz",
