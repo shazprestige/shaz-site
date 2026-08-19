@@ -4213,7 +4213,7 @@
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
       "shippingRibbonEnabled": true,
-      "soldOutEnabled": true,
+      "soldOutEnabled": false,
       "soldOutUntil": "",
       "internalCode": "G 5",
       "badgeShape": "circle"
