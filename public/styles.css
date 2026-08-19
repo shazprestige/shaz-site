@@ -4572,3 +4572,80 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
   min-width:44px!important;margin:0!important;padding:0!important;align-items:center!important;justify-content:center!important;z-index:3!important;
 }
 .siteAnnouncementTitleRow h2{padding-right:0!important;padding-left:0!important}
+
+/* ===== V137 — yalnız istenen kategori / hızlı ad düzenleme / panel / TÜKENDİ düzeltmeleri ===== */
+/* Fotoğraflı kategori kartlarının dört tarafında gerçek beyaz ayırıcı alan; kart içi renk/gradient dışarı taşamaz. */
+.categoryHubGrid{
+  row-gap:20px!important;
+  column-gap:16px!important;
+  background:#fff!important;
+}
+.categoryHubGrid>.categoryTile,
+.categoryHubGrid>.categoryTile.hasCover{
+  overflow:hidden!important;
+  isolation:isolate!important;
+  background-clip:padding-box!important;
+  outline:4px solid #fff!important;
+  outline-offset:4px!important;
+}
+.categoryHubGrid>.categoryTile .categoryTileText,
+.categoryHubGrid>.categoryTile.hasCover .categoryTileText{
+  overflow:hidden!important;
+}
+@media(max-width:520px){
+  .categoryHubGrid{row-gap:16px!important;column-gap:12px!important}
+  .categoryHubGrid>.categoryTile,.categoryHubGrid>.categoryTile.hasCover{outline-width:3px!important;outline-offset:3px!important}
+}
+
+/* TÜKENDİ ürünlerde kart ve detay rozeti tek biçim: düz, köşeli, kırmızı ve Türkçe İ destekli. */
+.soldOutVisualBadge{
+  position:absolute!important;
+  left:8px!important;
+  top:8px!important;
+  z-index:8!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:auto!important;
+  height:auto!important;
+  min-width:0!important;
+  max-width:calc(100% - 16px)!important;
+  margin:0!important;
+  padding:5px 8px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:#c62828!important;
+  color:#fff!important;
+  box-shadow:none!important;
+  transform:none!important;
+  font-family:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important;
+  font-size:8px!important;
+  font-weight:700!important;
+  line-height:1!important;
+  letter-spacing:.06em!important;
+  white-space:nowrap!important;
+  text-transform:none!important;
+  pointer-events:none!important;
+}
+.soldOutVisualBadge--detail{left:14px!important;top:14px!important;padding:6px 10px!important;font-size:9px!important}
+@media(max-width:520px){.soldOutVisualBadge{left:7px!important;top:7px!important}.soldOutVisualBadge--detail{left:10px!important;top:10px!important}}
+
+/* Tarihsiz TÜKENDİ, Sepete Ekle ile aynı satın alma alanını doldurur. Tarihli mobil görünüm korunur. */
+.productDetailBottomBar .soldOutBtn--plain{
+  flex:1!important;
+  width:auto!important;
+  min-width:0!important;
+  min-height:50px!important;
+  padding:10px 14px!important;
+  border-radius:0!important;
+  font-size:14px!important;
+}
+@media(max-width:520px){.productDetailBottomBar .soldOutBtn--plain{min-height:48px!important}}
+/* PC'de TÜKENDİ alanı sola yığılmaz; mevcut alt barın kullanılabilir alanına hizalanır. */
+@media(min-width:701px){
+  .productDetailBottomBar .soldOutBtn{
+    flex:1!important;
+    width:auto!important;
+    min-width:0!important;
+  }
+}

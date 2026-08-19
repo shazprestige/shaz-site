@@ -589,30 +589,40 @@ function shippingRibbonProductsPanel(){
   const groups=(catalog.categories||[]).filter(c=>c.id!=='tum').sort((x,y)=>(x.order||0)-(y.order||0)).map(c=>{
     const ps=products.filter(p=>p.category===c.id);
     if(!ps.length)return '';
-    return `<details class="shippingCampaignCategory"><summary>${esc(c.name)} <small>${ps.filter(p=>p.shippingRibbonEnabled).length}/${ps.length} açık</small></summary><div class="shippingCampaignProductGrid">${ps.map(p=>{const img=p.image||productImages(p)[0]||'';return `<label class="shippingCampaignProduct ${p.shippingRibbonEnabled?'active':''}"><input type=checkbox ${p.shippingRibbonEnabled?'checked':''} onchange="setShippingRibbonForProduct('${attr(p.id)}',this.checked)">${img?`<img src="${attr(img)}" alt="">`:''}<span><b>${esc(p.name||'Ürün')}</b><small>${p.shippingRibbonEnabled?'Kargo Bedava açık':'Kapalı'}</small></span></label>`}).join('')}</div></details>`;
+    return `<details class="shippingCampaignCategory"><summary>${esc(c.name)} <small>${ps.filter(p=>p.shippingRibbonEnabled).length}/${ps.length} açık</small></summary><div class="shippingCampaignProductGrid">${ps.map(p=>{const img=p.image||productImages(p)[0]||'';return `<label class="shippingCampaignProduct ${p.shippingRibbonEnabled?'active':''}"><input type=checkbox ${p.shippingRibbonEnabled?'checked':''} onchange="setShippingRibbonForProduct('${attr(p.id)}',this.checked,this)">${img?`<img src="${attr(img)}" alt="">`:''}<span><b>${esc(p.name||'Ürün')}</b><small>${p.shippingRibbonEnabled?'Kargo Bedava açık':'Kapalı'}</small></span></label>`}).join('')}</div></details>`;
   }).join('');
   return `<details class="panel simpleAdminDetails shippingCampaignAdmin"><summary>Kargo Bedava <small>Ürün kartı şeridi</small></summary><div class=simpleDetailsBody>
-    <div class=shippingCampaignMaster><div><b>Tüm ürünler</b><small>Tek tuşla bütün ürünlerde Kargo Bedava şeridini aç/kapat.</small></div><label class="adminSwitch"><input type=checkbox ${allOn?'checked':''} onchange="setShippingRibbonForAll(this.checked)"><i></i></label></div>
+    <div class=shippingCampaignMaster><div><b>Tüm ürünler</b><small>Tek tuşla bütün ürünlerde Kargo Bedava şeridini aç/kapat.</small></div><label class="adminSwitch"><input type=checkbox ${allOn?'checked':''} onchange="setShippingRibbonForAll(this.checked,this)"><i></i></label></div>
     <div class=help>İstersen aşağıdan kategori kategori açıp ürünleri tek tek seçebilirsin. Mevcut şerit yazısı ve rengi korunur.</div>
     <div class=shippingCampaignGroups>${groups||'<div class=emptyAdmin>Ürün bulunamadı.</div>'}</div>
   </div></details>`;
 }
-function setShippingRibbonForProduct(id,on){
+function setShippingRibbonForProduct(id,on,inputEl){
   const p=(catalog.products||[]).find(x=>x.id===id);if(!p)return;
   p.shippingRibbonEnabled=!!on;
   if(p.shippingRibbonText===undefined)p.shippingRibbonText='Kargo Bedava';
   if(!p.shippingRibbonColor)p.shippingRibbonColor='#444444';
   changed(`[data-product-id="${id}"]`);
-  renderDiscountCampaigns();
+  const label=inputEl?.closest('.shippingCampaignProduct');
+  if(label){label.classList.toggle('active',!!on);const status=label.querySelector('small');if(status)status.textContent=on?'Kargo Bedava açık':'Kapalı';}
+  const group=inputEl?.closest('.shippingCampaignCategory');
+  if(group){const total=group.querySelectorAll('.shippingCampaignProduct input[type="checkbox"]').length;const enabled=group.querySelectorAll('.shippingCampaignProduct input[type="checkbox"]:checked').length;const count=group.querySelector('summary small');if(count)count.textContent=`${enabled}/${total} açık`;}
+  const master=document.querySelector('.shippingCampaignMaster input[type="checkbox"]');
+  if(master)master.checked=(catalog.products||[]).length>0&&(catalog.products||[]).every(x=>!!x.shippingRibbonEnabled);
 }
-function setShippingRibbonForAll(on){
+function setShippingRibbonForAll(on,inputEl){
   (catalog.products||[]).forEach(p=>{
     p.shippingRibbonEnabled=!!on;
     if(p.shippingRibbonText===undefined)p.shippingRibbonText='Kargo Bedava';
     if(!p.shippingRibbonColor)p.shippingRibbonColor='#444444';
   });
   changed('#products');
-  renderDiscountCampaigns();
+  const root=inputEl?.closest('.shippingCampaignAdmin')||document.querySelector('.shippingCampaignAdmin');
+  root?.querySelectorAll('.shippingCampaignProduct').forEach(label=>{
+    const box=label.querySelector('input[type="checkbox"]');if(box)box.checked=!!on;
+    label.classList.toggle('active',!!on);const status=label.querySelector('small');if(status)status.textContent=on?'Kargo Bedava açık':'Kapalı';
+  });
+  root?.querySelectorAll('.shippingCampaignCategory').forEach(group=>{const total=group.querySelectorAll('.shippingCampaignProduct input[type="checkbox"]').length;const count=group.querySelector('summary small');if(count)count.textContent=`${on?total:0}/${total} açık`;});
 }
 
 function renderDiscountCampaigns(){
@@ -799,7 +809,7 @@ function productCompactRow(p){
   return `<div class="adminProductCompact ${open?'editing':''}" data-product-sort-id="${attr(p.id)}" ondragover="productDragOver(event,'${attr(p.id)}')" ondrop="productDrop(event,'${attr(p.id)}')">
     <div class=adminProductCompactHead>
       <span class=productDragHandle draggable="true" title="Tut ve sürükle" ondragstart="productDragStart(event,'${attr(p.id)}')" ondragend="productDragEnd(event)">⠿</span>
-      <button class=adminProductCompactMain onclick="toggleAdminProduct('${attr(p.id)}')">
+      <button class=adminProductCompactMain onclick="if(!event.target.closest('.compactProductName,.compactProductNameInput'))toggleAdminProduct('${attr(p.id)}')">
         <span class=compactThumb>${img?`<img src="${attr(img)}">`:'Fotoğraf yok'}</span>
         <span class=compactMeta>
           <b class=compactProductName data-inline-product-name="${attr(p.id)}" ondblclick="startInlineProductNameEdit(event,'${attr(p.id)}')" title="Ürün adını düzenlemek için çift tıkla">${esc(p.name||'Yeni Ürün')}</b>
