@@ -89,7 +89,7 @@
   "products": [
     {
       "id": "urun-1786817515929-2-ux88",
-      "name": "SHAZ - NOVA 1",
+      "name": "SHAZ - NOVA",
       "description": "",
       "features": [
         "Paslanma ve solmaya dayanıklı",
@@ -122,17 +122,18 @@
       "preferredWritePosition": "Kordon",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "descriptionEditorWidth": 288,
-      "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
-      "featuresWrapCh": 36,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
       "shippingRibbonText": "Kargo Bedava",
       "subtitle": "Erkek kol saati",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SHAZ 1"
     },
     {
       "id": "urun-1786817515929-5-de8a",
@@ -169,21 +170,22 @@
       "preferredWritePosition": "Kordon",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "descriptionEditorWidth": 288,
-      "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
-      "featuresWrapCh": 36,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
       "subtitle": "Erkek kol saati",
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SHAZ"
     },
     {
       "id": "urun-1786817515929-3-jj54",
-      "name": "SHAZ - NOVA 3",
+      "name": "SHAZ - NOVA",
       "description": "",
       "features": [
         "Paslanma ve solmaya dayanıklı",
@@ -216,21 +218,22 @@
       "preferredWritePosition": "Kordon",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "descriptionEditorWidth": 288,
-      "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
-      "featuresWrapCh": 36,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
       "subtitle": "Erkek kol saati",
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SHAZ 3"
     },
     {
       "id": "urun-1786817515929-4-okmm",
-      "name": "SHAZ - NOVA 4",
+      "name": "SHAZ - NOVA",
       "description": "",
       "features": [
         "Paslanma ve solmaya dayanıklı",
@@ -263,21 +266,22 @@
       "preferredWritePosition": "Kordon",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "descriptionEditorWidth": 288,
-      "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
-      "featuresWrapCh": 36,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
       "subtitle": "Erkek kol saati",
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SHAZ 4"
     },
     {
       "id": "urun-1786817515929-6-sr2c",
-      "name": "SHAZ - NOVA 5",
+      "name": "SHAZ - NOVA",
       "description": "",
       "features": [
         "Paslanma ve solmaya dayanıklı",
@@ -310,21 +314,22 @@
       "preferredWritePosition": "Kordon",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "descriptionEditorWidth": 288,
-      "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
-      "featuresWrapCh": 36,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
       "subtitle": "Erkek kol saati",
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SHAZ 5"
     },
     {
       "id": "urun-1786817515929-8-eu1y",
-      "name": "SHAZ - NOVA 6",
+      "name": "SHAZ - NOVA",
       "description": "",
       "features": [
         "Paslanma ve solmaya dayanıklı",
@@ -357,21 +362,22 @@
       "preferredWritePosition": "Kordon",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "descriptionEditorWidth": 288,
-      "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
-      "featuresWrapCh": 36,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
       "subtitle": "Erkek kol saati",
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SHAZ 6"
     },
     {
       "id": "urun-1786926774073-my5fx",
-      "name": "SHAZ - NOVA 7",
+      "name": "SHAZ - NOVA",
       "description": "",
       "features": [
         "Paslanma ve solmaya dayanıklı",
@@ -404,21 +410,22 @@
       "preferredWritePosition": "Kordon",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "descriptionEditorWidth": 288,
-      "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
-      "featuresWrapCh": 36,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
       "subtitle": "Erkek kol saati",
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SHAZ 7"
     },
     {
       "id": "urun-1786817515929-0-8z49",
-      "name": "SHAZ - NOVA 8",
+      "name": "SHAZ - NOVA",
       "description": "",
       "features": [
         "Paslanma ve solmaya dayanıklı",
@@ -451,21 +458,22 @@
       "preferredWritePosition": "Kordon",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "descriptionEditorWidth": 288,
-      "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
-      "featuresWrapCh": 36,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
       "subtitle": "Erkek kol saati",
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SHAZ 8"
     },
     {
       "id": "urun-1786817515929-1-nrm5",
-      "name": "SHAZ - NOVA 9",
+      "name": "SHAZ - NOVA",
       "description": "",
       "features": [
         "Paslanma ve solmaya dayanıklı",
@@ -498,21 +506,22 @@
       "preferredWritePosition": "Kordon",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "descriptionEditorWidth": 288,
-      "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
-      "featuresWrapCh": 36,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
       "subtitle": "Erkek kol saati",
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SHAZ 9"
     },
     {
       "id": "urun-1786817515929-7-jcik",
-      "name": "SHAZ - NOVA 10",
+      "name": "SHAZ - NOVA",
       "description": "",
       "features": [
         "Paslanma ve solmaya dayanıklı",
@@ -545,21 +554,22 @@
       "preferredWritePosition": "Kordon",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "descriptionEditorWidth": 288,
-      "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
-      "featuresWrapCh": 36,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
       "subtitle": "Erkek kol saati",
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": true,
       "soldOutUntil": "2026-08-25T03:34",
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SHAZ 10"
     },
     {
       "id": "urun-1786817515929-9-6j0k",
-      "name": "SHAZ - NOVA 11",
+      "name": "SHAZ - NOVA",
       "description": "",
       "features": [
         "Paslanma ve solmaya dayanıklı",
@@ -592,20 +602,21 @@
       "preferredWritePosition": "Kordon",
       "writeEnabled": true,
       "walletPhotoEnabled": true,
-      "descriptionEditorWidth": 288,
-      "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
-      "featuresWrapCh": 36,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
       "subtitle": "Erkek kol saati",
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": true,
       "soldOutUntil": "2026-08-25T03:35",
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "SHAZ 11"
     },
     {
-      "id": "urun-1786825421633-0-33da",
+      "id": "urun-1786825421633-2-a94y",
       "name": "SHAZ - LUMA",
       "description": "",
       "features": [
@@ -624,9 +635,9 @@
       "oldPrice": 0,
       "badge": "",
       "badgeColor": "orange",
-      "image": "/uploads/1786825417042-pxm14k.jpeg",
+      "image": "/uploads/1786825417547-px2pyr.jpeg",
       "images": [
-        "/uploads/1786825417042-pxm14k.jpeg"
+        "/uploads/1786825417547-px2pyr.jpeg"
       ],
       "hidden": false,
       "setEligible": true,
@@ -640,17 +651,18 @@
       "writeEnabled": true,
       "walletPhotoEnabled": true,
       "subcategoryId": "alt-1786824992077-ro14",
-      "descriptionEditorWidth": 288,
-      "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
-      "featuresWrapCh": 36,
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40,
       "shippingRibbonEnabled": true,
       "subtitle": "Kadın, Erkek  çift saati",
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "ÇİFT 1"
     },
     {
       "id": "urun-1786825421633-1-qpgw",
@@ -698,10 +710,11 @@
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "ÇİFT 2"
     },
     {
-      "id": "urun-1786825421633-2-a94y",
+      "id": "urun-1786825421633-0-33da",
       "name": "SHAZ - LUMA",
       "description": "",
       "features": [
@@ -720,9 +733,9 @@
       "oldPrice": 0,
       "badge": "",
       "badgeColor": "orange",
-      "image": "/uploads/1786825417547-px2pyr.jpeg",
+      "image": "/uploads/1786825417042-pxm14k.jpeg",
       "images": [
-        "/uploads/1786825417547-px2pyr.jpeg"
+        "/uploads/1786825417042-pxm14k.jpeg"
       ],
       "hidden": false,
       "setEligible": true,
@@ -746,7 +759,8 @@
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "internalCode": "ÇİFT 3"
     },
     {
       "id": "urun-1786899570443-23-0cio",
