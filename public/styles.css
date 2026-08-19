@@ -4873,3 +4873,120 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
   .categoryHubGrid>.categoryTile .categoryTileText span,
   .categoryHubGrid>.categoryTile.hasCover .categoryTileText span{font-size:10.5px!important}
 }
+
+
+/* v139 — Fotoğraflı kategori merkezi sıfırdan, bağımsız kart düzeni.
+   Eski categoryTile katmanlarına bağlı değildir; yalnız hamburger sonrası kategori ekranını etkiler. */
+.categoryHubFreshGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  width:100%;
+  max-width:760px;
+  margin:0 auto;
+  padding:16px 16px 32px;
+  box-sizing:border-box;
+  align-items:start;
+}
+.categoryFreshCard{
+  position:relative;
+  display:block;
+  width:100%;
+  aspect-ratio:1 / 1;
+  min-width:0;
+  padding:0;
+  margin:0;
+  border:0;
+  border-radius:8px;
+  overflow:hidden;
+  background:#eceff1;
+  color:#fff;
+  text-align:left;
+  cursor:pointer;
+  isolation:isolate;
+  box-sizing:border-box;
+  appearance:none;
+  -webkit-appearance:none;
+}
+.categoryFreshImage{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  max-width:none;
+  margin:0;
+  padding:0;
+  border:0;
+}
+.categoryFreshShade{
+  position:absolute;
+  inset:auto 0 0;
+  z-index:1;
+  height:48%;
+  pointer-events:none;
+  background:linear-gradient(to top,rgba(0,0,0,.68) 0%,rgba(0,0,0,.30) 48%,rgba(0,0,0,0) 100%);
+}
+.categoryFreshCopy{
+  position:absolute;
+  left:14px;
+  right:12px;
+  bottom:13px;
+  z-index:2;
+  display:block;
+  color:#fff;
+  pointer-events:none;
+  text-shadow:0 1px 3px rgba(0,0,0,.35);
+}
+.categoryFreshCopy b{
+  display:block;
+  margin:0;
+  font-size:17px;
+  line-height:1.12;
+  font-weight:700;
+  color:#fff;
+}
+.categoryFreshCopy>span{
+  display:block;
+  margin-top:6px;
+  font-size:11px;
+  line-height:1.2;
+  font-weight:500;
+  color:#fff;
+  white-space:nowrap;
+}
+.categoryFreshPlaceholder{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  display:grid;
+  place-items:center;
+  width:100%;
+  height:100%;
+  margin:0;
+  background:#eceff1;
+  color:#1d232b;
+  font:600 34px/1 Georgia,serif;
+}
+.categoryFreshCard:not(.hasCover) .categoryFreshShade{
+  background:linear-gradient(to top,rgba(0,0,0,.46) 0%,rgba(0,0,0,.12) 48%,rgba(0,0,0,0) 100%);
+}
+@media(min-width:700px){
+  .categoryHubFreshGrid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:18px;
+    padding:20px 18px 36px;
+  }
+  .categoryFreshCopy{left:15px;bottom:14px}
+  .categoryFreshCopy b{font-size:18px}
+  .categoryFreshCopy>span{font-size:11px}
+}
+@media(max-width:390px){
+  .categoryHubFreshGrid{gap:12px;padding:14px 12px 28px}
+  .categoryFreshCopy{left:12px;right:10px;bottom:11px}
+  .categoryFreshCopy b{font-size:15px}
+  .categoryFreshCopy>span{font-size:10px;margin-top:5px}
+}
