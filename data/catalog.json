@@ -537,8 +537,8 @@
       "category": "saatler",
       "price": 600,
       "oldPrice": 0,
-      "badge": "",
-      "badgeColor": "orange",
+      "badge": "TÜKENDİ",
+      "badgeColor": "red",
       "image": "/uploads/1786817507458-bbr386.jpeg",
       "images": [
         "/uploads/1786817507458-bbr386.jpeg"
@@ -564,7 +564,7 @@
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": true,
       "soldOutUntil": "2026-08-25T03:34",
-      "badgeShape": "circle",
+      "badgeShape": "rect",
       "internalCode": "SHAZ 10"
     },
     {
