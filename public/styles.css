@@ -4460,3 +4460,54 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 .badge.badge-rect .badgeText,.detailProductBadge.badge-rect .badgeText{
   width:auto!important;margin:0!important;padding:0!important;display:block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
 }
+
+
+/* ===== V135 — yalnız ilk render, ürün kartı tipografisi ve giriş duyurusu ===== */
+/* Logo alanı mevcut ölçüsünü korur; gerçek görsel yüklenene kadar yanlış/bozuk içerik göstermez. */
+#brandLogo.logo{visibility:hidden}
+#brandLogo.logo.logoReady{visibility:visible}
+.floating.initialUiPending{visibility:hidden!important}
+
+/* Ürün kartı geometrisine dokunmadan yalnız ağırlığı rafine et. */
+#productsList .productCardLink .info h3{font-weight:600!important;letter-spacing:.01em!important}
+#productsList .productCardLink .price{font-weight:650!important}
+
+/* Giriş duyurusu: mevcut kart karakteri korunur; başlık ve 44px kapatma alanı yapısal olarak ayrıdır. */
+.siteAnnouncementTitleRow{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 44px!important;
+  align-items:start!important;
+  column-gap:10px!important;
+  width:100%!important;
+}
+.siteAnnouncementTitleRow .siteAnnouncementClose{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  position:static!important;
+  width:44px!important;
+  height:44px!important;
+  min-width:44px!important;
+  padding:0!important;
+  margin:-7px -7px 0 0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#25282d!important;
+  font-family:Arial,sans-serif!important;
+  font-size:25px!important;
+  font-weight:300!important;
+  line-height:1!important;
+  cursor:pointer!important;
+  box-shadow:none!important;
+}
+.siteAnnouncementTitleRow h2{
+  min-width:0!important;
+  margin:0 0 11px!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:normal!important;
+  overflow-wrap:break-word!important;
+}
+.siteAnnouncementCard p{color:#555d68!important;font-weight:450!important;margin-bottom:0!important}
+.siteAnnouncementButton{display:none!important}

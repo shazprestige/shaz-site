@@ -45,8 +45,16 @@ function syncCatalogViewControls(){
 
 async function init(){
   loadLocalState();
-  settings=await fetch('/api/settings').then(r=>r.json());
-  catalog=await fetch('/api/catalog').then(r=>r.json());
+  const settingsRequest=fetch('/api/settings').then(r=>r.json());
+  const catalogRequest=fetch('/api/catalog').then(r=>r.json());
+  settings=await settingsRequest;
+  const priorityLogoUrl=settings.logoUrl||'/uploads/shaz-logo-transparent.png';
+  if($('#brandLogo')){
+    $('#brandLogo').onload=()=>$('#brandLogo').classList.add('logoReady');
+    $('#brandLogo').onerror=()=>$('#brandLogo').classList.remove('logoReady');
+    $('#brandLogo').src=priorityLogoUrl;
+  }
+  catalog=await catalogRequest;
   catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
   catalog.checkoutUpsells=Array.isArray(catalog.checkoutUpsells)?catalog.checkoutUpsells:[];
   catalog.builder=(catalog.builder&&typeof catalog.builder==='object')?catalog.builder:{};
@@ -66,6 +74,7 @@ async function init(){
   syncCatalogViewControls();
   ensureProductHistoryBase();
   apply(); renderCampaignCards(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart(); bindFloatingContacts(); renderSiteAnnouncement();
+  document.querySelector('.floating')?.classList.remove('initialUiPending');
   const sharedProductId=new URLSearchParams(location.search).get('product');
   if(sharedProductId&&catalog.products.some(p=>p.id===sharedProductId)) setTimeout(()=>openProductDetail(sharedProductId,'shared'),0);
   else if(sharedProductId) clearProductRoute();
@@ -110,8 +119,11 @@ function apply(){
   document.documentElement.style.setProperty('--announce-h',announceVisible?'25px':'0px');
   if($('#campaign')) renderLoopingMarquee($('#campaign'),settings.campaignText||'');
   if($('#brandLogo')){
-    $('#brandLogo').src=settings.logoUrl||'/uploads/shaz-logo-transparent.png';
-    $('#brandLogo').style.width=(settings.header?.logoWidth||92)+'px';
+    const logo=$('#brandLogo');
+    const logoUrl=settings.logoUrl||'/uploads/shaz-logo-transparent.png';
+    if(logo.getAttribute('src')!==logoUrl)logo.src=logoUrl;
+    logo.style.width=(settings.header?.logoWidth||92)+'px';
+    if(logo.complete&&logo.naturalWidth>0)logo.classList.add('logoReady');
   }
   if($('#heroTitle')) $('#heroTitle').textContent=settings.heroTitle||'Tarzına uygun saatini seç.';
   if($('#heroSubtitle')) $('#heroSubtitle').textContent=settings.heroSubtitle||'Saatini seç, setini kişiselleştir ve siparişini birkaç adımda tamamla.';
@@ -158,7 +170,7 @@ function renderSiteAnnouncement(force=false){
   if($('#siteAnnouncementEyebrow')) $('#siteAnnouncementEyebrow').textContent=cfg.eyebrow||'DUYURU';
   if($('#siteAnnouncementTitle')) $('#siteAnnouncementTitle').textContent=cfg.title||'Duyuru';
   if($('#siteAnnouncementText')) $('#siteAnnouncementText').textContent=cfg.text||'';
-  if($('#siteAnnouncementButton')) $('#siteAnnouncementButton').textContent=cfg.buttonText||'Kapat';
+  if($('#siteAnnouncementButton')) $('#siteAnnouncementButton').setAttribute('aria-label',cfg.buttonText||'Duyuruyu kapat');
   wrap.dataset.announcementSignature=signature;
   wrap.classList.remove('hidden');
 }
