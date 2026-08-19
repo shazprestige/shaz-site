@@ -5010,3 +5010,53 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
   .categoryFreshCopy b{font-size:15px}
   .categoryFreshCopy>span{font-size:10px;margin-top:5px}
 }
+
+
+/* ===== v141 — yalnız istenen set akışı, üst iletişim ikonları ve sabit fiyat yerleşimi ===== */
+.headLeftContacts{
+  position:absolute;
+  left:42px;
+  top:50%;
+  transform:translateY(-50%);
+  display:flex;
+  align-items:center;
+  gap:0;
+  z-index:2;
+}
+.headerContactAction{
+  width:38px;
+  min-width:38px;
+  height:38px;
+  padding:3px 2px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#14171d;
+  text-decoration:none;
+  background:transparent;
+  border:0;
+}
+.headerContactIcon{
+  width:21px;
+  height:21px;
+  display:grid;
+  place-items:center;
+  line-height:1;
+}
+.headerContactIcon svg{width:100%;height:100%;display:block}
+.setRemovalActions{justify-content:space-between!important;gap:12px!important;padding-left:14px!important}
+.setRemovalFooterTotal{display:flex;flex-direction:column;justify-content:center;min-width:0;line-height:1.08}
+.setRemovalFooterTotal span{font-size:10px;font-weight:650;color:#747b86;white-space:nowrap}
+.setRemovalFooterTotal b{margin-top:2px;font-size:21px;font-weight:850;color:#111;white-space:nowrap}
+@media(max-width:700px){
+  .headLeftContacts{left:36px}
+  .headerContactAction{width:35px;min-width:35px;height:35px}
+  .headerContactIcon{width:20px;height:20px}
+  .setRemovalActions{padding-left:12px!important}
+  .setRemovalFooterTotal b{font-size:20px}
+}
+@media(max-width:360px){
+  .headLeftContacts{left:32px}
+  .headerContactAction{width:32px;min-width:32px}
+  .headerContactIcon{width:19px;height:19px}
+}

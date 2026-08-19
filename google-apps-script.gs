@@ -327,7 +327,7 @@ function orderDetails_(o) {
         .map(id => ((x.product && x.product.setItems) || []).find(s => s.id === id))
         .filter(Boolean)
         .map(s => s.name);
-      if (removed.length) line += ' | Çıkarılan: ' + removed.join(', ');
+      if (removed.length) line += ' | Çıkarılan ürünler (' + removed.join(', ') + ')';
     }
 
     const writes = x.writes || (x.setCustomization && x.setCustomization.writes) || [];

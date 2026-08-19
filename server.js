@@ -413,7 +413,7 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
       const removed=(x.setCustomization.removedIds||[])
         .map(id=>(x.product?.setItems||[]).find(s=>s.id===id)?.name)
         .filter(Boolean);
-      if(removed.length) line+=` | Çıkarılan: ${removed.join(', ')}`;
+      if(removed.length) line+=` | Çıkarılan ürünler (${removed.join(', ')})`;
     }
     const writes=x.writes||x.setCustomization?.writes||[];
     if(writes.length){

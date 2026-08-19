@@ -16,10 +16,27 @@ let productSort='recommended';
 let productStockOnly=false;
 const pendingProductNotes={};
 let campaignSliderTimer=0,campaignSliderIndex=0,campaignTouchStartX=null;
+const categoryHubImagePreloads=[];
+function preloadCategoryHubImages(){
+  const urls=new Set();
+  (catalog.categories||[]).forEach(c=>{
+    if(c?.cover)urls.add(String(c.cover));
+    (Array.isArray(c?.subcategories)?c.subcategories:[]).forEach(sc=>{if(sc?.cover)urls.add(String(sc.cover))});
+  });
+  categoryHubImagePreloads.length=0;
+  urls.forEach(url=>{
+    const img=new Image();
+    img.decoding='async';
+    img.src=url;
+    categoryHubImagePreloads.push(img);
+    if(typeof img.decode==='function')img.decode().catch(()=>{});
+  });
+}
 let checkoutState={payment:'cod',customer:null,requestId:null};
 let orderSubmitting=false;
 let adminPreviewMode=false;
 let activeProductDetailId='',activeProductDetailSource='catalog',activeProductDetailScrollY=0,productHistoryClosing=false;
+let productDetailReopenBlockedUntil=0;
 const $=s=>document.querySelector(s);
 const money=n=>Number(n||0).toLocaleString('tr-TR')+' TL';
 
@@ -55,6 +72,7 @@ async function init(){
     $('#brandLogo').src=priorityLogoUrl;
   }
   catalog=await catalogRequest;
+  preloadCategoryHubImages();
   catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
   catalog.checkoutUpsells=Array.isArray(catalog.checkoutUpsells)?catalog.checkoutUpsells:[];
   catalog.builder=(catalog.builder&&typeof catalog.builder==='object')?catalog.builder:{};
@@ -74,7 +92,6 @@ async function init(){
   syncCatalogViewControls();
   ensureProductHistoryBase();
   apply(); renderCampaignCards(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart(); bindFloatingContacts(); renderSiteAnnouncement();
-  document.querySelector('.floating')?.classList.remove('initialUiPending');
   const sharedProductId=new URLSearchParams(location.search).get('product');
   if(sharedProductId&&catalog.products.some(p=>p.id===sharedProductId)) setTimeout(()=>openProductDetail(sharedProductId,'shared'),0);
   else if(sharedProductId) clearProductRoute();
@@ -642,6 +659,7 @@ function closeDrawer(){
 }
 function closeProductDetail(source=activeProductDetailSource||'catalog'){
   if(!activeProductDetailId)return closeDrawer();
+  productDetailReopenBlockedUntil=Date.now()+300;
   const restoreY=activeProductDetailScrollY;
   if(!adminPreviewMode&&history.state?.shazProductPushed&&productRouteId()){
     productHistoryClosing=true;
@@ -834,6 +852,7 @@ function soldOutRemaining(p){const raw=String(p?.soldOutUntil||'').trim();if(!p?
 function soldOutVisualBadgeHtml(p,detail=false){return p?.soldOutEnabled?`<span class="soldOutVisualBadge ${detail?'soldOutVisualBadge--detail':''}">TÜKENDİ</span>`:'';}
 function soldOutButtonHtml(p){return p?.soldOutEnabled?`<button class="btn detailAddBtn soldOutBtn ${p.soldOutUntil?'soldOutBtn--timed':'soldOutBtn--plain'}" disabled><span>TÜKENDİ</span>${p.soldOutUntil?`<small data-soldout-id="${escapeAttr(p.id)}">${escapeHtml(soldOutRemaining(p))}</small>`:''}</button>`:`<button class="btn detailAddBtn" onclick="startProduct('${escapeAttr(p.id)}')">Sepete Ekle</button>`;}
 function openProductDetail(id,source='catalog'){
+  if(!activeProductDetailId&&source==='catalog'&&Date.now()<productDetailReopenBlockedUntil)return;
   const p=catalog.products.find(x=>x.id===id); if(!p)return;
   const wasOpen=!!activeProductDetailId;
   if(!wasOpen)activeProductDetailScrollY=window.scrollY||document.documentElement.scrollTop||0;
@@ -1035,7 +1054,7 @@ function setWizardBack(){
 }
 
 function renderRemoveQuestion(restoring=false){
-  openDrawer(head(wiz.product.name)+`<div class=wizardCard><h3>Setinizin içerisinden çıkarmak istediğiniz bir ürün var mı?</h3><p>Seti birebir almak istiyorsanız ilk seçeneği seçin. Bir veya daha fazla ürün çıkarmak isterseniz ikinci seçeneğe geçin.</p>
+  openDrawer(head(wiz.product.name)+`<div class=wizardCard><h3>Setinizin içerisinden çıkarmak istediğiniz bir ürün var mı?</h3>
   <div class=choiceStack><button class="choiceBtn" onclick=keepAllSetItems()>Hayır, çıkarmak istemiyorum. Seti birebir almak istiyorum.</button><button class="choiceBtn primary" onclick=renderRemovalSelection()>Evet, bir veya daha fazla ürün çıkarmak istiyorum.</button></div></div>`);
 }
 function keepAllSetItems(){wiz.keptIds=wiz.product.setItems.map(x=>x.id);renderWriteQuestion()}
@@ -1043,7 +1062,7 @@ function renderRemovalSelection(restoring=false){
   if(!restoring)setWizardNext('removeQuestion');
   openDrawer(head('Set içeriğini düzenle')+`<div class=wizardCard><h3>Size gönderilmesini istediğiniz ürünler işaretli kalsın.</h3><p>Çıkarmak istediğiniz ürünün tikini kaldırın. Çıkardığınız ürünün tanımlı tutarı toplamdan düşer.</p>
   <div class=setItemList>${wiz.product.setItems.map(x=>`<label class=setItemToggle data-set-preview-stage="remove" data-set-preview-item="${escapeAttr(x.id)}"><span><b>${x.name}</b><div class=muted>Çıkarılırsa -${money(x.removeDiscount)}</div></span><input type=checkbox class=keepItem data-id="${x.id}" ${wiz.keptIds.includes(x.id)?'checked':''} onchange=handleRemovalToggle(this)></label>`).join('')}</div>
-  <div id=removeSummary></div></div><div class=setRemovalActions><button class=btn onclick=confirmRemoval()>Devam Et</button></div>`);
+  <div id=removeSummary></div></div><div class=setRemovalActions><div class=setRemovalFooterTotal><span>Set tutarı</span><b id=removeFooterTotal>${money(wiz.product.price)}</b></div><button class=btn onclick=confirmRemoval()>Devam Et</button></div>`);
   refreshRemovalSummary();
 }
 let removalFriendlyMessage='';
@@ -1072,7 +1091,8 @@ function refreshRemovalSummary(){
   const removed=wiz.product.setItems.filter(x=>!kept.includes(x.id)), remain=wiz.product.setItems.filter(x=>kept.includes(x.id));
   const removedTotal=removed.reduce((sum,x)=>sum+Number(x.removeDiscount||0),0);
   const currentTotal=Math.max(0,Number(wiz.product.price||0)-removedTotal);
-  $('#removeSummary').innerHTML=`<div class=setRemovalLiveTotal><span>Şu anki set tutarı</span><b>${money(currentTotal)}</b><small>${removed.length?money(removedTotal)+' düşüldü':'Henüz ürün çıkarılmadı'}</small></div><div class=removalSplitSummary><div class=remainingList><b>Size gelecek ürünler:</b><br>${remain.length?remain.map(x=>'✓ '+x.name).join('<br>'):'Hiç ürün kalmadı.'}</div><div class=removedList><b>Çıkardığınız ürünler:</b><br>${removed.length?removed.map(x=>'✕ '+x.name+' (-'+money(x.removeDiscount)+')').join('<br>'):'—'}</div></div>${removalFriendlyMessage?`<div class=removalFriendlyNote><b>Setinizi koruyalım</b><span>${escapeHtml(removalFriendlyMessage)}</span><button type=button class=smallInlineBtn onclick=goToRemainingSetItemCategory()>Kategoriyi Gör →</button></div>`:''}`;
+  const footerTotal=$('#removeFooterTotal');if(footerTotal)footerTotal.textContent=money(currentTotal);
+  $('#removeSummary').innerHTML=`<div class=removalSplitSummary><div class=remainingList><b>Size gelecek ürünler:</b><br>${remain.length?remain.map(x=>'✓ '+x.name).join('<br>'):'Hiç ürün kalmadı.'}</div><div class=removedList><b>Çıkardığınız ürünler:</b><br>${removed.length?removed.map(x=>'✕ '+x.name+' (-'+money(x.removeDiscount)+')').join('<br>'):'—'}</div></div>${removalFriendlyMessage?`<div class=removalFriendlyNote><b>Setinizi koruyalım</b><span>${escapeHtml(removalFriendlyMessage)}</span><button type=button class=smallInlineBtn onclick=goToRemainingSetItemCategory()>Kategoriyi Gör →</button></div>`:''}`;
 }
 function confirmRemoval(){
   wiz.keptIds=[...document.querySelectorAll('.keepItem:checked')].map(x=>x.dataset.id);
@@ -1475,7 +1495,7 @@ function cartItemSummary(x,i){
   priceLines.push(`<div><span>Ürün fiyatı</span><strong>${money(basePrice)}</strong></div>`);
   if(x.setCustomization){
     const removed=(x.setCustomization.removedIds||[]).map(id=>(x.product.setItems||[]).find(s=>s.id===id)).filter(Boolean);
-    if(removed.length){lines.push(`<div class=muted>Çıkarılan: ${removed.map(x=>escapeHtml(x.name)).join(', ')}</div>`);removed.forEach(item=>priceLines.push(`<div class="isDiscount"><span>Çıkarılan · ${escapeHtml(item.name)}</span><strong>-${money(item.removeDiscount||0)}</strong></div>`));}
+    if(removed.length){removed.forEach(item=>priceLines.push(`<div class="isDiscount"><span>Çıkarılan · ${escapeHtml(item.name)}</span><strong>-${money(item.removeDiscount||0)}</strong></div>`));}
   }
   if(x.builderItems?.length)lines.push(`<div class=muted>Set içeriği: ${x.builderItems.map(p=>escapeHtml(p.name)).join(', ')}</div>`);
   if(String(x.productNote||'').trim())lines.push(`<div class="cartProductNote"><b>Ürün notu:</b> ${escapeHtml(String(x.productNote).trim())}</div>`);

@@ -1802,7 +1802,7 @@ function orderItemDetails(x){
     const removed=(x.setCustomization.removedIds||[])
       .map(id=>(x.product?.setItems||[]).find(s=>s.id===id)?.name)
       .filter(Boolean);
-    if(removed.length)d+=`<div class=orderSub><b>Setten çıkarılan:</b> ${removed.map(esc).join(', ')}</div>`;
+    if(removed.length)d+=`<div class=orderSub><b>Çıkarılan ürünler</b> (${removed.map(esc).join(', ')})</div>`;
   }
 
   // Sadece gerçekten seçilmiş kişiselleştirmeleri göster.
