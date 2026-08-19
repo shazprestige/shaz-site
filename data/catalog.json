@@ -131,7 +131,8 @@
       "subtitle": "Erkek kol saati",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786817515929-5-de8a",
@@ -177,7 +178,8 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786817515929-3-jj54",
@@ -223,7 +225,8 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786817515929-4-okmm",
@@ -269,7 +272,8 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786817515929-6-sr2c",
@@ -315,7 +319,8 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786817515929-8-eu1y",
@@ -361,7 +366,8 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786926774073-my5fx",
@@ -407,7 +413,8 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786817515929-0-8z49",
@@ -453,7 +460,8 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786817515929-1-nrm5",
@@ -499,7 +507,8 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786817515929-7-jcik",
@@ -545,7 +554,8 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": true,
-      "soldOutUntil": "2026-08-25T03:34"
+      "soldOutUntil": "2026-08-25T03:34",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786817515929-9-6j0k",
@@ -591,7 +601,8 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": true,
-      "soldOutUntil": "2026-08-25T03:35"
+      "soldOutUntil": "2026-08-25T03:35",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786825421633-0-33da",
@@ -638,7 +649,8 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786825421633-1-qpgw",
@@ -685,7 +697,8 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786825421633-2-a94y",
@@ -732,7 +745,8 @@
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
-      "soldOutUntil": ""
+      "soldOutUntil": "",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-23-0cio",
@@ -867,7 +881,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-22-tprf",
@@ -1002,7 +1017,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-21-cpwj",
@@ -1137,7 +1153,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-20-sb6i",
@@ -1272,7 +1289,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-19-3hay",
@@ -1407,7 +1425,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-14-hda4",
@@ -1542,7 +1561,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-13-m0w1",
@@ -1677,7 +1697,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-17-6ai3",
@@ -1812,7 +1833,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-15-m6tq",
@@ -1947,7 +1969,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-10-zmhi",
@@ -2082,7 +2105,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-18-pns9",
@@ -2217,7 +2241,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-0-11aq",
@@ -2350,7 +2375,8 @@
       "featuresWrapCh": 36,
       "shippingRibbonEnabled": true,
       "soldOutEnabled": true,
-      "soldOutUntil": "2026-08-25T02:47"
+      "soldOutUntil": "2026-08-25T02:47",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-1-1xl3",
@@ -2485,7 +2511,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-2-xly6",
@@ -2620,7 +2647,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-5-w1vb",
@@ -2755,7 +2783,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-4-unxa",
@@ -2890,7 +2919,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-8-k3w3",
@@ -3025,7 +3055,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-7-rtyx",
@@ -3160,7 +3191,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-3-oxdi",
@@ -3295,7 +3327,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-11-j355",
@@ -3430,7 +3463,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-16-3bya",
@@ -3565,7 +3599,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-9-k358",
@@ -3700,7 +3735,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-12-xe9r",
@@ -3835,7 +3871,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786899570443-6-90hj",
@@ -3970,7 +4007,8 @@
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786910492353-4-ukzz",
@@ -4011,7 +4049,8 @@
       "featuresWrapCh": 36,
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "internalCode": "G 1"
+      "internalCode": "G 1",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786910492353-1-p6qf",
@@ -4052,7 +4091,8 @@
       "featuresWrapCh": 36,
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "internalCode": "2"
+      "internalCode": "G 2",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786910492353-2-zuew",
@@ -4093,7 +4133,8 @@
       "featuresWrapCh": 36,
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "internalCode": "3"
+      "internalCode": "G 3",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786910492353-3-rxft",
@@ -4134,7 +4175,8 @@
       "featuresWrapCh": 36,
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "internalCode": "4"
+      "internalCode": "G 4",
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1786910492353-0-cc9w",
@@ -4171,9 +4213,10 @@
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
       "shippingRibbonEnabled": true,
-      "soldOutEnabled": false,
+      "soldOutEnabled": true,
       "soldOutUntil": "",
-      "internalCode": "5"
+      "internalCode": "G 5",
+      "badgeShape": "circle"
     }
   ],
   "builder": {
