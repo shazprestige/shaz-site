@@ -4875,18 +4875,34 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 }
 
 
-/* v139 — Fotoğraflı kategori merkezi sıfırdan, bağımsız kart düzeni.
-   Eski categoryTile katmanlarına bağlı değildir; yalnız hamburger sonrası kategori ekranını etkiler. */
+/* v140 — Fotoğraflı kategori merkezi: fiziksel hücre boşluğu ile kesin kart ayrımı.
+   Yalnız hamburger sonrası ana/alt kategori kartlarının yerleşimini etkiler. */
 .categoryHubFreshGrid{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:14px;
+  gap:0;
   width:100%;
   max-width:760px;
+  height:100%;
+  min-height:0;
   margin:0 auto;
-  padding:16px 16px 32px;
+  padding:7px;
   box-sizing:border-box;
+  align-content:start;
   align-items:start;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  background:#fff;
+}
+.categoryFreshCell{
+  min-width:0;
+  padding:7px;
+  margin:0;
+  box-sizing:border-box;
+  background:#fff;
+  overflow:visible;
 }
 .categoryFreshCard{
   position:relative;
@@ -4904,6 +4920,7 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
   text-align:left;
   cursor:pointer;
   isolation:isolate;
+  contain:paint;
   box-sizing:border-box;
   appearance:none;
   -webkit-appearance:none;
@@ -4924,7 +4941,9 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 }
 .categoryFreshShade{
   position:absolute;
-  inset:auto 0 0;
+  left:0;
+  right:0;
+  bottom:0;
   z-index:1;
   height:48%;
   pointer-events:none;
@@ -4977,15 +4996,16 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 @media(min-width:700px){
   .categoryHubFreshGrid{
     grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:18px;
-    padding:20px 18px 36px;
+    padding:9px;
   }
+  .categoryFreshCell{padding:9px}
   .categoryFreshCopy{left:15px;bottom:14px}
   .categoryFreshCopy b{font-size:18px}
   .categoryFreshCopy>span{font-size:11px}
 }
 @media(max-width:390px){
-  .categoryHubFreshGrid{gap:12px;padding:14px 12px 28px}
+  .categoryHubFreshGrid{padding:6px}
+  .categoryFreshCell{padding:6px}
   .categoryFreshCopy{left:12px;right:10px;bottom:11px}
   .categoryFreshCopy b{font-size:15px}
   .categoryFreshCopy>span{font-size:10px;margin-top:5px}
