@@ -147,7 +147,7 @@
   },
   "paymentMethods": {
     "cod": true,
-    "online": true
+    "online": false
   },
   "campaignMarqueeOffset": 45
 }
