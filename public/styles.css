@@ -5060,3 +5060,33 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
   .headerContactAction{width:32px;min-width:32px}
   .headerContactIcon{width:19px;height:19px}
 }
+
+
+/* ===== v142 — yalnız üst ikon ölçü/hiza düzeltmesi ===== */
+.headActions .headerIconWrap{
+  width:26px;
+  min-width:26px;
+  height:26px;
+  min-height:26px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.headActions .packageIcon{width:21px;height:18px}
+.headActions .bagIcon{width:21px;height:18px}
+.headActions .headerActionIcon:not(.bagIcon){
+  height:26px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  line-height:26px;
+}
+.headActions .headerActionText{height:14px;min-height:14px;display:flex;align-items:flex-start;justify-content:flex-start}
+.headerContactIcon{width:23px;height:23px}
+@media(max-width:700px){
+  .headerContactIcon{width:22px;height:22px}
+}
+@media(max-width:360px){
+  .headerContactIcon{width:21px;height:21px}
+}

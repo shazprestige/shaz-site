@@ -1130,19 +1130,19 @@ function renderWriteSelection(restoring=false){
 }
 function feeForIndex(i){return i===0?(catalog.personalizationPricing?.first||75):i===1?(catalog.personalizationPricing?.second||50):(catalog.personalizationPricing?.thirdPlus||25)}
 function collectSetPersonalizationPlan(){
-  const plan=[];
+  const writes=[],photos=[];
   wiz.product.setItems.filter(x=>wiz.keptIds.includes(x.id)).forEach(x=>{
     let mode='none';
     if(isWalletSetItem(x))mode=document.querySelector(`input[name="set-mode-${CSS.escape(x.id)}"]:checked`)?.value||'none';
     else if(document.querySelector(`.writePick[data-id="${CSS.escape(x.id)}"]`)?.checked)mode='write';
-    if(mode!=='none')plan.push({itemId:x.id,item:x.name,mode,slotFee:feeForIndex(plan.length)});
+    if(mode==='write')writes.push({itemId:x.id,item:x.name,mode});
+    else if(mode==='photo')photos.push({itemId:x.id,item:x.name,mode});
   });
-  return plan;
+  return [...writes,...photos].map((x,i)=>({...x,slotFee:feeForIndex(i)}));
 }
 function refreshWriteFeePreview(){
   const plan=collectSetPersonalizationPlan();
-  const walletPhotoSelected=plan.some(x=>x.mode==='photo'&&isWalletSetItem(wiz.product.setItems.find(i=>i.id===x.itemId)));
-  $('#writeFeePreview').innerHTML=plan.length?`<div class=remainingList><b>Kişiselleştirme seçimi:</b><br>${plan.map((x,i)=>`${i+1}. ${escapeHtml(x.item)} — ${x.mode==='photo'?'Fotoğraf':'Yazı'} +${money(x.slotFee)}${x.mode==='photo'&&plan.length>1?` + ${money(walletPhotoFee())} fotoğraf işlemesi`:''}`).join('<br>')}${walletPhotoSelected?`<br><br><b>Not:</b> Cüzdan yalnızca fotoğrafla kişiselleştirilen tek ürünse toplam kişiselleştirme ücreti ${money(catalog.personalizationPricing?.first||75)} olur.`:''}</div>`:'';
+  $('#writeFeePreview').innerHTML=plan.length?`<div class=remainingList><b>Kişiselleştirme seçimi:</b><br>${plan.map((x,i)=>`${i+1}. ${escapeHtml(x.item)} — ${x.mode==='photo'?'Fotoğraf':'Yazı'} +${money(x.slotFee)}${x.mode==='photo'?` + ${money(walletPhotoFee())} fotoğraf işlemesi`:''}`).join('<br>')}</div>`:'';
 }
 function renderWriteDetails(restoring=false){
   if(!restoring){
@@ -1734,11 +1734,12 @@ async function finalizeOrder(personalApproved,button){
     shippingNoticeAccepted:true,
     subtotal:campaign.subtotal,
     discountTotal:campaign.discount,
-    appliedCampaigns:campaign.applied,
+    appliedCampaigns:(campaign.applied||[]).map(a=>({id:a.id||'',name:a.name||'Kampanya',discount:Number(a.discount||0),uses:Number(a.uses||1)})),
     total:campaign.total
   };
+  const orderPayload=JSON.stringify(order,(key,value)=>typeof value==='bigint'?value.toString():value);
   // Ağ/önbellek kaynaklı geçici bir sorunda sipariş taslağı müşterinin cihazında da korunsun.
-  try{localStorage.setItem('shaz_pending_order_v63',JSON.stringify(order))}catch{}
+  try{localStorage.setItem('shaz_pending_order_v63',orderPayload)}catch{}
   const btn=button||document.querySelector('.checkoutPrimary');
   const status=document.querySelector('#checkoutSubmitStatus');
   const oldText=btn?.textContent||'Siparişi Oluştur ✓';
@@ -1746,7 +1747,7 @@ async function finalizeOrder(personalApproved,button){
   if(btn){btn.disabled=true;btn.textContent='Siparişiniz oluşturuluyor…'}
   if(status)status.textContent='Lütfen bekleyin, siparişiniz kaydediliyor.';
   try{
-    const response=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(order)});
+    const response=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:orderPayload});
     let r={};
     try{r=await response.json()}catch{}
     if(!response.ok||!r.ok||!r.order?.id)throw new Error(r.message||'Sipariş oluşturulamadı. Lütfen tekrar deneyin.');
