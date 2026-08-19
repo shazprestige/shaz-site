@@ -4511,3 +4511,64 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 }
 .siteAnnouncementCard p{color:#555d68!important;font-weight:450!important;margin-bottom:0!important}
 .siteAnnouncementButton{display:none!important}
+
+
+/* ===== V136 — yalnız istenen 4 düzeltme ===== */
+/* 1) Hamburger sonrası fotoğraflı kategoriler: her kart bağımsız grid hücresi. */
+.categoryHubGrid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  grid-auto-flow:row!important;
+  grid-auto-rows:auto!important;
+  align-content:start!important;
+  align-items:start!important;
+  gap:16px!important;
+  padding:18px 16px 32px!important;
+  width:100%!important;
+  max-width:760px!important;
+  margin:0 auto!important;
+}
+.categoryHubGrid>.categoryTile,
+.categoryHubGrid>.categoryTile.hasCover{
+  display:block!important;
+  position:relative!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  aspect-ratio:1/1!important;
+  overflow:hidden!important;
+}
+@media(min-width:700px){
+  .categoryHubGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:18px!important;padding-left:18px!important;padding-right:18px!important}
+}
+@media(max-width:390px){
+  .categoryHubGrid{gap:12px!important;padding-left:14px!important;padding-right:14px!important}
+}
+
+/* 2) Yönetim ürün listesinde ürün adına çift tıklayarak düzenleme. */
+.compactProductName{cursor:text!important}
+.compactProductNameInput{
+  display:block!important;width:100%!important;min-width:0!important;height:28px!important;padding:4px 6px!important;
+  border:1px solid #bfc5cc!important;border-radius:5px!important;background:#fff!important;color:#111!important;
+  font:inherit!important;font-weight:700!important;outline:none!important;
+}
+.compactProductNameInput:focus{border-color:#111!important}
+
+/* 3) TÜKENDİ: küçük, sade, köşesiz dikdörtgen. */
+.productDetailBottomBar .soldOutBtn{
+  flex:0 0 auto!important;width:auto!important;min-width:104px!important;min-height:0!important;padding:8px 11px!important;
+  border-radius:0!important;gap:2px!important;font-size:11px!important;line-height:1.1!important;letter-spacing:.07em!important;
+}
+.productDetailBottomBar .soldOutBtn span{font-weight:750!important}
+.productDetailBottomBar .soldOutBtn small{font-size:8px!important;line-height:1.15!important;letter-spacing:0!important}
+.compactQuickActions .quickSoldOutOn{border-radius:0!important;letter-spacing:.04em!important}
+
+/* 4) Duyuru ×: kartın sağ üst köşesinde; tüm metin alanlarında güvenli sağ boşluk. */
+.siteAnnouncementCard{position:relative!important}
+.siteAnnouncementEyebrow{padding-right:52px!important;padding-left:52px!important}
+.siteAnnouncementTitleRow{display:block!important;width:100%!important;padding-right:52px!important;padding-left:52px!important}
+.siteAnnouncementTitleRow .siteAnnouncementClose{
+  display:flex!important;position:absolute!important;top:8px!important;right:8px!important;width:44px!important;height:44px!important;
+  min-width:44px!important;margin:0!important;padding:0!important;align-items:center!important;justify-content:center!important;z-index:3!important;
+}
+.siteAnnouncementTitleRow h2{padding-right:0!important;padding-left:0!important}

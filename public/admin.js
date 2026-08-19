@@ -802,7 +802,7 @@ function productCompactRow(p){
       <button class=adminProductCompactMain onclick="toggleAdminProduct('${attr(p.id)}')">
         <span class=compactThumb>${img?`<img src="${attr(img)}">`:'Fotoğraf yok'}</span>
         <span class=compactMeta>
-          <b>${esc(p.name||'Yeni Ürün')}</b>
+          <b class=compactProductName data-inline-product-name="${attr(p.id)}" ondblclick="startInlineProductNameEdit(event,'${attr(p.id)}')" title="Ürün adını düzenlemek için çift tıkla">${esc(p.name||'Yeni Ürün')}</b>
           ${p.subtitle?`<small class=compactSubtitle>${esc(p.subtitle)}</small>`:''}
           <small>₺${Number(p.price||0).toLocaleString('tr-TR')}${p.isSet?' · Hazır set':''}</small>
         </span>
@@ -811,7 +811,7 @@ function productCompactRow(p){
       <div class=compactQuickActions>
         <label class=compactInternalCode title="Ürün Kodu (Müşteriye Gösterilmez)"><span>Kod</span><input value="${attr(p.internalCode||'')}" placeholder="SAAT-1" onclick="event.stopPropagation()" oninput="catalog.products[${i}].internalCode=this.value;changed('#products')"></label>
         ${quickSub}
-        <button class="duplicateBtn ${p.soldOutEnabled?'quickSoldOutOn':''}" type=button onclick="quickToggleSoldOut('${attr(p.id)}')">${p.soldOutEnabled?'Tükendi':'Satışta'}</button>
+        <button class="duplicateBtn ${p.soldOutEnabled?'quickSoldOutOn':''}" type=button onclick="quickToggleSoldOut('${attr(p.id)}')">${p.soldOutEnabled?'TÜKENDİ':'Satışta'}</button>
         <button class=duplicateBtn type=button onclick="openAdminProductImage('${attr(p.id)}')">Büyüt</button>
         <button class=duplicateBtn type=button onclick="quickToggleProductHidden('${attr(p.id)}')">${p.hidden?'Göster':'Gizle'}</button>
         <button class=duplicateBtn type=button onclick="duplicateProduct(${i})">⧉</button>
@@ -820,6 +820,41 @@ function productCompactRow(p){
     ${open?`<div class=compactEditor>${productCard(p,true)}</div>`:''}
   </div>`;
 }
+
+function startInlineProductNameEdit(event,id){
+  event.preventDefault();
+  event.stopPropagation();
+  const p=(catalog.products||[]).find(x=>x.id===id);
+  const label=event.currentTarget;
+  if(!p||!label||label.dataset.editing==='1')return;
+  label.dataset.editing='1';
+  const original=String(p.name||'');
+  const input=document.createElement('input');
+  input.type='text';
+  input.className='compactProductNameInput';
+  input.value=original;
+  input.setAttribute('aria-label','Ürün adı');
+  let finished=false;
+  const finish=(save)=>{
+    if(finished)return;
+    finished=true;
+    const next=String(input.value||'').trim();
+    if(save&&next&&next!==original){p.name=next;changed('#products')}
+    renderCatalog();
+  };
+  input.addEventListener('click',e=>e.stopPropagation());
+  input.addEventListener('dblclick',e=>e.stopPropagation());
+  input.addEventListener('keydown',e=>{
+    e.stopPropagation();
+    if(e.key==='Enter'){e.preventDefault();finish(true)}
+    if(e.key==='Escape'){e.preventDefault();finish(false)}
+  });
+  input.addEventListener('blur',()=>finish(true),{once:true});
+  label.replaceWith(input);
+  input.focus();
+  input.select();
+}
+
 function quickToggleSoldOut(id){
   const p=(catalog.products||[]).find(x=>x.id===id);if(!p)return;
   p.soldOutEnabled=!p.soldOutEnabled;
