@@ -633,8 +633,8 @@
       "category": "saatler",
       "price": 1000,
       "oldPrice": 0,
-      "badge": "",
-      "badgeColor": "orange",
+      "badge": "TÜKENDİ",
+      "badgeColor": "red",
       "image": "/uploads/1786825417547-px2pyr.jpeg",
       "images": [
         "/uploads/1786825417547-px2pyr.jpeg"
@@ -661,7 +661,7 @@
       "shippingRibbonColor": "#444444",
       "soldOutEnabled": false,
       "soldOutUntil": "",
-      "badgeShape": "circle",
+      "badgeShape": "rect",
       "internalCode": "ÇİFT 1"
     },
     {
