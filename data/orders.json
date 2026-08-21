@@ -1,5 +1,276 @@
 [
   {
+    "id": "SHZ16",
+    "createdAt": "2026-08-21T21:37:37.334Z",
+    "createdAtTR": "22.08.2026 00:37:37",
+    "status": "new",
+    "statusUpdatedAt": "2026-08-21T21:37:37.334Z",
+    "requestId": "ea8a7ffe-a6fa-4610-a6f5-1d3c8ff279b4",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786899570443-4-unxa",
+          "name": "SHAZ - ERKEK AKSESUAR SETİ",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Takvim göstergeli, çelik kordonlu quartz kol saati",
+            "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+            "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+            "Metal püsküllü, cam plastik karışımlı tesbih",
+            "Ayarlanabilir metal tokalı SHAZ kemer",
+            "Metal detaylı ayarlanabilir erkek bileklik",
+            "Özel bölmeli, premium set kutusu"
+          ],
+          "category": "setler",
+          "price": 1150,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786899547509-ds4yrb.jpeg",
+          "images": [
+            "/uploads/1786899547509-ds4yrb.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": false,
+          "isSet": true,
+          "setItems": [
+            {
+              "id": "setitem-1786901698611-0-hti",
+              "productId": "",
+              "name": "Saat",
+              "type": "",
+              "removeDiscount": 400,
+              "writePositions": [
+                "Kordon",
+                "arka kapak"
+              ],
+              "preferredWritePosition": "Kordon",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-1-axx",
+              "productId": "",
+              "name": "Cüzdan",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "İç yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-2-edq",
+              "productId": "",
+              "name": "Çakmak",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "Ön yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-3-u1a",
+              "productId": "",
+              "name": "Tesbih",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-4-cqi",
+              "productId": "",
+              "name": "Kemer",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Toka arkası yanı",
+                "Toka önü yanı"
+              ],
+              "preferredWritePosition": "Toka arkası yanı",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-5-a63",
+              "productId": "",
+              "name": "Bileklik",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ],
+              "preferredWritePosition": "Arka yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-6-4nj",
+              "productId": "",
+              "name": "Set kutusu",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            }
+          ],
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "badgeShape": "circle",
+          "internalCode": "SET 16"
+        },
+        "basePrice": 1000,
+        "qty": 1,
+        "personalized": true,
+        "setCustomization": {
+          "keptIds": [
+            "setitem-1786901698611-0-hti",
+            "setitem-1786901698611-1-axx",
+            "setitem-1786901698611-2-edq",
+            "setitem-1786901698611-3-u1a",
+            "setitem-1786901698611-4-cqi",
+            "setitem-1786901698611-5-a63",
+            "setitem-1786901698611-6-4nj"
+          ],
+          "removedIds": [],
+          "writes": [
+            {
+              "itemId": "setitem-1786901698611-0-hti",
+              "item": "Saat",
+              "position": "Kordon",
+              "text": "Hasan",
+              "fee": 75
+            }
+          ],
+          "photoCustomizations": [
+            {
+              "itemId": "setitem-1786901698611-1-axx",
+              "item": "Cüzdan",
+              "imageUrl": "https://shaz.com.tr/uploads/1787230420080-ob3rdj.jpg",
+              "originalName": "inbound3735765387430641192.jpg",
+              "caption": "Gözüm üstünde...",
+              "captionPosition": "below",
+              "fee": 75,
+              "slotFee": 50,
+              "photoExtraFee": 25
+            }
+          ]
+        }
+      },
+      {
+        "product": {
+          "id": "urun-1786910492353-4-ukzz",
+          "name": "SHAZ - GÖZLÜK",
+          "subtitle": "Erkek gözlük",
+          "description": "Siyah çerçeve · Siyah cam · Gold detaylı · Klasik tasarım",
+          "features": [
+            "Polarize",
+            "UV200"
+          ],
+          "category": "gozlukler",
+          "price": 200,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786910487125-wtf0nj.jpeg",
+          "images": [
+            "/uploads/1786910487125-wtf0nj.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Sol gözlük sapı",
+            "Sağ gözlük sapı"
+          ],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "internalCode": "G 1",
+          "badgeShape": "circle"
+        },
+        "basePrice": 200,
+        "qty": 1,
+        "personalized": false,
+        "writes": [],
+        "upsell": {
+          "ruleId": "upsell-1786920061857",
+          "normalPrice": 350,
+          "specialPrice": 200
+        }
+      }
+    ],
+    "customer": {
+      "fullName": "Aysegul kucuk yilmaz",
+      "phone": "5342007334",
+      "extraPhone": "5319029363",
+      "province": "İstanbul",
+      "district": "Fatih",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "Yedikule MH.",
+      "avenue": "",
+      "street": "Hacı manav SK.",
+      "fullAddress": "No 78 daire 16",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": ""
+    },
+    "payment": "cod",
+    "personalApproval": {
+      "approved": true,
+      "method": "button",
+      "at": "2026-08-21T21:37:35.844Z"
+    },
+    "shippingNoticeAccepted": true,
+    "subtotal": 1350,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 1350
+  },
+  {
     "id": "SHZ15",
     "createdAt": "2026-08-19T20:40:08.258Z",
     "createdAtTR": "19.08.2026 23:40:08",
