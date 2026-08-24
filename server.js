@@ -257,10 +257,12 @@ async function syncPendingOrdersToSheets(){
   sheetSyncRunning=true;
   try{
     const orders=readJson('orders.json',[]);
+    const dailyDisplayIds=new Map(ordersWithDailyDisplayIds(orders).map(o=>[String(o.id||''),String(o.dailyDisplayId||o.id||'')]));
     let changed=false, syncedNow=0, lastError='';
     for(const order of orders.filter(o=>o.sheetSyncStatus!=='synced').slice().reverse()){
       try{
-        const sheet=await sheetsRequest({action:'create',requestId:order.requestId,order});
+        const sheetOrder={...order,dailyDisplayId:dailyDisplayIds.get(String(order.id||''))||order.id||''};
+        const sheet=await sheetsRequest({action:'create',requestId:order.requestId,order:sheetOrder});
         order.sheetSyncStatus='synced';
         order.sheetSyncedAt=new Date().toISOString();
         order.sheetId=sheet.id||order.id;

@@ -85,7 +85,8 @@ function createOrder_(data) {
 
     const order = data.order || {};
     const id = String((data.order||{}).id || '') || nextOrderId_(sh);
-    const customerNo = Number(id.replace(/^SHZ/i,'')) || 1;
+    const displayId = String(order.dailyDisplayId || id);
+    const customerNo = Number(displayId.replace(/^SHZ/i,'')) || 1;
     const c = order.customer || {};
     const details = orderDetails_(order);
 
@@ -101,7 +102,7 @@ function createOrder_(data) {
 
     sh.getRange(headerRow,1,1,5).merge();
     sh.getRange(headerRow,1)
-      .setValue(customerNo + '. MÜŞTERİ • ' + id + ' • ' + String(order.createdAtTR || ''))
+      .setValue(customerNo + '. MÜŞTERİ • ' + displayId + ' • ' + String(order.createdAtTR || ''))
       .setFontWeight('bold')
       .setHorizontalAlignment('left')
       .setVerticalAlignment('middle')
