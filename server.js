@@ -374,7 +374,34 @@ app.get('/api/storage/status',requireAdmin,(req,res)=>res.json({
   githubEnabled:githubEnabled(),repo:githubEnabled()?GITHUB_REPO:'',branch:GITHUB_BRANCH,
   mode:githubEnabled()?'github':'local'
 }));
-app.get('/api/orders',requireAdmin,(req,res)=>res.json(readJson('orders.json',[])));
+function orderIstanbulDayKey(o){
+  try{
+    const d=new Date(o?.createdAt||'');
+    if(Number.isFinite(d.getTime())){
+      const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d);
+      const v=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+      if(v.year&&v.month&&v.day)return `${v.year}-${v.month}-${v.day}`;
+    }
+  }catch(e){}
+  const tr=String(o?.createdAtTR||'').trim();
+  const m=tr.match(/^(\d{2})[.\/-](\d{2})[.\/-](\d{4})/);
+  return m?`${m[3]}-${m[2]}-${m[1]}`:'';
+}
+function ordersWithDailyDisplayIds(orders){
+  const byDay=new Map();
+  for(const o of [...(orders||[])].sort((a,b)=>new Date(a?.createdAt||0)-new Date(b?.createdAt||0))){
+    const day=orderIstanbulDayKey(o)||'unknown';
+    const n=(byDay.get(day)||0)+1;
+    byDay.set(day,n);
+    o.__dailyDisplayId='SHZ'+n;
+  }
+  return (orders||[]).map(o=>{
+    const dailyDisplayId=o.__dailyDisplayId||o.id||'';
+    delete o.__dailyDisplayId;
+    return {...o,dailyDisplayId};
+  });
+}
+app.get('/api/orders',requireAdmin,(req,res)=>res.json(ordersWithDailyDisplayIds(readJson('orders.json',[]))));
 app.patch('/api/orders/status',requireAdmin,async(req,res)=>{
  const ids=Array.isArray(req.body.ids)?req.body.ids:[]; const status=req.body.status;
  if(!['new','prepared','shipped'].includes(status))return res.status(400).json({ok:false});
@@ -388,6 +415,73 @@ app.patch('/api/orders/status',requireAdmin,async(req,res)=>{
  orders.forEach(o=>{if(ids.includes(o.id)){o.status=status;o.statusUpdatedAt=now;}});
  writeJson('orders.json',orders);res.json({ok:true,orders});
 });
+app.patch('/api/orders/:id',requireAdmin,(req,res)=>{
+  const id=String(req.params.id||'').trim();
+  const orders=readJson('orders.json',[]);
+  const order=orders.find(o=>String(o.id||'')===id);
+  if(!order)return res.status(404).json({ok:false,message:'Sipariş bulunamadı.'});
+
+  const body=req.body&&typeof req.body==='object'?req.body:{};
+  const customerPatch=body.customer&&typeof body.customer==='object'?body.customer:{};
+  order.customer=(order.customer&&typeof order.customer==='object')?order.customer:{};
+  const customerFields=['fullName','phone','extraPhone','province','district','neighborhood','avenue','street','fullAddress','buildingNo','floor','doorNo','businessName','branchName','note','deliveryMode','placeType'];
+  for(const key of customerFields){
+    if(Object.prototype.hasOwnProperty.call(customerPatch,key))order.customer[key]=String(customerPatch[key]??'').trim();
+  }
+  if(Object.prototype.hasOwnProperty.call(customerPatch,'phone')){
+    const phone=normalizeTRMobile(customerPatch.phone);
+    if(!phone)return res.status(400).json({ok:false,message:'Telefon numarası geçersiz.'});
+    order.customer.phone=phone;
+  }
+  if(Object.prototype.hasOwnProperty.call(customerPatch,'extraPhone')){
+    const raw=String(customerPatch.extraPhone||'').trim();
+    const extra=raw?normalizeTRMobile(raw):'';
+    if(raw&&!extra)return res.status(400).json({ok:false,message:'2. telefon numarası geçersiz.'});
+    if(extra&&extra===order.customer.phone)return res.status(400).json({ok:false,message:'İki telefon numarası aynı olamaz.'});
+    order.customer.extraPhone=extra;
+  }
+
+  if(Object.prototype.hasOwnProperty.call(body,'payment')){
+    const payment=String(body.payment||'').trim();
+    if(payment)order.payment=payment;
+  }
+  if(Object.prototype.hasOwnProperty.call(body,'total')){
+    const total=Number(body.total);
+    if(!Number.isFinite(total)||total<0)return res.status(400).json({ok:false,message:'Toplam tutar geçersiz.'});
+    order.total=total;
+  }
+  if(Array.isArray(body.items)){
+    body.items.forEach((patch,i)=>{
+      const item=order.items?.[i];
+      if(!item||!patch||typeof patch!=='object')return;
+      item.product=(item.product&&typeof item.product==='object')?item.product:{};
+      if(Object.prototype.hasOwnProperty.call(patch,'name'))item.product.name=String(patch.name||'').trim()||item.product.name||'Ürün';
+      if(Object.prototype.hasOwnProperty.call(patch,'price')){
+        const price=Number(patch.price);
+        if(Number.isFinite(price)&&price>=0)item.product.price=price;
+      }
+      if(Object.prototype.hasOwnProperty.call(patch,'qty')){
+        const qty=Math.max(1,Math.floor(Number(patch.qty)||1));
+        item.qty=qty;
+      }
+    });
+  }
+
+  writeJson('orders.json',orders);
+  persistOrdersToGithub().catch(e=>console.error('Sipariş düzenleme GitHub kalıcı kayıt:',e));
+  res.json({ok:true,order});
+});
+app.delete('/api/orders/:id',requireAdmin,(req,res)=>{
+  const id=String(req.params.id||'').trim();
+  const orders=readJson('orders.json',[]);
+  const index=orders.findIndex(o=>String(o.id||'')===id);
+  if(index<0)return res.status(404).json({ok:false,message:'Sipariş bulunamadı.'});
+  const [removed]=orders.splice(index,1);
+  writeJson('orders.json',orders);
+  persistOrdersToGithub().catch(e=>console.error('Sipariş silme GitHub kalıcı kayıt:',e));
+  res.json({ok:true,removedId:removed?.id||id});
+});
+
 app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
  const orders=readJson('orders.json',[]);
  const exportNow=new Date();

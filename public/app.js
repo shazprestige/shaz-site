@@ -1028,7 +1028,7 @@ async function finishSingleWalletPhoto(id,button){
 /* SET WIZARD */
 let wiz=null;
 function startSetWizard(p){
-  wiz={product:p, keptIds:p.setItems.map(x=>x.id), writes:[], photoCustomizations:[], personalizationPlan:[], step:1, history:[]};
+  wiz={product:p, keptIds:p.setItems.map(x=>x.id), writes:[], photoCustomizations:[], personalizationPlan:[], personalizationPlanDraft:[], writeDrafts:{}, photoDrafts:{}, photoFileDrafts:{}, step:1, history:[]};
   renderRemoveQuestion();
 }
 function head(title,canBack=true){return `<div class=wizardHead>${canBack?'<button class="pill backPill" onclick=setWizardBack()>← Geri</button>':''}<div><div class=wizardProgress>Adım ${wiz?.step||1}</div><h2>${title}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>`}
@@ -1040,6 +1040,7 @@ function setWizardSnapshot(screen){
 }
 function setWizardNext(screen){setWizardSnapshot(screen);wiz.step=(wiz.step||1)+1}
 function setWizardBack(){
+  captureSetWizardDrafts();
   if(!wiz?.history?.length){closeDrawer();return;}
   const prev=wiz.history.pop();
   wiz.step=prev.step;wiz.keptIds=prev.keptIds;wiz.writes=prev.writes;wiz.photoCustomizations=prev.photoCustomizations||[];wiz.personalizationPlan=prev.personalizationPlan||[];
@@ -1051,6 +1052,52 @@ function setWizardBack(){
   else if(prev.screen==='walletPhotoQuestion')renderWalletPhotoQuestion(true);
   else if(prev.screen==='walletPhotoDetails')renderWalletPhotoDetails(true);
   else if(prev.screen==='summary')renderSetSummary(true);
+}
+function captureSetPersonalizationPlanDraft(){
+  if(!wiz||!document.querySelector('[data-personalize-row]'))return;
+  wiz.personalizationPlanDraft=collectSetPersonalizationPlan();
+}
+function captureSetWriteDrafts(){
+  if(!wiz)return;
+  wiz.writeDrafts=wiz.writeDrafts||{};
+  document.querySelectorAll('[data-write-id]').forEach(card=>{
+    const id=card.dataset.writeId;if(!id)return;
+    const input=document.getElementById('text-'+id);
+    const selected=document.querySelector(`input[name="pos-${CSS.escape(id)}"]:checked`);
+    const current=wiz.writeDrafts[id]||{};
+    wiz.writeDrafts[id]={...current,text:input?input.value:(current.text||''),position:selected?.value||current.position||''};
+  });
+}
+function captureSetPhotoDrafts(){
+  if(!wiz)return;
+  wiz.photoDrafts=wiz.photoDrafts||{};wiz.photoFileDrafts=wiz.photoFileDrafts||{};
+  document.querySelectorAll('.walletPhotoCard[data-photo-plan]').forEach(card=>{
+    const itemId=card.dataset.photoPlan,idx=Number(card.dataset.photoIndex);if(!itemId||!Number.isFinite(idx))return;
+    const fileInput=document.getElementById(`setWalletPhotoFile-${idx}`),file=fileInput?.files?.[0];
+    if(file)wiz.photoFileDrafts[itemId]=file;
+    const current=wiz.photoDrafts[itemId]||{};
+    const captionOn=!!document.getElementById(`setWalletCaptionToggle-${idx}`)?.checked;
+    const regularToggle=document.getElementById(`setWalletRegularToggle-${idx}`);
+    const regularOn=regularToggle?!!regularToggle.checked:false;
+    const selected=document.querySelector(`input[name="set-wallet-pos-${idx}"]:checked`);
+    wiz.photoDrafts[itemId]={
+      ...current,
+      captionOn,
+      caption:document.getElementById(`setWalletCaptionText-${idx}`)?.value||'',
+      captionPosition:document.getElementById(`setWalletCaptionPosition-${idx}`)?.value||'below',
+      regularOn,
+      regularText:document.getElementById(`setWalletRegularText-${idx}`)?.value||'',
+      regularPosition:selected?.value||current.regularPosition||''
+    };
+  });
+}
+function captureSetWizardDrafts(){captureSetPersonalizationPlanDraft();captureSetWriteDrafts();captureSetPhotoDrafts()}
+function restoreSetPhotoFileInputs(){
+  if(!wiz?.photoFileDrafts)return;
+  document.querySelectorAll('input[type="file"][data-photo-item-id]').forEach(input=>{
+    const file=wiz.photoFileDrafts[input.dataset.photoItemId];if(!file||typeof DataTransfer==='undefined')return;
+    try{const dt=new DataTransfer();dt.items.add(file);input.files=dt.files}catch{}
+  });
 }
 
 function renderRemoveQuestion(restoring=false){
@@ -1107,11 +1154,11 @@ function renderWriteQuestion(restoring=false){
   <div class=priceInfo><b>Kişiselleştirme ücret sırası:</b><br>İlk ürün +${money(catalog.personalizationPricing?.first||75)}<br>İkinci ürün +${money(catalog.personalizationPricing?.second||50)}<br>3. ve sonraki her ürün +${money(catalog.personalizationPricing?.thirdPlus||25)}</div>
   <div class=choiceStack><button class=choiceBtn onclick=finishSetWithoutWrite()>Hayır, kişiselleştirme istemiyorum</button><button class="choiceBtn primary" onclick=renderWriteSelection()>Evet, kişiselleştirmek istiyorum</button></div></div>`);
 }
-function finishSetWithoutWrite(){wiz.writes=[];wiz.photoCustomizations=[];wiz.personalizationPlan=[];renderSetSummary()}
+function finishSetWithoutWrite(){wiz.writes=[];wiz.photoCustomizations=[];wiz.personalizationPlan=[];wiz.personalizationPlanDraft=[];wiz.writeDrafts={};wiz.photoDrafts={};wiz.photoFileDrafts={};renderSetSummary()}
 function renderWriteSelection(restoring=false){
   if(!restoring)setWizardNext('writeQuestion');
   const kept=wiz.product.setItems.filter(x=>wiz.keptIds.includes(x.id)&&(setItemWriteAvailable(x)||isWalletSetItem(x)));
-  const remembered=Object.fromEntries((wiz.personalizationPlan||[]).map(x=>[x.itemId,x.mode]));
+  const remembered=Object.fromEntries(((wiz.personalizationPlanDraft?.length?wiz.personalizationPlanDraft:wiz.personalizationPlan)||[]).map(x=>[x.itemId,x.mode]));
   openDrawer(head('Kişiselleştirilecek ürünleri seçin')+`<div class=wizardCard><div class=priceInfo><b>Ücret sırası otomatik hesaplanır:</b><br>1. kişiselleştirilen ürün +${money(catalog.personalizationPricing?.first||75)} · 2. ürün +${money(catalog.personalizationPricing?.second||50)} · 3. ve sonrası +${money(catalog.personalizationPricing?.thirdPlus||25)}.</div>
   <div class=writeSelectGrid>${kept.map(x=>{
     const wallet=isWalletSetItem(x),canWrite=setItemWriteAvailable(x),mode=remembered[x.id]||'none';
@@ -1147,7 +1194,9 @@ function refreshWriteFeePreview(){
 function renderWriteDetails(restoring=false){
   if(!restoring){
     wiz.personalizationPlan=collectSetPersonalizationPlan();
-    wiz.photoCustomizations=[];
+    wiz.personalizationPlanDraft=JSON.parse(JSON.stringify(wiz.personalizationPlan||[]));
+    const activePhotoIds=new Set((wiz.personalizationPlan||[]).filter(x=>x.mode==='photo').map(x=>x.itemId));
+    wiz.photoCustomizations=(wiz.photoCustomizations||[]).filter(x=>activePhotoIds.has(x.itemId));
   }
   const plan=wiz.personalizationPlan||[];
   if(!plan.length){wiz.writes=[];return renderSetSummary();}
@@ -1156,12 +1205,18 @@ function renderWriteDetails(restoring=false){
   if(!writePlan.length){wiz.writes=[];return renderWalletPhotoDetails(true);}
   openDrawer(head('Yazı detayları')+`<div class=wizardCard><h3>Yazı seçtiğiniz ürünlerin konumunu ve metnini girin.</h3>
   ${writePlan.map(x=>{
-    const item=wiz.product.setItems.find(it=>it.id===x.itemId);
-    return `<div class=writeItem data-write-id="${escapeAttr(x.itemId)}" data-fee="${Number(x.slotFee||0)}" data-set-preview-stage="write" data-set-preview-item="${escapeAttr(x.itemId)}"><div class=writeItemTop><b>${escapeHtml(item.name)}</b><span>+${money(x.slotFee)}</span></div><div class=writeDetails><div class=muted>${escapeHtml(item.name)} yazısı nereye işlensin?</div><div class=positionChoices>${(item.writePositions||[]).map((pos,j)=>positionOptionHtml('pos-'+item.id,pos,j,preferredForSetItem(item))).join('')||'<span class=muted>Bu ürün için henüz yazı konumu tanımlı değil.</span>'}</div><input class=writeInput id="text-${escapeAttr(item.id)}" placeholder="${escapeAttr(item.name)} üzerine yazdırmak istediğiniz yazı"></div></div>`;
+    const item=wiz.product.setItems.find(it=>it.id===x.itemId),confirmed=(wiz.writes||[]).find(w=>w.itemId===x.itemId)||{},saved={...confirmed,...((wiz.writeDrafts||{})[x.itemId]||{})};
+    return `<div class=writeItem data-write-id="${escapeAttr(x.itemId)}" data-fee="${Number(x.slotFee||0)}" data-set-preview-stage="write" data-set-preview-item="${escapeAttr(x.itemId)}"><div class=writeItemTop><b>${escapeHtml(item.name)}</b><span>+${money(x.slotFee)}</span></div><div class=writeDetails><div class=muted>${escapeHtml(item.name)} yazısı nereye işlensin?</div><div class=positionChoices>${(item.writePositions||[]).map((pos,j)=>positionOptionHtml('pos-'+item.id,pos,j,saved.position||preferredForSetItem(item))).join('')||'<span class=muted>Bu ürün için henüz yazı konumu tanımlı değil.</span>'}</div><input class=writeInput id="text-${escapeAttr(item.id)}" value="${escapeAttr(saved.text||'')}" placeholder="${escapeAttr(item.name)} üzerine yazdırmak istediğiniz yazı"></div></div>`;
   }).join('')}</div>
   <div class="wizardBottomAction"><button class=btn onclick=confirmWriteDetails()>${plan.some(x=>x.mode==='photo')?'Fotoğraf Detayına Devam Et':'Özeti Gör'}</button></div>`);
+  writePlan.forEach(x=>{
+    const confirmed=(wiz.writes||[]).find(w=>w.itemId===x.itemId)||{},saved={...confirmed,...((wiz.writeDrafts||{})[x.itemId]||{})};
+    if(saved.position)document.querySelectorAll(`input[name="pos-${CSS.escape(x.itemId)}"]`).forEach(r=>{r.checked=r.value===saved.position});
+  });
+  document.querySelectorAll('[data-write-id] input').forEach(el=>el.addEventListener(el.type==='text'?'input':'change',captureSetWriteDrafts));
 }
 function confirmWriteDetails(){
+  captureSetWriteDrafts();
   const cards=[...document.querySelectorAll('[data-write-id]')],writes=[];
   for(const c of cards){
     const id=c.dataset.writeId,item=wiz.product.setItems.find(x=>x.id===id),text=$('#text-'+id).value.trim(),position=document.querySelector(`input[name="pos-${id}"]:checked`)?.value;
@@ -1180,41 +1235,50 @@ function renderWalletPhotoDetails(restoring=false){
   if(!restoring)setWizardNext('writeDetails');
   openDrawer(head('Cüzdana fotoğraf işleme')+`<div class=priceInfo><b>Fotoğraf kişiselleştirmesi</b><br>Seçtiğiniz cüzdan, kişiselleştirme sırasındaki 75/50/25 TL ücretini alır. <b>Fotoğraf işleme bunun üzerine ayrıca +${money(walletPhotoFee())}</b> eklenir. Örnek: bu cüzdan 3. kişiselleştirilmiş ürünse +${money(catalog.personalizationPricing?.thirdPlus||25)} kişiselleştirme + ${money(walletPhotoFee())} fotoğraf işleme uygulanır.</div>
   ${photoPlan.map((plan,idx)=>{
-    const item=wiz.product.setItems.find(x=>x.id===plan.itemId),positions=item?.writePositions||[];
-    return `<div class="wizardCard walletPhotoCard" data-photo-plan="${escapeAttr(plan.itemId)}"><h3>${escapeHtml(item?.name||plan.item)} için fotoğraf yükleyin</h3><p><b>En sağlıklı sonuç için</b> fotoğrafın çok karanlık, aşırı parlak veya patlamış olmamasına dikkat edin. Net ve kontrastı dengeli fotoğraflar daha iyi sonuç verir. <b>Genelde göz fotoğrafları özellikle iyi sonuç verir.</b></p><input id="setWalletPhotoFile-${idx}" class=formControl type=file accept="image/*">
-      <label class=walletToggle><input id="setWalletCaptionToggle-${idx}" type=checkbox onchange="document.querySelector('#setWalletCaptionFields-${idx}').classList.toggle('hidden',!this.checked)"> Fotoğrafın üstüne veya altına yazı da eklemek istiyorum</label>
-      <div id="setWalletCaptionFields-${idx}" class="walletCaptionFields hidden"><input id="setWalletCaptionText-${idx}" class=writeInput placeholder="Fotoğrafla birlikte işlenecek yazı"><select id="setWalletCaptionPosition-${idx}" class=formControl><option value=below>Fotoğrafın altında</option><option value=above>Fotoğrafın üstünde</option></select></div>
-      ${setItemWriteAvailable(item)?`<label class=walletToggle><input id="setWalletRegularToggle-${idx}" type=checkbox onchange="document.querySelector('#setWalletRegularFields-${idx}').classList.toggle('hidden',!this.checked)"> Fotoğraftan ayrı olarak cüzdanın ön/iç yüzüne normal yazı da istiyorum</label>
-      <div id="setWalletRegularFields-${idx}" class=hidden><div class=positionChoices>${positions.map((pos,j)=>positionOptionHtml('set-wallet-pos-'+idx,pos,j,preferredForSetItem(item))).join('')}</div><input id="setWalletRegularText-${idx}" class=writeInput placeholder="Cüzdanın ön/iç yüzüne yazılacak metin"></div>`:''}
+    const item=wiz.product.setItems.find(x=>x.id===plan.itemId),positions=item?.writePositions||[],existingPhoto=(wiz.photoCustomizations||[]).find(x=>x.itemId===plan.itemId)||{},existingWrite=(wiz.writes||[]).find(x=>x.itemId===plan.itemId)||{},draft=(wiz.photoDrafts||{})[plan.itemId]||{},fileDraft=(wiz.photoFileDrafts||{})[plan.itemId];
+    const captionOn=('captionOn' in draft)?!!draft.captionOn:!!existingPhoto.caption,caption=('caption' in draft)?draft.caption:(existingPhoto.caption||''),captionPosition=draft.captionPosition||existingPhoto.captionPosition||'below';
+    const regularOn=('regularOn' in draft)?!!draft.regularOn:!!existingWrite.text,regularText=('regularText' in draft)?draft.regularText:(existingWrite.text||''),regularPosition=draft.regularPosition||existingWrite.position||preferredForSetItem(item);
+    const preservedFileName=fileDraft?.name||existingPhoto.originalName||'';
+    return `<div class="wizardCard walletPhotoCard" data-photo-plan="${escapeAttr(plan.itemId)}" data-photo-index="${idx}"><h3>${escapeHtml(item?.name||plan.item)} için fotoğraf yükleyin</h3><p><b>En sağlıklı sonuç için</b> fotoğrafın çok karanlık, aşırı parlak veya patlamış olmamasına dikkat edin. Net ve kontrastı dengeli fotoğraflar daha iyi sonuç verir. <b>Genelde göz fotoğrafları özellikle iyi sonuç verir.</b></p><input id="setWalletPhotoFile-${idx}" data-photo-item-id="${escapeAttr(plan.itemId)}" class=formControl type=file accept="image/*">${preservedFileName?`<div class=muted>Seçtiğiniz fotoğraf korunuyor: ${escapeHtml(preservedFileName)}</div>`:''}
+      <label class=walletToggle><input id="setWalletCaptionToggle-${idx}" type=checkbox ${captionOn?'checked':''} onchange="document.querySelector('#setWalletCaptionFields-${idx}').classList.toggle('hidden',!this.checked)"> Fotoğrafın üstüne veya altına yazı da eklemek istiyorum</label>
+      <div id="setWalletCaptionFields-${idx}" class="walletCaptionFields ${captionOn?'':'hidden'}"><input id="setWalletCaptionText-${idx}" class=writeInput value="${escapeAttr(caption)}" placeholder="Fotoğrafla birlikte işlenecek yazı"><select id="setWalletCaptionPosition-${idx}" class=formControl><option value=below ${captionPosition==='below'?'selected':''}>Fotoğrafın altında</option><option value=above ${captionPosition==='above'?'selected':''}>Fotoğrafın üstünde</option></select></div>
+      ${setItemWriteAvailable(item)?`<label class=walletToggle><input id="setWalletRegularToggle-${idx}" type=checkbox ${regularOn?'checked':''} onchange="document.querySelector('#setWalletRegularFields-${idx}').classList.toggle('hidden',!this.checked)"> Fotoğraftan ayrı olarak cüzdanın ön/iç yüzüne normal yazı da istiyorum</label>
+      <div id="setWalletRegularFields-${idx}" class="${regularOn?'':'hidden'}"><div class=positionChoices>${positions.map((pos,j)=>positionOptionHtml('set-wallet-pos-'+idx,pos,j,regularPosition)).join('')}</div><input id="setWalletRegularText-${idx}" class=writeInput value="${escapeAttr(regularText)}" placeholder="Cüzdanın ön/iç yüzüne yazılacak metin"></div>`:''}
     </div>`;
   }).join('')}<div class="wizardBottomAction"><button class=btn onclick=finishSetWalletPhoto(this)>Fotoğrafları Yükle ve Özeti Gör</button></div>`);
+  photoPlan.forEach((plan,idx)=>{
+    const existingWrite=(wiz.writes||[]).find(x=>x.itemId===plan.itemId)||{},draft=(wiz.photoDrafts||{})[plan.itemId]||{},position=draft.regularPosition||existingWrite.position||'';
+    if(position)document.querySelectorAll(`input[name="set-wallet-pos-${idx}"]`).forEach(r=>{r.checked=r.value===position});
+  });
+  document.querySelectorAll('.walletPhotoCard input,.walletPhotoCard select').forEach(el=>el.addEventListener(el.type==='text'?'input':'change',captureSetPhotoDrafts));
+  restoreSetPhotoFileInputs();
 }
 async function finishSetWalletPhoto(button){
+  captureSetPhotoDrafts();
   const photoPlan=(wiz.personalizationPlan||[]).filter(x=>x.mode==='photo');
   if(!photoPlan.length)return renderSetSummary();
-  const onlyPersonalization=(wiz.personalizationPlan||[]).length===1;
   const old=button?.textContent||'';if(button){button.disabled=true;button.textContent='Fotoğraf yükleniyor…'}
   try{
     const photos=[],extraWrites=[];
     for(let idx=0;idx<photoPlan.length;idx++){
-      const plan=photoPlan[idx],item=wiz.product.setItems.find(x=>x.id===plan.itemId),file=$(`#setWalletPhotoFile-${idx}`)?.files?.[0];
-      if(!file)throw new Error((item?.name||'Cüzdan')+' için işlenecek fotoğrafı seçin.');
-      const captionOn=$(`#setWalletCaptionToggle-${idx}`)?.checked,caption=captionOn?($(`#setWalletCaptionText-${idx}`)?.value.trim()||''):'';
+      const plan=photoPlan[idx],item=wiz.product.setItems.find(x=>x.id===plan.itemId),draft=(wiz.photoDrafts||{})[plan.itemId]||{},existingPhoto=(wiz.photoCustomizations||[]).find(x=>x.itemId===plan.itemId)||null;
+      const file=document.getElementById(`setWalletPhotoFile-${idx}`)?.files?.[0]||(wiz.photoFileDrafts||{})[plan.itemId]||null;
+      if(!file&&!existingPhoto?.imageUrl)throw new Error((item?.name||'Cüzdan')+' için işlenecek fotoğrafı seçin.');
+      const captionOn=!!draft.captionOn,caption=captionOn?(draft.caption||'').trim():'';
       if(captionOn&&!caption)throw new Error((item?.name||'Cüzdan')+' için fotoğraf yazısını girin.');
-      const regularOn=setItemWriteAvailable(item)&&!!$(`#setWalletRegularToggle-${idx}`)?.checked;
-      const regularText=regularOn?($(`#setWalletRegularText-${idx}`)?.value.trim()||''):'';
+      const regularOn=setItemWriteAvailable(item)&&!!draft.regularOn,regularText=regularOn?(draft.regularText||'').trim():'';
       if(regularOn&&!regularText)throw new Error((item?.name||'Cüzdan')+' için normal yazıyı girin.');
-      const up=await uploadCustomerPhoto(file);
+      const up=file?await uploadCustomerPhoto(file):{url:existingPhoto.imageUrl,name:existingPhoto.originalName||''};
+      if(file&&wiz.photoFileDrafts)delete wiz.photoFileDrafts[plan.itemId];
       let photoFee;
       if(regularOn){
-        extraWrites.push({itemId:item.id,item:item.name,position:document.querySelector(`input[name="set-wallet-pos-${idx}"]:checked`)?.value,text:regularText,fee:Number(plan.slotFee||0)});
+        extraWrites.push({itemId:item.id,item:item.name,position:draft.regularPosition||preferredForSetItem(item),text:regularText,fee:Number(plan.slotFee||0)});
         photoFee=walletPhotoFee();
-      }else{
-        photoFee=Number(plan.slotFee||0)+walletPhotoFee();
-      }
-      photos.push({itemId:item.id,item:item.name,imageUrl:up.url,originalName:up.name||file.name,caption,captionPosition:$(`#setWalletCaptionPosition-${idx}`)?.value||'below',fee:photoFee});
+      }else photoFee=Number(plan.slotFee||0)+walletPhotoFee();
+      photos.push({itemId:item.id,item:item.name,imageUrl:up.url,originalName:up.name||file?.name||existingPhoto?.originalName||'',caption,captionPosition:draft.captionPosition||'below',fee:photoFee});
     }
-    wiz.writes=[...(wiz.writes||[]),...extraWrites];
+    const photoIds=new Set(photoPlan.map(x=>x.itemId));
+    wiz.writes=[...(wiz.writes||[]).filter(w=>!photoIds.has(w.itemId)),...extraWrites];
     wiz.photoCustomizations=photos;
     renderSetSummary();
   }catch(e){alert(e.message||'Fotoğraf yüklenemedi.');if(button){button.disabled=false;button.textContent=old}}

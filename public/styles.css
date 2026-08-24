@@ -59,7 +59,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(246,247,248,.97);backdro
 .photo{height:180px;background:#eef0f2;display:grid;place-items:center;font-size:54px;position:relative}
 .photo img{width:100%;height:100%;object-fit:cover}
 .badge{position:absolute;left:8px;top:8px;background:#111;color:#fff;font-size:8px;font-weight:800;padding:6px 7px;border-radius:6px}
-.fav{position:absolute;right:8px;top:8px;width:32px;height:32px;border:0;border-radius:50%;background:#fff;font-size:17px}
+.fav{position:absolute;right:8px;top:8px;width:32px;height:32px;border:0;border-radius:50%;background:transparent;font-size:17px}
 .info{padding:11px}
 .info h3{font-size:14px;line-height:1.25;margin:0 0 8px}
 .price{font-weight:850;font-size:17px}
@@ -5089,4 +5089,27 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 }
 @media(max-width:360px){
   .headerContactIcon{width:21px;height:21px}
+}
+
+/* v144 — Sipariş yönetimi: düzenle / sil */
+.orderDeleteAction{color:#b42318!important;border-color:#efc9c5!important;background:#fff!important}
+.orderEditAction{color:#175cd3!important}
+.orderEditOverlay{position:fixed;inset:0;z-index:9999;background:rgba(16,24,40,.48);display:grid;place-items:center;padding:20px}
+.orderEditDialog{width:min(980px,96vw);max-height:90vh;overflow:auto;background:#fff;border:1px solid #dfe3e8;border-radius:16px;box-shadow:0 18px 50px rgba(16,24,40,.2);padding:18px}
+.orderEditHead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid #eceff2;padding-bottom:12px;margin-bottom:14px}
+.orderEditHead h2{margin:0 0 4px}
+.orderEditGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.orderEditWide{grid-column:span 2}
+.orderEditItems{margin-top:16px;padding-top:14px;border-top:1px solid #eceff2}
+.orderEditItems h3{margin:0 0 10px}
+.orderEditItemRow{display:grid;grid-template-columns:minmax(0,2fr) minmax(120px,.7fr) minmax(90px,.45fr);gap:10px;padding:10px 0;border-bottom:1px dashed #e4e7ec}
+.orderEditItemRow:last-child{border-bottom:0}
+.orderEditFooter{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid #eceff2}
+@media(max-width:800px){
+  .orderEditOverlay{padding:8px}
+  .orderEditDialog{width:100%;max-height:94vh;padding:14px;border-radius:12px}
+  .orderEditGrid{grid-template-columns:1fr}
+  .orderEditWide{grid-column:auto}
+  .orderEditItemRow{grid-template-columns:1fr 1fr}
+  .orderEditItemRow .field:first-child{grid-column:1/-1}
 }
