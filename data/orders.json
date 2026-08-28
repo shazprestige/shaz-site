@@ -1,5 +1,336 @@
 [
   {
+    "id": "SHZ2",
+    "createdAt": "2026-08-28T17:34:03.878Z",
+    "createdAtTR": "28.08.2026 20:34:03",
+    "status": "new",
+    "statusUpdatedAt": "2026-08-28T17:34:03.878Z",
+    "requestId": "8e54759f-9482-4f9c-a9bb-390922186f16",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1787920334952",
+          "name": "SHAZ - BİLEKLİK",
+          "internalCode": "BİLEKLİK 1",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Siyah deri görünümlü bileklik",
+            "Gümüş renk metal orta parça",
+            "Gümüş renk çift halka detayları",
+            "Çift çıtçıtlı kapanış sistemi",
+            "İki farklı ölçüde kullanım imkânı",
+            "Bileğe göre ayarlanabilir yapı",
+            "Günlük ve klasik kombinlere uygun tasarım",
+            "Hafif ve rahat kullanım"
+          ],
+          "category": "kategori-1786903369075",
+          "price": 200,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1787920363425-o0m6c6.png",
+          "images": [
+            "/uploads/1787920363425-o0m6c6.png",
+            "/uploads/1787920363978-anau0i.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "descriptionEditorWidth": 290,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 290,
+          "featuresWrapCh": 36
+        },
+        "qty": 1,
+        "personalized": false
+      },
+      {
+        "product": {
+          "id": "urun-1787917150247",
+          "name": "SHAZ - ÇAKMAK",
+          "internalCode": "ÇAKMAK 1",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Benzin yakıtıyla birlikte gönderilir",
+            "Metal gövde",
+            "Siyah parlak yüzey",
+            "Klasik kapaklı tasarım",
+            "Benzinli çalışma sistemi",
+            "Yeniden doldurulabilir yapı",
+            "Değiştirilebilir çakmak taşı",
+            "Cepte taşımaya uygun kompakt tasarım",
+            "Kişiye özel yazı uygulamasına uygun"
+          ],
+          "category": "kategori-1786740581832",
+          "price": 250,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1787917454614-hugx2j.png",
+          "images": [
+            "/uploads/1787917454614-hugx2j.png",
+            "/uploads/1787917455008-94014v.png",
+            "/uploads/1787917455320-bzyuwj.png"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Ön yüz",
+            "Arka yüz"
+          ],
+          "preferredWritePosition": "Ön yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "descriptionEditorWidth": 290,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 290,
+          "featuresWrapCh": 36,
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "badgeShape": "circle"
+        },
+        "qty": 1,
+        "personalized": false
+      },
+      {
+        "product": {
+          "id": "urun-1787919769422",
+          "name": "SHAZ - CÜZDAN",
+          "internalCode": "CÜZDAN 1",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Siyah deri görünümlü yüzey",
+            "Çoklu kart bölmeleri",
+            "Nakit para bölmesi",
+            "Şeffaf kartlık bölmeleri",
+            "Kimlik, ehliyet ve benzeri kartlar için uygun yapı",
+            "Çıtçıtlı kapanış",
+            "Kompakt ve cepte taşımaya uygun tasarım"
+          ],
+          "category": "cuzdanlar",
+          "price": 285,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1787919804217-u7wcmf.png",
+          "images": [
+            "/uploads/1787919804217-u7wcmf.png",
+            "/uploads/1787919806597-oogzo8.png",
+            "/uploads/1787919809658-6efti7.png",
+            "/uploads/1787919812224-9rzkv7.png"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "descriptionEditorWidth": 290,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 290,
+          "featuresWrapCh": 36
+        },
+        "qty": 1,
+        "personalized": false
+      },
+      {
+        "product": {
+          "id": "urun-1786817515929-2-ux88",
+          "name": "SHAZ - NOVA",
+          "description": "",
+          "features": [
+            "Paslanma ve solmaya dayanıklı",
+            "Çelik kordon",
+            "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
+            "Safir çizilmelere dayanıklı cam",
+            "takvim",
+            "Ayarlanabilir kordon",
+            "Kasa çapı 32-36 mm",
+            "Kordon uzunluk 19 cm",
+            "Kordon genişlik 2 cm"
+          ],
+          "category": "saatler",
+          "price": 600,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786817507308-mh5ma4.jpeg",
+          "images": [
+            "/uploads/1786817507308-mh5ma4.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Kordon",
+            "Arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "descriptionEditorWidth": 320,
+          "descriptionWrapCh": 40,
+          "featuresEditorWidth": 320,
+          "featuresWrapCh": 40,
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "subtitle": "Erkek kol saati",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "badgeShape": "circle",
+          "internalCode": "SHAZ 1"
+        },
+        "qty": 1,
+        "personalized": false
+      },
+      {
+        "product": {
+          "id": "urun-1787926526304",
+          "name": "SHAZ - KEMER",
+          "internalCode": "KEMER 1",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Renk: Siyah",
+            "Toka Rengi: Siyah",
+            "Toka Tipi: Klasik Metal Toka",
+            "Tasarım: Parlak Dokulu",
+            "Kemer Ucu: Sivri Form",
+            "Ayarlanabilir Kullanım",
+            "5 Kademeli Kemer Deliği",
+            "Çift Kemer Köprüsü",
+            "Günlük, Klasik ve takım elbise Kombinlerine Uygun"
+          ],
+          "category": "kategori-1786740619033",
+          "price": 285,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1787926553735-x2e084.png",
+          "images": [
+            "/uploads/1787926553735-x2e084.png",
+            "/uploads/1787926555134-jejx34.png"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Ön toka altına",
+            "Arka toka altına"
+          ],
+          "preferredWritePosition": "Arka toka altına",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "descriptionEditorWidth": 290,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 290,
+          "featuresWrapCh": 36
+        },
+        "qty": 1,
+        "personalized": false
+      },
+      {
+        "product": {
+          "id": "urun-1786910492353-4-ukzz",
+          "name": "SHAZ - GÖZLÜK",
+          "subtitle": "Erkek gözlük",
+          "description": "Siyah çerçeve · Siyah cam · Gold detaylı · Klasik tasarım",
+          "features": [
+            "Polarize",
+            "UV200"
+          ],
+          "category": "gozlukler",
+          "price": 350,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786910487125-wtf0nj.jpeg",
+          "images": [
+            "/uploads/1786910487125-wtf0nj.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Sol gözlük sapı",
+            "Sağ gözlük sapı"
+          ],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "internalCode": "G 1",
+          "badgeShape": "circle"
+        },
+        "qty": 1,
+        "personalized": false
+      }
+    ],
+    "customer": {
+      "fullName": "furkan şaz",
+      "phone": "5384316141",
+      "extraPhone": "5456863111",
+      "province": "İstanbul",
+      "district": "arnavutköy",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "atatürk MH.",
+      "avenue": "ertuğrul CD.",
+      "street": "reşat SK.",
+      "fullAddress": "daire:12",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": ""
+    },
+    "payment": "cod",
+    "personalApproval": null,
+    "shippingNoticeAccepted": true,
+    "subtotal": 1970,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 1970
+  },
+  {
     "id": "SHZ1",
     "createdAt": "2026-08-28T12:50:26.271Z",
     "createdAtTR": "28.08.2026 15:50:26",
