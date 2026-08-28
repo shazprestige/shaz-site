@@ -5193,3 +5193,71 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 @media(min-width:701px){
   .productDetailGalleryArrow{display:flex}
 }
+
+/* ===== V147 — yalnız Favoriler başlık aksiyonları + tüm müşteri ürün görselleri 4:5 ===== */
+/* Favoriler: Temizle ve Kapat aynı sabit başlıkta yan yana; tasarım ölçüleri korunur. */
+.favoritesHeadActions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto}
+.favoritesClear{white-space:nowrap}
+.drawer .favoritesToolbar{display:none!important}
+@media(max-width:520px){
+  .favoritesHead{gap:8px!important}
+  .favoritesHead h2{min-width:0!important;font-size:20px!important}
+  .favoritesHeadActions{gap:6px}
+  .favoritesClear,.favoritesClose{padding:7px 9px!important;font-size:11px!important}
+}
+
+/* Ürün görsel alanları: 4:5, boşluksuz ve oran bozmadan merkezden eşit cover kırpma. */
+#productsList .productCardLink .photo,
+.builderProductPhoto,
+.favoritePhoto,
+.drawer.productDetailDrawer .productDetailGallery .productDetailMedia,
+.drawer.productDetailDrawer>.productDetailShell>.productDetailMedia{
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  aspect-ratio:4 / 5!important;
+  overflow:hidden!important;
+}
+#productsList .productCardLink .photo>img,
+.builderProductPhoto img,
+.favoritePhoto img,
+.drawer.productDetailDrawer .productDetailGallery .productDetailMedia img{
+  width:100%!important;
+  height:100%!important;
+  min-width:100%!important;
+  min-height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:cover!important;
+  object-position:50% 50%!important;
+  padding:0!important;
+}
+.productDetailThumbs button{aspect-ratio:4 / 5!important;height:auto!important;overflow:hidden!important}
+.productDetailThumbs img{width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important}
+.checkoutUpsellCard>img{aspect-ratio:4 / 5!important;object-fit:cover!important;object-position:center!important}
+/* Diğer müşteri ürün küçük görselleri de aynı 4:5 kırpma sistemini kullanır. */
+.cartItemThumb,
+.builderSummaryThumb,
+.builderMiniThumb,
+.builderPricingProductImg{
+  height:auto!important;
+  aspect-ratio:4 / 5!important;
+  overflow:hidden!important;
+}
+.cartItemThumb img,
+.builderSummaryThumb img,
+.builderMiniThumb img,
+.builderPricingProductImg img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center!important;
+}
+.upsellProductChoice img,
+.upsellPriceRow img,
+.upsellSelectMain img{
+  height:auto!important;
+  aspect-ratio:4 / 5!important;
+  object-fit:cover!important;
+  object-position:center!important;
+}

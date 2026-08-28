@@ -35,7 +35,7 @@ function preloadCategoryHubImages(){
 let checkoutState={payment:'cod',customer:null,requestId:null};
 let orderSubmitting=false;
 let adminPreviewMode=false;
-let activeProductDetailId='',activeProductDetailSource='catalog',activeProductDetailScrollY=0,productHistoryClosing=false;
+let activeProductDetailId='',activeProductDetailSource='catalog',activeProductDetailScrollY=0,activeCartDetailScrollTop=0,productHistoryClosing=false;
 let productDetailReopenBlockedUntil=0;
 const $=s=>document.querySelector(s);
 const money=n=>Number(n||0).toLocaleString('tr-TR')+' TL';
@@ -571,8 +571,8 @@ function removeFavorite(id){favorites.delete(id);localStorage.setItem('shazFavs'
 function clearFavorites(){if(!favorites.size)return;favorites.clear();localStorage.setItem('shazFavs','[]');updateFavoriteBadge();renderProducts($('#search')?.value||'');showFavorites()}
 function showFavorites(){
   const ps=catalog.products.filter(p=>favorites.has(p.id));
-  openDrawer(`<div class="wizardHead favoritesHead"><h2>Favorilerim <span class="favoritesTitleHeart">♥</span></h2><button class="pill favoritesClose" onclick=closeDrawer()>Kapat</button></div>
-  ${ps.length?`<div class="favoritesToolbar"><button class="pill" onclick="clearFavorites()">Favorileri Temizle</button></div><div class="favoritesList">${ps.map(p=>{const img=mainProductImage(p);return `<div class="favoriteCard"><button type="button" class="favoritePhoto" onclick="openProductDetail('${p.id}','favorites')" aria-label="${escapeAttr(p.name||'Ürün')} ürününü incele">${img?`<img src="${escapeAttr(img)}" alt="${escapeAttr(p.name||'Ürün')}">`:'⌚'}</button><div class="favoriteContent"><div class="favoriteMeta"><b>${escapeHtml(p.name)}</b><span>${money(p.price)}</span></div><div class="favoriteActions"><button class="btn" onclick="openProductDetail('${p.id}','favorites')">Ürünü İncele</button><button class="btn favoriteCartBtn" onclick="startProduct('${p.id}')">Sepete Ekle</button><button class="pill" onclick="removeFavorite('${p.id}')">Favoriden Kaldır</button></div></div></div>`}).join('')}</div>`:`<div class="favoritesEmpty"><div class="favoritesEmptyHeart">♡</div><b>Henüz favoriniz yok.</b><span>Beğendiğiniz ürünlerde kalp simgesine dokunarak buraya ekleyebilirsiniz.</span></div>`}`)
+  openDrawer(`<div class="wizardHead favoritesHead"><h2>Favorilerim <span class="favoritesTitleHeart">♥</span></h2><div class="favoritesHeadActions">${ps.length?`<button class="pill favoritesClear" onclick="clearFavorites()">Favorileri Temizle</button>`:''}<button class="pill favoritesClose" onclick=closeDrawer()>Kapat</button></div></div>
+  ${ps.length?`<div class="favoritesList">${ps.map(p=>{const img=mainProductImage(p);return `<div class="favoriteCard"><button type="button" class="favoritePhoto" onclick="openProductDetail('${p.id}','favorites')" aria-label="${escapeAttr(p.name||'Ürün')} ürününü incele">${img?`<img src="${escapeAttr(img)}" alt="${escapeAttr(p.name||'Ürün')}">`:'⌚'}</button><div class="favoriteContent"><div class="favoriteMeta"><b>${escapeHtml(p.name)}</b><span>${money(p.price)}</span></div><div class="favoriteActions"><button class="btn" onclick="openProductDetail('${p.id}','favorites')">Ürünü İncele</button><button class="btn favoriteCartBtn" onclick="startProduct('${p.id}')">Sepete Ekle</button><button class="pill" onclick="removeFavorite('${p.id}')">Favoriden Kaldır</button></div></div></div>`}).join('')}</div>`:`<div class="favoritesEmpty"><div class="favoritesEmptyHeart">♡</div><b>Henüz favoriniz yok.</b><span>Beğendiğiniz ürünlerde kalp simgesine dokunarak buraya ekleyebilirsiniz.</span></div>`}`)
 }
 function toggleFavFromDetail(id){
   favorites.has(id)?favorites.delete(id):favorites.add(id);
@@ -615,7 +615,7 @@ function finalizeProductDetailClose(source=activeProductDetailSource||'catalog',
   activeProductDetailId='';activeProductDetailSource='catalog';setProductDetailScrollLock(false);
   if(source==='favorites'){showFavorites();return}
   if(source==='builder'){builderReturnFromDetail();return}
-  if(source==='cart'){checkout();return}
+  if(source==='cart'){checkout(activeCartDetailScrollTop);return}
   closeDrawer();
   if(Number.isFinite(Number(restoreY)))requestAnimationFrame(()=>window.scrollTo({top:Number(restoreY),left:0,behavior:'auto'}));
 }
@@ -643,7 +643,9 @@ function openDrawer(html){
   document.body.classList.add('drawerOpen');
   document.documentElement.classList.add('drawerOpen');
   $('#overlay').classList.remove('hidden');drawer.classList.remove('hidden');drawer.innerHTML=html;
+  if(isProductDetail)drawer.scrollTop=0;
   requestAnimationFrame(()=>{
+    if(isProductDetail)drawer.scrollTop=0;
     drawer.querySelectorAll('input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select').forEach(el=>{if(!el.style.fontSize)el.style.fontSize='16px'});
     // Klavye davranışı yalnız adres ekranında değil, drawer içindeki TÜM yazı alanlarında çalışır.
     // Böylece set kişiselleştirme/yazı ekranlarında da alttaki katalog klavye arkasından görünmez.
@@ -1574,16 +1576,17 @@ function openSharedCartFromUrl(){
   try{renderSharedCart(JSON.parse(decodeURIComponent(escape(atob(raw)))));return true}catch(e){console.warn('Paylaşılan sepet açılamadı',e);return false}
 }
 
-function checkout(){
+function checkout(restoreScrollTop=null){
   normalizeCartPersonalizationFees();
   if(!cart.length)return openDrawer('<div class="checkoutEmpty"><h2>Sepetiniz boş</h2><p>Beğendiğiniz ürünleri sepete ekleyerek siparişe başlayabilirsiniz.</p><button class="btn" onclick="closeDrawer()">Ürünlere Dön</button></div>');
   const campaign=calculateCartCampaigns(),itemCount=cart.reduce((n,x)=>n+Number(x.qty||1),0),next=campaign.prompts?.[0];
   openDrawer(`<div class="checkoutShell checkoutShell--cart"><div class="checkoutStickyTop"><div class="checkoutTop"><div><h2>Sepetiniz</h2><p>Ürünleri kontrol edin; ardından teslimat ve ödemeye geçin.</p></div><div class="checkoutTopActions"><button type="button" class="checkoutMiniAction" onclick="shareCartFromCheckout()"><span class="checkoutMiniIcon">⤴</span><small>Sepeti paylaş</small></button><button class="pill" onclick=closeDrawer()>Kapat</button></div></div><div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="closeDrawer()">← Alışverişe dön</button></div><div class="checkoutSteps"><span class="active">1 Sepet</span><span>2 Teslimat</span><span>3 Onay</span></div></div>
     <div class="checkoutScrollBody"><div class="cartToolbar"><span>${itemCount} ürün</span><button type="button" class="cartClearBtn" onclick="clearCartFromCheckout()">Sepeti boşalt</button></div><div class="checkoutProductPanel">${cart.map((x,i)=>cartItemSummary(x,i)).join('')}</div></div>
     <div class="checkoutStickyBottom">${next?`<div class="campaignPromptBox campaignPromptBox--next"><b>${escapeHtml(next.name)}:</b> <strong>${next.remaining} ürün daha ekle</strong> → ${escapeHtml(next.benefit)} indirim kazan.</div>`:''}<div class="checkoutPriceBreakdown"><div><span>Ara toplam</span><strong>${money(campaign.subtotal)}</strong></div>${campaign.applied.map(x=>`<div class="checkoutDiscountLine"><span>${escapeHtml(x.name)}</span><strong>-${money(x.discount)}</strong></div>`).join('')}<div class="checkoutTotal"><span>Toplam</span><strong>${money(campaign.total)}</strong></div></div><button class="btn checkoutPrimary" onclick="proceedToAddressWithUpsell()">Teslimat ve Ödemeye Geç →</button></div></div>`);
+  if(Number.isFinite(Number(restoreScrollTop)))requestAnimationFrame(()=>{const scroller=document.querySelector('.drawer.drawerCartMode .checkoutScrollBody');if(scroller)scroller.scrollTop=Math.max(0,Number(restoreScrollTop)||0)});
 }
 let cartEditBackup=null;
-function openCartItemProduct(i){const x=cart[i];if(!x?.product?.id)return;openProductDetail(x.product.id,'cart')}
+function openCartItemProduct(i){const x=cart[i];if(!x?.product?.id)return;const scroller=document.querySelector('.drawer.drawerCartMode .checkoutScrollBody');activeCartDetailScrollTop=scroller?.scrollTop||0;openProductDetail(x.product.id,'cart')}
 function editCartItem(i){
   const x=cart[i];if(!x)return;
   const writes=x.writes||x.setCustomization?.writes||[];
