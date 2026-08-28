@@ -18,7 +18,12 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const attr=s=>String(s??'').replace(/"/g,'&quot;');
 
+function adminCompactViewport(){
+  return window.matchMedia && window.matchMedia('(max-width: 760px)').matches;
+}
+
 document.addEventListener('focusin',e=>{
+  if(adminCompactViewport())return;
   const el=e.target.closest?.('[data-preview-target]');
   const target=el?.dataset?.previewTarget;
   if(target)previewTo(target,true);
@@ -92,10 +97,12 @@ async function saveAll(){
   alert(r.github?.ok?'Kaydedildi ve GitHub’a kalıcı olarak işlendi.':'Kaydedildi. GitHub kalıcı kayıt henüz bağlı değil.');
 }
 function sendPreview(){
+  if(adminCompactViewport())return;
   const f=$('#previewFrame');
   if(f?.contentWindow)f.contentWindow.postMessage({type:'shaz-preview',settings,catalog},'*');
 }
 function previewTo(target,scroll=true){
+  if(adminCompactViewport())return;
   currentPreviewTarget=target||currentPreviewTarget;
   const f=$('#previewFrame');
   if(!f?.contentWindow||!currentPreviewTarget)return;
@@ -118,6 +125,7 @@ function changed(target){
   });
 }
 function previewSetStage(setId,itemId,stage='remove',scroll=true){
+  if(adminCompactViewport())return;
   const f=$('#previewFrame');
   if(!f?.contentWindow||!setId)return;
   const token=++previewFocusToken;
@@ -156,6 +164,7 @@ function adminSetItemWriteEnabled(it){
   return it?.writeEnabled!==false && linked?.writeEnabled!==false;
 }
 function previewProductStage(productId,stage='write'){
+  if(adminCompactViewport())return;
   const f=$('#previewFrame'); if(!f?.contentWindow)return;
   sendPreview();
   setTimeout(()=>f.contentWindow.postMessage({type:'shaz-preview-product-stage',productId,stage},'*'),70);

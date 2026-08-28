@@ -104,7 +104,9 @@ function bindCore(){
     window.addEventListener('popstate',e=>{
       const routeId=productRouteId();
       if(activeProductDetailId&&!routeId){
-        const src=activeProductDetailSource==='catalog'&&e.state?.shazReturn==='cart'?'cart':activeProductDetailSource;
+        // Geri dönüş hedefini yalnız ürünün gerçekten hangi ekrandan açıldığı belirler.
+        // Önceki bir sepet history kaydının normal katalog ürünlerine sızmasına izin verme.
+        const src=activeProductDetailSource;
         const restoreY=e.state?.shazScrollY??activeProductDetailScrollY;
         productHistoryClosing=false;
         finalizeProductDetailClose(src,restoreY);
@@ -865,7 +867,7 @@ function openProductDetail(id,source='catalog'){
     if(productRouteId()!==id)setProductRoute(id,'replace',{shazBase:true,shazProductPushed:false,shazScrollY:activeProductDetailScrollY});
   }else if(productRouteId()!==id){
     ensureProductHistoryBase();
-    const returnState=source==='cart'?{shazReturn:'cart'}:{};
+    const returnState={shazReturn:source==='cart'?'cart':null};
     history.replaceState({...history.state,...returnState,shazBase:true,shazScrollY:activeProductDetailScrollY,shazProduct:null,shazProductPushed:false},'',location.pathname+location.search+location.hash);
     setProductRoute(id,'push',{...returnState,shazBase:true,shazProductPushed:true,shazScrollY:activeProductDetailScrollY});
   }

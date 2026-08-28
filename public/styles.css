@@ -5261,3 +5261,27 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
   object-fit:cover!important;
   object-position:center!important;
 }
+
+
+/* v148: Yönetim panelinde telefon ekranında müşteri canlı önizlemesi gösterilmez. */
+@media (max-width:760px){
+  .simpleAdmin:not(.ordersMode){grid-template-columns:1fr!important;}
+  .simpleAdmin:not(.ordersMode) .previewPane{display:none!important;}
+  .simpleAdmin .content{grid-column:1!important;min-width:0!important;width:100%!important;}
+}
+
+/* ===== V149 — yalnız ürün detay galerisi PC/tablet ilk ekran dengesi ===== */
+/* Telefon görünümüne dokunma. 701px ve üzerindeki ekranlarda 4:5 oran korunurken
+   ana görsel; noktalar ve küçük önizlemeler ilk viewport içinde kalacak kadar sınırlandırılır. */
+@media (min-width:701px){
+  .drawer.productDetailDrawer .productDetailGallery .productDetailMedia,
+  .drawer.productDetailDrawer>.productDetailShell>.productDetailMedia{
+    width:auto!important;
+    height:min(640px,calc(100dvh - var(--announce-h,25px) - 250px))!important;
+    max-height:calc(100dvh - var(--announce-h,25px) - 250px)!important;
+    max-width:100%!important;
+    aspect-ratio:4 / 5!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+  }
+}
