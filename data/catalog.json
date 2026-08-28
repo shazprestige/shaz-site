@@ -4259,6 +4259,51 @@
       "badgeShape": "circle",
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444"
+    },
+    {
+      "id": "urun-1787917150247",
+      "name": "SHAZ - ÇAKMAK",
+      "internalCode": "ÇAKMAK 1",
+      "subtitle": "",
+      "description": "",
+      "features": [
+        "Benzin yakıtıyla birlikte gönderilir",
+        "Metal gövde",
+        "Siyah parlak yüzey",
+        "Klasik kapaklı tasarım",
+        "Benzinli çalışma sistemi",
+        "Yeniden doldurulabilir yapı",
+        "Değiştirilebilir çakmak taşı",
+        "Cepte taşımaya uygun kompakt tasarım",
+        "Kişiye özel yazı uygulamasına uygun"
+      ],
+      "category": "kategori-1786740581832",
+      "price": 0,
+      "oldPrice": 0,
+      "badge": "",
+      "badgeColor": "orange",
+      "image": "/uploads/1787917454614-hugx2j.png",
+      "images": [
+        "/uploads/1787917454614-hugx2j.png",
+        "/uploads/1787917455008-94014v.png",
+        "/uploads/1787917455320-bzyuwj.png"
+      ],
+      "hidden": false,
+      "setEligible": true,
+      "isSet": false,
+      "setItems": [],
+      "writePositions": [
+        "Ön yüz",
+        "Arka yüz"
+      ],
+      "preferredWritePosition": "Ön yüz",
+      "writeEnabled": true,
+      "walletPhotoEnabled": true,
+      "subcategoryId": "",
+      "descriptionEditorWidth": 290,
+      "descriptionWrapCh": 36,
+      "featuresEditorWidth": 290,
+      "featuresWrapCh": 36
     }
   ],
   "builder": {
