@@ -4351,6 +4351,37 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 290,
       "featuresWrapCh": 36
+    },
+    {
+      "id": "urun-1787920334952",
+      "name": "SHAZ - BİLEKLİK",
+      "internalCode": "BİLEKLİK 1",
+      "subtitle": "",
+      "description": "",
+      "features": [],
+      "category": "kategori-1786903369075",
+      "price": 0,
+      "oldPrice": 0,
+      "badge": "",
+      "badgeColor": "orange",
+      "image": "/uploads/1787920363425-o0m6c6.png",
+      "images": [
+        "/uploads/1787920363425-o0m6c6.png",
+        "/uploads/1787920363978-anau0i.jpeg"
+      ],
+      "hidden": false,
+      "setEligible": true,
+      "isSet": false,
+      "setItems": [],
+      "writePositions": [],
+      "preferredWritePosition": "",
+      "writeEnabled": true,
+      "walletPhotoEnabled": true,
+      "subcategoryId": "",
+      "descriptionEditorWidth": 290,
+      "descriptionWrapCh": 36,
+      "featuresEditorWidth": 290,
+      "featuresWrapCh": 36
     }
   ],
   "builder": {
