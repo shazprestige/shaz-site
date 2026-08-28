@@ -104,7 +104,8 @@ function bindCore(){
     window.addEventListener('popstate',e=>{
       const routeId=productRouteId();
       if(activeProductDetailId&&!routeId){
-        const src=activeProductDetailSource,restoreY=e.state?.shazScrollY??activeProductDetailScrollY;
+        const src=activeProductDetailSource==='catalog'&&e.state?.shazReturn==='cart'?'cart':activeProductDetailSource;
+        const restoreY=e.state?.shazScrollY??activeProductDetailScrollY;
         productHistoryClosing=false;
         finalizeProductDetailClose(src,restoreY);
         return;
@@ -614,6 +615,7 @@ function finalizeProductDetailClose(source=activeProductDetailSource||'catalog',
   activeProductDetailId='';activeProductDetailSource='catalog';setProductDetailScrollLock(false);
   if(source==='favorites'){showFavorites();return}
   if(source==='builder'){builderReturnFromDetail();return}
+  if(source==='cart'){checkout();return}
   closeDrawer();
   if(Number.isFinite(Number(restoreY)))requestAnimationFrame(()=>window.scrollTo({top:Number(restoreY),left:0,behavior:'auto'}));
 }
@@ -861,8 +863,9 @@ function openProductDetail(id,source='catalog'){
     if(productRouteId()!==id)setProductRoute(id,'replace',{shazBase:true,shazProductPushed:false,shazScrollY:activeProductDetailScrollY});
   }else if(productRouteId()!==id){
     ensureProductHistoryBase();
-    history.replaceState({...history.state,shazBase:true,shazScrollY:activeProductDetailScrollY,shazProduct:null,shazProductPushed:false},'',location.pathname+location.search+location.hash);
-    setProductRoute(id,'push',{shazBase:true,shazProductPushed:true,shazScrollY:activeProductDetailScrollY});
+    const returnState=source==='cart'?{shazReturn:'cart'}:{};
+    history.replaceState({...history.state,...returnState,shazBase:true,shazScrollY:activeProductDetailScrollY,shazProduct:null,shazProductPushed:false},'',location.pathname+location.search+location.hash);
+    setProductRoute(id,'push',{...returnState,shazBase:true,shazProductPushed:true,shazScrollY:activeProductDetailScrollY});
   }
   const features=productFeatureList(p);
   const positions=Array.isArray(p.writePositions)?p.writePositions.filter(Boolean):[];
@@ -875,17 +878,19 @@ function openProductDetail(id,source='catalog'){
     infoBlocks.push(`<div class="productInfoPart setPersonalizationInfo"><h3>Kişiselleştirme</h3><p class=personalizationIntro>Set içeriğindeki uygun ürünleri sipariş sırasında kişiselleştirebilirsiniz.</p>${can.length?`<div class=personalizationGroup><b>Kişiselleştirme yapılabilir</b>${can.map(x=>`<div class=personalizationLine><span class=miniYes>✓</span>${escapeHtml(x.name)}</div>`).join('')}</div>`:''}${cannot.length?`<div class=personalizationGroup><b>Kişiselleştirme yapılamaz</b>${cannot.map(x=>`<div class=personalizationLine><span class=miniNo>×</span>${escapeHtml(x.name)}</div>`).join('')}</div>`:''}</div>`);
   }
   if(p.writeEnabled!==false&&positions.length&&!p.isSet) infoBlocks.push(`<div class="productInfoPart"><h3>Kişiselleştirme alanları</h3><p>${positions.map(escapeHtml).join(' · ')}</p></div>`);
-  const closeLabel=source==='favorites'?'← Favorilere Dön':'Kapat';
+  const images=productImages(p);
+  const closeLabel=source==='favorites'?'← Favorilere Dön':source==='cart'?'Sepete Dön':'Kapat';
   openDrawer(`<div class="productDetailShell">
     <div class="wizardHead productDetailHead"><div class="productDetailTitle"><h2>${escapeHtml(p.name||'SHAZ Ürün')}</h2>${String(p.subtitle||'').trim()?`<div class="productDetailSubtitle">${escapeHtml(String(p.subtitle).trim())}</div>`:''}</div><div class="productDetailHeadActions"><button id="productDetailFavBtn" class="productDetailFav ${favorites.has(p.id)?'active':''}" onclick="toggleFavFromDetail('${escapeAttr(p.id)}')" aria-label="${favorites.has(p.id)?'Favorilerden kaldır':'Favorilere ekle'}">${favorites.has(p.id)?'♥':'♡'}</button><button type="button" class="productDetailShare" onclick="shareProduct('${escapeAttr(p.id)}')" aria-label="Ürünü paylaş" title="Ürünü paylaş"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 11v8h14v-8"/></svg></button><button class="pill productDetailClose" onclick="closeProductDetail('${escapeAttr(source)}')">${closeLabel}</button></div></div>
-    ${productImages(p).length?`<div class=productDetailGallery>
-      <div class="productDetailMedia" style="--detail-bg:url(&quot;${escapeAttr(mainProductImage(p))}&quot;)" onclick="openProductImageViewer()" role="button" tabindex="0" aria-label="Fotoğrafı büyüt">${p.soldOutEnabled?soldOutVisualBadgeHtml(p,true):(p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'} ${p.badgeShape==='rect'?'badge-rect':''}"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:'')}<img id=productDetailMain src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name||'Ürün')}"></div>
-      ${productImages(p).length>1?`<div class=productDetailThumbs>${productImages(p).map((u,i)=>`<button class="${i===0?'active':''}" onclick="selectProductDetailImage(this,'${escapeAttr(u)}')"><img src="${escapeAttr(u)}" alt=""></button>`).join('')}</div>`:''}
+    ${images.length?`<div class=productDetailGallery>
+      <div class="productDetailMedia" data-image-index="0" style="--detail-bg:url(&quot;${escapeAttr(mainProductImage(p))}&quot;)" onclick="handleProductDetailMediaClick(event)" role="button" tabindex="0" aria-label="Fotoğrafı büyüt">${p.soldOutEnabled?soldOutVisualBadgeHtml(p,true):(p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'} ${p.badgeShape==='rect'?'badge-rect':''}"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:'')}${images.length>1?`<button type="button" class="productDetailGalleryArrow productDetailGalleryArrow--prev" onclick="event.stopPropagation();stepProductDetailImage(-1)" aria-label="Önceki fotoğraf">‹</button><button type="button" class="productDetailGalleryArrow productDetailGalleryArrow--next" onclick="event.stopPropagation();stepProductDetailImage(1)" aria-label="Sonraki fotoğraf">›</button>`:''}<img id=productDetailMain src="${escapeAttr(mainProductImage(p))}" alt="${escapeAttr(p.name||'Ürün')}"></div>
+      ${images.length>1?`<div class=productDetailDots aria-label="Ürün fotoğrafları">${images.map((u,i)=>`<button type="button" class="${i===0?'active':''}" data-image-index="${i}" onclick="setProductDetailImage(${i})" aria-label="${i+1}. fotoğraf"></button>`).join('')}</div><div class=productDetailThumbs>${images.map((u,i)=>`<button class="${i===0?'active':''}" data-image-index="${i}" onclick="selectProductDetailImage(this,'${escapeAttr(u)}',${i})"><img src="${escapeAttr(u)}" alt=""></button>`).join('')}</div>`:''}
     </div>`:`<div class=productDetailMedia>${p.soldOutEnabled?soldOutVisualBadgeHtml(p,true):(p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'} ${p.badgeShape==='rect'?'badge-rect':''}"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:'')}<div class=productDetailPlaceholder>⌚</div></div>`}
     ${infoBlocks.length?`<div class="productDetailInfoBox">${infoBlocks.join('')}</div>`:''}
     <button type="button" class="productNoteTrigger" onclick="openProductNote('${escapeAttr(p.id)}')">＋ Ürünüme not eklemek istiyorum</button>
     <div class="productDetailBottomBar"><div class="productDetailBottomPrice">${money(p.price)}${p.oldPrice?` <span class=old>${money(p.oldPrice)}</span>`:''}</div>${soldOutButtonHtml(p)}</div>
   </div>`);
+  bindProductDetailGallery();
 }
 
 
@@ -922,15 +927,67 @@ function bindFloatingContacts(){
   window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',schedule,{passive:true});update();
 }
 
-function selectProductDetailImage(btn,url){
-  const img=document.getElementById('productDetailMain');
+let productDetailSwipeStartX=null,productDetailSwipeStartY=null,productDetailSuppressClickUntil=0;
+function activeProductDetailImages(){
+  const p=catalog.products.find(x=>x.id===activeProductDetailId);
+  return p?productImages(p):[];
+}
+function setProductDetailImage(index){
+  const images=activeProductDetailImages();
+  if(!images.length)return;
+  const normalized=((Number(index)||0)%images.length+images.length)%images.length;
+  const url=images[normalized],img=document.getElementById('productDetailMain');
   if(img){
+    img.classList.add('productDetailImageChanging');
     img.src=url;
+    const reveal=()=>img.classList.remove('productDetailImageChanging');
+    if(img.complete)requestAnimationFrame(reveal);else img.addEventListener('load',reveal,{once:true});
     const media=img.closest('.productDetailMedia');
-    if(media)media.style.setProperty('--detail-bg',`url("${String(url).replace(/"/g,'%22')}")`);
+    if(media){
+      media.dataset.imageIndex=String(normalized);
+      media.style.setProperty('--detail-bg',`url("${String(url).replace(/"/g,'%22')}")`);
+    }
   }
-  document.querySelectorAll('.productDetailThumbs button').forEach(x=>x.classList.remove('active'));
-  btn?.classList.add('active');
+  document.querySelectorAll('.productDetailThumbs button').forEach(x=>x.classList.toggle('active',Number(x.dataset.imageIndex)===normalized));
+  document.querySelectorAll('.productDetailDots button').forEach(x=>x.classList.toggle('active',Number(x.dataset.imageIndex)===normalized));
+}
+function selectProductDetailImage(btn,url,index){
+  const images=activeProductDetailImages();
+  let target=Number(index);
+  if(!Number.isFinite(target))target=images.indexOf(url);
+  if(target<0)target=0;
+  setProductDetailImage(target);
+}
+function stepProductDetailImage(delta){
+  const media=document.querySelector('.productDetailMedia[data-image-index]');
+  if(!media)return;
+  setProductDetailImage(Number(media.dataset.imageIndex||0)+Number(delta||0));
+}
+function handleProductDetailMediaClick(event){
+  if(Date.now()<productDetailSuppressClickUntil)return;
+  if(event?.target?.closest?.('.productDetailGalleryArrow'))return;
+  openProductImageViewer();
+}
+function bindProductDetailGallery(){
+  const media=document.querySelector('.productDetailGallery .productDetailMedia');
+  if(!media||media.dataset.swipeBound==='1'||activeProductDetailImages().length<2)return;
+  media.dataset.swipeBound='1';
+  media.addEventListener('touchstart',e=>{
+    if(e.touches?.length!==1)return;
+    productDetailSwipeStartX=e.touches[0].clientX;
+    productDetailSwipeStartY=e.touches[0].clientY;
+  },{passive:true});
+  media.addEventListener('touchend',e=>{
+    if(productDetailSwipeStartX===null||productDetailSwipeStartY===null)return;
+    const touch=e.changedTouches?.[0];
+    if(!touch){productDetailSwipeStartX=null;productDetailSwipeStartY=null;return}
+    const dx=touch.clientX-productDetailSwipeStartX,dy=touch.clientY-productDetailSwipeStartY;
+    productDetailSwipeStartX=null;productDetailSwipeStartY=null;
+    if(Math.abs(dx)>=42&&Math.abs(dx)>Math.abs(dy)*1.2){
+      productDetailSuppressClickUntil=Date.now()+450;
+      stepProductDetailImage(dx<0?1:-1);
+    }
+  },{passive:true});
 }
 
 function startProduct(id){
@@ -1743,6 +1800,7 @@ function saveAddressAndContinue(){
   const neighborhood=addressPart(g('neighborhood'),'neighborhood');
   const avenue=addressPart(g('avenue'),'avenue');
   const street=addressPart(g('street'),'street');
+  if(!branch&&!avenue&&!street)return alert('Lütfen cadde veya sokak bilgilerinden en az birini giriniz.');
   const customer={
     fullName,phone:primaryPhone.value,extraPhone:extraPhone.value,province,district:g('district'),
     deliveryMode:branch?'branch':'address',branchName:branch?g('branchName'):'',

@@ -537,11 +537,10 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
  const itemCount=o=>(o.items||[]).reduce((n,x)=>n+Math.max(1,Number(x.qty||1)),0)||1;
  const fullAddress=c=>{
   if(c.deliveryMode==='branch') return `ARAS KARGO ŞUBE TESLİM — ${c.branchName||''}`.trim();
-  if(c.fullAddress) return [c.neighborhood,c.fullAddress].filter(Boolean).join(' ');
   const road=[c.neighborhood,c.avenue,c.street].filter(Boolean).join(' ');
   const nums=[c.buildingNo?`no:${c.buildingNo}`:'',c.floor?`kat:${c.floor}`:'',c.doorNo?`daire:${c.doorNo}`:''].filter(Boolean).join(' ');
-  const biz=c.placeType==='business'&&c.businessName?` ${c.businessName}`:'';
-  return [road,nums].filter(Boolean).join(' ')+biz;
+  const biz=c.placeType==='business'&&c.businessName?c.businessName:'';
+  return [road,c.fullAddress,nums,biz].filter(Boolean).join(' ');
  };
 
  // İlk satır: Excel'in alınma zamanı.
@@ -667,6 +666,9 @@ app.post('/api/orders',async(req,res)=>{
    }
    if(normalizedExtra&&normalizedExtra===normalizedPhone){
      return res.status(400).json({ok:false,message:'İki telefon numarası aynı olamaz. Lütfen yedek olarak farklı bir telefon numarası girin.'});
+   }
+   if(body.customer.deliveryMode!=='branch'&&!String(body.customer.avenue||'').trim()&&!String(body.customer.street||'').trim()){
+     return res.status(400).json({ok:false,message:'Lütfen cadde veya sokak bilgilerinden en az birini giriniz.'});
    }
    body.customer.phone=normalizedPhone;
    body.customer.extraPhone=normalizedExtra;

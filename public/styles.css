@@ -5113,3 +5113,83 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
   .orderEditItemRow{grid-template-columns:1fr 1fr}
   .orderEditItemRow .field:first-child{grid-column:1/-1}
 }
+
+/* ===== V146 — yalnız Favoriler boşluğu + ürün detay galerisi ===== */
+/* Favorilerim: sabit başlık ile temizleme butonu ve ilk kart arasında dengeli dikey boşluk. */
+.drawer .favoritesToolbar{
+  margin-top:14px!important;
+  margin-bottom:14px!important;
+}
+
+/* Ürün detay ana görseli: tüm cihazlarda sabit 3:4, kırpmasız contain. */
+.drawer.productDetailDrawer .productDetailGallery .productDetailMedia,
+.drawer.productDetailDrawer>.productDetailShell>.productDetailMedia{
+  width:100%!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  aspect-ratio:3 / 4!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  position:relative!important;
+  touch-action:pan-y!important;
+}
+.drawer.productDetailDrawer .productDetailGallery .productDetailMedia img{
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  transition:opacity .18s ease!important;
+}
+.drawer.productDetailDrawer .productDetailGallery .productDetailMedia img.productDetailImageChanging{opacity:.42!important}
+.productDetailDots{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-height:18px;
+  padding:5px 0 2px;
+}
+.productDetailDots button{
+  width:7px;
+  height:7px;
+  min-width:7px;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:#c7cbd0;
+  opacity:.7;
+  cursor:pointer;
+}
+.productDetailDots button.active{
+  background:#111;
+  opacity:1;
+  transform:scale(1.22);
+}
+.productDetailGalleryArrow{
+  display:none;
+  position:absolute;
+  top:50%;
+  z-index:6;
+  width:40px;
+  height:40px;
+  padding:0;
+  transform:translateY(-50%);
+  border:1px solid rgba(255,255,255,.7);
+  border-radius:50%;
+  background:rgba(17,17,17,.58);
+  color:#fff;
+  font-size:30px;
+  line-height:1;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+.productDetailGalleryArrow--prev{left:12px}
+.productDetailGalleryArrow--next{right:12px}
+@media(min-width:701px){
+  .productDetailGalleryArrow{display:flex}
+}
