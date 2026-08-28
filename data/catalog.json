@@ -4314,7 +4314,17 @@
       "internalCode": "CÜZDAN 1",
       "subtitle": "",
       "description": "",
-      "features": [],
+      "features": [
+        "Siyah deri görünümlü yüzey",
+        "* Çoklu kart bölmeleri",
+        "* Nakit para bölmesi",
+        "* Şeffaf kartlık bölmeleri",
+        "* Kimlik, ehliyet ve benzeri kartlar için uygun yapı",
+        "* Çıtçıtlı kapanış",
+        "* Kompakt ve cepte taşımaya uygun tasarım",
+        "* Ön yüzeyde kabartma SHAZ logosu",
+        "Kişiye özel yazı uygulamasına uygun"
+      ],
       "category": "cuzdanlar",
       "price": 0,
       "oldPrice": 0,
@@ -4325,7 +4335,11 @@
         "/uploads/1787919804217-u7wcmf.png",
         "/uploads/1787919806597-oogzo8.png",
         "/uploads/1787919809658-6efti7.png",
-        "/uploads/1787919812224-9rzkv7.png"
+        "/uploads/1787919812224-9rzkv7.png",
+        "/uploads/1787919889549-8qq6ws.png",
+        "/uploads/1787919890108-qwi8hl.png",
+        "/uploads/1787919891056-han9ja.png",
+        "/uploads/1787919892165-m7dzk3.png"
       ],
       "hidden": false,
       "setEligible": true,
