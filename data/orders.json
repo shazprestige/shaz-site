@@ -1,5 +1,95 @@
 [
   {
+    "id": "SHZ4",
+    "createdAt": "2026-08-28T17:36:31.461Z",
+    "createdAtTR": "28.08.2026 20:36:31",
+    "status": "new",
+    "statusUpdatedAt": "2026-08-28T17:36:31.461Z",
+    "requestId": "993121da-6d16-4d62-97ce-b578e96691ee",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786817515929-5-de8a",
+          "name": "SHAZ - NOVA",
+          "description": "",
+          "features": [
+            "Paslanma ve solmaya dayanıklı",
+            "Çelik kordon",
+            "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
+            "Safir çizilmelere dayanıklı cam",
+            "takvim",
+            "Ayarlanabilir kordon",
+            "Kasa çapı 32-36 mm",
+            "Kordon uzunluk 19 cm",
+            "Kordon genişlik 2 cm"
+          ],
+          "category": "saatler",
+          "price": 600,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786817507409-5ss3kw.jpeg",
+          "images": [
+            "/uploads/1786817507409-5ss3kw.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Kordon",
+            "Arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "descriptionEditorWidth": 320,
+          "descriptionWrapCh": 40,
+          "featuresEditorWidth": 320,
+          "featuresWrapCh": 40,
+          "shippingRibbonEnabled": false,
+          "subtitle": "Erkek kol saati",
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "badgeShape": "circle",
+          "internalCode": "SHAZ 2"
+        },
+        "qty": 1,
+        "personalized": false
+      }
+    ],
+    "customer": {
+      "fullName": "furkan çakar",
+      "phone": "5384316141",
+      "extraPhone": "5354185698",
+      "province": "İstanbul",
+      "district": "şişli",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "reşat MH.",
+      "avenue": "BAĞDAT CD.",
+      "street": "REŞAT SK.",
+      "fullAddress": "DAİRE:12",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": ""
+    },
+    "payment": "cod",
+    "personalApproval": null,
+    "shippingNoticeAccepted": true,
+    "subtotal": 600,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 600
+  },
+  {
     "id": "SHZ3",
     "createdAt": "2026-08-28T17:35:12.685Z",
     "createdAtTR": "28.08.2026 20:35:12",
