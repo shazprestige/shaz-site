@@ -4426,7 +4426,7 @@
       "image": "/uploads/1787926553735-x2e084.png",
       "images": [
         "/uploads/1787926553735-x2e084.png",
-        "/uploads/1787926555134-jejx34.png"
+        "/uploads/1788005310671-uyvdl5.png"
       ],
       "hidden": false,
       "setEligible": true,
@@ -4443,7 +4443,10 @@
       "descriptionEditorWidth": 290,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 290,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "soldOutEnabled": false,
+      "soldOutUntil": "",
+      "badgeShape": "circle"
     }
   ],
   "builder": {
