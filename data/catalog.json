@@ -4469,8 +4469,10 @@
       "oldPrice": 0,
       "badge": "",
       "badgeColor": "orange",
-      "image": "",
-      "images": [],
+      "image": "/uploads/1788310875542-zm8ky7.png",
+      "images": [
+        "/uploads/1788310875542-zm8ky7.png"
+      ],
       "hidden": false,
       "setEligible": true,
       "isSet": false,
