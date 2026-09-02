@@ -4469,10 +4469,8 @@
       "oldPrice": 0,
       "badge": "",
       "badgeColor": "orange",
-      "image": "/uploads/1788310363870-k54j9m.png",
-      "images": [
-        "/uploads/1788310363870-k54j9m.png"
-      ],
+      "image": "",
+      "images": [],
       "hidden": false,
       "setEligible": true,
       "isSet": false,
