@@ -1035,7 +1035,26 @@ function startSingleWizard(p){
   ${p.description?`<div class="productDetailIntro"><b>Ürün açıklaması</b><p>${escapeHtml(p.description)}</p></div>`:''}<div class=wizardCard><h3>Ürününüzü kişiselleştirmek ister misiniz?</h3>
   <div class=choiceStack><button class="choiceBtn" onclick='addSingleNoText(${JSON.stringify(p.id)})'>Hayır, birebir bu şekilde istiyorum</button>${canWrite?`<button class="choiceBtn primary" onclick='singleWriteStep(${JSON.stringify(p.id)})'>Evet, yazı yazdırmak istiyorum</button>`:''}${wallet?`<button class="choiceBtn walletPhotoChoice" onclick='singleWalletPhotoStep(${JSON.stringify(p.id)})'>📷 Cüzdana fotoğraf işleme istiyorum</button>`:''}</div>${wallet?`<p class=muted>Fotoğrafı tek başına seçebilirsiniz. İsterseniz fotoğrafın üstüne/altına ayrı yazı ekleyebilir, ayrıca cüzdanın kendi ön/iç yüzüne normal yazı da isteyebilirsiniz.</p>`:''}</div>`);
 }
-function addSingleNoText(id){const p=catalog.products.find(x=>x.id===id);cart.push(withPendingProductNote({product:p,qty:1,personalized:false},p));updateCart();closeDrawer();toast('✓ Ürün sepete eklendi')}
+function metaAddToCart(p){
+  if(!p || typeof fbq!=='function') return;
+  fbq('track','AddToCart',{
+    content_ids:[String(p.id)],
+    content_name:p.name || '',
+    content_type:'product',
+    value:Number(p.price)||0,
+    currency:'TRY'
+  });
+}
+
+function addSingleNoText(id){
+  const p=catalog.products.find(x=>x.id===id);
+  if(!p)return;
+  cart.push(withPendingProductNote({product:p,qty:1,personalized:false},p));
+  updateCart();
+  metaAddToCart(p);
+  closeDrawer();
+  toast('✓ Ürün sepete eklendi');
+}
 function singleWriteStep(id){
   const p=catalog.products.find(x=>x.id===id);
   const positions=defaultPositionsForProduct(p);
