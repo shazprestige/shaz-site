@@ -1897,6 +1897,13 @@ async function finalizeOrder(personalApproved,button){
     let r={};
     try{r=await response.json()}catch{}
     if(!response.ok||!r.ok||!r.order?.id)throw new Error(r.message||'Sipariş oluşturulamadı. Lütfen tekrar deneyin.');
+    if(typeof fbq==='function'){
+  fbq('trackCustom','OrderPlaced',{
+    value:Number(order.total)||0,
+    currency:'TRY',
+    order_id:String(r.order.id||'')
+  });
+}
     cart=[];
     checkoutState={payment:'cod',customer:null,requestId:null};
     updateCart();
