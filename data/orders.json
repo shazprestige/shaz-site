@@ -6,7 +6,7 @@
     "status": "new",
     "statusUpdatedAt": "2026-09-06T15:49:33.786Z",
     "requestId": "784f4aa9-8d69-41cd-8c30-614307017c44",
-    "sheetSyncStatus": "pending",
+    "sheetSyncStatus": "synced",
     "sheetSyncError": "",
     "items": [
       {
@@ -562,7 +562,9 @@
         "uses": 2
       }
     ],
-    "total": 4200
+    "total": 4200,
+    "sheetSyncedAt": "2026-09-06T15:49:39.142Z",
+    "sheetId": "SHZ11"
   },
   {
     "id": "SHZ10",
