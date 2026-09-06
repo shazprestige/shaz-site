@@ -1,5 +1,95 @@
 [
   {
+    "id": "SHZ13",
+    "createdAt": "2026-09-06T16:29:12.806Z",
+    "createdAtTR": "06.09.2026 19:29:12",
+    "status": "new",
+    "statusUpdatedAt": "2026-09-06T16:29:12.806Z",
+    "requestId": "f8a0ba3d-1f2e-438e-b55f-725f5b3cac03",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786926774073-my5fx",
+          "name": "SHAZ - NOVA",
+          "description": "",
+          "features": [
+            "Paslanma ve solmaya dayanıklı",
+            "Çelik kordon",
+            "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
+            "Safir çizilmelere dayanıklı cam",
+            "takvim",
+            "Ayarlanabilir kordon",
+            "Kasa çapı 32-36 mm",
+            "Kordon uzunluk 19 cm",
+            "Kordon genişlik 2 cm"
+          ],
+          "category": "saatler",
+          "price": 600,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786926816775-sla852.jpeg",
+          "images": [
+            "/uploads/1786926816775-sla852.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Kordon",
+            "Arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "descriptionEditorWidth": 320,
+          "descriptionWrapCh": 40,
+          "featuresEditorWidth": 320,
+          "featuresWrapCh": 40,
+          "shippingRibbonEnabled": false,
+          "subtitle": "Erkek kol saati",
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "badgeShape": "circle",
+          "internalCode": "SHAZ 7"
+        },
+        "qty": 1,
+        "personalized": false
+      }
+    ],
+    "customer": {
+      "fullName": "furkan şaz 3",
+      "phone": "5384316141",
+      "extraPhone": "5456863111",
+      "province": "Kocaeli",
+      "district": "kadı",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "ads MH.",
+      "avenue": "ad CD.",
+      "street": "ad SK.",
+      "fullAddress": "dad",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": ""
+    },
+    "payment": "cod",
+    "personalApproval": null,
+    "shippingNoticeAccepted": true,
+    "subtotal": 600,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 600
+  },
+  {
     "id": "SHZ12",
     "createdAt": "2026-09-06T16:16:58.544Z",
     "createdAtTR": "06.09.2026 19:16:58",
