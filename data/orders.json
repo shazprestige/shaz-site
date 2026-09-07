@@ -1,5 +1,287 @@
 [
   {
+    "id": "SHZ16",
+    "createdAt": "2026-09-07T17:03:50.870Z",
+    "createdAtTR": "07.09.2026 20:03:50",
+    "status": "new",
+    "statusUpdatedAt": "2026-09-07T17:03:50.870Z",
+    "requestId": "ed371a18-0269-4765-97bc-50d67ee56ce3",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786899570443-8-k3w3",
+          "name": "SHAZ - ERKEK AKSESUAR SETİ",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Takvim göstergeli, çelik kordonlu quartz kol saati",
+            "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+            "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+            "Metal püsküllü, cam plastik karışımlı tesbih",
+            "Ayarlanabilir metal tokalı SHAZ kemer",
+            "Metal detaylı ayarlanabilir erkek bileklik",
+            "Özel bölmeli, premium set kutusu"
+          ],
+          "category": "setler",
+          "price": 1175,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786899547808-vagf4n.jpeg",
+          "images": [
+            "/uploads/1786899547808-vagf4n.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": false,
+          "isSet": true,
+          "setItems": [
+            {
+              "id": "setitem-1786901698611-0-ikk",
+              "productId": "",
+              "name": "Saat",
+              "type": "",
+              "removeDiscount": 400,
+              "writePositions": [
+                "Kordon",
+                "arka kapak"
+              ],
+              "preferredWritePosition": "Kordon",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-1-pg9",
+              "productId": "",
+              "name": "Cüzdan",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "İç yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-2-3ke",
+              "productId": "",
+              "name": "Çakmak",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "Ön yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-3-559",
+              "productId": "",
+              "name": "Tesbih",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-4-kj5",
+              "productId": "",
+              "name": "Kemer",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Toka arkası yanı",
+                "Toka önü yanı"
+              ],
+              "preferredWritePosition": "Toka arkası yanı",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-5-gry",
+              "productId": "",
+              "name": "Bileklik",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ],
+              "preferredWritePosition": "Arka yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-6-05e",
+              "productId": "",
+              "name": "Set kutusu",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            }
+          ],
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "badgeShape": "circle",
+          "internalCode": "SET 17"
+        },
+        "basePrice": 1000,
+        "qty": 1,
+        "personalized": true,
+        "setCustomization": {
+          "keptIds": [
+            "setitem-1786901698611-0-ikk",
+            "setitem-1786901698611-1-pg9",
+            "setitem-1786901698611-2-3ke",
+            "setitem-1786901698611-3-559",
+            "setitem-1786901698611-4-kj5",
+            "setitem-1786901698611-5-gry",
+            "setitem-1786901698611-6-05e"
+          ],
+          "removedIds": [],
+          "writes": [
+            {
+              "itemId": "setitem-1786901698611-0-ikk",
+              "item": "Saat",
+              "position": "Kordon",
+              "text": "Rüyam",
+              "fee": 75
+            },
+            {
+              "itemId": "setitem-1786901698611-1-pg9",
+              "item": "Cüzdan",
+              "position": "Ön yüz",
+              "text": "Ahmet Alp Doğan",
+              "fee": 50
+            },
+            {
+              "itemId": "setitem-1786901698611-2-3ke",
+              "item": "Çakmak",
+              "position": "Ön yüz",
+              "text": "Doğan",
+              "fee": 25
+            },
+            {
+              "itemId": "setitem-1786901698611-5-gry",
+              "item": "Bileklik",
+              "position": "Arka yüz",
+              "text": "Rüyam",
+              "fee": 25
+            }
+          ],
+          "photoCustomizations": []
+        }
+      },
+      {
+        "product": {
+          "id": "urun-1786910492353-0-cc9w",
+          "name": "SHAZ - GÖZLÜK",
+          "subtitle": "Erkek gözlük",
+          "description": "Siyah çerçeve · Füme/gradient cam · Gold detaylı · Dikdörtgen tasarım",
+          "features": [
+            "Polarize",
+            "UV200"
+          ],
+          "category": "gozlukler",
+          "price": 315,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786910486678-qsepo2.jpeg",
+          "images": [
+            "/uploads/1786910486678-qsepo2.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Sol gözlük sapı",
+            "Sağ gözlük sapı"
+          ],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "shippingRibbonEnabled": false,
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "internalCode": "G 5",
+          "badgeShape": "circle",
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444"
+        },
+        "basePrice": 290,
+        "qty": 1,
+        "personalized": true,
+        "writes": [
+          {
+            "item": "SHAZ - GÖZLÜK",
+            "position": "Sol gözlük sapı",
+            "text": "La familia lo es todo",
+            "fee": 25
+          }
+        ]
+      }
+    ],
+    "customer": {
+      "fullName": "Ahmet Alp Doğan",
+      "phone": "5396881809",
+      "extraPhone": "5357668023",
+      "province": "Balıkesir",
+      "district": "Ayvalık",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "Altınova MH.",
+      "avenue": "",
+      "street": "Muhyiddin piri bey SK.",
+      "fullAddress": "Altınova mahallesi muhyiddin piri bey sokağı no 15",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": "Saatin yanında birde saat pili gönderirmisiniz ücret gerekiyorsa ekleyebilirsiniz"
+    },
+    "payment": "cod",
+    "personalApproval": {
+      "approved": true,
+      "method": "button",
+      "at": "2026-09-07T17:03:50.534Z"
+    },
+    "shippingNoticeAccepted": true,
+    "subtotal": 1490,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 1490
+  },
+  {
     "id": "SHZ15",
     "createdAt": "2026-09-07T07:25:36.119Z",
     "createdAtTR": "07.09.2026 10:25:36",
