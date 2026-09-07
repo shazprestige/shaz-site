@@ -1,5 +1,218 @@
 [
   {
+    "id": "SHZ20",
+    "createdAt": "2026-09-07T23:27:01.743Z",
+    "createdAtTR": "08.09.2026 02:27:01",
+    "status": "new",
+    "statusUpdatedAt": "2026-09-07T23:27:01.743Z",
+    "requestId": "331df4b1-1e81-44a6-b267-b35b32c5a426",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786899570443-4-unxa",
+          "name": "SHAZ - ERKEK AKSESUAR SETİ",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Takvim göstergeli, çelik kordonlu quartz kol saati",
+            "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+            "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+            "Metal püsküllü, cam plastik karışımlı tesbih",
+            "Ayarlanabilir metal tokalı SHAZ kemer",
+            "Metal detaylı ayarlanabilir erkek bileklik",
+            "Özel bölmeli, premium set kutusu"
+          ],
+          "category": "setler",
+          "price": 1125,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786899547509-ds4yrb.jpeg",
+          "images": [
+            "/uploads/1786899547509-ds4yrb.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": false,
+          "isSet": true,
+          "setItems": [
+            {
+              "id": "setitem-1786901698611-0-hti",
+              "productId": "",
+              "name": "Saat",
+              "type": "",
+              "removeDiscount": 400,
+              "writePositions": [
+                "Kordon",
+                "arka kapak"
+              ],
+              "preferredWritePosition": "Kordon",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-1-axx",
+              "productId": "",
+              "name": "Cüzdan",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "İç yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-2-edq",
+              "productId": "",
+              "name": "Çakmak",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "Ön yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-3-u1a",
+              "productId": "",
+              "name": "Tesbih",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-4-cqi",
+              "productId": "",
+              "name": "Kemer",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Toka arkası yanı",
+                "Toka önü yanı"
+              ],
+              "preferredWritePosition": "Toka arkası yanı",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-5-a63",
+              "productId": "",
+              "name": "Bileklik",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ],
+              "preferredWritePosition": "Arka yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-6-4nj",
+              "productId": "",
+              "name": "Set kutusu",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            }
+          ],
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "badgeShape": "circle",
+          "internalCode": "SET 16"
+        },
+        "basePrice": 1000,
+        "qty": 1,
+        "personalized": true,
+        "setCustomization": {
+          "keptIds": [
+            "setitem-1786901698611-0-hti",
+            "setitem-1786901698611-1-axx",
+            "setitem-1786901698611-2-edq",
+            "setitem-1786901698611-3-u1a",
+            "setitem-1786901698611-4-cqi",
+            "setitem-1786901698611-5-a63",
+            "setitem-1786901698611-6-4nj"
+          ],
+          "removedIds": [],
+          "writes": [
+            {
+              "itemId": "setitem-1786901698611-0-hti",
+              "item": "Saat",
+              "position": "Kordon",
+              "text": "Smsk",
+              "fee": 75
+            },
+            {
+              "itemId": "setitem-1786901698611-1-axx",
+              "item": "Cüzdan",
+              "position": "Ön yüz",
+              "text": "Enes Şimşek",
+              "fee": 50
+            }
+          ],
+          "photoCustomizations": []
+        }
+      }
+    ],
+    "customer": {
+      "fullName": "Enes Şimşek",
+      "phone": "5464170534",
+      "extraPhone": "5376777831",
+      "province": "Kahramanmaraş",
+      "district": "Dulkadiroglu",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "Karacasu karaziyaret MH.",
+      "avenue": "Arslanbey CD.",
+      "street": "",
+      "fullAddress": "Karacasu karaziyaret mahallesi Gaziantep yol üzeri mado ilerisi yolcu cafe yanı miraç gros awm",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": "Hızlı bir şekilde gelmesi önemle rica olunur\nBirde yazilar eğik yazı ile olursa sevirim"
+    },
+    "payment": "cod",
+    "personalApproval": {
+      "approved": true,
+      "method": "button",
+      "at": "2026-09-07T23:27:01.436Z"
+    },
+    "shippingNoticeAccepted": true,
+    "subtotal": 1125,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 1125
+  },
+  {
     "id": "SHZ19",
     "createdAt": "2026-09-07T22:30:32.238Z",
     "createdAtTR": "08.09.2026 01:30:32",
