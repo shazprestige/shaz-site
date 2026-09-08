@@ -1,2 +1,0 @@
-
-V53: Favoriler ekranına tek ürün Favoriden Kaldır ve Favorileri Temizle eklendi.

@@ -1,5 +1,0 @@
-V49
-- WhatsApp iletişim butonunda WhatsApp amblemi kullanıldı.
-- Instagram iletişim butonunda Instagram amblemi kullanıldı.
-- Instagram alt metni “Buraya tıkla ve iletişime geç” olarak değiştirildi.
-- Diğer site davranışlarına dokunulmadı.
