@@ -90,13 +90,13 @@ function createOrder_(data) {
     const c = order.customer || {};
     const details = orderDetails_(order);
 
-    // 1 müşteri = başlık + 8 bilgi satırı + ayırıcı.
+    // 1 müşteri = başlık + 9 bilgi satırı + ayırıcı.
     // Sayfada önceden hazırlanmış / birleştirilmiş boş bloklar bulunabiliyor.
     // Bir sonraki bloğu kullanmadan önce yalnızca o bloğun birleşimlerini çözüyoruz.
     // Böylece "birleştirilen aralıktaki tüm hücreleri seçmelisiniz" hatası oluşmaz.
     const headerRow = nextHeaderRow_(sh);
     const start = headerRow + 1;
-    const separatorRow = start + 8;
+    const separatorRow = start + 9;
     ensureRows_(sh, separatorRow);
     prepareOrderBlock_(sh, headerRow, separatorRow);
 
@@ -108,6 +108,7 @@ function createOrder_(data) {
       .setVerticalAlignment('middle')
       .setBackground('#d9d9d9');
 
+    const orderNote = String(order.orderNote || '').trim();
     const left = [
       String(c.fullName || ''),
       phoneNumber_(c.phone), // ikinci telefon kasıtlı olarak yazılmaz
@@ -116,7 +117,8 @@ function createOrder_(data) {
       Number(order.total || 0).toLocaleString('tr-TR') + ' TL',
       paymentText_(order.payment),
       '@',
-      details
+      details,
+      '9 | (not: ' + (orderNote || 'yok') + ')'
     ];
 
     const rows = left.map((v, i) => [
@@ -129,30 +131,30 @@ function createOrder_(data) {
       i === 0 ? String(order.createdAtTR || '') : '',
       i === 0 ? requestId : ''
     ]);
-    sh.getRange(start, 1, 8, 8).setValues(rows);
+    sh.getRange(start, 1, 9, 8).setValues(rows);
 
     // Sipariş açıklaması ve adet alanları blok boyunca tek parça.
-    sh.getRange(start,2,8,1).merge();
-    sh.getRange(start,3,8,1).merge();
+    sh.getRange(start,2,9,1).merge();
+    sh.getRange(start,3,9,1).merge();
 
     // D/E birleşik değil: ortadaki hücre gerçek tıklanabilir Google checkbox.
     const checkboxRow = start + 3;
     sh.getRange(checkboxRow,4).insertCheckboxes().setValue(false);
     sh.getRange(checkboxRow,5).insertCheckboxes().setValue(false);
 
-    sh.getRange(start,1,8,1)
+    sh.getRange(start,1,9,1)
       .setBackground('#93c47d')
       .setFontWeight('bold')
       .setHorizontalAlignment('center')
       .setVerticalAlignment('middle')
       .setWrap(true);
 
-    sh.getRange(start,2,8,4)
+    sh.getRange(start,2,9,4)
       .setHorizontalAlignment('center')
       .setVerticalAlignment('middle')
       .setWrap(true);
 
-    sh.getRange(start,1,8,5)
+    sh.getRange(start,1,9,5)
       .setBorder(true,true,true,true,true,true,'#6b6b6b',SpreadsheetApp.BorderStyle.SOLID);
 
     // Fotoğraf bağlantıları setValues ile düz metin kalabildiği için URL parçalarını
@@ -162,6 +164,7 @@ function createOrder_(data) {
 
     sh.setRowHeights(start,7,22);
     sh.setRowHeight(start+7,38);
+    sh.setRowHeight(start+8,30);
     sh.setRowHeight(headerRow,24);
 
     // Belirgin müşteri ayırıcı satırı.
@@ -189,14 +192,14 @@ function ensureRows_(sh, lastNeededRow) {
 function nextHeaderRow_(sh) {
   // Hazır şablonda aşağıda biçimlendirilmiş boş bloklar bulunduğu için getLastRow()+1
   // tek başına güvenilir değildir. A sütunundaki gerçek müşteri başlıklarını bulup
-  // bir sonraki 10 satırlık bloğa geçiyoruz: başlık + 8 satır + ayırıcı.
+  // bir sonraki 11 satırlık bloğa geçiyoruz: başlık + 9 satır + ayırıcı.
   const max = Math.max(2, sh.getLastRow());
   const vals = sh.getRange(2, 1, max - 1, 1).getDisplayValues().flat();
   let lastHeader = 0;
   vals.forEach((v, i) => {
     if (/MÜŞTERİ/i.test(String(v || ''))) lastHeader = i + 2;
   });
-  if (lastHeader) return lastHeader + 10;
+  if (lastHeader) return lastHeader + 11;
   return 2;
 }
 
