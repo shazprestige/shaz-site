@@ -48,6 +48,57 @@ app.use((req,res,next)=>{
 });
 app.use(express.static(path.join(root,'public'),{etag:false,lastModified:false}));
 
+// ---------- SEO: robots, sitemap ve gerçek ürün URL'leri ----------
+const SHAZ_ORIGIN='https://shaz.com.tr';
+function seoSlugPart(value){
+  return String(value||'').trim().toLocaleLowerCase('tr-TR')
+    .replaceAll('ı','i').replaceAll('ğ','g').replaceAll('ü','u').replaceAll('ş','s').replaceAll('ö','o').replaceAll('ç','c')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+}
+function productSeoSlug(product){
+  const base=seoSlugPart(product?.name||'urun')||'urun';
+  const code=seoSlugPart(product?.internalCode||'').replace(/^shaz-?/,'');
+  return code?`${base}-${code}`:`${base}-${seoSlugPart(product?.id||'urun')}`;
+}
+function escapeXml(value){
+  return String(value??'').replace(/[<>&'"]/g,ch=>({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[ch]));
+}
+function escapeHtmlAttr(value){
+  return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+app.get('/robots.txt',(req,res)=>{
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nSitemap: ${SHAZ_ORIGIN}/sitemap.xml\n`);
+});
+app.get('/sitemap.xml',(req,res)=>{
+  const catalog=readJson('catalog.json',{products:[]});
+  const urls=[`${SHAZ_ORIGIN}/`,...(catalog.products||[]).filter(p=>p&&!p.hidden).map(p=>`${SHAZ_ORIGIN}/urun/${encodeURIComponent(productSeoSlug(p))}`)];
+  const xml=`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(url=>`  <url><loc>${escapeXml(url)}</loc></url>`).join('\n')}\n</urlset>`;
+  res.type('application/xml').send(xml);
+});
+app.get('/urun/:slug',(req,res)=>{
+  const catalog=readJson('catalog.json',{products:[]});
+  const product=(catalog.products||[]).find(p=>p&&!p.hidden&&productSeoSlug(p)===String(req.params.slug||''));
+  if(!product)return res.status(404).type('text/plain').send('Ürün bulunamadı');
+  const indexPath=path.join(root,'public','index.html');
+  let html=fs.readFileSync(indexPath,'utf8');
+  const title=`${String(product.name||'SHAZ Ürün').trim()} | SHAZ`;
+  const rawDesc=String(product.description||product.subtitle||(Array.isArray(product.features)?product.features.filter(Boolean).join(', '):'')||'SHAZ erkek aksesuarı').trim();
+  const desc=rawDesc.slice(0,160);
+  const canonical=`${SHAZ_ORIGIN}/urun/${encodeURIComponent(productSeoSlug(product))}`;
+  const image=String(product.image||((product.images||[])[0])||'').trim();
+  const absoluteImage=image?(image.startsWith('http')?image:`${SHAZ_ORIGIN}${image.startsWith('/')?'':'/'}${image}`):'';
+  html=html
+    .replace(/<title>[^<]*<\/title>/,`<title>${escapeHtmlAttr(title)}</title>`)
+    .replace(/<meta name="description" content="[^"]*">/,`<meta name="description" content="${escapeHtmlAttr(desc)}">`)
+    .replace(/<link rel="canonical" href="[^"]*">/,`<link rel="canonical" href="${escapeHtmlAttr(canonical)}">`)
+    .replace(/<meta property="og:type" content="[^"]*">/,`<meta property="og:type" content="product">`)
+    .replace(/<meta property="og:title" content="[^"]*">/,`<meta property="og:title" content="${escapeHtmlAttr(title)}">`)
+    .replace(/<meta property="og:description" content="[^"]*">/,`<meta property="og:description" content="${escapeHtmlAttr(desc)}">`)
+    .replace(/<meta property="og:url" content="[^"]*">/,`<meta property="og:url" content="${escapeHtmlAttr(canonical)}">`);
+  if(absoluteImage)html=html.replace('</head>',`<meta property="og:image" content="${escapeHtmlAttr(absoluteImage)}">\n</head>`);
+  res.type('html').send(html);
+});
+
 // ---------- Yönetici güvenliği ----------
 const ADMIN_USER = process.env.ADMIN_USER || '';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
@@ -522,8 +573,11 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
       const setItems=Array.isArray(x.product?.setItems)?x.product.setItems:[];
       const keptIds=Array.isArray(x.setCustomization.keptIds)?x.setCustomization.keptIds:[];
       const removedIds=Array.isArray(x.setCustomization.removedIds)?x.setCustomization.removedIds:[];
-      const sent=(keptIds.length?setItems.filter(it=>keptIds.includes(it.id)):setItems.filter(it=>!removedIds.includes(it.id))).map(it=>it.name).filter(Boolean);
-      if(sent.length)lines.push(`• Gönderilecek ürünler: ${sent.join(', ')}`);
+      const removed=setItems.filter(it=>removedIds.includes(it.id)).map(it=>it.name).filter(Boolean);
+      if(removed.length){
+        const sent=(keptIds.length?setItems.filter(it=>keptIds.includes(it.id)):setItems.filter(it=>!removedIds.includes(it.id))).map(it=>it.name).filter(Boolean);
+        if(sent.length)lines.push(`• Gönderilecek ürünler: ${sent.join(', ')} (Çıkarılan ürünler: ${removed.join(', ')})`);
+      }
     }
     const writes=x.writes||x.setCustomization?.writes||[];
     writes.forEach(w=>{
@@ -537,13 +591,14 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
       const caption=ph.caption?` · Fotoğraf yazısı (${ph.captionPosition==='above'?'üstte':'altta'}): ${ph.caption}`:'';
       lines.push(`• Fotoğraf — ${item}: ${ph.imageUrl||''}${caption}`);
     });
-    const legacyNote=String(x.productNote||'').trim();
-    if(legacyNote)lines.push(`• Sipariş notu: ${legacyNote}`);
     blocks.push(lines.join('\n'));
   });
-  const directNote=String(o.orderNote||'').trim();
-  if(directNote)blocks.push(`• Sipariş notu: ${directNote}`);
   return blocks.join('\n\n')||'Ürün';
+ };
+ const orderNoteText=o=>{
+  const direct=String(o.orderNote||'').trim();
+  if(direct)return direct;
+  return (o.items||[]).map(x=>String(x.productNote||'').trim()).filter(Boolean).join(' | ');
  };
  const itemCount=o=>(o.items||[]).reduce((n,x)=>n+Math.max(1,Number(x.qty||1)),0)||1;
  const fullAddress=c=>{
@@ -571,6 +626,10 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
    const r=blockStart+1; // 8 bilgi satırı burada başlar
    const separatorRow=blockStart+9;
    const details=orderProducts(o);
+   const normalNote=orderNoteText(o);
+   const deliveryNote=String(c.note||'').trim();
+   const combinedNotes=`not: ${normalNote} | teslimat notu: ${deliveryNote}`;
+   const detailsWithNotes=`${details}\n\n${combinedNotes}`;
 
    // Müşteri numarası açıkça görünsün.
    aoa[headerRow]=[
@@ -597,7 +656,7 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
    for(let i=0;i<8;i++){
      aoa[r+i]=[
        left[i],
-       i===0?details:'',
+       i===0?detailsWithNotes:'',
        i===0?itemCount(o):'',
        i===0?(o.status==='prepared'||o.status==='shipped'?'✓':'☐'):'',
        i===0?(o.status==='shipped'?'✓':'☐'):''

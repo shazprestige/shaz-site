@@ -92,7 +92,7 @@ async function init(){
   syncCatalogViewControls();
   ensureProductHistoryBase();
   apply(); renderCampaignCards(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart(); bindFloatingContacts(); renderSiteAnnouncement();
-  const sharedProductId=new URLSearchParams(location.search).get('product');
+  const sharedProductId=productRouteId();
   if(sharedProductId&&catalog.products.some(p=>p.id===sharedProductId)) setTimeout(()=>openProductDetail(sharedProductId,'shared'),0);
   else if(sharedProductId) clearProductRoute();
   if(new URLSearchParams(location.search).get('sharedCart')||new URLSearchParams(location.search).get('s'))setTimeout(()=>openSharedCartFromUrl(),40);
@@ -583,10 +583,20 @@ function toggleFavFromDetail(id){
   const b=document.getElementById('productDetailFavBtn');
   if(b){b.textContent=favorites.has(id)?'♥':'♡';b.classList.toggle('active',favorites.has(id));b.setAttribute('aria-label',favorites.has(id)?'Favorilerden kaldır':'Favorilere ekle')}
 }
+function productSlug(p){
+  const clean=v=>String(v||'').trim().toLocaleLowerCase('tr-TR')
+    .replaceAll('ı','i').replaceAll('ğ','g').replaceAll('ü','u').replaceAll('ş','s').replaceAll('ö','o').replaceAll('ç','c')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  const base=clean(p?.name||'urun')||'urun';
+  const rawCode=clean(p?.internalCode||'').replace(/^shaz-?/,'');
+  return rawCode?`${base}-${rawCode}`:`${base}-${clean(p?.id||'urun')}`;
+}
 function productShareUrl(id){
+  const p=catalog.products.find(x=>x.id===id);
   const u=new URL(location.href);
   u.searchParams.delete('adminpreview');
-  u.searchParams.set('product',id);
+  u.searchParams.delete('product');
+  if(p)u.pathname='/urun/'+encodeURIComponent(productSlug(p));
   u.hash='';
   return u.toString();
 }
@@ -604,15 +614,27 @@ async function shareProduct(id){
     }
   }
 }
-function productRouteId(){return new URLSearchParams(location.search).get('product')||''}
+function productRouteId(){
+  const legacy=new URLSearchParams(location.search).get('product')||'';
+  if(legacy)return legacy;
+  const m=location.pathname.match(/^\/urun\/([^/]+)\/?$/);
+  if(!m)return '';
+  let slug='';
+  try{slug=decodeURIComponent(m[1])}catch{slug=m[1]}
+  return (catalog.products||[]).find(p=>productSlug(p)===slug)?.id||'';
+}
 function setProductRoute(id,mode='replace',extraState={}){
   if(adminPreviewMode||new URLSearchParams(location.search).get('adminpreview')==='1')return;
   const u=new URL(location.href);
-  if(id)u.searchParams.set('product',id);else u.searchParams.delete('product');
+  u.searchParams.delete('product');
+  if(id){
+    const p=catalog.products.find(x=>x.id===id);
+    u.pathname=p?'/urun/'+encodeURIComponent(productSlug(p)):'/';
+  }else if(/^\/urun\//.test(u.pathname))u.pathname='/';
   const state={...(history.state||{}),...extraState,shazProduct:id||null};
   history[mode==='push'?'pushState':'replaceState'](state,'',u.pathname+u.search+u.hash);
 }
-function clearProductRoute(){if(productRouteId())setProductRoute('','replace',{shazProductPushed:false})}
+function clearProductRoute(){if(productRouteId()||/^\/urun\//.test(location.pathname))setProductRoute('','replace',{shazProductPushed:false})}
 function finalizeProductDetailClose(source=activeProductDetailSource||'catalog',restoreY=activeProductDetailScrollY){
   activeProductDetailId='';activeProductDetailSource='catalog';setProductDetailScrollLock(false);
   if(source==='favorites'){showFavorites();return}

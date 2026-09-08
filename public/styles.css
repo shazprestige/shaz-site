@@ -5297,6 +5297,6 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 .addressCheckOrderItem>span{display:block;color:#475467}
 .addressCheckOrderNote{background:#fff9e9;border:1px solid #ead9ad;border-radius:8px;padding:7px 8px;color:#5d4b26!important}
 .addressCheckNoteArea{margin-top:12px}
-.addressCheckNoteTrigger{width:100%;margin:0;padding:12px 14px}
+.addressCheckNoteTrigger{width:100%;margin:0;padding:12px 14px;text-align:center}
 .addressCheckOrderNotePreview{display:flex;flex-direction:column;gap:4px;margin-bottom:8px;padding:10px 12px;background:#fff9e9;border:1px solid #ead9ad;border-radius:10px;color:#5d4b26;font-size:12px;line-height:1.45}
 .orderAdminNote{margin-top:10px;padding:9px 10px;border:1px solid #ead9ad;background:#fff9e9;border-radius:9px;line-height:1.45}

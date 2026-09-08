@@ -109,6 +109,8 @@ function createOrder_(data) {
       .setBackground('#d9d9d9');
 
     const orderNote = orderNoteText_(order);
+    const deliveryNote = String(c.note || '').trim();
+    const combinedNotes = 'not: ' + orderNote + ' | teslimat notu: ' + deliveryNote;
     const left = [
       String(c.fullName || ''),
       phoneNumber_(c.phone),
@@ -123,7 +125,7 @@ function createOrder_(data) {
 
     const rows = left.map((v, i) => [
       v,
-      i === 0 ? details : (i === 8 ? (orderNote ? 'not: ' + orderNote : 'not yok') : ''),
+      i === 0 ? details : (i === 8 ? combinedNotes : ''),
       i === 0 ? itemCount_(order) : '',
       '',
       '',
@@ -338,12 +340,15 @@ function orderDetails_(o) {
       const setItems = ((x.product && x.product.setItems) || []);
       const keptIds = Array.isArray(x.setCustomization.keptIds) ? x.setCustomization.keptIds : [];
       const removedIds = Array.isArray(x.setCustomization.removedIds) ? x.setCustomization.removedIds : [];
-      const sent = (keptIds.length
-        ? setItems.filter(it => keptIds.indexOf(it.id) >= 0)
-        : setItems.filter(it => removedIds.indexOf(it.id) < 0))
-        .map(it => it.name)
-        .filter(Boolean);
-      if (sent.length) lines.push('• Gönderilecek ürünler: ' + sent.join(', '));
+      const removed = setItems.filter(it => removedIds.indexOf(it.id) >= 0).map(it => it.name).filter(Boolean);
+      if (removed.length) {
+        const sent = (keptIds.length
+          ? setItems.filter(it => keptIds.indexOf(it.id) >= 0)
+          : setItems.filter(it => removedIds.indexOf(it.id) < 0))
+          .map(it => it.name)
+          .filter(Boolean);
+        if (sent.length) lines.push('• Gönderilecek ürünler: ' + sent.join(', ') + ' (Çıkarılan ürünler: ' + removed.join(', ') + ')');
+      }
     }
 
     const writes = x.writes || (x.setCustomization && x.setCustomization.writes) || [];
