@@ -4129,7 +4129,7 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "soldOutEnabled": true,
+      "soldOutEnabled": false,
       "soldOutUntil": "",
       "internalCode": "G 2",
       "badgeShape": "circle"
@@ -4489,6 +4489,34 @@
       "soldOutEnabled": false,
       "soldOutUntil": "",
       "badgeShape": "circle"
+    },
+    {
+      "id": "urun-1788906457396",
+      "name": "Yeni Ürünadasd",
+      "internalCode": "ada",
+      "subtitle": "",
+      "description": "",
+      "features": [],
+      "category": "cuzdanlar",
+      "price": 0,
+      "oldPrice": 0,
+      "badge": "",
+      "badgeColor": "orange",
+      "image": "",
+      "images": [],
+      "hidden": false,
+      "setEligible": true,
+      "isSet": false,
+      "setItems": [],
+      "writePositions": [],
+      "preferredWritePosition": "",
+      "writeEnabled": true,
+      "walletPhotoEnabled": true,
+      "subcategoryId": "",
+      "descriptionEditorWidth": 320,
+      "descriptionWrapCh": 40,
+      "featuresEditorWidth": 320,
+      "featuresWrapCh": 40
     }
   ],
   "builder": {
