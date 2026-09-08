@@ -1,5 +1,333 @@
 [
   {
+    "id": "SHZ24",
+    "createdAt": "2026-09-08T14:30:03.959Z",
+    "createdAtTR": "08.09.2026 17:30:03",
+    "status": "new",
+    "statusUpdatedAt": "2026-09-08T14:30:03.959Z",
+    "requestId": "f4b15b3d-55d1-49ac-800f-80cd9250052f",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786910492353-2-zuew",
+          "name": "SHAZ - GÖZLÜK",
+          "subtitle": "Erkek gözlük",
+          "description": "Siyah çerçeve · Siyah cam · Metal detaylı · Pilot tasarım",
+          "features": [
+            "Polarize",
+            "UV200"
+          ],
+          "category": "gozlukler",
+          "price": 365,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786910486986-9vw9bq.jpeg",
+          "images": [
+            "/uploads/1786910486986-9vw9bq.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Sol gözlük sapı",
+            "Sağ gözlük sapı"
+          ],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "internalCode": "G 3",
+          "badgeShape": "circle"
+        },
+        "basePrice": 290,
+        "qty": 1,
+        "personalized": true,
+        "writes": [
+          {
+            "item": "SHAZ - GÖZLÜK",
+            "position": "Sol gözlük sapı",
+            "text": "Ümit yoluklar",
+            "fee": 75
+          }
+        ]
+      },
+      {
+        "product": {
+          "id": "urun-1786899570443-7-rtyx",
+          "name": "SHAZ - ERKEK AKSESUAR SETİ",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Takvim göstergeli, çelik kordonlu quartz kol saati",
+            "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+            "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+            "Metal püsküllü, cam plastik karışımlı tesbih",
+            "Ayarlanabilir metal tokalı SHAZ kemer",
+            "Metal detaylı ayarlanabilir erkek bileklik",
+            "Özel bölmeli, premium set kutusu"
+          ],
+          "category": "setler",
+          "price": 1075,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786899547749-qzgln8.jpeg",
+          "images": [
+            "/uploads/1786899547749-qzgln8.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": false,
+          "isSet": true,
+          "setItems": [
+            {
+              "id": "setitem-1786901698611-0-9g6",
+              "productId": "",
+              "name": "Saat",
+              "type": "",
+              "removeDiscount": 400,
+              "writePositions": [
+                "Kordon",
+                "arka kapak"
+              ],
+              "preferredWritePosition": "Kordon",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-1-kfb",
+              "productId": "",
+              "name": "Cüzdan",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "İç yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-2-10m",
+              "productId": "",
+              "name": "Çakmak",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "Ön yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-3-dum",
+              "productId": "",
+              "name": "Tesbih",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-4-pso",
+              "productId": "",
+              "name": "Kemer",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Toka arkası yanı",
+                "Toka önü yanı"
+              ],
+              "preferredWritePosition": "Toka arkası yanı",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-5-dgo",
+              "productId": "",
+              "name": "Bileklik",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ],
+              "preferredWritePosition": "Arka yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-6-h2i",
+              "productId": "",
+              "name": "Set kutusu",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            }
+          ],
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "badgeShape": "circle",
+          "internalCode": "SET 18"
+        },
+        "basePrice": 1000,
+        "qty": 1,
+        "personalized": true,
+        "setCustomization": {
+          "keptIds": [
+            "setitem-1786901698611-0-9g6",
+            "setitem-1786901698611-1-kfb",
+            "setitem-1786901698611-2-10m",
+            "setitem-1786901698611-3-dum",
+            "setitem-1786901698611-4-pso",
+            "setitem-1786901698611-5-dgo",
+            "setitem-1786901698611-6-h2i"
+          ],
+          "removedIds": [],
+          "writes": [
+            {
+              "itemId": "setitem-1786901698611-1-kfb",
+              "item": "Cüzdan",
+              "position": "Ön yüz",
+              "text": "Ümit Yoluklar",
+              "fee": 50
+            },
+            {
+              "itemId": "setitem-1786901698611-2-10m",
+              "item": "Çakmak",
+              "position": "Ön yüz",
+              "text": "Ümit Yoluklar",
+              "fee": 25
+            }
+          ],
+          "photoCustomizations": []
+        }
+      },
+      {
+        "product": {
+          "id": "urun-1786910492353-2-zuew",
+          "name": "SHAZ - GÖZLÜK",
+          "subtitle": "Erkek gözlük",
+          "description": "Siyah çerçeve · Siyah cam · Metal detaylı · Pilot tasarım",
+          "features": [
+            "Polarize",
+            "UV200"
+          ],
+          "category": "gozlukler",
+          "price": 225,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786910486986-9vw9bq.jpeg",
+          "images": [
+            "/uploads/1786910486986-9vw9bq.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Sol gözlük sapı",
+            "Sağ gözlük sapı"
+          ],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "internalCode": "G 3",
+          "badgeShape": "circle"
+        },
+        "basePrice": 200,
+        "qty": 1,
+        "personalized": true,
+        "writes": [
+          {
+            "item": "SHAZ - GÖZLÜK",
+            "position": "Sol gözlük sapı",
+            "text": "Mami",
+            "fee": 25
+          }
+        ],
+        "upsell": {
+          "ruleId": "upsell-1786920061857",
+          "normalPrice": 290,
+          "specialPrice": 200
+        }
+      }
+    ],
+    "customer": {
+      "fullName": "Muhammed mulki",
+      "phone": "5352843143",
+      "extraPhone": "5438288419",
+      "province": "Bursa",
+      "district": "Yıldırım",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "Davutkadı MH.",
+      "avenue": "Teyyareci Mehmet Ali CD.",
+      "street": "",
+      "fullAddress": "Davutkadı mahallesi Teyyareci Mehmet Ali caddesi no2A",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": "Kapıda ödeme yapılacak iş yeri trukcell bayi"
+    },
+    "payment": "cod",
+    "personalApproval": {
+      "approved": true,
+      "method": "button",
+      "at": "2026-09-08T14:30:03.584Z"
+    },
+    "shippingNoticeAccepted": true,
+    "subtotal": 1665,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 1665
+  },
+  {
     "id": "SHZ23",
     "createdAt": "2026-09-08T09:54:36.863Z",
     "createdAtTR": "08.09.2026 12:54:36",
