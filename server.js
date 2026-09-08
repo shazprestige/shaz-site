@@ -35,33 +35,6 @@ for(const name of ['settings.json','catalog.json','orders.json']){
 console.log('SHAZ veri dizini:',persistRoot);
 app.use(express.json({limit:'5mb'}));
 app.use(express.urlencoded({extended:true}));
-// ---------- Instagram Webhook ----------
-const INSTAGRAM_VERIFY_TOKEN =
-  process.env.INSTAGRAM_VERIFY_TOKEN || 'shaz-instagram-webhook-2026';
-
-app.get('/meta/instagram-webhook', (req, res) => {
-  const mode = req.query['hub.mode'];
-  const token = req.query['hub.verify_token'];
-  const challenge = req.query['hub.challenge'];
-
-  if (mode === 'subscribe' && token === INSTAGRAM_VERIFY_TOKEN) {
-    console.log('Instagram webhook doğrulandı.');
-    return res.status(200).send(challenge);
-  }
-
-  return res.sendStatus(403);
-});
-
-app.post('/meta/instagram-webhook', (req, res) => {
-  console.log(
-    'Instagram webhook olayı:',
-    JSON.stringify(req.body, null, 2)
-  );
-
-  // Meta'ya olayı aldığımızı hemen bildir.
-  res.sendStatus(200);
-});
-// ---------- /Instagram Webhook ----------
 app.use('/uploads', express.static(uploadDir,{maxAge:'7d'}));
 
 // Yeni sürümlerde telefonların eski JS/CSS'i tutup sipariş isteğini eski kodla göndermesini engelle.
@@ -547,7 +520,7 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
       }).filter(Boolean);
       if(writeText.length) line+=` | Yazı: ${writeText.join(' | ')}`;
     }
-    if(String(x.productNote||'').trim()) line+=` | Ürün notu: ${String(x.productNote).trim()}`;
+    if(String(x.productNote||'').trim()) line+=` | Sipariş notu: ${String(x.productNote).trim()}`;
     const photos=x.photoCustomizations||x.setCustomization?.photoCustomizations||[];
     if(photos.length){
       const photoText=photos.map(ph=>{

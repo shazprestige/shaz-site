@@ -5285,3 +5285,14 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
     margin-right:auto!important;
   }
 }
+
+/* v150 — yalnız set sipariş notu ve son kontrol içeriği */
+.setOrderNoteText{min-height:180px;resize:vertical;line-height:1.5}
+.addressCheckCard{max-height:calc(100vh - 40px);overflow:auto}
+.addressCheckOrderReview{margin-top:12px;border:1px solid #e4e7ec;border-radius:10px;padding:12px;background:#fff}
+.addressCheckOrderReview>strong{display:block;margin-bottom:8px;font-size:12px}
+.addressCheckOrderItem{display:grid;gap:4px;padding:9px 0;border-top:1px solid #eef0f2;font-size:12px;line-height:1.4}
+.addressCheckOrderItem:first-of-type{border-top:0;padding-top:0}
+.addressCheckOrderItem:last-child{padding-bottom:0}
+.addressCheckOrderItem>span{display:block;color:#475467}
+.addressCheckOrderNote{background:#fff9e9;border:1px solid #ead9ad;border-radius:8px;padding:7px 8px;color:#5d4b26!important}

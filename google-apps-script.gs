@@ -5,7 +5,7 @@
  * Script Properties içinde SHAZ_WEBHOOK_SECRET anahtarı tanımlanmalıdır.
  *
  * Görünen düzen:
- * A: müşterinin 8 satırlık sipariş fişi
+ * A: müşterinin 9 satırlık sipariş fişi
  * B: SİPARİŞ
  * C: ADET
  * D: HAZIR MI
@@ -27,7 +27,7 @@ function doPost(e) {
       return json_({ok:false, message:'Yetkisiz istek.'});
     }
 
-    if (data.action === 'ping') return json_({ok:true, version:'V70', sheet:SHEET_NAME});
+    if (data.action === 'ping') return json_({ok:true, version:'V150', sheet:SHEET_NAME});
     if (data.action === 'create') return createOrder_(data);
     if (data.action === 'status') return updateStatus_(data);
 
@@ -108,7 +108,6 @@ function createOrder_(data) {
       .setVerticalAlignment('middle')
       .setBackground('#d9d9d9');
 
-    const orderNote = String(order.orderNote || '').trim();
     const left = [
       String(c.fullName || ''),
       phoneNumber_(c.phone), // ikinci telefon kasıtlı olarak yazılmaz
@@ -118,7 +117,7 @@ function createOrder_(data) {
       paymentText_(order.payment),
       '@',
       details,
-      '9 | (not: ' + (orderNote || 'yok') + ')'
+      orderNoteRow_(order)
     ];
 
     const rows = left.map((v, i) => [
@@ -164,7 +163,7 @@ function createOrder_(data) {
 
     sh.setRowHeights(start,7,22);
     sh.setRowHeight(start+7,38);
-    sh.setRowHeight(start+8,30);
+    sh.setRowHeight(start+8,38);
     sh.setRowHeight(headerRow,24);
 
     // Belirgin müşteri ayırıcı satırı.
@@ -258,7 +257,7 @@ function updateStatus_(data) {
       const idx = idValues.indexOf(id);
       if (idx < 0) return;
 
-      // F'deki sipariş kodu 8 bilgi satırının ilk satırındadır.
+      // F'deki sipariş kodu 9 bilgi satırının ilk satırındadır.
       const orderStartRow = idx + 2;
       const checkboxRow = orderStartRow + 3;
 
@@ -317,6 +316,14 @@ function itemCount_(o) {
   return (o.items || []).reduce((n,x)=>n + Math.max(1, Number(x.qty || 1)), 0) || 1;
 }
 
+function orderNoteRow_(o) {
+  const notes = (o.items || [])
+    .map(x => String(x.productNote || '').trim())
+    .filter(Boolean);
+  if (!notes.length) return '';
+  return '9 | (not: ' + notes.join(' | ') + ')';
+}
+
 function orderDetails_(o) {
   const lines = [];
   (o.items || []).forEach(x => {
@@ -342,8 +349,6 @@ function orderDetails_(o) {
       });
       line += ' | Yazı: ' + w.join(' | ');
     }
-
-    if (String(x.productNote || '').trim()) line += ' | Ürün notu: ' + String(x.productNote).trim();
 
     const photos = x.photoCustomizations || (x.setCustomization && x.setCustomization.photoCustomizations) || [];
     if (photos.length) {
