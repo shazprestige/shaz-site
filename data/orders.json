@@ -1,5 +1,96 @@
 [
   {
+    "id": "SHZ32",
+    "createdAt": "2026-09-08T18:09:56.827Z",
+    "createdAtTR": "08.09.2026 21:09:56",
+    "status": "new",
+    "statusUpdatedAt": "2026-09-08T18:09:56.827Z",
+    "requestId": "372eb9a1-c8dd-44af-a42a-a5ff8722a13f",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786817515929-2-ux88",
+          "name": "SHAZ - NOVA",
+          "description": "",
+          "features": [
+            "Paslanma ve solmaya dayanıklı",
+            "Çelik kordon",
+            "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
+            "Safir çizilmelere dayanıklı cam",
+            "takvim",
+            "Ayarlanabilir kordon",
+            "Kasa çapı 32-36 mm",
+            "Kordon uzunluk 19 cm",
+            "Kordon genişlik 2 cm"
+          ],
+          "category": "saatler",
+          "price": 600,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786817507308-mh5ma4.jpeg",
+          "images": [
+            "/uploads/1786817507308-mh5ma4.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Kordon",
+            "Arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "descriptionEditorWidth": 320,
+          "descriptionWrapCh": 40,
+          "featuresEditorWidth": 320,
+          "featuresWrapCh": 40,
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "subtitle": "Erkek kol saati",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "badgeShape": "circle",
+          "internalCode": "SHAZ 1"
+        },
+        "qty": 1,
+        "personalized": false
+      }
+    ],
+    "customer": {
+      "fullName": "dksjs kejsjd",
+      "phone": "5384316141",
+      "extraPhone": "5384316142",
+      "province": "Burdur",
+      "district": "fksjjd",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "dkekd MH.",
+      "avenue": "rkekr CD.",
+      "street": "fkkdkr SK.",
+      "fullAddress": "daire 12",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": "teslimat not"
+    },
+    "payment": "cod",
+    "orderNote": "siparişime not",
+    "personalApproval": null,
+    "shippingNoticeAccepted": true,
+    "subtotal": 600,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 600
+  },
+  {
     "id": "SHZ31",
     "createdAt": "2026-09-08T18:07:38.756Z",
     "createdAtTR": "08.09.2026 21:07:38",
