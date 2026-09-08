@@ -1,5 +1,200 @@
 [
   {
+    "id": "SHZ36",
+    "createdAt": "2026-09-08T21:30:32.045Z",
+    "createdAtTR": "09.09.2026 00:30:32",
+    "status": "new",
+    "statusUpdatedAt": "2026-09-08T21:30:32.045Z",
+    "requestId": "79d7991a-b71f-4247-8f0e-f9d37bcb86db",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786899570443-17-6ai3",
+          "name": "SHAZ - ERKEK AKSESUAR SETİ",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Takvim göstergeli, çelik kordonlu quartz kol saati",
+            "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+            "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+            "Metal püsküllü, cam plastik karışımlı tesbih",
+            "Ayarlanabilir metal tokalı SHAZ kemer",
+            "Metal detaylı ayarlanabilir erkek bileklik",
+            "Özel bölmeli, premium set kutusu"
+          ],
+          "category": "setler",
+          "price": 1000,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786899548543-9iyzcu.jpeg",
+          "images": [
+            "/uploads/1786899548543-9iyzcu.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": false,
+          "isSet": true,
+          "setItems": [
+            {
+              "id": "setitem-1786901698611-0-wci",
+              "productId": "",
+              "name": "Saat",
+              "type": "",
+              "removeDiscount": 400,
+              "writePositions": [
+                "Kordon",
+                "arka kapak"
+              ],
+              "preferredWritePosition": "Kordon",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-1-2l7",
+              "productId": "",
+              "name": "Cüzdan",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "İç yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-2-31z",
+              "productId": "",
+              "name": "Çakmak",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "Ön yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-3-mqm",
+              "productId": "",
+              "name": "Tesbih",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-4-a31",
+              "productId": "",
+              "name": "Kemer",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Toka arkası yanı",
+                "Toka önü yanı"
+              ],
+              "preferredWritePosition": "Toka arkası yanı",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-5-29b",
+              "productId": "",
+              "name": "Bileklik",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ],
+              "preferredWritePosition": "Arka yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-6-brx",
+              "productId": "",
+              "name": "Set kutusu",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            }
+          ],
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "badgeShape": "circle",
+          "internalCode": "SET 8"
+        },
+        "basePrice": 1000,
+        "qty": 1,
+        "personalized": false,
+        "setCustomization": {
+          "keptIds": [
+            "setitem-1786901698611-0-wci",
+            "setitem-1786901698611-1-2l7",
+            "setitem-1786901698612-2-31z",
+            "setitem-1786901698612-3-mqm",
+            "setitem-1786901698612-4-a31",
+            "setitem-1786901698612-5-29b",
+            "setitem-1786901698612-6-brx"
+          ],
+          "removedIds": [],
+          "writes": [],
+          "photoCustomizations": []
+        }
+      }
+    ],
+    "customer": {
+      "fullName": "Beyzanur toprak",
+      "phone": "5015469599",
+      "extraPhone": "5397653785",
+      "province": "Zonguldak",
+      "district": "Devrek",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "Recep Tayyip Erdoğan MH.",
+      "avenue": "Recep Tayyip Erdoğan mahallesi 103 CD.",
+      "street": "Sk2A SK.",
+      "fullAddress": "Recep Tayyip Erdoğan mahallesi 103Sk 2A caydegirmeni C1-4ic kapı 15",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": "Hızlı gelmesi istiyorum"
+    },
+    "payment": "cod",
+    "orderNote": "",
+    "personalApproval": null,
+    "shippingNoticeAccepted": true,
+    "subtotal": 1000,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 1000
+  },
+  {
     "id": "SHZ35",
     "createdAt": "2026-09-08T19:12:42.367Z",
     "createdAtTR": "08.09.2026 22:12:42",
