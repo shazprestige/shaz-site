@@ -108,21 +108,22 @@ function createOrder_(data) {
       .setVerticalAlignment('middle')
       .setBackground('#d9d9d9');
 
+    const orderNote = orderNoteText_(order);
     const left = [
       String(c.fullName || ''),
-      phoneNumber_(c.phone), // ikinci telefon kasıtlı olarak yazılmaz
+      phoneNumber_(c.phone),
       fullAddress_(c),
       [c.province, c.district].filter(Boolean).join(' '),
       Number(order.total || 0).toLocaleString('tr-TR') + ' TL',
       paymentText_(order.payment),
       '@',
       details,
-      orderNoteRow_(order)
+      phoneNumber_(c.extraPhone)
     ];
 
     const rows = left.map((v, i) => [
       v,
-      i === 0 ? details : '',
+      i === 0 ? details : (i === 8 ? (orderNote ? 'not: ' + orderNote : 'not yok') : ''),
       i === 0 ? itemCount_(order) : '',
       '',
       '',
@@ -133,7 +134,7 @@ function createOrder_(data) {
     sh.getRange(start, 1, 9, 8).setValues(rows);
 
     // Sipariş açıklaması ve adet alanları blok boyunca tek parça.
-    sh.getRange(start,2,9,1).merge();
+    sh.getRange(start,2,8,1).merge();
     sh.getRange(start,3,9,1).merge();
 
     // D/E birleşik değil: ortadaki hücre gerçek tıklanabilir Google checkbox.
@@ -316,53 +317,52 @@ function itemCount_(o) {
   return (o.items || []).reduce((n,x)=>n + Math.max(1, Number(x.qty || 1)), 0) || 1;
 }
 
-function orderNoteRow_(o) {
-  const notes = (o.items || [])
+function orderNoteText_(o) {
+  const direct = String(o.orderNote || '').trim();
+  if (direct) return direct;
+  return (o.items || [])
     .map(x => String(x.productNote || '').trim())
-    .filter(Boolean);
-  if (!notes.length) return '';
-  return '9 | (not: ' + notes.join(' | ') + ')';
+    .filter(Boolean)
+    .join(' | ');
 }
 
 function orderDetails_(o) {
-  const lines = [];
+  const blocks = [];
   (o.items || []).forEach(x => {
     const name = x.product && x.product.name ? x.product.name : 'Ürün';
     const internalCode = String((x.product && x.product.internalCode) || '').trim();
-    let line = internalCode ? (name + ' | ' + internalCode) : name;
+    const title = internalCode ? (name + ' | ' + internalCode) : name;
+    const lines = [title];
 
-    // Hazır seti parçalara ayırmıyoruz; yalnızca çıkarılan varsa ekliyoruz.
     if (x.setCustomization) {
-      const removed = (x.setCustomization.removedIds || [])
-        .map(id => ((x.product && x.product.setItems) || []).find(s => s.id === id))
-        .filter(Boolean)
-        .map(s => s.name);
-      if (removed.length) line += ' | Çıkarılan ürünler (' + removed.join(', ') + ')';
+      const setItems = ((x.product && x.product.setItems) || []);
+      const keptIds = Array.isArray(x.setCustomization.keptIds) ? x.setCustomization.keptIds : [];
+      const removedIds = Array.isArray(x.setCustomization.removedIds) ? x.setCustomization.removedIds : [];
+      const sent = (keptIds.length
+        ? setItems.filter(it => keptIds.indexOf(it.id) >= 0)
+        : setItems.filter(it => removedIds.indexOf(it.id) < 0))
+        .map(it => it.name)
+        .filter(Boolean);
+      if (sent.length) lines.push('• Gönderilecek ürünler: ' + sent.join(', '));
     }
 
     const writes = x.writes || (x.setCustomization && x.setCustomization.writes) || [];
-    if (writes.length) {
-      const w = writes.map(a => {
-        const item = a.item || name;
-        const pos = a.position ? ' (' + a.position + ')' : '';
-        return item + ': ' + (a.text || '') + pos;
-      });
-      line += ' | Yazı: ' + w.join(' | ');
-    }
+    writes.forEach(a => {
+      const item = a.item || name;
+      const pos = a.position ? ' (' + a.position + ')' : '';
+      lines.push('• Yazı — ' + item + ': “' + (a.text || '') + '”' + pos);
+    });
 
     const photos = x.photoCustomizations || (x.setCustomization && x.setCustomization.photoCustomizations) || [];
-    if (photos.length) {
-      const p = photos.map(a => {
-        const item = a.item || name;
-        const caption = a.caption ? ' | Fotoğraf yazısı (' + (a.captionPosition === 'above' ? 'üstte' : 'altta') + '): ' + a.caption : '';
-        return item + ': ' + String(a.imageUrl || '') + caption;
-      });
-      line += ' | Fotoğraf: ' + p.join(' | ');
-    }
+    photos.forEach(a => {
+      const item = a.item || name;
+      const caption = a.caption ? ' · Fotoğraf yazısı (' + (a.captionPosition === 'above' ? 'üstte' : 'altta') + '): ' + a.caption : '';
+      lines.push('• Fotoğraf — ' + item + ': ' + String(a.imageUrl || '') + caption);
+    });
 
-    lines.push(line);
+    blocks.push(lines.join('\n'));
   });
-  return lines.join(' + ') || 'Ürün';
+  return blocks.join('\n\n') || 'Ürün';
 }
 
 function json_(obj) {

@@ -473,6 +473,18 @@ app.patch('/api/orders/:id',requireAdmin,(req,res)=>{
   persistOrdersToGithub().catch(e=>console.error('Sipariş düzenleme GitHub kalıcı kayıt:',e));
   res.json({ok:true,order});
 });
+app.delete('/api/orders',requireAdmin,(req,res)=>{
+  const ids=Array.isArray(req.body?.ids)?req.body.ids.map(x=>String(x||'').trim()).filter(Boolean):[];
+  if(!ids.length)return res.status(400).json({ok:false,message:'Silinecek sipariş seçilmedi.'});
+  const idSet=new Set(ids);
+  const orders=readJson('orders.json',[]);
+  const kept=orders.filter(o=>!idSet.has(String(o.id||'')));
+  const removedCount=orders.length-kept.length;
+  if(!removedCount)return res.status(404).json({ok:false,message:'Seçili siparişler bulunamadı.'});
+  writeJson('orders.json',kept);
+  persistOrdersToGithub().catch(e=>console.error('Toplu sipariş silme GitHub kalıcı kayıt:',e));
+  res.json({ok:true,removedCount});
+});
 app.delete('/api/orders/:id',requireAdmin,(req,res)=>{
   const id=String(req.params.id||'').trim();
   const orders=readJson('orders.json',[]);
@@ -500,39 +512,38 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
   return p||'';
  };
  const orderProducts=o=>{
-  const lines=[];
+  const blocks=[];
   (o.items||[]).forEach(x=>{
     const name=x.product?.name||'Ürün';
     const internalCode=String(x.product?.internalCode||'').trim();
-    let line=internalCode?`${name} | ${internalCode}`:name;
+    const title=internalCode?`${name} | ${internalCode}`:name;
+    const lines=[title];
     if(x.setCustomization){
-      const removed=(x.setCustomization.removedIds||[])
-        .map(id=>(x.product?.setItems||[]).find(s=>s.id===id)?.name)
-        .filter(Boolean);
-      if(removed.length) line+=` | Çıkarılan ürünler (${removed.join(', ')})`;
+      const setItems=Array.isArray(x.product?.setItems)?x.product.setItems:[];
+      const keptIds=Array.isArray(x.setCustomization.keptIds)?x.setCustomization.keptIds:[];
+      const removedIds=Array.isArray(x.setCustomization.removedIds)?x.setCustomization.removedIds:[];
+      const sent=(keptIds.length?setItems.filter(it=>keptIds.includes(it.id)):setItems.filter(it=>!removedIds.includes(it.id))).map(it=>it.name).filter(Boolean);
+      if(sent.length)lines.push(`• Gönderilecek ürünler: ${sent.join(', ')}`);
     }
     const writes=x.writes||x.setCustomization?.writes||[];
-    if(writes.length){
-      const writeText=writes.map(w=>{
-        const item=w.item||name;
-        const pos=w.position?` (${w.position})`:'';
-        return `${item}: ${w.text||''}${pos}`;
-      }).filter(Boolean);
-      if(writeText.length) line+=` | Yazı: ${writeText.join(' | ')}`;
-    }
-    if(String(x.productNote||'').trim()) line+=` | Sipariş notu: ${String(x.productNote).trim()}`;
+    writes.forEach(w=>{
+      const item=w.item||name;
+      const pos=w.position?` (${w.position})`:'';
+      lines.push(`• Yazı — ${item}: “${w.text||''}”${pos}`);
+    });
     const photos=x.photoCustomizations||x.setCustomization?.photoCustomizations||[];
-    if(photos.length){
-      const photoText=photos.map(ph=>{
-        const item=ph.item||name;
-        const caption=ph.caption?` | Fotoğraf yazısı (${ph.captionPosition==='above'?'üstte':'altta'}): ${ph.caption}`:'';
-        return `${item}: ${ph.imageUrl||''}${caption}`;
-      }).filter(Boolean);
-      if(photoText.length) line+=` | Fotoğraf: ${photoText.join(' | ')}`;
-    }
-    lines.push(line);
+    photos.forEach(ph=>{
+      const item=ph.item||name;
+      const caption=ph.caption?` · Fotoğraf yazısı (${ph.captionPosition==='above'?'üstte':'altta'}): ${ph.caption}`:'';
+      lines.push(`• Fotoğraf — ${item}: ${ph.imageUrl||''}${caption}`);
+    });
+    const legacyNote=String(x.productNote||'').trim();
+    if(legacyNote)lines.push(`• Sipariş notu: ${legacyNote}`);
+    blocks.push(lines.join('\n'));
   });
-  return lines.join(' + ')||'Ürün';
+  const directNote=String(o.orderNote||'').trim();
+  if(directNote)blocks.push(`• Sipariş notu: ${directNote}`);
+  return blocks.join('\n\n')||'Ürün';
  };
  const itemCount=o=>(o.items||[]).reduce((n,x)=>n+Math.max(1,Number(x.qty||1)),0)||1;
  const fullAddress=c=>{

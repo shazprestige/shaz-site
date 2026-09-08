@@ -32,7 +32,7 @@ function preloadCategoryHubImages(){
     if(typeof img.decode==='function')img.decode().catch(()=>{});
   });
 }
-let checkoutState={payment:'cod',customer:null,requestId:null};
+let checkoutState={payment:'cod',customer:null,requestId:null,orderNote:''};
 let orderSubmitting=false;
 let adminPreviewMode=false;
 let activeProductDetailId='',activeProductDetailSource='catalog',activeProductDetailScrollY=0,activeCartDetailScrollTop=0,productHistoryClosing=false;
@@ -892,7 +892,6 @@ function openProductDetail(id,source='catalog'){
       ${images.length>1?`<div class=productDetailDots aria-label="Ürün fotoğrafları">${images.map((u,i)=>`<button type="button" class="${i===0?'active':''}" data-image-index="${i}" onclick="setProductDetailImage(${i})" aria-label="${i+1}. fotoğraf"></button>`).join('')}</div><div class=productDetailThumbs>${images.map((u,i)=>`<button class="${i===0?'active':''}" data-image-index="${i}" onclick="selectProductDetailImage(this,'${escapeAttr(u)}',${i})"><img src="${escapeAttr(u)}" alt=""></button>`).join('')}</div>`:''}
     </div>`:`<div class=productDetailMedia>${p.soldOutEnabled?soldOutVisualBadgeHtml(p,true):(p.badge?`<span class="badge detailProductBadge badge-${['orange','purple','red'].includes(p.badgeColor)?p.badgeColor:'orange'} ${p.badgeShape==='rect'?'badge-rect':''}"><span class="badgeText">${escapeHtml(p.badge)}</span></span>`:'')}<div class=productDetailPlaceholder>⌚</div></div>`}
     ${infoBlocks.length?`<div class="productDetailInfoBox">${infoBlocks.join('')}</div>`:''}
-    ${!p.isSet?`<button type="button" class="productNoteTrigger" onclick="openProductNote('${escapeAttr(p.id)}')">＋ Siparişime not eklemek istiyorum</button>`:''}
     <div class="productDetailBottomBar"><div class="productDetailBottomPrice">${money(p.price)}${p.oldPrice?` <span class=old>${money(p.oldPrice)}</span>`:''}</div>${soldOutButtonHtml(p)}</div>
   </div>`);
   bindProductDetailGallery();
@@ -1221,12 +1220,12 @@ function renderWriteQuestion(restoring=false){
   if(!restoring)setWizardNext(wiz.currentScreen||'removeQuestion');
   wiz.currentScreen='writeQuestion';
   const available=wiz.product.setItems.filter(x=>wiz.keptIds.includes(x.id)&&(setItemWriteAvailable(x)||isWalletSetItem(x)));
-  if(!available.length){wiz.writes=[];wiz.photoCustomizations=[];wiz.personalizationPlan=[];return renderSetOrderNoteQuestion();}
+  if(!available.length){wiz.writes=[];wiz.photoCustomizations=[];wiz.personalizationPlan=[];return renderSetSummary();}
   openDrawer(head(wiz.product.name)+`<div class=wizardCard><h3>${available.length>1?'Ürünlerinizi':'Ürününüzü'} kişiselleştirmek ister misiniz?</h3>
   <div class=priceInfo><b>Kişiselleştirme ücret sırası:</b><br>İlk ürün +${money(catalog.personalizationPricing?.first||75)}<br>İkinci ürün +${money(catalog.personalizationPricing?.second||50)}<br>3. ve sonraki her ürün +${money(catalog.personalizationPricing?.thirdPlus||25)}</div>
   <div class=choiceStack><button class=choiceBtn onclick=finishSetWithoutWrite()>Hayır, kişiselleştirme istemiyorum</button><button class="choiceBtn primary" onclick=renderWriteSelection()>Evet, kişiselleştirmek istiyorum</button></div></div>`);
 }
-function finishSetWithoutWrite(){wiz.writes=[];wiz.photoCustomizations=[];wiz.personalizationPlan=[];wiz.personalizationPlanDraft=[];wiz.writeDrafts={};wiz.photoDrafts={};wiz.photoFileDrafts={};renderSetOrderNoteQuestion()}
+function finishSetWithoutWrite(){wiz.writes=[];wiz.photoCustomizations=[];wiz.personalizationPlan=[];wiz.personalizationPlanDraft=[];wiz.writeDrafts={};wiz.photoDrafts={};wiz.photoFileDrafts={};renderSetSummary()}
 function renderWriteSelection(restoring=false){
   if(!restoring)setWizardNext('writeQuestion');
   wiz.currentScreen='writeSelection';
@@ -1272,7 +1271,7 @@ function renderWriteDetails(restoring=false){
     wiz.photoCustomizations=(wiz.photoCustomizations||[]).filter(x=>activePhotoIds.has(x.itemId));
   }
   const plan=wiz.personalizationPlan||[];
-  if(!plan.length){wiz.writes=[];return renderSetOrderNoteQuestion();}
+  if(!plan.length){wiz.writes=[];return renderSetSummary();}
   const writePlan=plan.filter(x=>x.mode==='write');
   if(!restoring)setWizardNext('writeSelection');
   if(!writePlan.length){wiz.writes=[];return renderWalletPhotoDetails(true);}
@@ -1298,14 +1297,14 @@ function confirmWriteDetails(){
     writes.push({itemId:id,item:item.name,position,text,fee:Number(c.dataset.fee)});
   }
   wiz.writes=writes;
-  if((wiz.personalizationPlan||[]).some(x=>x.mode==='photo'))renderWalletPhotoDetails(); else renderSetOrderNoteQuestion();
+  if((wiz.personalizationPlan||[]).some(x=>x.mode==='photo'))renderWalletPhotoDetails(); else renderSetSummary();
 }
 function keptWalletItems(){return (wiz?.product?.setItems||[]).filter(x=>wiz.keptIds.includes(x.id)&&isWalletSetItem(x));}
-function maybeWalletPhotoStep(){renderSetOrderNoteQuestion()}
+function maybeWalletPhotoStep(){renderSetSummary()}
 function renderWalletPhotoQuestion(restoring=false){renderWriteSelection(restoring)}
 function renderWalletPhotoDetails(restoring=false){
   const photoPlan=(wiz.personalizationPlan||[]).filter(x=>x.mode==='photo');
-  if(!photoPlan.length)return renderSetOrderNoteQuestion();
+  if(!photoPlan.length)return renderSetSummary();
   if(!restoring)setWizardNext('writeDetails');
   wiz.currentScreen='walletPhotoDetails';
   openDrawer(head('Cüzdana fotoğraf işleme')+`<div class=priceInfo><b>Fotoğraf kişiselleştirmesi</b><br>Seçtiğiniz cüzdan, kişiselleştirme sırasındaki 75/50/25 TL ücretini alır. <b>Fotoğraf işleme bunun üzerine ayrıca +${money(walletPhotoFee())}</b> eklenir. Örnek: bu cüzdan 3. kişiselleştirilmiş ürünse +${money(catalog.personalizationPricing?.thirdPlus||25)} kişiselleştirme + ${money(walletPhotoFee())} fotoğraf işleme uygulanır.</div>
@@ -1331,7 +1330,7 @@ function renderWalletPhotoDetails(restoring=false){
 async function finishSetWalletPhoto(button){
   captureSetPhotoDrafts();
   const photoPlan=(wiz.personalizationPlan||[]).filter(x=>x.mode==='photo');
-  if(!photoPlan.length)return renderSetOrderNoteQuestion();
+  if(!photoPlan.length)return renderSetSummary();
   const old=button?.textContent||'';if(button){button.disabled=true;button.textContent='Fotoğraf yükleniyor…'}
   try{
     const photos=[],extraWrites=[];
@@ -1355,7 +1354,7 @@ async function finishSetWalletPhoto(button){
     const photoIds=new Set(photoPlan.map(x=>x.itemId));
     wiz.writes=[...(wiz.writes||[]).filter(w=>!photoIds.has(w.itemId)),...extraWrites];
     wiz.photoCustomizations=photos;
-    renderSetOrderNoteQuestion();
+    renderSetSummary();
   }catch(e){alert(e.message||'Fotoğraf yüklenemedi.');if(button){button.disabled=false;button.textContent=old}}
 }
 
@@ -1387,14 +1386,12 @@ function renderSetSummary(restoring=false){
   openDrawer(head('Sipariş özeti')+`${removed.length?`<div class=wizardCard><div class=removalSplitSummary><div class=remainingList><b>Size gelecek ürünler:</b><br>${kept.map(x=>'✓ '+escapeHtml(x.name)).join('<br>')}</div><div class=removedList><b>Setten çıkardığınız ürünler:</b><br>${removed.map(x=>'✕ '+escapeHtml(x.name)+' (-'+money(x.removeDiscount)+')').join('<br>')}</div></div></div>`:`<div class=wizardCard><h3>Size gönderilecek ürünler</h3>${kept.map(x=>`<div class=summaryLine><span>✓ ${x.name}</span><span></span></div>`).join('')}</div>`}
   ${wiz.writes.length?`<div class=wizardCard><h3>Kişiye özel yazılar</h3>${wiz.writes.map(x=>`<div class=summaryLine><span><b>${x.item}</b><br><span class=muted>${x.position}: “${x.text}”</span></span><span>+${money(x.fee)}</span></div>`).join('')}</div>`:''}
   ${(wiz.photoCustomizations||[]).length?`<div class=wizardCard><h3>Cüzdan fotoğrafı</h3>${wiz.photoCustomizations.map(x=>`<div class=summaryLine><span><b>${x.item}</b>${x.caption?`<br><span class=muted>${x.captionPosition==='above'?'Fotoğrafın üstünde':'Fotoğrafın altında'}: “${escapeHtml(x.caption)}”</span>`:''}</span><span>+${money(x.fee)}</span></div>`).join('')}</div>`:''}
-  ${String(wiz.orderNote||'').trim()?`<div class=wizardCard><h3>Sipariş notu</h3><div class=summaryLine><span>${escapeHtml(String(wiz.orderNote).trim())}</span><span></span></div></div>`:''}
   <div class=wizardCard><div class=summaryLine><span>Set fiyatı</span><span>${money(pr.base)}</span></div>${pr.removed?`<div class=summaryLine><span>Çıkarılan ürünler</span><span>-${money(pr.removed)}</span></div>`:''}${pr.writeFee?`<div class=summaryLine><span>Yazı işlemleri</span><span>+${money(pr.writeFee)}</span></div>`:''}${pr.photoFee?`<div class=summaryLine><span>Fotoğraf işlemesi</span><span>+${money(pr.photoFee)}</span></div>`:''}<div class="summaryLine summaryTotal"><span>Toplam</span><span>${money(pr.total)}</span></div></div>
   <div class="wizardFinalAction"><button class=btn onclick=addSetToCart()>Sepete Ekle</button></div>`);
 }
 function addSetToCart(){
   const pr=calcSetPrice();
   const item={product:{...wiz.product,price:pr.total},basePrice:wiz.product.price,qty:1,personalized:wiz.writes.length>0||(wiz.photoCustomizations||[]).length>0,setCustomization:{keptIds:wiz.keptIds,removedIds:wiz.product.setItems.filter(x=>!wiz.keptIds.includes(x.id)).map(x=>x.id),writes:wiz.writes,photoCustomizations:wiz.photoCustomizations||[]}};
-  const note=String(wiz.orderNote||'').trim();if(note)item.productNote=note;
   cart.push(item);
   updateCart(); closeDrawer(); toast('✓ Ürün sepete eklendi');
 }
@@ -1870,10 +1867,28 @@ function checkoutRequestedDetailsHtml(){
   }).join('');
 }
 
+function checkoutOrderNoteText(){
+  return String(checkoutState.orderNote||'').trim();
+}
+function openCheckoutOrderNote(){
+  document.querySelector('.productNoteOverlay')?.remove();
+  const el=document.createElement('div');el.className='productNoteOverlay';
+  el.innerHTML=`<div class="productNotePaper"><button class="productNoteClose" type="button" onclick="this.closest('.productNoteOverlay').remove()">×</button><div class="productNoteLabel">SİPARİŞ NOTU</div><h3>Notunuzu yazın</h3><textarea id="checkoutOrderNoteText" maxlength="500" placeholder="Siparişiniz için notunuzu buraya yazın...">${escapeHtml(checkoutOrderNoteText())}</textarea><button class="btn productNoteSave" type="button" onclick="saveCheckoutOrderNote()">Notu Kaydet</button></div>`;
+  document.body.appendChild(el);
+  setTimeout(()=>document.getElementById('checkoutOrderNoteText')?.focus(),30);
+}
+function saveCheckoutOrderNote(){
+  checkoutState.orderNote=(document.getElementById('checkoutOrderNoteText')?.value||'').trim();
+  document.querySelector('.productNoteOverlay')?.remove();
+  if(checkoutState.customer)showAddressConfirmation(checkoutState.customer);
+  toast(checkoutState.orderNote?'✓ Sipariş notu kaydedildi':'Sipariş notu kaldırıldı');
+}
+
 function showAddressConfirmation(c){
   document.querySelector('.addressCheckModal')?.remove();
   const el=document.createElement('div');el.className='addressCheckModal';
-  el.innerHTML=`<div class="addressCheckCard"><button class="addressCheckX" onclick="this.closest('.addressCheckModal').remove()">×</button><span class="checkoutEyebrow">ADRES KONTROLÜ</span><h3>Bilgilerinizi kontrol edin</h3><p class="addressCheckHint">Adres bilgileriniz eksik veya hatalıysa kargonuz teslim edilemeden geri dönebilir.</p><div class="addressCheckData"><b>${escapeHtml(c.fullName)}</b><span>${escapeHtml(c.phone)}${c.extraPhone?` · 2. tel: ${escapeHtml(c.extraPhone)}`:''}</span><strong>${c.deliveryMode==='branch'?'📦 Şubeden teslim':'📍 Adrese teslim'}</strong><span>${escapeHtml(customerAddressText(c))}</span>${c.deliveryMode==='branch'?'<small>Şube adını Google Haritalar’dan kontrol ettiğinizden emin olun.</small>':''}${String(c.note||'').trim()?`<span><b>Teslimat notu:</b> ${escapeHtml(String(c.note).trim())}</span>`:''}</div><div class="addressCheckOrderReview"><strong>Siparişiniz için seçtikleriniz</strong>${checkoutRequestedDetailsHtml()}</div><div class="addressCheckActions"><button class="pill" onclick="this.closest('.addressCheckModal').remove()">Düzenle</button><button class="btn" onclick="confirmAddressAndContinue()">Bilgiler doğru, devam et →</button></div></div>`;
+  const orderNote=checkoutOrderNoteText();
+  el.innerHTML=`<div class="addressCheckCard"><button class="addressCheckX" onclick="this.closest('.addressCheckModal').remove()">×</button><span class="checkoutEyebrow">ADRES KONTROLÜ</span><h3>Bilgilerinizi kontrol edin</h3><p class="addressCheckHint">Adres bilgileriniz eksik veya hatalıysa kargonuz teslim edilemeden geri dönebilir.</p><div class="addressCheckData"><b>${escapeHtml(c.fullName)}</b><span>${escapeHtml(c.phone)}${c.extraPhone?` · 2. tel: ${escapeHtml(c.extraPhone)}`:''}</span><strong>${c.deliveryMode==='branch'?'📦 Şubeden teslim':'📍 Adrese teslim'}</strong><span>${escapeHtml(customerAddressText(c))}</span>${c.deliveryMode==='branch'?'<small>Şube adını Google Haritalar’dan kontrol ettiğinizden emin olun.</small>':''}${String(c.note||'').trim()?`<span><b>Teslimat notu:</b> ${escapeHtml(String(c.note).trim())}</span>`:''}</div><div class="addressCheckOrderReview"><strong>Siparişiniz için seçtikleriniz</strong>${checkoutRequestedDetailsHtml()}</div><div class="addressCheckNoteArea">${orderNote?`<div class="addressCheckOrderNotePreview"><b>Sipariş notu</b><span>${escapeHtml(orderNote)}</span></div>`:''}<button type="button" class="productNoteTrigger addressCheckNoteTrigger" onclick="openCheckoutOrderNote()">＋ ${orderNote?'Sipariş notunu düzenle':'Siparişime not eklemek istiyorum'}</button></div><div class="addressCheckActions"><button class="pill" onclick="this.closest('.addressCheckModal').remove()">Düzenle</button><button class="btn" onclick="confirmAddressAndContinue()">Bilgiler doğru, devam et →</button></div></div>`;
   document.body.appendChild(el);
 }
 function confirmAddressAndContinue(){document.querySelector('.addressCheckModal')?.remove();continueAfterAddress();}
@@ -1905,6 +1920,7 @@ async function finalizeOrder(personalApproved,button){
     items:cart,
     customer:checkoutState.customer,
     payment:checkoutState.payment,
+    orderNote:checkoutOrderNoteText(),
     personalApproval:personalApproved?{approved:true,method:'button',at:new Date().toISOString()}:null,
     shippingNoticeAccepted:true,
     subtotal:campaign.subtotal,
@@ -1927,7 +1943,7 @@ async function finalizeOrder(personalApproved,button){
     try{r=await response.json()}catch{}
     if(!response.ok||!r.ok||!r.order?.id)throw new Error(r.message||'Sipariş oluşturulamadı. Lütfen tekrar deneyin.');
     cart=[];
-    checkoutState={payment:'cod',customer:null,requestId:null};
+    checkoutState={payment:'cod',customer:null,requestId:null,orderNote:''};
     updateCart();
     try{localStorage.removeItem('shaz_pending_order_v63')}catch{}
     success(r.order.id);
