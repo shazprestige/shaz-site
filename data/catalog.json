@@ -2945,11 +2945,11 @@
       "shippingRibbonEnabled": false,
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
-      "soldOutEnabled": false,
+      "soldOutEnabled": true,
       "soldOutUntil": "",
-      "descriptionEditorWidth": 288,
+      "descriptionEditorWidth": 290,
       "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
+      "featuresEditorWidth": 290,
       "featuresWrapCh": 36,
       "badgeShape": "circle",
       "internalCode": "SET 16"
@@ -4485,7 +4485,10 @@
       "descriptionEditorWidth": 290,
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 290,
-      "featuresWrapCh": 36
+      "featuresWrapCh": 36,
+      "soldOutEnabled": false,
+      "soldOutUntil": "",
+      "badgeShape": "circle"
     }
   ],
   "builder": {
