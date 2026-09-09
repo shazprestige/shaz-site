@@ -1,5 +1,160 @@
 [
   {
+    "id": "SHZ45",
+    "createdAt": "2026-09-09T15:24:21.049Z",
+    "createdAtTR": "09.09.2026 18:24:21",
+    "status": "new",
+    "statusUpdatedAt": "2026-09-09T15:24:21.049Z",
+    "requestId": "cac28ba6-a710-4f68-a444-4506c48c0b96",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786817515929-2-ux88",
+          "name": "SHAZ - NOVA",
+          "description": "",
+          "features": [
+            "Paslanma ve solmaya dayanıklı",
+            "Çelik kordon",
+            "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
+            "Safir çizilmelere dayanıklı cam",
+            "takvim",
+            "Ayarlanabilir kordon",
+            "Kasa çapı 32-36 mm",
+            "Kordon uzunluk 19 cm",
+            "Kordon genişlik 2 cm"
+          ],
+          "category": "saatler",
+          "price": 675,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786817507308-mh5ma4.jpeg",
+          "images": [
+            "/uploads/1786817507308-mh5ma4.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Kordon",
+            "Arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "descriptionEditorWidth": 320,
+          "descriptionWrapCh": 40,
+          "featuresEditorWidth": 320,
+          "featuresWrapCh": 40,
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "subtitle": "Erkek kol saati",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "badgeShape": "circle",
+          "internalCode": "SHAZ 1"
+        },
+        "basePrice": 600,
+        "qty": 1,
+        "personalized": true,
+        "writes": [
+          {
+            "item": "SHAZ - NOVA",
+            "position": "Kordon",
+            "text": "ENES",
+            "fee": 75
+          }
+        ]
+      },
+      {
+        "product": {
+          "id": "urun-1787919769422",
+          "name": "SHAZ - CÜZDAN",
+          "internalCode": "CÜZDAN 1",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Siyah deri görünümlü yüzey",
+            "Çoklu kart bölmeleri",
+            "Nakit para bölmesi",
+            "Şeffaf kartlık bölmeleri",
+            "Kimlik, ehliyet ve benzeri kartlar için uygun yapı",
+            "Çıtçıtlı kapanış",
+            "Kompakt ve cepte taşımaya uygun tasarım"
+          ],
+          "category": "cuzdanlar",
+          "price": 285,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1787919804217-u7wcmf.png",
+          "images": [
+            "/uploads/1787919804217-u7wcmf.png",
+            "/uploads/1787919806597-oogzo8.png",
+            "/uploads/1787919809658-6efti7.png",
+            "/uploads/1787919812224-9rzkv7.png"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Ön yüz",
+            "İç yüz"
+          ],
+          "preferredWritePosition": "İç yüz",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "descriptionEditorWidth": 290,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 290,
+          "featuresWrapCh": 36,
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "badgeShape": "circle"
+        },
+        "qty": 1,
+        "personalized": false
+      }
+    ],
+    "customer": {
+      "fullName": "ENES TÜRKMEN",
+      "phone": "5363883455",
+      "extraPhone": "5318687415",
+      "province": "İstanbul",
+      "district": "Esenyurt",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "Yeşilkent MH.",
+      "avenue": "Salı pazarı CD.",
+      "street": "171 SK.",
+      "fullAddress": "No;18 kat1 daire1",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": ""
+    },
+    "payment": "cod",
+    "orderNote": "",
+    "personalApproval": {
+      "approved": true,
+      "method": "button",
+      "at": "2026-09-09T15:24:20.463Z"
+    },
+    "shippingNoticeAccepted": true,
+    "subtotal": 960,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 960
+  },
+  {
     "id": "SHZ44",
     "createdAt": "2026-09-09T14:37:24.247Z",
     "createdAtTR": "09.09.2026 17:37:24",
