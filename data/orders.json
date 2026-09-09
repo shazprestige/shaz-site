@@ -1,5 +1,226 @@
 [
   {
+    "id": "SHZ50",
+    "createdAt": "2026-09-09T20:14:11.347Z",
+    "createdAtTR": "09.09.2026 23:14:11",
+    "status": "new",
+    "statusUpdatedAt": "2026-09-09T20:14:11.347Z",
+    "requestId": "bb64f288-82a1-49d1-9991-aea474e0b138",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786899570443-1-1xl3",
+          "name": "SHAZ - ERKEK AKSESUAR SETİ",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Takvim göstergeli, çelik kordonlu quartz kol saati",
+            "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+            "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+            "Metal püsküllü, cam plastik karışımlı tesbih",
+            "Ayarlanabilir metal tokalı SHAZ kemer",
+            "Metal detaylı ayarlanabilir erkek bileklik",
+            "Özel bölmeli, premium set kutusu"
+          ],
+          "category": "setler",
+          "price": 1150,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786899547071-7s5jzb.jpeg",
+          "images": [
+            "/uploads/1786899547071-7s5jzb.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": false,
+          "isSet": true,
+          "setItems": [
+            {
+              "id": "setitem-1786901698611-0-cl9",
+              "productId": "",
+              "name": "Saat",
+              "type": "",
+              "removeDiscount": 400,
+              "writePositions": [
+                "Kordon",
+                "arka kapak"
+              ],
+              "preferredWritePosition": "Kordon",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-1-b23",
+              "productId": "",
+              "name": "Cüzdan",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "İç yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-2-bk7",
+              "productId": "",
+              "name": "Çakmak",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "Ön yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-3-baq",
+              "productId": "",
+              "name": "Tesbih",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-4-pul",
+              "productId": "",
+              "name": "Kemer",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Toka arkası yanı",
+                "Toka önü yanı"
+              ],
+              "preferredWritePosition": "Toka arkası yanı",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-5-vrh",
+              "productId": "",
+              "name": "Bileklik",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ],
+              "preferredWritePosition": "Arka yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-6-7p5",
+              "productId": "",
+              "name": "Set kutusu",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            }
+          ],
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "badgeShape": "circle",
+          "internalCode": "SET 13"
+        },
+        "basePrice": 1000,
+        "qty": 1,
+        "personalized": true,
+        "setCustomization": {
+          "keptIds": [
+            "setitem-1786901698611-0-cl9",
+            "setitem-1786901698611-1-b23",
+            "setitem-1786901698611-2-bk7",
+            "setitem-1786901698611-3-baq",
+            "setitem-1786901698611-4-pul",
+            "setitem-1786901698611-5-vrh",
+            "setitem-1786901698611-6-7p5"
+          ],
+          "removedIds": [],
+          "writes": [
+            {
+              "itemId": "setitem-1786901698611-0-cl9",
+              "item": "Saat",
+              "position": "arka kapak",
+              "text": "Mustafa Nebioğlu",
+              "fee": 75
+            },
+            {
+              "itemId": "setitem-1786901698611-2-bk7",
+              "item": "Çakmak",
+              "position": "Ön yüz",
+              "text": "Nebioğlu",
+              "fee": 50
+            },
+            {
+              "itemId": "setitem-1786901698611-5-vrh",
+              "item": "Bileklik",
+              "position": "Arka yüz",
+              "text": "Mustafa Nebioğlu",
+              "fee": 25
+            }
+          ],
+          "photoCustomizations": []
+        }
+      }
+    ],
+    "customer": {
+      "fullName": "Ekin Bülbül",
+      "phone": "5313452934",
+      "extraPhone": "5393417514",
+      "province": "Muğla",
+      "district": "Bodrum",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "Yalıkavak MH.",
+      "avenue": "Dirmil CD.",
+      "street": "Sanayi sitesi SK.",
+      "fullAddress": "Yalıkavak sanayi sitesi D/blok no:2 Nebioğlu Oto",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": "Gelmeden önce ararmısınız kimsenin haberinin olmaması lazım süpriz olucak"
+    },
+    "payment": "cod",
+    "orderNote": "",
+    "personalApproval": {
+      "approved": true,
+      "method": "button",
+      "at": "2026-09-09T20:14:10.587Z"
+    },
+    "shippingNoticeAccepted": true,
+    "subtotal": 1150,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 1150
+  },
+  {
     "id": "SHZ49",
     "createdAt": "2026-09-09T19:36:34.728Z",
     "createdAtTR": "09.09.2026 22:36:34",
