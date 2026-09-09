@@ -1,5 +1,200 @@
 [
   {
+    "id": "SHZ46",
+    "createdAt": "2026-09-09T15:35:40.747Z",
+    "createdAtTR": "09.09.2026 18:35:40",
+    "status": "new",
+    "statusUpdatedAt": "2026-09-09T15:35:40.747Z",
+    "requestId": "6b3e1126-84c4-4758-a534-9523d089b516",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786899570443-21-cpwj",
+          "name": "SHAZ - ERKEK AKSESUAR SETİ",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Takvim göstergeli, çelik kordonlu quartz kol saati",
+            "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+            "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+            "Metal püsküllü, cam plastik karışımlı tesbih",
+            "Ayarlanabilir metal tokalı SHAZ kemer",
+            "Metal detaylı ayarlanabilir erkek bileklik",
+            "Özel bölmeli, premium set kutusu"
+          ],
+          "category": "setler",
+          "price": 1000,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786899548847-inhzvk.jpeg",
+          "images": [
+            "/uploads/1786899548847-inhzvk.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": false,
+          "isSet": true,
+          "setItems": [
+            {
+              "id": "setitem-1786901698612-0-smj",
+              "productId": "",
+              "name": "Saat",
+              "type": "",
+              "removeDiscount": 400,
+              "writePositions": [
+                "Kordon",
+                "arka kapak"
+              ],
+              "preferredWritePosition": "Kordon",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-1-jg9",
+              "productId": "",
+              "name": "Cüzdan",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "İç yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-2-792",
+              "productId": "",
+              "name": "Çakmak",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "Ön yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-3-qux",
+              "productId": "",
+              "name": "Tesbih",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-4-pt8",
+              "productId": "",
+              "name": "Kemer",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Toka arkası yanı",
+                "Toka önü yanı"
+              ],
+              "preferredWritePosition": "Toka arkası yanı",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-5-5lz",
+              "productId": "",
+              "name": "Bileklik",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ],
+              "preferredWritePosition": "Arka yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-6-nal",
+              "productId": "",
+              "name": "Set kutusu",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            }
+          ],
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "descriptionEditorWidth": 320,
+          "descriptionWrapCh": 40,
+          "featuresEditorWidth": 320,
+          "featuresWrapCh": 40,
+          "badgeShape": "circle",
+          "internalCode": "SET 3"
+        },
+        "basePrice": 1000,
+        "qty": 1,
+        "personalized": false,
+        "setCustomization": {
+          "keptIds": [
+            "setitem-1786901698612-0-smj",
+            "setitem-1786901698612-1-jg9",
+            "setitem-1786901698612-2-792",
+            "setitem-1786901698612-3-qux",
+            "setitem-1786901698612-4-pt8",
+            "setitem-1786901698612-5-5lz",
+            "setitem-1786901698612-6-nal"
+          ],
+          "removedIds": [],
+          "writes": [],
+          "photoCustomizations": []
+        }
+      }
+    ],
+    "customer": {
+      "fullName": "Yağmur ceylan",
+      "phone": "5356892792",
+      "extraPhone": "5417484202",
+      "province": "Kırklareli",
+      "district": "Merkez",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "Yayla MH.",
+      "avenue": "4 tüm evler CD.",
+      "street": "No 1 SK.",
+      "fullAddress": "Yayla Mahallesi 4 Küme Evler No 1",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": "Yağmur ceylan"
+    },
+    "payment": "cod",
+    "orderNote": "",
+    "personalApproval": null,
+    "shippingNoticeAccepted": true,
+    "subtotal": 1000,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 1000
+  },
+  {
     "id": "SHZ45",
     "createdAt": "2026-09-09T15:24:21.049Z",
     "createdAtTR": "09.09.2026 18:24:21",
