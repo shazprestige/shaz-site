@@ -1,5 +1,270 @@
 [
   {
+    "id": "SHZ49",
+    "createdAt": "2026-09-09T19:36:34.728Z",
+    "createdAtTR": "09.09.2026 22:36:34",
+    "status": "new",
+    "statusUpdatedAt": "2026-09-09T19:36:34.728Z",
+    "requestId": "2873d693-d494-44f7-bf25-cfa08202519b",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786899570443-23-0cio",
+          "name": "SHAZ - ERKEK AKSESUAR SETİ",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Takvim göstergeli, çelik kordonlu quartz kol saati",
+            "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+            "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+            "Metal püsküllü, cam plastik karışımlı tesbih",
+            "Ayarlanabilir metal tokalı SHAZ kemer",
+            "Metal detaylı ayarlanabilir erkek bileklik",
+            "Özel bölmeli, premium set kutusu"
+          ],
+          "category": "setler",
+          "price": 1150,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786899549025-ptgstj.jpeg",
+          "images": [
+            "/uploads/1786899549025-ptgstj.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": false,
+          "isSet": true,
+          "setItems": [
+            {
+              "id": "setitem-1786901698612-0-18q",
+              "productId": "",
+              "name": "Saat",
+              "type": "",
+              "removeDiscount": 400,
+              "writePositions": [
+                "Kordon",
+                "arka kapak"
+              ],
+              "preferredWritePosition": "Kordon",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-1-fsm",
+              "productId": "",
+              "name": "Cüzdan",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "İç yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-2-66d",
+              "productId": "",
+              "name": "Çakmak",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "Ön yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-3-gkw",
+              "productId": "",
+              "name": "Tesbih",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-4-m3f",
+              "productId": "",
+              "name": "Kemer",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Toka arkası yanı",
+                "Toka önü yanı"
+              ],
+              "preferredWritePosition": "Toka arkası yanı",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-5-3wq",
+              "productId": "",
+              "name": "Bileklik",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ],
+              "preferredWritePosition": "Arka yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-6-zu9",
+              "productId": "",
+              "name": "Set kutusu",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            }
+          ],
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "badgeShape": "circle",
+          "internalCode": "SET 1"
+        },
+        "basePrice": 1000,
+        "qty": 1,
+        "personalized": true,
+        "setCustomization": {
+          "keptIds": [
+            "setitem-1786901698612-0-18q",
+            "setitem-1786901698612-1-fsm",
+            "setitem-1786901698612-2-66d",
+            "setitem-1786901698612-3-gkw",
+            "setitem-1786901698612-4-m3f",
+            "setitem-1786901698612-5-3wq",
+            "setitem-1786901698612-6-zu9"
+          ],
+          "removedIds": [],
+          "writes": [
+            {
+              "itemId": "setitem-1786901698612-2-66d",
+              "item": "Çakmak",
+              "position": "Ön yüz",
+              "text": "Fatma nur &Harun Az iç sevdiğim daha yaşayacak çok güzel günlerimiz var…",
+              "fee": 75
+            }
+          ],
+          "photoCustomizations": [
+            {
+              "itemId": "setitem-1786901698612-1-fsm",
+              "item": "Cüzdan",
+              "imageUrl": "https://shaz.com.tr/uploads/1788982201767-zon321.jpeg",
+              "originalName": "IMG_9276.jpeg",
+              "caption": "",
+              "captionPosition": "below",
+              "fee": 75,
+              "slotFee": 50,
+              "photoExtraFee": 25
+            }
+          ]
+        }
+      },
+      {
+        "product": {
+          "id": "urun-1786910492353-3-rxft",
+          "name": "SHAZ - GÖZLÜK",
+          "subtitle": "Erkek gözlük",
+          "description": "Siyah çerçeve · Siyah cam · Metal detaylı · Dikdörtgen tasarım",
+          "features": [
+            "Polarize",
+            "UV200"
+          ],
+          "category": "gozlukler",
+          "price": 290,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786910487068-3nignw.jpeg",
+          "images": [
+            "/uploads/1786910487068-3nignw.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Sol gözlük sapı",
+            "Sağ gözlük sapı"
+          ],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "internalCode": "G 4",
+          "badgeShape": "circle"
+        },
+        "qty": 1,
+        "personalized": false
+      }
+    ],
+    "customer": {
+      "fullName": "Fatma nur Güldalı",
+      "phone": "5378229213",
+      "extraPhone": "5331383082",
+      "province": "Antalya",
+      "district": "Alanya",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "Tosmur MH.",
+      "avenue": "Caami CD.",
+      "street": "22101 SK.",
+      "fullAddress": "No:17 Daire :3",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": ""
+    },
+    "payment": "cod",
+    "orderNote": "Güzel günlerde kullanman dileğiyle sevdiğimmm🙏🏻🥰🤍🫶…",
+    "personalApproval": {
+      "approved": true,
+      "method": "button",
+      "at": "2026-09-09T19:36:33.440Z"
+    },
+    "shippingNoticeAccepted": true,
+    "subtotal": 1440,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 1440
+  },
+  {
     "id": "SHZ48",
     "createdAt": "2026-09-09T19:00:56.759Z",
     "createdAtTR": "09.09.2026 22:00:56",
