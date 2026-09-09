@@ -1,5 +1,200 @@
 [
   {
+    "id": "SHZ48",
+    "createdAt": "2026-09-09T19:00:56.759Z",
+    "createdAtTR": "09.09.2026 22:00:56",
+    "status": "new",
+    "statusUpdatedAt": "2026-09-09T19:00:56.759Z",
+    "requestId": "44954c35-3b3e-4889-a3be-ccd3c49832d8",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786899570443-2-xly6",
+          "name": "SHAZ - ERKEK AKSESUAR SETİ",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Takvim göstergeli, çelik kordonlu quartz kol saati",
+            "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+            "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+            "Metal püsküllü, cam plastik karışımlı tesbih",
+            "Ayarlanabilir metal tokalı SHAZ kemer",
+            "Metal detaylı ayarlanabilir erkek bileklik",
+            "Özel bölmeli, premium set kutusu"
+          ],
+          "category": "setler",
+          "price": 1000,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786899547287-mmllmg.jpeg",
+          "images": [
+            "/uploads/1786899547287-mmllmg.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": false,
+          "isSet": true,
+          "setItems": [
+            {
+              "id": "setitem-1786901698611-0-tcw",
+              "productId": "",
+              "name": "Saat",
+              "type": "",
+              "removeDiscount": 400,
+              "writePositions": [
+                "Kordon",
+                "arka kapak"
+              ],
+              "preferredWritePosition": "Kordon",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-1-iti",
+              "productId": "",
+              "name": "Cüzdan",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "İç yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-2-p02",
+              "productId": "",
+              "name": "Çakmak",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "Ön yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-3-gny",
+              "productId": "",
+              "name": "Tesbih",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-4-je3",
+              "productId": "",
+              "name": "Kemer",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Toka arkası yanı",
+                "Toka önü yanı"
+              ],
+              "preferredWritePosition": "Toka arkası yanı",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-5-c03",
+              "productId": "",
+              "name": "Bileklik",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ],
+              "preferredWritePosition": "Arka yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-6-kcv",
+              "productId": "",
+              "name": "Set kutusu",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            }
+          ],
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "badgeShape": "circle",
+          "internalCode": "SET 14"
+        },
+        "basePrice": 1000,
+        "qty": 1,
+        "personalized": false,
+        "setCustomization": {
+          "keptIds": [
+            "setitem-1786901698611-0-tcw",
+            "setitem-1786901698611-1-iti",
+            "setitem-1786901698611-2-p02",
+            "setitem-1786901698611-3-gny",
+            "setitem-1786901698611-4-je3",
+            "setitem-1786901698611-5-c03",
+            "setitem-1786901698611-6-kcv"
+          ],
+          "removedIds": [],
+          "writes": [],
+          "photoCustomizations": []
+        }
+      }
+    ],
+    "customer": {
+      "fullName": "Yıldıray bayraktar",
+      "phone": "5457832386",
+      "extraPhone": "5327183170",
+      "province": "İzmir",
+      "district": "Karabağlar",
+      "deliveryMode": "branch",
+      "branchName": "İzmir Karabağlar Aras kargo",
+      "neighborhood": "",
+      "avenue": "",
+      "street": "",
+      "fullAddress": "İzmir Karabağlar Aras kargo",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": "Üzerlerine isim yazılmasını istiyorum. MELİH. Diye"
+    },
+    "payment": "cod",
+    "orderNote": "",
+    "personalApproval": null,
+    "shippingNoticeAccepted": true,
+    "subtotal": 1000,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 1000
+  },
+  {
     "id": "SHZ47",
     "createdAt": "2026-09-09T18:57:36.463Z",
     "createdAtTR": "09.09.2026 21:57:36",
