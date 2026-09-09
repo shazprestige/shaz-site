@@ -4051,10 +4051,10 @@
       "internalCode": "SET 24"
     },
     {
-      "id": "urun-1786910492353-4-ukzz",
+      "id": "urun-1786910492353-0-cc9w",
       "name": "SHAZ - GÖZLÜK",
       "subtitle": "Erkek gözlük",
-      "description": "Siyah çerçeve · Siyah cam · Gold detaylı · Klasik tasarım",
+      "description": "Siyah çerçeve · Füme/gradient cam · Gold detaylı · Dikdörtgen tasarım",
       "features": [
         "Polarize",
         "UV200"
@@ -4064,9 +4064,9 @@
       "oldPrice": 0,
       "badge": "",
       "badgeColor": "orange",
-      "image": "/uploads/1786910487125-wtf0nj.jpeg",
+      "image": "/uploads/1786910486678-qsepo2.jpeg",
       "images": [
-        "/uploads/1786910487125-wtf0nj.jpeg"
+        "/uploads/1786910486678-qsepo2.jpeg"
       ],
       "hidden": false,
       "setEligible": true,
@@ -4080,17 +4080,17 @@
       "writeEnabled": true,
       "walletPhotoEnabled": true,
       "subcategoryId": "",
-      "shippingRibbonEnabled": false,
-      "shippingRibbonText": "Kargo Bedava",
-      "shippingRibbonColor": "#444444",
-      "descriptionEditorWidth": 290,
+      "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
-      "featuresEditorWidth": 290,
+      "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
+      "shippingRibbonEnabled": false,
       "soldOutEnabled": false,
       "soldOutUntil": "",
       "internalCode": "G 1",
-      "badgeShape": "circle"
+      "badgeShape": "circle",
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444"
     },
     {
       "id": "urun-1786910492353-1-p6qf",
@@ -4219,10 +4219,10 @@
       "badgeShape": "circle"
     },
     {
-      "id": "urun-1786910492353-0-cc9w",
+      "id": "urun-1786910492353-4-ukzz",
       "name": "SHAZ - GÖZLÜK",
       "subtitle": "Erkek gözlük",
-      "description": "Siyah çerçeve · Füme/gradient cam · Gold detaylı · Dikdörtgen tasarım",
+      "description": "Siyah çerçeve · Siyah cam · Gold detaylı · Klasik tasarım",
       "features": [
         "Polarize",
         "UV200"
@@ -4232,9 +4232,9 @@
       "oldPrice": 0,
       "badge": "",
       "badgeColor": "orange",
-      "image": "/uploads/1786910486678-qsepo2.jpeg",
+      "image": "/uploads/1786910487125-wtf0nj.jpeg",
       "images": [
-        "/uploads/1786910486678-qsepo2.jpeg"
+        "/uploads/1786910487125-wtf0nj.jpeg"
       ],
       "hidden": false,
       "setEligible": true,
@@ -4248,17 +4248,17 @@
       "writeEnabled": true,
       "walletPhotoEnabled": true,
       "subcategoryId": "",
-      "descriptionEditorWidth": 288,
-      "descriptionWrapCh": 36,
-      "featuresEditorWidth": 288,
-      "featuresWrapCh": 36,
       "shippingRibbonEnabled": false,
+      "shippingRibbonText": "Kargo Bedava",
+      "shippingRibbonColor": "#444444",
+      "descriptionEditorWidth": 290,
+      "descriptionWrapCh": 36,
+      "featuresEditorWidth": 290,
+      "featuresWrapCh": 36,
       "soldOutEnabled": false,
       "soldOutUntil": "",
       "internalCode": "G 5",
-      "badgeShape": "circle",
-      "shippingRibbonText": "Kargo Bedava",
-      "shippingRibbonColor": "#444444"
+      "badgeShape": "circle"
     },
     {
       "id": "urun-1787917150247",
