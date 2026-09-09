@@ -4171,7 +4171,7 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
-      "soldOutEnabled": false,
+      "soldOutEnabled": true,
       "soldOutUntil": "",
       "internalCode": "G 3",
       "badgeShape": "circle"
