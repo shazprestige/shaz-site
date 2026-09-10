@@ -4085,7 +4085,7 @@
       "featuresEditorWidth": 288,
       "featuresWrapCh": 36,
       "shippingRibbonEnabled": false,
-      "soldOutEnabled": false,
+      "soldOutEnabled": true,
       "soldOutUntil": "",
       "internalCode": "G 1",
       "badgeShape": "circle",
