@@ -1,5 +1,226 @@
 [
   {
+    "id": "SHZ55",
+    "createdAt": "2026-09-10T16:47:48.722Z",
+    "createdAtTR": "10.09.2026 19:47:48",
+    "status": "new",
+    "statusUpdatedAt": "2026-09-10T16:47:48.722Z",
+    "requestId": "1d885c70-a86f-4230-8c25-18f3fa99063c",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786899570443-6-90hj",
+          "name": "SHAZ - ERKEK AKSESUAR SETİ",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Takvim göstergeli, çelik kordonlu quartz kol saati",
+            "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+            "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+            "Metal püsküllü, cam plastik karışımlı tesbih",
+            "Ayarlanabilir metal tokalı SHAZ kemer",
+            "Metal detaylı ayarlanabilir erkek bileklik",
+            "Özel bölmeli, premium set kutusu"
+          ],
+          "category": "setler",
+          "price": 1150,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786899547670-nflm3v.jpeg",
+          "images": [
+            "/uploads/1786899547670-nflm3v.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": false,
+          "isSet": true,
+          "setItems": [
+            {
+              "id": "setitem-1786901698611-0-vrl",
+              "productId": "",
+              "name": "Saat",
+              "type": "",
+              "removeDiscount": 400,
+              "writePositions": [
+                "Kordon",
+                "arka kapak"
+              ],
+              "preferredWritePosition": "Kordon",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-1-vho",
+              "productId": "",
+              "name": "Cüzdan",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "İç yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-2-lwz",
+              "productId": "",
+              "name": "Çakmak",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "Ön yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-3-kva",
+              "productId": "",
+              "name": "Tesbih",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-4-krn",
+              "productId": "",
+              "name": "Kemer",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Toka arkası yanı",
+                "Toka önü yanı"
+              ],
+              "preferredWritePosition": "Toka arkası yanı",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-5-nza",
+              "productId": "",
+              "name": "Bileklik",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ],
+              "preferredWritePosition": "Arka yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-6-p8s",
+              "productId": "",
+              "name": "Set kutusu",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            }
+          ],
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "badgeShape": "circle",
+          "internalCode": "SET 24"
+        },
+        "basePrice": 1000,
+        "qty": 1,
+        "personalized": true,
+        "setCustomization": {
+          "keptIds": [
+            "setitem-1786901698611-0-vrl",
+            "setitem-1786901698611-1-vho",
+            "setitem-1786901698611-2-lwz",
+            "setitem-1786901698611-3-kva",
+            "setitem-1786901698611-4-krn",
+            "setitem-1786901698611-5-nza",
+            "setitem-1786901698611-6-p8s"
+          ],
+          "removedIds": [],
+          "writes": [
+            {
+              "itemId": "setitem-1786901698611-0-vrl",
+              "item": "Saat",
+              "position": "Kordon",
+              "text": "Bünyamin Taha aslan 🦁",
+              "fee": 75
+            },
+            {
+              "itemId": "setitem-1786901698611-1-vho",
+              "item": "Cüzdan",
+              "position": "Ön yüz",
+              "text": "Bünyamin Taha aslan",
+              "fee": 50
+            },
+            {
+              "itemId": "setitem-1786901698611-2-lwz",
+              "item": "Çakmak",
+              "position": "Ön yüz",
+              "text": "Bünyamin Taha aslan",
+              "fee": 25
+            }
+          ],
+          "photoCustomizations": []
+        }
+      }
+    ],
+    "customer": {
+      "fullName": "Bünyamin Taha aslan",
+      "phone": "5387288218",
+      "extraPhone": "5343202513",
+      "province": "Gaziantep",
+      "district": "Nizip",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "Atatürk MH.",
+      "avenue": "Çapan sokak CD.",
+      "street": "Çapan SK.",
+      "fullAddress": "Sultan ap bina no 22 kat 4",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": ""
+    },
+    "payment": "cod",
+    "orderNote": "",
+    "personalApproval": {
+      "approved": true,
+      "method": "button",
+      "at": "2026-09-10T16:47:49.055Z"
+    },
+    "shippingNoticeAccepted": true,
+    "subtotal": 1150,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 1150
+  },
+  {
     "id": "SHZ54",
     "createdAt": "2026-09-10T16:45:04.879Z",
     "createdAtTR": "10.09.2026 19:45:04",
