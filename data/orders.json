@@ -1,5 +1,200 @@
 [
   {
+    "id": "SHZ61",
+    "createdAt": "2026-09-12T21:55:20.605Z",
+    "createdAtTR": "13.09.2026 00:55:20",
+    "status": "new",
+    "statusUpdatedAt": "2026-09-12T21:55:20.605Z",
+    "requestId": "47f208d8-e08e-4753-bb2c-d1f686cbca18",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786899570443-22-tprf",
+          "name": "SHAZ - ERKEK AKSESUAR SETİ",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Takvim göstergeli, çelik kordonlu quartz kol saati",
+            "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+            "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+            "Metal püsküllü, cam plastik karışımlı tesbih",
+            "Ayarlanabilir metal tokalı SHAZ kemer",
+            "Metal detaylı ayarlanabilir erkek bileklik",
+            "Özel bölmeli, premium set kutusu"
+          ],
+          "category": "setler",
+          "price": 1000,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786899548932-rlgpa2.jpeg",
+          "images": [
+            "/uploads/1786899548932-rlgpa2.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": false,
+          "isSet": true,
+          "setItems": [
+            {
+              "id": "setitem-1786901698612-0-m7p",
+              "productId": "",
+              "name": "Saat",
+              "type": "",
+              "removeDiscount": 400,
+              "writePositions": [
+                "Kordon",
+                "arka kapak"
+              ],
+              "preferredWritePosition": "Kordon",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-1-opf",
+              "productId": "",
+              "name": "Cüzdan",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "İç yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-2-o28",
+              "productId": "",
+              "name": "Çakmak",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "Ön yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-3-caa",
+              "productId": "",
+              "name": "Tesbih",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-4-vqx",
+              "productId": "",
+              "name": "Kemer",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Toka arkası yanı",
+                "Toka önü yanı"
+              ],
+              "preferredWritePosition": "Toka arkası yanı",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-5-pbm",
+              "productId": "",
+              "name": "Bileklik",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ],
+              "preferredWritePosition": "Arka yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-6-k88",
+              "productId": "",
+              "name": "Set kutusu",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            }
+          ],
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "descriptionEditorWidth": 320,
+          "descriptionWrapCh": 40,
+          "featuresEditorWidth": 320,
+          "featuresWrapCh": 40,
+          "badgeShape": "circle",
+          "internalCode": "SET 2"
+        },
+        "basePrice": 1000,
+        "qty": 1,
+        "personalized": false,
+        "setCustomization": {
+          "keptIds": [
+            "setitem-1786901698612-0-m7p",
+            "setitem-1786901698612-1-opf",
+            "setitem-1786901698612-2-o28",
+            "setitem-1786901698612-3-caa",
+            "setitem-1786901698612-4-vqx",
+            "setitem-1786901698612-5-pbm",
+            "setitem-1786901698612-6-k88"
+          ],
+          "removedIds": [],
+          "writes": [],
+          "photoCustomizations": []
+        }
+      }
+    ],
+    "customer": {
+      "fullName": "Erkan Çolak",
+      "phone": "5425887731",
+      "extraPhone": "5422766914",
+      "province": "Eskişehir",
+      "district": "Odunpazarı",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "Emek MH.",
+      "avenue": "Hanoğlu CD.",
+      "street": "Alkan apartman SK.",
+      "fullAddress": "Eskişehir emek mahallesi Hanoğlu sokak Alkan apartman 32 2",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": "Salı günün öglendesonra gelsin"
+    },
+    "payment": "cod",
+    "orderNote": "",
+    "personalApproval": null,
+    "shippingNoticeAccepted": true,
+    "subtotal": 1000,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 1000
+  },
+  {
     "id": "SHZ60",
     "createdAt": "2026-09-12T00:46:51.054Z",
     "createdAtTR": "12.09.2026 03:46:51",
