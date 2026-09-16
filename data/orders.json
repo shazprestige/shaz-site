@@ -1,5 +1,200 @@
 [
   {
+    "id": "SHZ66",
+    "createdAt": "2026-09-16T22:44:30.351Z",
+    "createdAtTR": "17.09.2026 01:44:30",
+    "status": "new",
+    "statusUpdatedAt": "2026-09-16T22:44:30.351Z",
+    "requestId": "42b0230a-a108-4a5a-a987-dd7b78dc7ad0",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786899570443-1-1xl3",
+          "name": "SHAZ - ERKEK AKSESUAR SETİ",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Takvim göstergeli, çelik kordonlu quartz kol saati",
+            "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+            "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+            "Metal püsküllü, cam plastik karışımlı tesbih",
+            "Ayarlanabilir metal tokalı SHAZ kemer",
+            "Metal detaylı ayarlanabilir erkek bileklik",
+            "Özel bölmeli, premium set kutusu"
+          ],
+          "category": "setler",
+          "price": 1000,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786899547071-7s5jzb.jpeg",
+          "images": [
+            "/uploads/1786899547071-7s5jzb.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": false,
+          "isSet": true,
+          "setItems": [
+            {
+              "id": "setitem-1786901698611-0-cl9",
+              "productId": "",
+              "name": "Saat",
+              "type": "",
+              "removeDiscount": 400,
+              "writePositions": [
+                "Kordon",
+                "arka kapak"
+              ],
+              "preferredWritePosition": "Kordon",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-1-b23",
+              "productId": "",
+              "name": "Cüzdan",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "İç yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-2-bk7",
+              "productId": "",
+              "name": "Çakmak",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "Ön yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-3-baq",
+              "productId": "",
+              "name": "Tesbih",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-4-pul",
+              "productId": "",
+              "name": "Kemer",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Toka arkası yanı",
+                "Toka önü yanı"
+              ],
+              "preferredWritePosition": "Toka arkası yanı",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-5-vrh",
+              "productId": "",
+              "name": "Bileklik",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ],
+              "preferredWritePosition": "Arka yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698611-6-7p5",
+              "productId": "",
+              "name": "Set kutusu",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            }
+          ],
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "badgeShape": "circle",
+          "internalCode": "SET 13"
+        },
+        "basePrice": 1000,
+        "qty": 1,
+        "personalized": false,
+        "setCustomization": {
+          "keptIds": [
+            "setitem-1786901698611-0-cl9",
+            "setitem-1786901698611-1-b23",
+            "setitem-1786901698611-2-bk7",
+            "setitem-1786901698611-3-baq",
+            "setitem-1786901698611-4-pul",
+            "setitem-1786901698611-5-vrh",
+            "setitem-1786901698611-6-7p5"
+          ],
+          "removedIds": [],
+          "writes": [],
+          "photoCustomizations": []
+        }
+      }
+    ],
+    "customer": {
+      "fullName": "Enes Duman",
+      "phone": "5335082333",
+      "extraPhone": "5553628836",
+      "province": "Ankara",
+      "district": "Yenimahalle",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "Ata MH.",
+      "avenue": "Şehit yakup çımar CD.",
+      "street": "",
+      "fullAddress": "Şehit yakup çınar caddesi gözde evler sitesi B blok 9. Kat 40 numara",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": "Konum bulunamassa kınuma yeşik gözde evler mescidi yazarakta rahatlıkla bulabilirsiniz"
+    },
+    "payment": "cod",
+    "orderNote": "",
+    "personalApproval": null,
+    "shippingNoticeAccepted": true,
+    "subtotal": 1000,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 1000
+  },
+  {
     "id": "SHZ65",
     "createdAt": "2026-09-16T18:02:59.605Z",
     "createdAtTR": "16.09.2026 21:02:59",
