@@ -514,7 +514,7 @@
       "subtitle": "Erkek kol saati",
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
-      "soldOutEnabled": false,
+      "soldOutEnabled": true,
       "soldOutUntil": "",
       "badgeShape": "circle",
       "internalCode": "SHAZ 9"
@@ -1986,7 +1986,7 @@
       "shippingRibbonEnabled": false,
       "shippingRibbonText": "Kargo Bedava",
       "shippingRibbonColor": "#444444",
-      "soldOutEnabled": false,
+      "soldOutEnabled": true,
       "soldOutUntil": "",
       "descriptionEditorWidth": 288,
       "descriptionWrapCh": 36,
