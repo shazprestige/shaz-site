@@ -1,5 +1,252 @@
 [
   {
+    "id": "SHZ81",
+    "createdAt": "2026-09-19T19:01:52.547Z",
+    "createdAtTR": "19.09.2026 22:01:52",
+    "status": "new",
+    "statusUpdatedAt": "2026-09-19T19:01:52.547Z",
+    "requestId": "03f3ea34-4dd4-4dba-b4d7-b4fe837d0bb0",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786899570443-19-3hay",
+          "name": "SHAZ - ERKEK AKSESUAR SETİ",
+          "subtitle": "",
+          "description": "",
+          "features": [
+            "Takvim göstergeli, çelik kordonlu quartz kol saati",
+            "Kart bölmeli,kompakt tasarımlı SHAZ cüzdan",
+            "Yeniden doldurulabilir zippo çakmak (benzin ile çalışır)",
+            "Metal püsküllü, cam plastik karışımlı tesbih",
+            "Ayarlanabilir metal tokalı SHAZ kemer",
+            "Metal detaylı ayarlanabilir erkek bileklik",
+            "Özel bölmeli, premium set kutusu"
+          ],
+          "category": "setler",
+          "price": 1225,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786899548692-vur16y.jpeg",
+          "images": [
+            "/uploads/1786899548692-vur16y.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": false,
+          "isSet": true,
+          "setItems": [
+            {
+              "id": "setitem-1786901698612-0-esx",
+              "productId": "",
+              "name": "Saat",
+              "type": "",
+              "removeDiscount": 400,
+              "writePositions": [
+                "Kordon",
+                "arka kapak"
+              ],
+              "preferredWritePosition": "Kordon",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-1-5dj",
+              "productId": "",
+              "name": "Cüzdan",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "İç yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-2-mms",
+              "productId": "",
+              "name": "Çakmak",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "İç yüz"
+              ],
+              "preferredWritePosition": "Ön yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-3-wio",
+              "productId": "",
+              "name": "Tesbih",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-4-if8",
+              "productId": "",
+              "name": "Kemer",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Toka arkası yanı",
+                "Toka önü yanı"
+              ],
+              "preferredWritePosition": "Toka arkası yanı",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-5-c2t",
+              "productId": "",
+              "name": "Bileklik",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [
+                "Ön yüz",
+                "Arka yüz"
+              ],
+              "preferredWritePosition": "Arka yüz",
+              "writeEnabled": true,
+              "walletPhotoEnabled": true
+            },
+            {
+              "id": "setitem-1786901698612-6-oso",
+              "productId": "",
+              "name": "Set kutusu",
+              "type": "",
+              "removeDiscount": 50,
+              "writePositions": [],
+              "preferredWritePosition": "",
+              "writeEnabled": false,
+              "walletPhotoEnabled": true
+            }
+          ],
+          "writePositions": [],
+          "preferredWritePosition": "",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "subcategoryId": "",
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "descriptionEditorWidth": 288,
+          "descriptionWrapCh": 36,
+          "featuresEditorWidth": 288,
+          "featuresWrapCh": 36,
+          "badgeShape": "circle",
+          "internalCode": "SET 5"
+        },
+        "basePrice": 1000,
+        "qty": 1,
+        "personalized": true,
+        "setCustomization": {
+          "keptIds": [
+            "setitem-1786901698612-0-esx",
+            "setitem-1786901698612-1-5dj",
+            "setitem-1786901698612-2-mms",
+            "setitem-1786901698612-3-wio",
+            "setitem-1786901698612-4-if8",
+            "setitem-1786901698612-5-c2t",
+            "setitem-1786901698612-6-oso"
+          ],
+          "removedIds": [],
+          "writes": [
+            {
+              "itemId": "setitem-1786901698612-0-esx",
+              "item": "Saat",
+              "position": "Kordon",
+              "text": "Ali ❤️A",
+              "fee": 75
+            },
+            {
+              "itemId": "setitem-1786901698612-2-mms",
+              "item": "Çakmak",
+              "position": "Ön yüz",
+              "text": "A ❤️A sevgilim",
+              "fee": 50
+            },
+            {
+              "itemId": "setitem-1786901698612-4-if8",
+              "item": "Kemer",
+              "position": "Toka arkası yanı",
+              "text": "Ali ❤️A",
+              "fee": 25
+            },
+            {
+              "itemId": "setitem-1786901698612-5-c2t",
+              "item": "Bileklik",
+              "position": "Ön yüz",
+              "text": "A ❤️A",
+              "fee": 25
+            },
+            {
+              "itemId": "setitem-1786901698612-1-5dj",
+              "item": "Cüzdan",
+              "position": "Ön yüz",
+              "text": "A ❤️A",
+              "fee": 25
+            }
+          ],
+          "photoCustomizations": [
+            {
+              "itemId": "setitem-1786901698612-1-5dj",
+              "item": "Cüzdan",
+              "imageUrl": "https://shaz.com.tr/uploads/1789843925760-ewu5pt.webp",
+              "originalName": "inbound7250881008847864860.webp",
+              "caption": "",
+              "captionPosition": "below",
+              "fee": 25,
+              "slotFee": 0,
+              "photoExtraFee": 25
+            }
+          ]
+        }
+      }
+    ],
+    "customer": {
+      "fullName": "Abir Bozoğlan",
+      "phone": "5448747353",
+      "extraPhone": "5519691155",
+      "province": "Osmaniye",
+      "district": "Merkez",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "Alibeyli MH.",
+      "avenue": "Palalı Süleyman CD.",
+      "street": "No 9/B SK.",
+      "fullAddress": "Ali beyli mahallesi pelalı Süleyman cadde 9B Zafer camii  kasırga giyim",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": "A"
+    },
+    "payment": "cod",
+    "orderNote": "",
+    "personalApproval": {
+      "approved": true,
+      "method": "button",
+      "at": "2026-09-19T19:01:51.768Z"
+    },
+    "shippingNoticeAccepted": true,
+    "subtotal": 1225,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "total": 1225
+  },
+  {
     "id": "SHZ80",
     "createdAt": "2026-09-19T18:26:33.439Z",
     "createdAtTR": "19.09.2026 21:26:33",
