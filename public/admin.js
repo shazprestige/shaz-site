@@ -1,5 +1,5 @@
 
-let settings={},catalog={};
+let settings={},catalog={},legalDocuments=[];
 let adminOpenCategory=sessionStorage.getItem('shazAdminCategory')||null,adminProductSearch="",adminOpenProduct=null;
 let adminDraggedCategory=null;
 let adminDraggedProduct=null;
@@ -40,6 +40,7 @@ async function logoutAdmin(){
 async function load(){
   settings=await fetch('/api/settings').then(r=>r.json());
   catalog=await fetch('/api/catalog').then(r=>r.json());
+  try{legalDocuments=(await fetch('/api/admin/legal-documents').then(r=>r.json())).documents||[]}catch(_){legalDocuments=[]}
   catalog.walletPhotoFee=Number(catalog.walletPhotoFee??25);
   catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
   catalog.checkoutUpsells=Array.isArray(catalog.checkoutUpsells)?catalog.checkoutUpsells:[];
@@ -204,6 +205,17 @@ function show(tab){
   if(tab==='orders')return renderOrders();
   if(tab==='legal')return renderLegalDocuments();
 }
+
+function renderLegalDocuments(){
+  const labels={MEMBERSHIP:'Üyelik Sözleşmesi',KVKK:'KVKK Aydınlatma Metni',PRIVACY:'Gizlilik Politikası',COOKIE:'Çerez Politikası',PRE_INFORMATION:'Ön Bilgilendirme Formu',DISTANCE_SALES:'Mesafeli Satış Sözleşmesi'};
+  const rows=Object.entries(labels).map(([type,label])=>{const d=legalDocuments.find(x=>x.type===type)||{type,version:'1',title:label,content:'',active:true};return `<div class=panel><div class=grid2><div class=field><label><b>Başlık</b></label><input class=formControl data-legal-title="${attr(type)}" value="${attr(d.title||label)}"></div><div class=field><label><b>Versiyon</b></label><input class=formControl data-legal-version="${attr(type)}" value="${attr(d.version||'1')}" readonly><div class=help>Daha önce kabul edilmiş bir metni değiştirirsen sürüm otomatik artırılır.</div></div></div><div class=field><label><b>${label}</b></label><textarea class=formControl data-legal-content="${attr(type)}" rows=10 placeholder="Avukat tarafından sağlanan/onaylanan nihai metni buraya yapıştırın.">${esc(d.content||'')}</textarea></div></div>`}).join('');
+  $('#view').innerHTML=`<h1>Hukuki Metinler</h1><div class=sectionTip>Tüm metinleri düzenledikten sonra aşağıdaki tek butona bas. Hepsi birlikte kaydedilir. Daha önce müşteri tarafından kabul edilmiş bir sürüm değiştirilirse eski kayıt korunur ve yeni sürüm otomatik oluşturulur.</div>${rows}<div class=saveBar><button class=btn onclick=saveLegalDocuments(this)>Değişiklikleri Kaydet</button></div>`;
+}
+async function saveLegalDocuments(btn){
+  const types=['MEMBERSHIP','KVKK','PRIVACY','COOKIE','PRE_INFORMATION','DISTANCE_SALES'];const documents=types.map(type=>({type,title:document.querySelector(`[data-legal-title="${type}"]`)?.value||'',version:document.querySelector(`[data-legal-version="${type}"]`)?.value||'1',content:document.querySelector(`[data-legal-content="${type}"]`)?.value||'',active:true}));
+  try{btn.disabled=true;const oldText=btn.textContent;btn.textContent='Kaydediliyor…';const r=await fetch('/api/admin/legal-documents',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({documents})}).then(r=>r.json());if(!r.ok)throw new Error(r.message||'Kaydedilemedi.');legalDocuments=r.documents||documents;alert('Tüm hukuki metinler kaydedildi.');renderLegalDocuments()}catch(e){alert(e.message)}finally{btn.disabled=false;if(document.body.contains(btn))btn.textContent='Değişiklikleri Kaydet'}
+}
+
 
 function adminSoldOutRemainingText(p){
   const raw=String(p?.soldOutUntil||'').trim();
@@ -488,8 +500,7 @@ async function uploadCampaignBulk(){
 }
 
 function catalogGlobalTools(){
-  catalog.personalizationPricing=catalog.personalizationPricing||{first:75,second:50,thirdPlus:50};
-  catalog.personalizationPricing.thirdPlus=Number(catalog.personalizationPricing.second||50);
+  catalog.personalizationPricing=catalog.personalizationPricing||{first:75,second:50,thirdPlus:50};catalog.personalizationPricing.first=75;catalog.personalizationPricing.second=50;catalog.personalizationPricing.thirdPlus=50;
   catalog.builder=catalog.builder||{allowedCategories:[],categoryOrder:[],pricingRules:[]};
   if(catalog.builder.enabled===undefined)catalog.builder.enabled=false;
   catalog.builder.allowedCategories=Array.isArray(catalog.builder.allowedCategories)?catalog.builder.allowedCategories:[];
@@ -513,7 +524,7 @@ function catalogGlobalTools(){
       <div class=grid3>
         ${input('İlk ürün yazısı','catalog.personalizationPricing.first',pricing.first,'Müşteri ilk ürüne yazı eklerse uygulanacak ücret.','.drawer','number')}
         ${input('İkinci ürün yazısı','catalog.personalizationPricing.second',pricing.second,'Müşteri ikinci ürüne yazı eklerse uygulanacak ücret.','.drawer','number')}
-        ${input('2. ve sonrası','catalog.personalizationPricing.second',pricing.second,'İkinci ve sonraki her kişiselleştirme için ücret.','.drawer','number')}
+        ${input('3. ve sonrası','catalog.personalizationPricing.thirdPlus',pricing.thirdPlus,'Üçüncü ve sonraki her yazılı ürün için ücret.','.drawer','number')}
         ${input('Cüzdana fotoğraf işleme','catalog.walletPhotoFee',catalog.walletPhotoFee??25,'Fotoğraf işlemesi normal yazı ücretlerinden bağımsız ek ücrettir.','.drawer','number')}
       </div>
       <details class=nestedAdminDetails><summary>Kendi Setini Oluştur kategorileri</summary><div class=setItemList>${allowed}</div><div class=help>Burada seçtiklerin yalnızca müşterinin “Kendi Setini Oluştur” akışında görünür.</div><div class=builderOrderBox><b>Müşteride gösterilecek sıra</b><div class=help>Yalnızca soldaki ⠿ tutamacından tutup sürükle. Sıralama sırasında bu ekrandan çıkılmaz.</div><div id=builderOrderRows>${builderOrderHtml}</div></div>${renderBuilderProductPricingAdmin()}<div class=builderSpotlightAdmin><b>Ana sayfadaki “Kendi Setini Oluştur” alanı</b><div class=grid2>${input('Üst küçük yazı','catalog.builder.spotlight.eyebrow',catalog.builder.spotlight.eyebrow,'Örn. KENDİ SETİNİ OLUŞTUR','#builderSpotlight')}${input('Başlık','catalog.builder.spotlight.title',catalog.builder.spotlight.title,'Örn. Setini sen seç.','#builderSpotlight')}${textarea('Açıklama','catalog.builder.spotlight.text',catalog.builder.spotlight.text,'Kartta görünecek açıklama.','#builderSpotlight')}<div class=field><label><b>Arka plan fotoğrafı (isteğe bağlı)</b></label><input id=builderSpotlightFile type=file accept="image/*"><div class=builderSpotlightUploadRow><button type=button class=smallBtn onclick=uploadBuilderSpotlightImage()>Fotoğraf Yükle</button>${catalog.builder.spotlight.imageUrl?'<button type=button class=smallBtn onclick=removeBuilderSpotlightImage()>Fotoğrafı Kaldır</button>':''}</div><div class=help>Fotoğraf eklemezsen mevcut koyu tasarım aynen kalır.</div></div></div></div></details>
@@ -1192,7 +1203,7 @@ function moveProductWithinCategory(productId,direction){
   const other=same[pos+(direction<0?-1:1)];
   if(!other)return;
   [catalog.products[i],catalog.products[other.idx]]=[catalog.products[other.idx],catalog.products[i]];
-  catalog.recommendedProductOrder=(catalog.products||[]).filter(p=>!p.hidden).map(p=>p.id);
+  catalog.recommendedProductOrder=(catalog.products||[]).map(x=>x.id);
   changed('#products');
   renderCatalog();
 }
@@ -1235,7 +1246,8 @@ function productDrop(e,targetId){
   // İki sütunlu yönetim görünümünde bırakılan kartla birebir yer değiştirir.
   // Önce/sonra tahmini kullanılmadığı için ürün yanlış aralığa sıçramaz.
   [products[from],products[to]]=[products[to],products[from]];
-  catalog.recommendedProductOrder=(products||[]).filter(p=>!p.hidden).map(p=>p.id);
+  // v153: Yönetimde sürüklenen sıra müşterinin “Önerilen” sırasına da aynen yansır.
+  catalog.recommendedProductOrder=products.map(p=>p.id);
   adminDraggedProduct=null;
   changed('#products');
   renderCatalog();
@@ -1564,8 +1576,7 @@ function removeProductPhoto(i,gi){
 }
 
 function renderCustom(){
-  catalog.personalizationPricing=catalog.personalizationPricing||{first:75,second:50,thirdPlus:50};
-  catalog.personalizationPricing.thirdPlus=Number(catalog.personalizationPricing.second||50);
+  catalog.personalizationPricing=catalog.personalizationPricing||{first:75,second:50,thirdPlus:50};catalog.personalizationPricing.first=75;catalog.personalizationPricing.second=50;catalog.personalizationPricing.thirdPlus=50;
   catalog.builder=catalog.builder||{allowedCategories:[],categoryOrder:[],pricingRules:[]};
   const pricing=catalog.personalizationPricing;
   const readySets=catalog.products.filter(p=>p.isSet);
@@ -1578,7 +1589,7 @@ function renderCustom(){
   `<details class="panel simpleAdminDetails"><summary>Yazı ücretleri <small>Kişiselleştirme fiyatları</small></summary><div class="grid2 simpleDetailsBody">
     ${input('İlk ürün yazısı','catalog.personalizationPricing.first',pricing.first,'İlk seçilen yazılı ürün.','.drawer','number')}
     ${input('İkinci ürün yazısı','catalog.personalizationPricing.second',pricing.second,'İkinci seçilen yazılı ürün.','.drawer','number')}
-    ${input('2. ve sonrası','catalog.personalizationPricing.second',pricing.second,'İkinci ve sonraki her kişiselleştirme.','.drawer','number')}
+    ${input('3. ve sonrası','catalog.personalizationPricing.thirdPlus',50,'Üçüncü ve sonraki her ürün daima 50 TL.','.drawer','number')}
     ${input('Cüzdana fotoğraf işleme','catalog.walletPhotoFee',catalog.walletPhotoFee??25,'Fotoğraf işlemesi yazı ücretlerinden bağımsızdır; her fotoğraf için bu tutar ayrıca eklenir.','.drawer','number')}
   </div></details>
   <details class="panel simpleAdminDetails"><summary>Kendi Setini Oluştur <small>Kullanılacak kategoriler</small></summary><div class=simpleDetailsBody><div class=help>Müşteri set oluştururken hangi kategori adımlarını göreceğini seç.</div><div class=setItemList>${allowed}</div></div></details>
@@ -1936,12 +1947,3 @@ function setAllUpsellProducts(i,mode,on){const r=catalog.checkoutUpsells[i],key=
 function setUpsellProductPrice(i,id,value){const r=catalog.checkoutUpsells[i];r.productPrices=r.productPrices||{};r.productPrices[id]=Math.max(0,Number(value||0));changed('.drawer')}
 function applyUpsellBulkPrice(i){const r=catalog.checkoutUpsells[i],el=document.getElementById('upsellBulkPrice-'+i),v=Math.max(0,Number(el?.value||0));r.specialPrice=v;r.productPrices=r.productPrices||{};const selected=new Set(r.offerProductIds||[]);upsellProductsFor(r,'offer').filter(p=>(r.offerMode||'all')==='all'||selected.has(p.id)).forEach(p=>r.productPrices[p.id]=v);renderUpsells(i)}
 
-
-
-async function renderLegalDocuments(){
-  let docs=[];try{const r=await fetch('/api/admin/legal-documents').then(x=>x.json());docs=r.documents||[]}catch(_){}
-  const defs=[['PRE_INFORMATION','Ön Bilgilendirme Formu'],['DISTANCE_SALES','Mesafeli Satış Sözleşmesi'],['MEMBERSHIP_AGREEMENT','Üyelik Sözleşmesi'],['KVKK_NOTICE','KVKK Aydınlatma Metni'],['PRIVACY_POLICY','Gizlilik Politikası'],['COOKIE_POLICY','Çerez Politikası']];
-  const cards=defs.map(([type,title])=>{const d=docs.find(x=>x.type===type)||{type,title,version:'1.0',content:'',active:true};return `<div class=panel><h2>${esc(title)}</h2><div class=grid2><div class=field><label><b>Versiyon</b></label><input id="legal-ver-${type}" class=formControl value="${attr(d.version||'1.0')}"></div><div class=field><label><b>Aktif</b></label><input id="legal-active-${type}" type=checkbox ${d.active!==false?'checked':''}></div></div><div class=field><label><b>Avukat/onaylı içerik</b></label><textarea id="legal-content-${type}" class=formControl rows=12>${esc(d.content||'')}</textarea><div class=help>Metin uydurulmaz. Buraya avukatınızın/onayladığınız nihai içeriği girin.</div></div><button class=btn onclick="saveLegalDocument('${type}','${attr(title)}')">Bu Metni Kaydet</button></div>`}).join('');
-  shell('Hukuki Metinler','Üyelik ve sipariş onaylarında kullanılan metinlerin versiyonlarını burada yönetirsin. Eski siparişlerin kabul ettiği versiyon kayıtları korunur.',cards);
-}
-async function saveLegalDocument(type,title){const body={type,title,version:document.getElementById('legal-ver-'+type)?.value||'1.0',content:document.getElementById('legal-content-'+type)?.value||'',active:!!document.getElementById('legal-active-'+type)?.checked};const r=await fetch('/api/admin/legal-documents',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(async x=>({ok:x.ok,...await x.json()}));if(!r.ok)return alert(r.message||'Kaydedilemedi.');alert('Hukuki metin kaydedildi.');renderLegalDocuments()}

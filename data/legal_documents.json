@@ -1,0 +1,44 @@
+[
+  {
+    "type": "MEMBERSHIP",
+    "version": "1",
+    "title": "Üyelik Sözleşmesi",
+    "content": "",
+    "active": true
+  },
+  {
+    "type": "KVKK",
+    "version": "1",
+    "title": "KVKK Aydınlatma Metni",
+    "content": "",
+    "active": true
+  },
+  {
+    "type": "PRIVACY",
+    "version": "1",
+    "title": "Gizlilik Politikası",
+    "content": "",
+    "active": true
+  },
+  {
+    "type": "COOKIE",
+    "version": "1",
+    "title": "Çerez Politikası",
+    "content": "",
+    "active": true
+  },
+  {
+    "type": "PRE_INFORMATION",
+    "version": "1",
+    "title": "Ön Bilgilendirme Formu",
+    "content": "",
+    "active": true
+  },
+  {
+    "type": "DISTANCE_SALES",
+    "version": "1",
+    "title": "Mesafeli Satış Sözleşmesi",
+    "content": "",
+    "active": true
+  }
+]
