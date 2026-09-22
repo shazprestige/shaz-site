@@ -4255,7 +4255,7 @@
       "descriptionWrapCh": 36,
       "featuresEditorWidth": 290,
       "featuresWrapCh": 36,
-      "soldOutEnabled": false,
+      "soldOutEnabled": true,
       "soldOutUntil": "",
       "internalCode": "G 5",
       "badgeShape": "circle"
