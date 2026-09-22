@@ -27,7 +27,7 @@ const uploadDir = path.join(persistRoot,'uploads');
 fs.mkdirSync(dataDir,{recursive:true});
 fs.mkdirSync(uploadDir,{recursive:true});
 // İlk kullanımda repodaki başlangıç JSON'larını kalıcı alana yalnızca bir kez kopyala.
-for(const name of ['settings.json','catalog.json','orders.json']){
+for(const name of ['settings.json','catalog.json','orders.json','users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','legal_documents.json','legal_acceptances.json','phone_verifications.json','order_personalizations.json']){
   const dst=path.join(dataDir,name);
   const seed=path.join(root,'data',name);
   if(!fs.existsSync(dst) && fs.existsSync(seed)) fs.copyFileSync(seed,dst);
@@ -36,6 +36,20 @@ console.log('SHAZ veri dizini:',persistRoot);
 app.use(express.json({limit:'5mb'}));
 app.use(express.urlencoded({extended:true}));
 app.use('/uploads', express.static(uploadDir,{maxAge:'7d'}));
+app.get('/favicon.ico',(req,res)=>{
+  const settings=readJson('settings.json',{});const logo=String(settings.logoUrl||'/uploads/shaz-logo-transparent.png');
+  if(/^https?:\/\//i.test(logo))return res.redirect(302,logo);
+  const rel=logo.replace(/^\/+/,''),file=logo.startsWith('/uploads/')?path.join(uploadDir,path.basename(rel)):path.join(root,'public',rel);
+  if(fs.existsSync(file))return res.sendFile(file);
+  const fallback=path.join(root,'public','favicon.ico');if(fs.existsSync(fallback))return res.sendFile(fallback);
+  res.status(404).end();
+});
+app.get('/social-logo',(req,res)=>{
+  const settings=readJson('settings.json',{});const logo=String(settings.logoUrl||'/uploads/shaz-logo-transparent.png');
+  if(/^https?:\/\//i.test(logo))return res.redirect(302,logo);
+  const rel=logo.replace(/^\/+/,''),file=logo.startsWith('/uploads/')?path.join(uploadDir,path.basename(rel)):path.join(root,'public',rel);
+  if(fs.existsSync(file))return res.sendFile(file);res.status(404).end();
+});
 
 // Yeni sürümlerde telefonların eski JS/CSS'i tutup sipariş isteğini eski kodla göndermesini engelle.
 app.use((req,res,next)=>{
@@ -183,8 +197,35 @@ const normalizeTRMobile=value=>{
   const digits=String(value||'').replace(/\D/g,'');
   if(/^5\d{9}$/.test(digits))return digits;
   if(/^05\d{9}$/.test(digits))return digits.slice(1);
+  if(/^905\d{9}$/.test(digits))return digits.slice(2);
   return '';
 };
+
+const normalizeAccountPhone=value=>{const n=normalizeTRMobile(value);return n?'+90'+n:''};
+const normalizeEmail=value=>String(value||'').trim().toLowerCase();
+const CUSTOMER_SESSION_COOKIE='shaz_customer_session';
+const CUSTOMER_SESSION_SECRET=(process.env.CUSTOMER_SESSION_SECRET||SESSION_SECRET||'').trim();
+const PHONE_VERIFICATION_REQUIRED=String(process.env.PHONE_VERIFICATION_REQUIRED||'false').toLowerCase()==='true';
+const SMS_PROVIDER=String(process.env.SMS_PROVIDER||'verimor');
+const SmsVerificationProvider={async sendOtp(){throw new Error('SMS doğrulama şu anda kapalı.')},async verifyOtp(){return false}};
+const VerimorSmsProvider={name:'verimor',configured:()=>!!(process.env.VERIMOR_USERNAME&&process.env.VERIMOR_PASSWORD&&process.env.VERIMOR_SOURCE_ADDR),async sendOtp(){throw new Error('Verimor OTP feature flag açılmadan kullanılamaz.')},async verifyOtp(){return false}};
+const CUSTOMER_SESSION_MAX=30*24*60*60*1000;
+function ensureArrayFile(name){const f=path.join(dataDir,name);if(!fs.existsSync(f))writeJson(name,[])}
+['users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','legal_documents.json','legal_acceptances.json','phone_verifications.json','order_personalizations.json'].forEach(ensureArrayFile);
+function hashPassword(password){const salt=crypto.randomBytes(16).toString('hex');const hash=crypto.scryptSync(String(password),salt,64).toString('hex');return `scrypt$${salt}$${hash}`}
+function verifyPassword(password,stored){try{const [kind,salt,hash]=String(stored||'').split('$');if(kind!=='scrypt'||!salt||!hash)return false;const got=crypto.scryptSync(String(password),salt,64);const want=Buffer.from(hash,'hex');return got.length===want.length&&crypto.timingSafeEqual(got,want)}catch{return false}}
+function signCustomerSession(userId,issuedAt=Date.now()){if(!CUSTOMER_SESSION_SECRET)return '';const payload=`${userId}.${issuedAt}`;const sig=crypto.createHmac('sha256',CUSTOMER_SESSION_SECRET).update(payload).digest('hex');return `${payload}.${sig}`}
+function currentUser(req){if(!CUSTOMER_SESSION_SECRET)return null;const token=parseCookies(req)[CUSTOMER_SESSION_COOKIE];if(!token)return null;const parts=token.split('.');if(parts.length!==3)return null;const [id,issued,sig]=parts;const ts=Number(issued);if(!id||!Number.isFinite(ts)||Date.now()-ts>CUSTOMER_SESSION_MAX)return null;const expected=crypto.createHmac('sha256',CUSTOMER_SESSION_SECRET).update(`${id}.${issued}`).digest('hex');if(!safeEqual(sig,expected))return null;return readJson('users.json',[]).find(u=>String(u.id)===String(id))||null}
+function setCustomerCookie(req,res,userId){const secure=process.env.NODE_ENV==='production'||String(req.headers['x-forwarded-proto']||'').includes('https');res.setHeader('Set-Cookie',`${CUSTOMER_SESSION_COOKIE}=${encodeURIComponent(signCustomerSession(userId))}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${CUSTOMER_SESSION_MAX/1000}${secure?'; Secure':''}`)}
+function clearCustomerCookie(req,res){const secure=process.env.NODE_ENV==='production'||String(req.headers['x-forwarded-proto']||'').includes('https');res.setHeader('Set-Cookie',`${CUSTOMER_SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure?'; Secure':''}`)}
+function publicUser(u){if(!u)return null;const {passwordHash,...x}=u;return x}
+function requireCustomer(req,res,next){const u=currentUser(req);if(!u)return res.status(401).json({ok:false,message:'Giriş yapmanız gerekiyor.'});req.customerUser=u;next()}
+function requestIp(req){return String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0].trim()}
+function customerIdForUser(user){return String(user?.customerId||'')}
+const customerLoginAttempts=new Map();
+function customerLoginBlocked(key){const now=Date.now(),x=customerLoginAttempts.get(key);if(!x)return false;if(now-x.start>15*60*1000){customerLoginAttempts.delete(key);return false}return x.count>=8}
+function customerLoginFail(key){const now=Date.now(),x=customerLoginAttempts.get(key);if(!x||now-x.start>15*60*1000)customerLoginAttempts.set(key,{count:1,start:now});else x.count++}
+function activeLegalDocuments(){return readJson('legal_documents.json',[]).filter(d=>d&&d.active!==false).map(d=>({...d,hash:crypto.createHash('sha256').update(String(d.content||'')).digest('hex')}))}
 
 
 const GOOGLE_SHEETS_WEBHOOK_URL=process.env.GOOGLE_SHEETS_WEBHOOK_URL||'';
@@ -406,6 +447,49 @@ app.get('/api/shared-cart/:id',(req,res)=>{
   try{res.json({ok:true,cart:JSON.parse(fs.readFileSync(f,'utf8'))})}catch(e){res.status(404).json({ok:false})}
 });
 
+
+app.get('/api/legal-documents/public',(req,res)=>res.json({ok:true,documents:activeLegalDocuments().map(({type,title,version,content,active,effectiveAt,hash})=>({type,title,version,content,active,effectiveAt,hash}))}));
+app.get('/legal/:type',(req,res)=>{const d=activeLegalDocuments().find(x=>x.type===String(req.params.type||''));if(!d)return res.status(404).type('text/plain').send('Metin bulunamadı.');res.type('html').send(`<!doctype html><html lang="tr"><meta charset="utf-8"><title>${escapeHtmlAttr(d.title||'SHAZ')}</title><body style="font-family:Arial;max-width:900px;margin:40px auto;padding:0 18px;line-height:1.6"><h1>${escapeHtmlAttr(d.title||'')}</h1><small>Versiyon ${escapeHtmlAttr(d.version||'')}</small><div style="white-space:pre-wrap">${escapeHtmlAttr(d.content||'')}</div></body></html>`)});
+
+app.post('/api/auth/register',(req,res)=>{
+  try{
+    if(!CUSTOMER_SESSION_SECRET)return res.status(503).json({ok:false,message:'Üyelik oturum anahtarı sunucuda yapılandırılmadı.'});
+    const firstName=String(req.body?.firstName||'').trim(),lastName=String(req.body?.lastName||'').trim(),email=normalizeEmail(req.body?.email),phone=normalizeAccountPhone(req.body?.phone),password=String(req.body?.password||''),passwordConfirm=String(req.body?.passwordConfirm||'');
+    if(!firstName||!lastName)return res.status(400).json({ok:false,message:'Ad ve soyad zorunludur.'});
+    if(!/^\S+@\S+\.\S+$/.test(email))return res.status(400).json({ok:false,message:'Lütfen geçerli bir e-posta adresi girin.'});
+    if(!phone)return res.status(400).json({ok:false,message:'Lütfen geçerli bir telefon numarası girin.'});
+    if(password.length<8)return res.status(400).json({ok:false,message:'Şifre en az 8 karakter olmalıdır.'});
+    if(password!==passwordConfirm)return res.status(400).json({ok:false,message:'Şifreler eşleşmiyor.'});
+    const users=readJson('users.json',[]);
+    if(users.some(u=>normalizeEmail(u.email)===email))return res.status(409).json({ok:false,message:'Bu e-posta adresiyle daha önce hesap oluşturulmuş.'});
+    if(users.some(u=>normalizeAccountPhone(u.phone)===phone))return res.status(409).json({ok:false,message:'Bu telefon numarasıyla daha önce hesap oluşturulmuş.'});
+    const customers=readJson('customers.json',[]);
+    let customer=customers.find(c=>normalizeEmail(c.email)===email&&normalizeAccountPhone(c.phone)===phone);
+    if(!customer){customer={id:crypto.randomUUID(),firstName,lastName,fullName:`${firstName} ${lastName}`,email,phone,createdAt:new Date().toISOString()};customers.push(customer);writeJson('customers.json',customers)}
+    const now=new Date().toISOString();
+    const user={id:crypto.randomUUID(),customerId:customer.id,firstName,lastName,email,phone,birthDate:String(req.body?.birthDate||''),passwordHash:hashPassword(password),phoneVerifiedAt:null,createdAt:now,updatedAt:now,smsMarketingConsent:!!req.body?.smsMarketingConsent,emailMarketingConsent:!!req.body?.emailMarketingConsent};
+    users.push(user);writeJson('users.json',users);
+    const cons=readJson('marketing_consents.json',[]);for(const [channel,granted] of [['sms',user.smsMarketingConsent],['email',user.emailMarketingConsent]])cons.push({id:crypto.randomUUID(),userId:user.id,channel,granted,consentAt:now,source:'registration',textVersion:'v1',ip:requestIp(req),userAgent:String(req.headers['user-agent']||'')});writeJson('marketing_consents.json',cons);
+    // Eski siparişleri yalnız telefon + e-posta birlikte güvenle eşleşiyorsa bağla.
+    const orders=readJson('orders.json',[]);let changed=false;for(const o of orders){if(o.userId||o.customerId)continue;const oe=normalizeEmail(o.customer?.email),op=normalizeAccountPhone(o.customer?.phone);if(oe&&op&&oe===email&&op===phone){o.userId=user.id;o.customerId=customer.id;changed=true}}if(changed)writeJson('orders.json',orders);
+    setCustomerCookie(req,res,user.id);res.json({ok:true,user:publicUser(user),phoneVerificationRequired:PHONE_VERIFICATION_REQUIRED,smsProvider:SMS_PROVIDER});
+  }catch(e){res.status(500).json({ok:false,message:'Hesap oluşturulamadı.'})}
+});
+app.post('/api/auth/login',(req,res)=>{const key=requestIp(req);if(customerLoginBlocked(key))return res.status(429).json({ok:false,message:'Çok fazla başarısız deneme. Daha sonra tekrar deneyin.'});const id=String(req.body?.identifier||'').trim(),users=readJson('users.json',[]);const email=normalizeEmail(id),phone=normalizeAccountPhone(id);const u=users.find(x=>normalizeEmail(x.email)===email||(phone&&normalizeAccountPhone(x.phone)===phone));if(!u||!verifyPassword(req.body?.password,u.passwordHash)){customerLoginFail(key);return res.status(401).json({ok:false,message:'E-posta/telefon veya şifre hatalı.'})}customerLoginAttempts.delete(key);setCustomerCookie(req,res,u.id);res.json({ok:true,user:publicUser(u)})});
+app.post('/api/auth/logout',(req,res)=>{clearCustomerCookie(req,res);res.json({ok:true})});
+app.get('/api/auth/me',(req,res)=>res.json({ok:true,user:publicUser(currentUser(req))}));
+app.get('/api/account',requireCustomer,(req,res)=>res.json({ok:true,user:publicUser(req.customerUser)}));
+app.patch('/api/account',requireCustomer,(req,res)=>{const users=readJson('users.json',[]),u=users.find(x=>x.id===req.customerUser.id);if(!u)return res.status(404).json({ok:false});const email=normalizeEmail(req.body?.email),phone=normalizeAccountPhone(req.body?.phone);if(!/^\S+@\S+\.\S+$/.test(email))return res.status(400).json({ok:false,message:'Lütfen geçerli bir e-posta adresi girin.'});if(!phone)return res.status(400).json({ok:false,message:'Lütfen geçerli bir telefon numarası girin.'});if(users.some(x=>x.id!==u.id&&normalizeEmail(x.email)===email))return res.status(409).json({ok:false,message:'Bu e-posta adresi başka bir hesapta kullanılıyor.'});if(users.some(x=>x.id!==u.id&&normalizeAccountPhone(x.phone)===phone))return res.status(409).json({ok:false,message:'Bu telefon numarası başka bir hesapta kullanılıyor.'});const beforeSms=!!u.smsMarketingConsent,beforeMail=!!u.emailMarketingConsent;u.firstName=String(req.body?.firstName||u.firstName).trim();u.lastName=String(req.body?.lastName||u.lastName).trim();u.email=email;u.phone=phone;u.birthDate=String(req.body?.birthDate||'');u.smsMarketingConsent=!!req.body?.smsMarketingConsent;u.emailMarketingConsent=!!req.body?.emailMarketingConsent;u.updatedAt=new Date().toISOString();writeJson('users.json',users);if(beforeSms!==u.smsMarketingConsent||beforeMail!==u.emailMarketingConsent){const cons=readJson('marketing_consents.json',[]),now=new Date().toISOString();if(beforeSms!==u.smsMarketingConsent)cons.push({id:crypto.randomUUID(),userId:u.id,channel:'sms',granted:u.smsMarketingConsent,consentAt:now,source:'account',textVersion:'v1',ip:requestIp(req),userAgent:String(req.headers['user-agent']||'')});if(beforeMail!==u.emailMarketingConsent)cons.push({id:crypto.randomUUID(),userId:u.id,channel:'email',granted:u.emailMarketingConsent,consentAt:now,source:'account',textVersion:'v1',ip:requestIp(req),userAgent:String(req.headers['user-agent']||'')});writeJson('marketing_consents.json',cons)}res.json({ok:true,user:publicUser(u)})});
+app.post('/api/account/password',requireCustomer,(req,res)=>{const users=readJson('users.json',[]),u=users.find(x=>x.id===req.customerUser.id);if(!u||!verifyPassword(req.body?.currentPassword,u.passwordHash))return res.status(400).json({ok:false,message:'Mevcut şifre yanlış.'});const np=String(req.body?.newPassword||'');if(np.length<8)return res.status(400).json({ok:false,message:'Yeni şifre en az 8 karakter olmalıdır.'});if(np!==String(req.body?.newPasswordConfirm||''))return res.status(400).json({ok:false,message:'Şifreler eşleşmiyor.'});u.passwordHash=hashPassword(np);u.updatedAt=new Date().toISOString();writeJson('users.json',users);res.json({ok:true})});
+app.get('/api/account/addresses',requireCustomer,(req,res)=>res.json({ok:true,addresses:readJson('addresses.json',[]).filter(a=>a.userId===req.customerUser.id)}));
+app.post('/api/account/addresses',requireCustomer,(req,res)=>{const list=readJson('addresses.json',[]);const a={id:crypto.randomUUID(),userId:req.customerUser.id,createdAt:new Date().toISOString(),...req.body};a.phone=normalizeAccountPhone(a.phone)||req.customerUser.phone;a.isDefault=!list.some(x=>x.userId===req.customerUser.id);list.push(a);writeJson('addresses.json',list);res.json({ok:true,address:a})});
+app.patch('/api/account/addresses/:id',requireCustomer,(req,res)=>{const list=readJson('addresses.json',[]),a=list.find(x=>x.id===req.params.id&&x.userId===req.customerUser.id);if(!a)return res.status(404).json({ok:false,message:'Adres bulunamadı.'});if(req.body?.isDefault){list.filter(x=>x.userId===req.customerUser.id).forEach(x=>x.isDefault=false)}Object.assign(a,req.body,{id:a.id,userId:a.userId,updatedAt:new Date().toISOString()});if(a.phone)a.phone=normalizeAccountPhone(a.phone)||req.customerUser.phone;writeJson('addresses.json',list);res.json({ok:true,address:a})});
+app.delete('/api/account/addresses/:id',requireCustomer,(req,res)=>{const list=readJson('addresses.json',[]),a=list.find(x=>x.id===req.params.id&&x.userId===req.customerUser.id);if(!a)return res.status(404).json({ok:false});const next=list.filter(x=>x!==a);if(a.isDefault){const first=next.find(x=>x.userId===req.customerUser.id);if(first)first.isDefault=true}writeJson('addresses.json',next);res.json({ok:true})});
+app.get('/api/account/favorites',requireCustomer,(req,res)=>{const row=readJson('favorites.json',[]).find(x=>x.userId===req.customerUser.id);res.json({ok:true,productIds:row?.productIds||[]})});
+app.put('/api/account/favorites',requireCustomer,(req,res)=>{const list=readJson('favorites.json',[]);let row=list.find(x=>x.userId===req.customerUser.id);if(!row){row={id:crypto.randomUUID(),userId:req.customerUser.id,productIds:[]};list.push(row)}const valid=new Set(readJson('catalog.json',{products:[]}).products?.map(p=>p.id)||[]);row.productIds=[...new Set((req.body?.productIds||[]).filter(id=>valid.has(id)))];row.updatedAt=new Date().toISOString();writeJson('favorites.json',list);res.json({ok:true,productIds:row.productIds})});
+app.get('/api/account/orders',requireCustomer,(req,res)=>{const uid=req.customerUser.id,cid=customerIdForUser(req.customerUser);const orders=ordersWithDailyDisplayIds(readJson('orders.json',[])).filter(o=>String(o.userId||'')===uid||String(o.customerId||'')===cid);res.json({ok:true,orders})});
+app.get('/api/account/orders/:id',requireCustomer,(req,res)=>{const uid=req.customerUser.id,cid=customerIdForUser(req.customerUser);const o=ordersWithDailyDisplayIds(readJson('orders.json',[])).find(o=>String(o.id)===String(req.params.id)&&(String(o.userId||'')===uid||String(o.customerId||'')===cid));if(!o)return res.status(404).json({ok:false,message:'Sipariş bulunamadı.'});res.json({ok:true,order:o})});
+
 app.get('/api/settings',(req,res)=>res.json(readJson('settings.json',{})));
 app.get('/api/catalog',(req,res)=>res.json(stripLegacyStockRecords(readJson('catalog.json',{categories:[],products:[],builder:{}}))));
 
@@ -423,6 +507,8 @@ app.post('/api/admin/state',requireAdmin,async(req,res)=>{
 });
 app.post('/api/settings',requireAdmin,(req,res)=>{writeJson('settings.json',req.body);res.json({ok:true})});
 app.post('/api/catalog',requireAdmin,(req,res)=>{writeJson('catalog.json',stripLegacyStockRecords(req.body));res.json({ok:true})});
+app.get('/api/admin/legal-documents',requireAdmin,(req,res)=>res.json({ok:true,documents:activeLegalDocuments()}));
+app.post('/api/admin/legal-documents',requireAdmin,(req,res)=>{const type=String(req.body?.type||'').trim();if(!type)return res.status(400).json({ok:false,message:'Belge tipi eksik.'});const list=readJson('legal_documents.json',[]),now=new Date().toISOString();let d=list.find(x=>x.type===type&&x.version===String(req.body?.version||'1.0'));if(!d){d={id:crypto.randomUUID(),type,createdAt:now};list.push(d)}d.title=String(req.body?.title||type);d.version=String(req.body?.version||'1.0');d.content=String(req.body?.content||'');d.active=req.body?.active!==false;d.effectiveAt=d.effectiveAt||now;d.updatedAt=now;writeJson('legal_documents.json',list);res.json({ok:true,document:{...d,hash:crypto.createHash('sha256').update(d.content).digest('hex')}})});
 app.get('/api/storage/status',requireAdmin,(req,res)=>res.json({
   githubEnabled:githubEnabled(),repo:githubEnabled()?GITHUB_REPO:'',branch:GITHUB_BRANCH,
   mode:githubEnabled()?'github':'local'
@@ -742,6 +828,14 @@ app.post('/api/orders',async(req,res)=>{
    }
    body.customer.phone=normalizedPhone;
    body.customer.extraPhone=normalizedExtra;
+   const signedUser=currentUser(req);
+   if(signedUser){body.userId=signedUser.id;body.customerId=signedUser.customerId||'';if(!body.customer.email)body.customer.email=signedUser.email||'';}
+   const legalDocs=activeLegalDocuments();
+   const requiredTypes=['PRE_INFORMATION','DISTANCE_SALES'];
+   const accepts=Array.isArray(body.legalAcceptances)?body.legalAcceptances:[];
+   for(const type of requiredTypes){const doc=legalDocs.find(d=>d.type===type&&String(d.content||'').trim());if(!doc)return res.status(503).json({ok:false,message:'Sipariş için gerekli hukuki metinler henüz yönetim paneline eklenmedi.'});const a=accepts.find(x=>x.type===type&&x.version===doc.version&&x.hash===doc.hash);if(!a)return res.status(400).json({ok:false,message:'Lütfen sözleşmeleri onaylayın.'});}
+   const hasPersonal=(body.items||[]).some(x=>x?.personalized||x?.writes?.length||x?.setCustomization?.writes?.length||x?.photoCustomizations?.length||x?.setCustomization?.photoCustomizations?.length);
+   if(hasPersonal&&!body.personalizationConfirmed)return res.status(400).json({ok:false,message:'Lütfen kişiselleştirme bilgilerinizi kontrol edip onaylayın.'});
 
    // Siparişin ana kaydı önce sunucu/panele yapılır. Google E-Tablo geçici olarak cevap vermese bile
    // müşteri siparişi kaybolmaz ve tekrar adres girmek zorunda kalmaz.
@@ -751,6 +845,11 @@ app.post('/api/orders',async(req,res)=>{
    };
    orders.unshift(order);
    writeJson('orders.json',orders);
+   const acceptanceRows=readJson('legal_acceptances.json',[]);
+   for(const a of accepts){const doc=legalDocs.find(d=>d.type===a.type&&d.version===a.version);if(!doc)continue;acceptanceRows.push({id:crypto.randomUUID(),orderId:order.id,userId:signedUser?.id||null,customerId:signedUser?.customerId||body.customerId||null,legalDocumentType:doc.type,documentVersion:doc.version,documentHash:doc.hash,acceptedAt:createdAt,ipAddress:requestIp(req),userAgent:String(req.headers['user-agent']||'')})}
+   if(hasPersonal)acceptanceRows.push({id:crypto.randomUUID(),orderId:order.id,userId:signedUser?.id||null,customerId:signedUser?.customerId||body.customerId||null,legalDocumentType:'PERSONALIZATION_CONFIRMATION',documentVersion:'v1',documentHash:crypto.createHash('sha256').update(JSON.stringify(body.items||[])).digest('hex'),acceptedAt:createdAt,ipAddress:requestIp(req),userAgent:String(req.headers['user-agent']||'')});
+   writeJson('legal_acceptances.json',acceptanceRows);
+   if(hasPersonal){const snapshots=readJson('order_personalizations.json',[]);for(const [itemIndex,item] of (body.items||[]).entries()){const productId=item?.product?.id||'';for(const w of (item?.writes||item?.setCustomization?.writes||[]))snapshots.push({id:crypto.randomUUID(),orderId:order.id,orderItemIndex:itemIndex,productId,fieldType:'text',placement:w.position||'',customerValue:w.text||'',uploadedImageReference:'',createdAt});for(const ph of (item?.photoCustomizations||item?.setCustomization?.photoCustomizations||[]))snapshots.push({id:crypto.randomUUID(),orderId:order.id,orderItemIndex:itemIndex,productId,fieldType:'photo',placement:ph.position||'',customerValue:ph.caption||'',uploadedImageReference:ph.imageUrl||ph.url||'',createdAt})}writeJson('order_personalizations.json',snapshots)}
 
    // Render yeniden başlasa/deploy olsa da sipariş kaybolmasın diye GitHub'a da kalıcı kopyayı yaz.
    // Bunlar müşteri cevabını bloke etmez; asıl sipariş zaten orders.json'a kaydedildi.

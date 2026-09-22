@@ -4004,7 +4004,7 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 @media(max-width:390px){.categoryHubGrid{gap:9px!important;padding:14px 10px 28px!important}.categoryTile .categoryTileText b{font-size:16px!important}}
 
 /* Özel set kapağı gerçek görsel yüklenmeden yanlış/boş tasarım göstermesin */
-#builderSpotlight.builderImagePending{visibility:hidden}
+#builderSpotlight.builderImagePending{visibility:visible;background-color:#151a21}
 
 .recommendedOrderAdmin{margin-top:14px}
 .recommendedOrderList{display:grid;gap:7px;margin-top:10px}
@@ -5300,3 +5300,27 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 .addressCheckNoteTrigger{width:100%;margin:0;padding:12px 14px;text-align:center}
 .addressCheckOrderNotePreview{display:flex;flex-direction:column;gap:4px;margin-bottom:8px;padding:10px 12px;background:#fff9e9;border:1px solid #ead9ad;border-radius:10px;color:#5d4b26;font-size:12px;line-height:1.45}
 .orderAdminNote{margin-top:10px;padding:9px 10px;border:1px solid #ead9ad;background:#fff9e9;border-radius:9px;line-height:1.45}
+
+
+/* ===== v153 — yalnız istenen ürün geçişi / header / üyelik görünümü ===== */
+#brandLogo{cursor:pointer}
+.headerCargoCompact{gap:5px!important;width:auto!important;padding:0 5px!important;text-decoration:none;color:inherit}
+.headerCompactText{font-size:10px;font-weight:800;white-space:nowrap}
+.accountIcon{font-size:23px;line-height:1}.accountIcon svg{width:23px;height:23px;display:block}
+.productDetailMedia{overflow:hidden}
+.productDetailMedia img.productSlideOutLeft{animation:shazSlideOutLeft .18s ease forwards}
+.productDetailMedia img.productSlideOutRight{animation:shazSlideOutRight .18s ease forwards}
+.productDetailMedia img.productSlideInRight{animation:shazSlideInRight .24s ease forwards}
+.productDetailMedia img.productSlideInLeft{animation:shazSlideInLeft .24s ease forwards}
+@keyframes shazSlideOutLeft{to{transform:translateX(-28%);opacity:.25}}
+@keyframes shazSlideOutRight{to{transform:translateX(28%);opacity:.25}}
+@keyframes shazSlideInRight{from{transform:translateX(28%);opacity:.25}to{transform:translateX(0);opacity:1}}
+@keyframes shazSlideInLeft{from{transform:translateX(-28%);opacity:.25}to{transform:translateX(0);opacity:1}}
+.productImageViewer{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:34px 48px}
+.productImageViewer img{max-width:min(92vw,1100px);max-height:82vh;object-fit:contain}
+.productImageViewerClose,.productImageViewerArrow{position:absolute;border:0;background:rgba(255,255,255,.12);color:#fff;border-radius:999px;cursor:pointer;display:grid;place-items:center}
+.productImageViewerClose{right:18px;top:18px;width:42px;height:42px;font-size:28px}
+.productImageViewerArrow{top:50%;transform:translateY(-50%);width:48px;height:48px;font-size:38px}.productImageViewerArrow.prev{left:14px}.productImageViewerArrow.next{right:14px}
+.productImageViewerDots{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);display:flex;gap:8px}.productImageViewerDots button{width:8px;height:8px;border-radius:999px;border:0;background:#ffffff66;padding:0}.productImageViewerDots button.active{width:22px;background:#fff}
+.accountOverlay{position:fixed;inset:0;z-index:10020;background:rgba(5,8,12,.58);display:flex;align-items:flex-start;justify-content:center;padding:6vh 14px 30px;overflow:auto}.accountCard{width:min(760px,100%);background:#fff;border-radius:18px;padding:22px;box-shadow:0 24px 70px #0004}.accountCardHead{display:flex;justify-content:space-between;align-items:center;gap:12px}.accountClose{border:0;background:#f1f2f4;border-radius:999px;width:38px;height:38px;font-size:24px}.accountTabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}.accountTabs button{border:1px solid #ddd;background:#fff;border-radius:999px;padding:8px 12px;font-weight:800}.accountTabs button.active{background:#111;color:#fff}.accountGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.accountGrid .fieldWide{grid-column:1/-1}.accountLegalLinks{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;margin:8px 0}.accountConsent{display:flex;gap:8px;align-items:flex-start;margin:10px 0}.accountAddressCard,.accountOrderCard,.accountCouponCard{border:1px solid #e3e5e8;border-radius:12px;padding:12px;margin:8px 0}.accountActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.legalDocModal{position:fixed;inset:0;z-index:10040;background:#0009;display:flex;align-items:center;justify-content:center;padding:18px}.legalDocCard{background:#fff;border-radius:14px;max-width:820px;width:100%;max-height:86vh;overflow:auto;padding:22px}.legalDocBody{white-space:pre-wrap;line-height:1.55}.checkoutLegalList{display:grid;gap:12px;margin:14px 0}.checkoutLegalCheck{display:flex;gap:10px;align-items:flex-start;border:1px solid #e0e3e7;border-radius:10px;padding:12px}.checkoutLegalCheck input{margin-top:3px}.personalizationLegalBox{border:1px solid #e7d3aa;background:#fffaf0;border-radius:12px;padding:14px;margin-top:12px}.savedAddressPick{display:grid;gap:8px;margin-bottom:14px}.savedAddressOption{border:1px solid #ddd;border-radius:10px;padding:10px;cursor:pointer}.savedAddressOption.active{border-color:#111;background:#f6f6f6}
+@media(max-width:700px){.headerCompactText{display:none}.headerCargoCompact{width:34px!important}.accountGrid{grid-template-columns:1fr}.productImageViewer{padding:54px 8px}.productImageViewerArrow{width:40px;height:40px}.productImageViewerArrow.prev{left:6px}.productImageViewerArrow.next{right:6px}}

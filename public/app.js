@@ -1,5 +1,6 @@
 
 let settings={},catalog={},cart=[],favorites=new Set();
+let accountUser=null,accountAddresses=[],accountFavoritesLoaded=false,legalDocuments=[];
 const CART_STORAGE_KEY='shazCartV113';
 function loadLocalState(){
   try{
@@ -32,7 +33,7 @@ function preloadCategoryHubImages(){
     if(typeof img.decode==='function')img.decode().catch(()=>{});
   });
 }
-let checkoutState={payment:'cod',customer:null,requestId:null,orderNote:''};
+let checkoutState={payment:'cod',customer:null,requestId:null,orderNote:'',legalAcceptances:[],personalizationConfirmed:false};
 let orderSubmitting=false;
 let adminPreviewMode=false;
 let activeProductDetailId='',activeProductDetailSource='catalog',activeProductDetailScrollY=0,activeCartDetailScrollTop=0,productHistoryClosing=false;
@@ -91,7 +92,7 @@ async function init(){
   try{localStorage.setItem('shazFavs',JSON.stringify([...favorites]))}catch(_){}
   syncCatalogViewControls();
   ensureProductHistoryBase();
-  apply(); renderCampaignCards(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart(); bindFloatingContacts(); renderSiteAnnouncement();
+  apply(); renderCampaignCards(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart(); bindFloatingContacts(); renderSiteAnnouncement(); initAccountState();
   const sharedProductId=productRouteId();
   if(sharedProductId&&catalog.products.some(p=>p.id===sharedProductId)) setTimeout(()=>openProductDetail(sharedProductId,'shared'),0);
   else if(sharedProductId) clearProductRoute();
@@ -129,6 +130,8 @@ function bindCore(){
   if($('#categoryHubClose')) $('#categoryHubClose').onclick=closeCategoryHub;
   window.addEventListener('resize',()=>{syncSubcategoryStickyOffset();positionActiveCategoryTab('auto');positionActiveSubcategoryTab('auto')},{passive:true});
   if($('#siteAnnouncementButton')) $('#siteAnnouncementButton').onclick=closeSiteAnnouncement;
+  if($('#brandLogo')) $('#brandLogo').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+  if($('#accountBtn')) $('#accountBtn').onclick=()=>openAccountEntry();
 }
 
 function apply(){
@@ -568,9 +571,9 @@ function renderProducts(filter=''){
   requestAnimationFrame(()=>{syncSubcategoryStickyOffset();positionActiveSubcategoryTab('auto')});
 }
 function updateFavoriteBadge(){if($('#favBadge'))$('#favBadge').textContent=favorites.size}
-function toggleFav(id,e){e?.stopPropagation();favorites.has(id)?favorites.delete(id):favorites.add(id);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));updateFavoriteBadge();renderProducts($('#search')?.value||'')}
-function removeFavorite(id){favorites.delete(id);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));updateFavoriteBadge();renderProducts($('#search')?.value||'');showFavorites()}
-function clearFavorites(){if(!favorites.size)return;favorites.clear();localStorage.setItem('shazFavs','[]');updateFavoriteBadge();renderProducts($('#search')?.value||'');showFavorites()}
+function toggleFav(id,e){e?.stopPropagation();favorites.has(id)?favorites.delete(id):favorites.add(id);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));if(accountUser)fetch('/api/account/favorites',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({productIds:[...favorites]})});updateFavoriteBadge();renderProducts($('#search')?.value||'')}
+function removeFavorite(id){favorites.delete(id);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));if(accountUser)fetch('/api/account/favorites',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({productIds:[...favorites]})});updateFavoriteBadge();renderProducts($('#search')?.value||'');showFavorites()}
+function clearFavorites(){if(!favorites.size)return;favorites.clear();localStorage.setItem('shazFavs','[]');if(accountUser)fetch('/api/account/favorites',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({productIds:[]})});updateFavoriteBadge();renderProducts($('#search')?.value||'');showFavorites()}
 function showFavorites(){
   const ps=catalog.products.filter(p=>favorites.has(p.id));
   openDrawer(`<div class="wizardHead favoritesHead"><h2>Favorilerim <span class="favoritesTitleHeart">♥</span></h2><div class="favoritesHeadActions">${ps.length?`<button class="pill favoritesClear" onclick="clearFavorites()">Favorileri Temizle</button>`:''}<button class="pill favoritesClose" onclick=closeDrawer()>Kapat</button></div></div>
@@ -579,6 +582,7 @@ function showFavorites(){
 function toggleFavFromDetail(id){
   favorites.has(id)?favorites.delete(id):favorites.add(id);
   localStorage.setItem('shazFavs',JSON.stringify([...favorites]));
+  if(accountUser)fetch('/api/account/favorites',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({productIds:[...favorites]})});
   updateFavoriteBadge();renderProducts($('#search')?.value||'');
   const b=document.getElementById('productDetailFavBtn');
   if(b){b.textContent=favorites.has(id)?'♥':'♡';b.classList.toggle('active',favorites.has(id));b.setAttribute('aria-label',favorites.has(id)?'Favorilerden kaldır':'Favorilere ekle')}
@@ -699,7 +703,7 @@ function closeProductDetail(source=activeProductDetailSource||'catalog'){
   finalizeProductDetailClose(source,restoreY);
 }
 function toast(msg){const t=$('#toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
-function personalizationFeeAt(i){return i===0?Number(catalog.personalizationPricing?.first||75):i===1?Number(catalog.personalizationPricing?.second||50):Number(catalog.personalizationPricing?.thirdPlus||25)}
+function personalizationFeeAt(i){return i===0?Number(catalog.personalizationPricing?.first||75):Number(catalog.personalizationPricing?.second||50)}
 function cartPersonalizationSlotCount(){
   let slot=0;
   cart.forEach(x=>{
@@ -921,12 +925,17 @@ function openProductDetail(id,source='catalog'){
 
 
 function openProductImageViewer(){
-  const img=document.getElementById('productDetailMain');
-  if(!img?.src)return;
-  const viewer=document.createElement('div');
-  viewer.className='productImageViewer';
-  viewer.innerHTML=`<img src="${escapeAttr(img.src)}" alt="${escapeAttr(img.alt||'Ürün fotoğrafı')}">`;
-  viewer.addEventListener('click',e=>{if(e.target===viewer)viewer.remove()});
+  const images=activeProductDetailImages(); if(!images.length)return;
+  const media=document.querySelector('.productDetailMedia[data-image-index]');
+  let index=Number(media?.dataset.imageIndex||0);
+  const viewer=document.createElement('div'); viewer.className='productImageViewer';
+  const paint=()=>{viewer.innerHTML=`<button class="productImageViewerClose" aria-label="Kapat">×</button>${images.length>1?'<button class="productImageViewerArrow prev" aria-label="Önceki fotoğraf">‹</button>':''}<img src="${escapeAttr(images[index])}" alt="Ürün fotoğrafı">${images.length>1?'<button class="productImageViewerArrow next" aria-label="Sonraki fotoğraf">›</button>':''}${images.length>1?`<div class="productImageViewerDots">${images.map((_,i)=>`<button class="${i===index?'active':''}" data-viewer-index="${i}" aria-label="${i+1}. fotoğraf"></button>`).join('')}</div>`:''}`;
+    viewer.querySelector('.productImageViewerClose').onclick=()=>viewer.remove();
+    viewer.querySelector('.prev')?.addEventListener('click',e=>{e.stopPropagation();index=(index-1+images.length)%images.length;paint()});
+    viewer.querySelector('.next')?.addEventListener('click',e=>{e.stopPropagation();index=(index+1)%images.length;paint()});
+    viewer.querySelectorAll('[data-viewer-index]').forEach(b=>b.onclick=e=>{e.stopPropagation();index=Number(b.dataset.viewerIndex);paint()});
+  }; paint(); viewer.addEventListener('click',e=>{if(e.target===viewer)viewer.remove()});
+  let sx=null;viewer.addEventListener('touchstart',e=>{sx=e.touches?.[0]?.clientX??null},{passive:true});viewer.addEventListener('touchend',e=>{if(sx===null)return;const dx=(e.changedTouches?.[0]?.clientX??sx)-sx;sx=null;if(Math.abs(dx)>45&&images.length>1){index=(index+(dx<0?1:-1)+images.length)%images.length;paint()}},{passive:true});
   document.body.appendChild(viewer);
 }
 
@@ -958,21 +967,27 @@ function activeProductDetailImages(){
   const p=catalog.products.find(x=>x.id===activeProductDetailId);
   return p?productImages(p):[];
 }
-function setProductDetailImage(index){
+function setProductDetailImage(index,direction=0){
   const images=activeProductDetailImages();
   if(!images.length)return;
   const normalized=((Number(index)||0)%images.length+images.length)%images.length;
   const url=images[normalized],img=document.getElementById('productDetailMain');
   if(img){
-    img.classList.add('productDetailImageChanging');
-    img.src=url;
-    const reveal=()=>img.classList.remove('productDetailImageChanging');
-    if(img.complete)requestAnimationFrame(reveal);else img.addEventListener('load',reveal,{once:true});
     const media=img.closest('.productDetailMedia');
-    if(media){
-      media.dataset.imageIndex=String(normalized);
-      media.style.setProperty('--detail-bg',`url("${String(url).replace(/"/g,'%22')}")`);
+    const current=Number(media?.dataset.imageIndex||0);
+    const dir=direction||((normalized-current+images.length)%images.length===1?1:-1);
+    const swap=()=>{
+      img.classList.remove('productSlideOutLeft','productSlideOutRight');
+      img.src=url;
+      img.classList.add(dir>0?'productSlideInRight':'productSlideInLeft');
+      setTimeout(()=>img.classList.remove('productSlideInRight','productSlideInLeft'),260);
+    };
+    if(normalized!==current){
+      img.classList.remove('productSlideInRight','productSlideInLeft');
+      img.classList.add(dir>0?'productSlideOutLeft':'productSlideOutRight');
+      setTimeout(swap,150);
     }
+    if(media){media.dataset.imageIndex=String(normalized);media.style.setProperty('--detail-bg',`url("${String(url).replace(/"/g,'%22')}")`)}
   }
   document.querySelectorAll('.productDetailThumbs button').forEach(x=>x.classList.toggle('active',Number(x.dataset.imageIndex)===normalized));
   document.querySelectorAll('.productDetailDots button').forEach(x=>x.classList.toggle('active',Number(x.dataset.imageIndex)===normalized));
@@ -987,7 +1002,7 @@ function selectProductDetailImage(btn,url,index){
 function stepProductDetailImage(delta){
   const media=document.querySelector('.productDetailMedia[data-image-index]');
   if(!media)return;
-  setProductDetailImage(Number(media.dataset.imageIndex||0)+Number(delta||0));
+  setProductDetailImage(Number(media.dataset.imageIndex||0)+Number(delta||0),Number(delta||0));
 }
 function handleProductDetailMediaClick(event){
   if(Date.now()<productDetailSuppressClickUntil)return;
@@ -1086,7 +1101,7 @@ function singleWalletPhotoStep(id){
       <div id=walletCaptionFields class="walletCaptionFields hidden"><input id=walletCaptionText class=writeInput placeholder="Fotoğrafla birlikte işlenecek yazı"><select id=walletCaptionPosition class=formControl><option value=below>Fotoğrafın altında</option><option value=above>Fotoğrafın üstünde</option></select></div>
     </div>
     ${writeAvailable(p)?`<div class=wizardCard><label class=walletToggle><input id=walletRegularWriteToggle type=checkbox onchange="document.querySelector('#walletRegularWriteFields').classList.toggle('hidden',!this.checked)"> Fotoğraftan ayrı olarak cüzdanın ön/iç yüzüne normal yazı da istiyorum</label>
-      <div id=walletRegularWriteFields class="hidden"><div class=priceInfo>Normal yazı aynı ürünün kişiselleştirme hakkı içindedir; ayrıca yeni bir 75/50/25 TL sırası açmaz. Fotoğraf ek ücreti +${money(pricing.photoExtraFee)} olarak kalır.</div><div class=positionChoices>${positions.map((x,i)=>positionOptionHtml('walletRegularPos',x,i,p.preferredWritePosition)).join('')}</div><input id=walletRegularText class=writeInput placeholder="Cüzdanın ön/iç yüzüne yazılacak metin"></div>
+      <div id=walletRegularWriteFields class="hidden"><div class=priceInfo>Normal yazı aynı ürünün kişiselleştirme hakkı içindedir; ayrıca yeni bir 75/50/50 TL sırası açmaz. Fotoğraf ek ücreti +${money(pricing.photoExtraFee)} olarak kalır.</div><div class=positionChoices>${positions.map((x,i)=>positionOptionHtml('walletRegularPos',x,i,p.preferredWritePosition)).join('')}</div><input id=walletRegularText class=writeInput placeholder="Cüzdanın ön/iç yüzüne yazılacak metin"></div>
     </div>`:''}
     <button class=btn id=walletPhotoSubmit onclick='finishSingleWalletPhoto(${JSON.stringify(p.id)},this)'>Fotoğrafı Yükle ve Sepete Ekle</button>`);
 }
@@ -1244,7 +1259,7 @@ function renderWriteQuestion(restoring=false){
   const available=wiz.product.setItems.filter(x=>wiz.keptIds.includes(x.id)&&(setItemWriteAvailable(x)||isWalletSetItem(x)));
   if(!available.length){wiz.writes=[];wiz.photoCustomizations=[];wiz.personalizationPlan=[];return renderSetSummary();}
   openDrawer(head(wiz.product.name)+`<div class=wizardCard><h3>${available.length>1?'Ürünlerinizi':'Ürününüzü'} kişiselleştirmek ister misiniz?</h3>
-  <div class=priceInfo><b>Kişiselleştirme ücret sırası:</b><br>İlk ürün +${money(catalog.personalizationPricing?.first||75)}<br>İkinci ürün +${money(catalog.personalizationPricing?.second||50)}<br>3. ve sonraki her ürün +${money(catalog.personalizationPricing?.thirdPlus||25)}</div>
+  <div class=priceInfo><b>Kişiselleştirme ücret sırası:</b><br>İlk ürün +${money(catalog.personalizationPricing?.first||75)}<br>İkinci ürün +${money(catalog.personalizationPricing?.second||50)}<br>3. ve sonraki her ürün +${money(catalog.personalizationPricing?.second||50)}</div>
   <div class=choiceStack><button class=choiceBtn onclick=finishSetWithoutWrite()>Hayır, kişiselleştirme istemiyorum</button><button class="choiceBtn primary" onclick=renderWriteSelection()>Evet, kişiselleştirmek istiyorum</button></div></div>`);
 }
 function finishSetWithoutWrite(){wiz.writes=[];wiz.photoCustomizations=[];wiz.personalizationPlan=[];wiz.personalizationPlanDraft=[];wiz.writeDrafts={};wiz.photoDrafts={};wiz.photoFileDrafts={};renderSetSummary()}
@@ -1253,7 +1268,7 @@ function renderWriteSelection(restoring=false){
   wiz.currentScreen='writeSelection';
   const kept=wiz.product.setItems.filter(x=>wiz.keptIds.includes(x.id)&&(setItemWriteAvailable(x)||isWalletSetItem(x)));
   const remembered=Object.fromEntries(((wiz.personalizationPlanDraft?.length?wiz.personalizationPlanDraft:wiz.personalizationPlan)||[]).map(x=>[x.itemId,x.mode]));
-  openDrawer(head('Kişiselleştirilecek ürünleri seçin')+`<div class=wizardCard><div class=priceInfo><b>Ücret sırası otomatik hesaplanır:</b><br>1. kişiselleştirilen ürün +${money(catalog.personalizationPricing?.first||75)} · 2. ürün +${money(catalog.personalizationPricing?.second||50)} · 3. ve sonrası +${money(catalog.personalizationPricing?.thirdPlus||25)}.</div>
+  openDrawer(head('Kişiselleştirilecek ürünleri seçin')+`<div class=wizardCard><div class=priceInfo><b>Ücret sırası otomatik hesaplanır:</b><br>1. kişiselleştirilen ürün +${money(catalog.personalizationPricing?.first||75)} · 2. ürün +${money(catalog.personalizationPricing?.second||50)} · 3. ve sonrası +${money(catalog.personalizationPricing?.second||50)}.</div>
   <div class=writeSelectGrid>${kept.map(x=>{
     const wallet=isWalletSetItem(x),canWrite=setItemWriteAvailable(x),mode=remembered[x.id]||'none';
     if(wallet){
@@ -1269,7 +1284,7 @@ function renderWriteSelection(restoring=false){
   document.querySelectorAll('[data-personalize-row] input').forEach(el=>el.addEventListener('change',refreshWriteFeePreview));
   refreshWriteFeePreview();
 }
-function feeForIndex(i){return i===0?(catalog.personalizationPricing?.first||75):i===1?(catalog.personalizationPricing?.second||50):(catalog.personalizationPricing?.thirdPlus||25)}
+function feeForIndex(i){return i===0?(catalog.personalizationPricing?.first||75):(catalog.personalizationPricing?.second||50)}
 function collectSetPersonalizationPlan(){
   const writes=[],photos=[];
   wiz.product.setItems.filter(x=>wiz.keptIds.includes(x.id)).forEach(x=>{
@@ -1329,7 +1344,7 @@ function renderWalletPhotoDetails(restoring=false){
   if(!photoPlan.length)return renderSetSummary();
   if(!restoring)setWizardNext('writeDetails');
   wiz.currentScreen='walletPhotoDetails';
-  openDrawer(head('Cüzdana fotoğraf işleme')+`<div class=priceInfo><b>Fotoğraf kişiselleştirmesi</b><br>Seçtiğiniz cüzdan, kişiselleştirme sırasındaki 75/50/25 TL ücretini alır. <b>Fotoğraf işleme bunun üzerine ayrıca +${money(walletPhotoFee())}</b> eklenir. Örnek: bu cüzdan 3. kişiselleştirilmiş ürünse +${money(catalog.personalizationPricing?.thirdPlus||25)} kişiselleştirme + ${money(walletPhotoFee())} fotoğraf işleme uygulanır.</div>
+  openDrawer(head('Cüzdana fotoğraf işleme')+`<div class=priceInfo><b>Fotoğraf kişiselleştirmesi</b><br>Seçtiğiniz cüzdan, kişiselleştirme sırasındaki 75/50/50 TL ücretini alır. <b>Fotoğraf işleme bunun üzerine ayrıca +${money(walletPhotoFee())}</b> eklenir. Örnek: bu cüzdan 3. kişiselleştirilmiş ürünse +${money(catalog.personalizationPricing?.second||50)} kişiselleştirme + ${money(walletPhotoFee())} fotoğraf işleme uygulanır.</div>
   ${photoPlan.map((plan,idx)=>{
     const item=wiz.product.setItems.find(x=>x.id===plan.itemId),positions=item?.writePositions||[],existingPhoto=(wiz.photoCustomizations||[]).find(x=>x.itemId===plan.itemId)||{},existingWrite=(wiz.writes||[]).find(x=>x.itemId===plan.itemId)||{},draft=(wiz.photoDrafts||{})[plan.itemId]||{},fileDraft=(wiz.photoFileDrafts||{})[plan.itemId];
     const captionOn=('captionOn' in draft)?!!draft.captionOn:!!existingPhoto.caption,caption=('caption' in draft)?draft.caption:(existingPhoto.caption||''),captionPosition=draft.captionPosition||existingPhoto.captionPosition||'below';
@@ -1690,6 +1705,7 @@ function normalizeTRMobile(raw){
   const digits=String(raw||'').replace(/\D/g,'');
   if(/^5\d{9}$/.test(digits))return {ok:true,value:digits};
   if(/^05\d{9}$/.test(digits))return {ok:true,value:digits.slice(1)};
+  if(/^905\d{9}$/.test(digits))return {ok:true,value:digits.slice(2)};
   return {ok:false,value:digits};
 }
 function phoneValidationMessage(label='Telefon numarası'){
@@ -1793,6 +1809,8 @@ function addressStep(){
     <div class="checkoutScrollBody addressScrollBody">
       <div class="addressCompact addressCompactV114">
         <div class="field fieldWide">${addrInputInner('Ad Soyad *','fullName',c.fullName,'text','Adınızı ve soyadınızı yazın')}</div>
+        <div class="field fieldWide"><label><b>E-posta${accountUser?' *':''}</b><small class="fieldHelp">Üyeyseniz hesabınızdaki e-posta kullanılır.</small></label><input class=formControl id=addr-email type=email autocomplete=email value="${escapeAttr(c.email||accountUser?.email||'')}" placeholder="ornek@eposta.com"></div>
+        ${accountUser&&accountAddresses.length?`<div class="field fieldWide"><label><b>Kayıtlı adreslerim</b></label><div class="savedAddressPick">${accountAddresses.map(a=>`<button type="button" class="savedAddressOption" onclick="fillCheckoutAddress('${escapeAttr(a.id)}')"><b>${escapeHtml(a.title||'Adres')}</b><br><small>${escapeHtml([a.neighborhood,a.avenue,a.street,a.fullAddress,a.district,a.province].filter(Boolean).join(' '))}</small></button>`).join('')}</div></div>`:''}
         <div class="addressPair phonePair fieldWide">
           <div class="field"><label><b>Telefon *</b><small class="fieldHelp phoneHelp">05xx xxx xx xx veya<br>5xx xxx xx xx</small></label><input class=formControl id=addr-phone type=tel inputmode=numeric autocomplete=tel value="${escapeAttr(c.phone||'')}" placeholder="05xx xxx xx xx"></div>
           <div class="field"><label><b>2. Telefon Numarası *</b><small class="fieldHelp">Size ulaşamamamız halinde kullanabileceğimiz ikinci numara zorunludur.</small></label><input class=formControl id=addr-extraPhone type=tel inputmode=numeric autocomplete=tel value="${escapeAttr(c.extraPhone||'')}" placeholder="05xx xxx xx xx"></div>
@@ -1814,6 +1832,7 @@ function addressStep(){
           <div class="branchInfo">📍 <b>Aras Kargo şube adını net yazın.</b><br>Google Haritalar'dan kontrol edip şubenin tam adını girin.</div>
           <div class="field fieldWide"><label><b>Aras Kargo şube adı *</b></label><input class=formControl id=addr-branchName value="${escapeAttr(c.branchName||'')}" placeholder="Örn: Aras Kargo Kadıköy Şubesi"></div>
         </div>
+        ${accountUser?`<label class="branchChoice fieldWide"><input id="addr-saveAccount" type="checkbox"><span><b>Bu adresi hesabıma kaydet</b><small>Bir sonraki siparişinizde hızlıca seçebilirsiniz.</small></span></label>`:''}
         <div class="field fieldWide checkoutPaymentField"><label><b>Ödeme yöntemi *</b></label>${(()=>{const cod=settings.paymentMethods?.cod!==false,online=settings.paymentMethods?.online!==false;const available=[...(cod?['cod']:[]),...(online?['online']:[])];if(!available.includes(checkoutState.payment))checkoutState.payment=available[0]||'';if(!available.length)return '<div class="formControl paymentUnavailable">Şu anda aktif ödeme yöntemi bulunmuyor.</div>';return `<select id="pay" class="formControl">${cod?`<option value="cod" ${checkoutState.payment==='cod'?'selected':''}>Kapıda ödeme</option>`:''}${online?`<option value="online" ${checkoutState.payment==='online'?'selected':''}>Online ödeme</option>`:''}</select>`})()}</div>
         <div class="field fieldWide"><label><b>Teslimat notu</b><small class="fieldHelp">İsteğe bağlı</small></label><textarea class=formControl id=addr-note rows=2 placeholder="Teslimat notu">${escapeHtml(c.note||'')}</textarea></div>
       </div>
@@ -1830,7 +1849,7 @@ function toggleBranchDelivery(){
   if($('#homeAddressFields')) $('#homeAddressFields').style.display=on?'none':'grid';
   if($('#branchAddressFields')) $('#branchAddressFields').style.display=on?'grid':'none';
 }
-function saveAddressAndContinue(){
+async function saveAddressAndContinue(){
   const availablePayments=[...(settings.paymentMethods?.cod!==false?['cod']:[]),...(settings.paymentMethods?.online!==false?['online']:[])];
   if(!availablePayments.length)return alert('Şu anda kullanılabilir bir ödeme yöntemi bulunmuyor.');
   checkoutState.payment=$('#pay')?.value||availablePayments[0];
@@ -1853,15 +1872,17 @@ function saveAddressAndContinue(){
   const street=addressPart(g('street'),'street');
   if(!branch&&!avenue&&!street)return alert('Lütfen cadde veya sokak bilgilerinden en az birini giriniz.');
   const customer={
-    fullName,phone:primaryPhone.value,extraPhone:extraPhone.value,province,district:g('district'),
+    fullName,email:g('email').toLocaleLowerCase('tr-TR'),phone:primaryPhone.value,extraPhone:extraPhone.value,province,district:g('district'),
     deliveryMode:branch?'branch':'address',branchName:branch?g('branchName'):'',
     neighborhood,avenue,street,fullAddress:g('fullAddress'),
     buildingNo:'',floor:'',doorNo:'',placeType:'home',businessName:'',note:g('note')
   };
+  if(accountUser&&!/^\S+@\S+\.\S+$/.test(customer.email))return alert('Lütfen geçerli bir e-posta adresi girin.');
   if(!customer.phone||!customer.province||!customer.district)return alert('Lütfen * işaretli zorunlu alanları doldurun.');
   if(branch&&!customer.branchName)return alert('Teslim almak istediğiniz Aras Kargo şubesinin tam adını yazın.');
   if(!branch&&(!g('neighborhood')||!customer.fullAddress))return alert('Mahalle ve adres devamı alanlarını doldurun.');
   checkoutState.customer=customer;
+  if(accountUser&&$('#addr-saveAccount')?.checked){try{await fetch('/api/account/addresses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:'Sipariş Adresi',...customer})});await loadAccountAddresses()}catch(_){}}
   showAddressConfirmation(customer);
 }
 function customerAddressText(c){
@@ -1915,11 +1936,37 @@ function showAddressConfirmation(c){
 }
 function confirmAddressAndContinue(){document.querySelector('.addressCheckModal')?.remove();continueAfterAddress();}
 function continueAfterAddress(){
+  return showLegalCheckout();
+}
+function legacyPersonalizedNotice(){
   const hasPersonal=cart.some(x=>x.personalized);
   if(checkoutState.payment==='cod'&&hasPersonal){
     openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">SİPARİŞ ONAYI</span><h2>Kişiye özel ürün bilgilendirmesi</h2></div></div><div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="addressStep()">← Teslimata dön</button></div><div class="checkoutSteps"><span>1 Sepet</span><span>2 Teslimat</span><span class="active">3 Onay</span></div><div class=notice>${settings.personalizedNotice}</div><button class="btn checkoutPrimary" onclick="shippingNotice(true)">Onaylıyorum, devam et →</button></div>`);
   }else shippingNotice(false);
 }
+
+async function fetchLegalDocuments(){
+  try{const r=await fetch('/api/legal-documents/public').then(x=>x.json());legalDocuments=Array.isArray(r.documents)?r.documents:[];return legalDocuments}catch(_){return []}
+}
+function legalDocByType(type){return legalDocuments.find(d=>d.type===type&&d.active!==false)}
+function openLegalDocument(type){const d=legalDocByType(type);if(!d)return alert('Bu hukuki metin henüz sisteme eklenmemiş.');const el=document.createElement('div');el.className='legalDocModal';el.innerHTML=`<div class="legalDocCard"><button class="pill" onclick="this.closest('.legalDocModal').remove()">Kapat</button><h2>${escapeHtml(d.title||type)}</h2><small>Versiyon: ${escapeHtml(d.version||'')}</small><div class="legalDocBody">${escapeHtml(d.content||'')}</div></div>`;el.addEventListener('click',e=>{if(e.target===el)el.remove()});document.body.appendChild(el)}
+function personalizationSummaryForLegal(){return cart.flatMap(x=>{const p=x.product||{},out=[];(x.writes||x.setCustomization?.writes||[]).forEach(w=>out.push(`${p.name||'Ürün'} — ${w.position||'Konum belirtilmedi'} — “${w.text||''}”`));(x.photoCustomizations||x.setCustomization?.photoCustomizations||[]).forEach(ph=>out.push(`${p.name||'Ürün'} — Fotoğraf işleme${ph.caption?' — '+ph.caption:''}`));return out}).filter(Boolean)}
+async function showLegalCheckout(){
+  await fetchLegalDocuments();
+  const pre=legalDocByType('PRE_INFORMATION'),dist=legalDocByType('DISTANCE_SALES');
+  const hasPersonal=cart.some(x=>x.personalized||((x.writes||[]).length)||((x.setCustomization?.writes||[]).length)||((x.photoCustomizations||[]).length)||((x.setCustomization?.photoCustomizations||[]).length));
+  const missing=!pre||!dist||!String(pre.content||'').trim()||!String(dist.content||'').trim();
+  openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">SİPARİŞ ONAYI</span><h2>Sipariş ve Sözleşme Onayı</h2></div></div><div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="addressStep()">← Teslimata dön</button></div><div class="checkoutSteps"><span>1 Sepet</span><span>2 Teslimat</span><span class="active">3 Onay</span></div>${missing?'<div class="notice"><b>Hukuki metinler henüz yönetim panelinden eklenmemiş.</b><br>Ön Bilgilendirme Formu ve Mesafeli Satış Sözleşmesi eklenmeden sipariş oluşturulamaz.</div>':''}<div class="checkoutLegalList"><label class="checkoutLegalCheck"><input id="legal-pre" type="checkbox"><span><button type="button" class="linkButton" onclick="event.preventDefault();openLegalDocument('PRE_INFORMATION')">Ön Bilgilendirme Formu</button>’nu okudum ve bilgilendirildim.</span></label><label class="checkoutLegalCheck"><input id="legal-dist" type="checkbox"><span><button type="button" class="linkButton" onclick="event.preventDefault();openLegalDocument('DISTANCE_SALES')">Mesafeli Satış Sözleşmesi</button>’ni okudum ve kabul ediyorum.</span></label></div>${hasPersonal?`<div class="personalizationLegalBox"><h3>KİŞİSELLEŞTİRME BİLGİLERİ</h3>${personalizationSummaryForLegal().map(x=>`<div>• ${escapeHtml(x)}</div>`).join('')}<p>Müşterinin isim, yazı, tarih, görsel, fotoğraf, logo, renk, ölçü veya benzeri kişisel talebi doğrultusunda özel hazırlanan ürünler Mesafeli Sözleşmeler Yönetmeliği 15/1-b kapsamındaki kişiye özel ürün istisnasına tabi olabilir ve bu nedenle genel cayma hakkı bulunmayabilir. Yanlış yazılan, yanlış görsel uygulanan, kırık/bozuk, ayıplı veya siparişe aykırı ürünlerde tüketicinin kanuni hakları devam eder.</p><label class="checkoutLegalCheck"><input id="legal-personal" type="checkbox"><span>Kişiselleştirme bilgilerimi kontrol ettim, verdiğim bilgilerin doğru olduğunu onaylıyorum ve ürünün talebim doğrultusunda kişiye özel hazırlanacağını biliyorum.</span></label></div>`:''}<button class="btn checkoutPrimary" ${missing?'disabled':''} onclick="acceptLegalAndContinue(${hasPersonal})">Onaylıyorum, devam et →</button></div>`);
+}
+function acceptLegalAndContinue(hasPersonal){
+  if(!$('#legal-pre')?.checked||!$('#legal-dist')?.checked)return alert('Lütfen Ön Bilgilendirme Formu ve Mesafeli Satış Sözleşmesi onaylarını tamamlayın.');
+  if(hasPersonal&&!$('#legal-personal')?.checked)return alert('Lütfen kişiselleştirme bilgilerinizi kontrol edip onaylayın.');
+  const pre=legalDocByType('PRE_INFORMATION'),dist=legalDocByType('DISTANCE_SALES');
+  checkoutState.legalAcceptances=[{type:'PRE_INFORMATION',version:pre?.version||'',hash:pre?.hash||''},{type:'DISTANCE_SALES',version:dist?.version||'',hash:dist?.hash||''}];
+  checkoutState.personalizationConfirmed=!!hasPersonal;
+  shippingNotice(!!hasPersonal);
+}
+
 function shippingNotice(personalApproved=false){
   openDrawer(`<div class="checkoutShell"><div class="checkoutTop"><div><span class="checkoutEyebrow">SON ADIM</span><h2>Kargo bilgilendirmesi</h2><p>Siparişinizi oluşturmadan önce kısa bilgilendirmeyi okuyun.</p></div></div><div class="checkoutBackRow"><button type="button" class="checkoutBackBtn" onclick="addressStep()">← Teslimata dön</button></div><div class="checkoutSteps"><span>1 Sepet</span><span>2 Teslimat</span><span class="active">3 Onay</span></div><div class=notice>${settings.shippingNotice}</div><button class="btn checkoutPrimary" onclick="finalizeOrder(${personalApproved},this)">Siparişi Oluştur ✓</button><small class="checkoutSubmitStatus" id="checkoutSubmitStatus"></small></div>`);
 }
@@ -1945,6 +1992,8 @@ async function finalizeOrder(personalApproved,button){
     orderNote:checkoutOrderNoteText(),
     personalApproval:personalApproved?{approved:true,method:'button',at:new Date().toISOString()}:null,
     shippingNoticeAccepted:true,
+    legalAcceptances:checkoutState.legalAcceptances||[],
+    personalizationConfirmed:!!checkoutState.personalizationConfirmed,
     subtotal:campaign.subtotal,
     discountTotal:campaign.discount,
     appliedCampaigns:(campaign.applied||[]).map(a=>({id:a.id||'',name:a.name||'Kampanya',discount:Number(a.discount||0),uses:Number(a.uses||1)})),
@@ -1965,7 +2014,7 @@ async function finalizeOrder(personalApproved,button){
     try{r=await response.json()}catch{}
     if(!response.ok||!r.ok||!r.order?.id)throw new Error(r.message||'Sipariş oluşturulamadı. Lütfen tekrar deneyin.');
     cart=[];
-    checkoutState={payment:'cod',customer:null,requestId:null,orderNote:''};
+    checkoutState={payment:'cod',customer:null,requestId:null,orderNote:'',legalAcceptances:[],personalizationConfirmed:false};
     updateCart();
     try{localStorage.removeItem('shaz_pending_order_v63')}catch{}
     success(r.order.id);
@@ -2162,7 +2211,7 @@ function builderAskWrite(){
   const selected=getBuilderSelectedProducts();
   if(!selected.some(p=>writeAvailable(p)||walletPhotoAvailable(p))){customBuilder.writes=[];customBuilder.photoCustomizations=[];return renderBuilderFinalSummary();}
   openDrawer(`<div class=wizardHead><button class="pill backPill" onclick=renderBuilderSelectionSummary()>← Geri</button><div><div class=wizardProgress>Kişiselleştirme</div><h2>Set ürünlerinizi kişiselleştirmek ister misiniz?</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
-    <div class=priceInfo><b>Kişiselleştirme ücret sırası:</b><br>İlk ürün +${money(catalog.personalizationPricing?.first||75)} · İkinci ürün +${money(catalog.personalizationPricing?.second||50)} · 3. ve sonrası +${money(catalog.personalizationPricing?.thirdPlus||25)}.</div>
+    <div class=priceInfo><b>Kişiselleştirme ücret sırası:</b><br>İlk ürün +${money(catalog.personalizationPricing?.first||75)} · İkinci ürün +${money(catalog.personalizationPricing?.second||50)} · 3. ve sonrası +${money(catalog.personalizationPricing?.second||50)}.</div>
     <div class=wizardCard><p>${selected.length} ürünlük setiniz hazır. Cüzdanlarda normal yazı yerine doğrudan fotoğraf işlemeyi de seçebilirsiniz.</p>
     <div class=choiceStack><button class=choiceBtn onclick=builderFinishNoWrite()>Hayır, kişiselleştirme istemiyorum</button><button class="choiceBtn primary" onclick=builderWriteSelection()>Evet, kişiselleştirmek istiyorum</button></div></div>`);
 }
@@ -2185,7 +2234,7 @@ function builderWriteSelection(){
   document.querySelectorAll('[data-builder-personalize-row] input').forEach(el=>el.addEventListener('change',builderRefreshFeePreview));
   builderRefreshFeePreview();
 }
-function builderFeeForIndex(i){return i===0?(catalog.personalizationPricing?.first||75):i===1?(catalog.personalizationPricing?.second||50):(catalog.personalizationPricing?.thirdPlus||25)}
+function builderFeeForIndex(i){return i===0?(catalog.personalizationPricing?.first||75):(catalog.personalizationPricing?.second||50)}
 function collectBuilderPersonalizationPlan(){
   const plan=[];
   getBuilderSelectedProducts().forEach(p=>{
@@ -2297,6 +2346,35 @@ function builderAddToCart(){
   cart.push({product:customProduct,basePrice:base,qty:1,personalized:(customBuilder.writes||[]).length>0||(customBuilder.photoCustomizations||[]).length>0,builderItems:selected.map(p=>({id:p.id,name:p.name,category:p.category,image:mainProductImage(p)})),writes:customBuilder.writes||[],photoCustomizations:customBuilder.photoCustomizations||[]});
   updateCart();closeDrawer();toast('✓ Kendi setiniz sepete eklendi');
 }
+
+
+async function initAccountState(){
+  try{const r=await fetch('/api/auth/me').then(x=>x.json());accountUser=r.user||null;if(accountUser){await Promise.all([loadAccountAddresses(),syncAccountFavorites()])}}catch(_){accountUser=null}updateAccountHeader();
+}
+function updateAccountHeader(){const t=$('#accountBtnText');if(t)t.textContent=accountUser?(accountUser.firstName||'Hesabım'):'Üyelik'}
+function accountOverlay(html){document.querySelector('.accountOverlay')?.remove();const el=document.createElement('div');el.className='accountOverlay';el.innerHTML=`<div class="accountCard">${html}</div>`;el.addEventListener('click',e=>{if(e.target===el)el.remove()});document.body.appendChild(el)}
+function accountHead(title){return `<div class="accountCardHead"><div><span class="checkoutEyebrow">SHAZ HESAP</span><h2>${escapeHtml(title)}</h2></div><button class="accountClose" onclick="this.closest('.accountOverlay').remove()">×</button></div>`}
+function openAccountEntry(){if(accountUser)return openAccountDashboard();accountOverlay(accountHead('Üyelik')+`<div class="choiceStack"><button class="choiceBtn primary" onclick="openLoginForm()">Giriş Yap</button><button class="choiceBtn" onclick="openRegisterForm()">Üye Ol</button></div><p class="muted">Üye olmadan alışveriş yapmaya devam edebilirsiniz.</p>`)}
+function openLoginForm(){accountOverlay(accountHead('Giriş Yap')+`<div class="accountGrid"><div class="field fieldWide"><label><b>E-posta veya telefon</b></label><input id="login-id" class="formControl"></div><div class="field fieldWide"><label><b>Şifre</b></label><input id="login-pass" class="formControl" type="password"></div></div><button class="btn" onclick="submitLogin()">Giriş Yap</button><button class="pill" onclick="openRegisterForm()">Üye Ol</button>`)}
+async function submitLogin(){const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifier:$('#login-id')?.value,password:$('#login-pass')?.value})}).then(async x=>({ok:x.ok,...await x.json()}));if(!r.ok)return alert(r.message||'Giriş yapılamadı.');accountUser=r.user;await Promise.all([loadAccountAddresses(),syncAccountFavorites()]);updateAccountHeader();openAccountDashboard()}
+function openRegisterForm(){accountOverlay(accountHead('Üye Ol')+`<div class="accountGrid"><div class="field"><label><b>Ad *</b></label><input id="reg-first" class="formControl"></div><div class="field"><label><b>Soyad *</b></label><input id="reg-last" class="formControl"></div><div class="field"><label><b>E-posta *</b></label><input id="reg-email" class="formControl" type="email"></div><div class="field"><label><b>Telefon *</b></label><input id="reg-phone" class="formControl" type="tel"></div><div class="field"><label><b>Şifre *</b></label><input id="reg-pass" class="formControl" type="password"></div><div class="field"><label><b>Şifre Tekrar *</b></label><input id="reg-pass2" class="formControl" type="password"></div><div class="field fieldWide"><label><b>Doğum Tarihi</b></label><input id="reg-birth" class="formControl" type="date"></div></div><label class="accountConsent"><input id="reg-sms" type="checkbox"><span>Kampanya, indirim, fırsat ve tanıtımlardan SMS ile haberdar olmak istiyorum.</span></label><label class="accountConsent"><input id="reg-mail" type="checkbox"><span>Kampanya, indirim, fırsat ve tanıtımlardan e-posta ile haberdar olmak istiyorum.</span></label><div class="accountLegalLinks"><button class="linkButton" onclick="openMembershipLegal('MEMBERSHIP_AGREEMENT')">Üyelik Sözleşmesi</button><button class="linkButton" onclick="openMembershipLegal('KVKK_NOTICE')">KVKK Aydınlatma Metni</button><button class="linkButton" onclick="openMembershipLegal('PRIVACY_POLICY')">Gizlilik Politikası</button><button class="linkButton" onclick="openMembershipLegal('COOKIE_POLICY')">Çerez Politikası</button></div><button class="btn" onclick="submitRegister()">Hesap Oluştur</button>`)}
+async function openMembershipLegal(type){await fetchLegalDocuments();openLegalDocument(type)}
+async function submitRegister(){const body={firstName:$('#reg-first')?.value,lastName:$('#reg-last')?.value,email:$('#reg-email')?.value,phone:$('#reg-phone')?.value,password:$('#reg-pass')?.value,passwordConfirm:$('#reg-pass2')?.value,birthDate:$('#reg-birth')?.value,smsMarketingConsent:!!$('#reg-sms')?.checked,emailMarketingConsent:!!$('#reg-mail')?.checked};const r=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(async x=>({ok:x.ok,...await x.json()}));if(!r.ok)return alert(r.message||'Hesap oluşturulamadı.');accountUser=r.user;await loadAccountAddresses();updateAccountHeader();openAccountDashboard()}
+function accountTabs(active){return `<div class="accountTabs"><button class="${active==='home'?'active':''}" onclick="openAccountDashboard()">Hesabım</button><button class="${active==='orders'?'active':''}" onclick="openAccountOrders()">Siparişlerim</button><button class="${active==='addresses'?'active':''}" onclick="openAccountAddresses()">Adreslerim</button><button class="${active==='favorites'?'active':''}" onclick="showFavorites();document.querySelector('.accountOverlay')?.remove()">Favorilerim</button><button onclick="logoutAccount()">Çıkış Yap</button></div>`}
+function openAccountDashboard(){if(!accountUser)return openAccountEntry();accountOverlay(accountHead(`Merhaba, ${accountUser.firstName||''}`)+accountTabs('home')+`<div class="accountGrid"><div class="field"><label><b>Ad</b></label><input id="acc-first" class="formControl" value="${escapeAttr(accountUser.firstName||'')}"></div><div class="field"><label><b>Soyad</b></label><input id="acc-last" class="formControl" value="${escapeAttr(accountUser.lastName||'')}"></div><div class="field"><label><b>E-posta</b></label><input id="acc-email" class="formControl" value="${escapeAttr(accountUser.email||'')}"></div><div class="field"><label><b>Telefon</b></label><input id="acc-phone" class="formControl" value="${escapeAttr(accountUser.phone||'')}"></div><div class="field fieldWide"><label><b>Doğum Tarihi</b></label><input id="acc-birth" type="date" class="formControl" value="${escapeAttr(accountUser.birthDate||'')}"></div></div><label class="accountConsent"><input id="acc-sms" type="checkbox" ${accountUser.smsMarketingConsent?'checked':''}> SMS pazarlama izni</label><label class="accountConsent"><input id="acc-mail" type="checkbox" ${accountUser.emailMarketingConsent?'checked':''}> E-posta pazarlama izni</label><div class="accountActions"><button class="btn" onclick="saveAccountProfile()">Bilgilerimi Kaydet</button><button class="pill" onclick="openPasswordChange()">Şifre Değiştir</button></div>`)}
+async function saveAccountProfile(){const r=await fetch('/api/account',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:$('#acc-first')?.value,lastName:$('#acc-last')?.value,email:$('#acc-email')?.value,phone:$('#acc-phone')?.value,birthDate:$('#acc-birth')?.value,smsMarketingConsent:!!$('#acc-sms')?.checked,emailMarketingConsent:!!$('#acc-mail')?.checked})}).then(async x=>({ok:x.ok,...await x.json()}));if(!r.ok)return alert(r.message);accountUser=r.user;updateAccountHeader();toast('✓ Hesap bilgileriniz güncellendi');openAccountDashboard()}
+function openPasswordChange(){accountOverlay(accountHead('Şifre Değiştir')+`<div class="accountGrid"><div class="field fieldWide"><label><b>Mevcut şifre</b></label><input id="pw-old" type="password" class="formControl"></div><div class="field"><label><b>Yeni şifre</b></label><input id="pw-new" type="password" class="formControl"></div><div class="field"><label><b>Yeni şifre tekrar</b></label><input id="pw-new2" type="password" class="formControl"></div></div><button class="btn" onclick="savePasswordChange()">Şifreyi Değiştir</button>`)}
+async function savePasswordChange(){const r=await fetch('/api/account/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({currentPassword:$('#pw-old')?.value,newPassword:$('#pw-new')?.value,newPasswordConfirm:$('#pw-new2')?.value})}).then(async x=>({ok:x.ok,...await x.json()}));if(!r.ok)return alert(r.message);toast('✓ Şifreniz değiştirildi');openAccountDashboard()}
+async function logoutAccount(){await fetch('/api/auth/logout',{method:'POST'});accountUser=null;accountAddresses=[];accountFavoritesLoaded=false;updateAccountHeader();document.querySelector('.accountOverlay')?.remove();toast('Çıkış yapıldı')}
+async function loadAccountAddresses(){if(!accountUser)return accountAddresses=[];const r=await fetch('/api/account/addresses').then(x=>x.json());accountAddresses=Array.isArray(r.addresses)?r.addresses:[];return accountAddresses}
+async function openAccountAddresses(){await loadAccountAddresses();accountOverlay(accountHead('Adreslerim')+accountTabs('addresses')+`<button class="btn" onclick="openAddressEditor()">+ Yeni Adres</button>${accountAddresses.map(a=>`<div class="accountAddressCard"><b>${escapeHtml(a.title||'Adres')}</b><div>${escapeHtml([a.neighborhood,a.avenue,a.street,a.fullAddress,a.district,a.province].filter(Boolean).join(' '))}</div><small>${escapeHtml(a.phone||'')}</small><div class="accountActions"><button class="pill" onclick="openAddressEditor('${escapeAttr(a.id)}')">Düzenle</button><button class="pill" onclick="deleteAccountAddress('${escapeAttr(a.id)}')">Sil</button>${a.isDefault?'<b>Varsayılan</b>':`<button class="pill" onclick="setDefaultAddress('${escapeAttr(a.id)}')">Varsayılan Yap</button>`}</div></div>`).join('')||'<p>Henüz kayıtlı adresiniz yok.</p>'}`)}
+function openAddressEditor(id=''){const a=accountAddresses.find(x=>x.id===id)||{};accountOverlay(accountHead(id?'Adresi Düzenle':'Yeni Adres')+`<div class="accountGrid"><div class="field"><label><b>Adres Başlığı *</b></label><input id="ae-title" class="formControl" value="${escapeAttr(a.title||'')}"></div><div class="field"><label><b>Ad Soyad *</b></label><input id="ae-name" class="formControl" value="${escapeAttr(a.fullName||`${accountUser?.firstName||''} ${accountUser?.lastName||''}`.trim())}"></div><div class="field"><label><b>Telefon *</b></label><input id="ae-phone" class="formControl" value="${escapeAttr(a.phone||accountUser?.phone||'')}"></div><div class="field"><label><b>İl *</b></label><input id="ae-province" class="formControl" value="${escapeAttr(a.province||'')}"></div><div class="field"><label><b>İlçe *</b></label><input id="ae-district" class="formControl" value="${escapeAttr(a.district||'')}"></div><div class="field"><label><b>Mahalle *</b></label><input id="ae-neighborhood" class="formControl" value="${escapeAttr(a.neighborhood||'')}"></div><div class="field"><label><b>Cadde</b></label><input id="ae-avenue" class="formControl" value="${escapeAttr(a.avenue||'')}"></div><div class="field"><label><b>Sokak</b></label><input id="ae-street" class="formControl" value="${escapeAttr(a.street||'')}"></div><div class="field fieldWide"><label><b>Adres Devamı *</b></label><textarea id="ae-full" class="formControl">${escapeHtml(a.fullAddress||'')}</textarea></div></div><button class="btn" onclick="saveAccountAddress('${escapeAttr(id)}')">Kaydet</button>`)}
+async function saveAccountAddress(id){const body={title:$('#ae-title')?.value,fullName:$('#ae-name')?.value,phone:$('#ae-phone')?.value,province:$('#ae-province')?.value,district:$('#ae-district')?.value,neighborhood:$('#ae-neighborhood')?.value,avenue:$('#ae-avenue')?.value,street:$('#ae-street')?.value,fullAddress:$('#ae-full')?.value};const url=id?`/api/account/addresses/${encodeURIComponent(id)}`:'/api/account/addresses',method=id?'PATCH':'POST';const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(async x=>({ok:x.ok,...await x.json()}));if(!r.ok)return alert(r.message);await openAccountAddresses()}
+async function deleteAccountAddress(id){if(!confirm('Bu adres silinsin mi?'))return;await fetch(`/api/account/addresses/${encodeURIComponent(id)}`,{method:'DELETE'});await openAccountAddresses()}
+async function setDefaultAddress(id){await fetch(`/api/account/addresses/${encodeURIComponent(id)}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({isDefault:true})});await openAccountAddresses()}
+function fillCheckoutAddress(id){const a=accountAddresses.find(x=>x.id===id);if(!a)return;['fullName','phone','province','district','neighborhood','avenue','street','fullAddress'].forEach(k=>{const el=$('#addr-'+k);if(el)el.value=a[k]||''})}
+async function openAccountOrders(){const r=await fetch('/api/account/orders').then(x=>x.json());const orders=Array.isArray(r.orders)?r.orders:[];accountOverlay(accountHead('Siparişlerim')+accountTabs('orders')+(orders.map(o=>`<div class="accountOrderCard"><b>${escapeHtml(o.dailyDisplayId||o.id||'Sipariş')}</b><span> · ${escapeHtml(o.createdAtTR||'')}</span><div>${(o.items||[]).map(x=>escapeHtml(x.product?.name||'Ürün')).join(', ')}</div><strong>${money(o.total)}</strong> · ${escapeHtml(o.status||'')}</div>`).join('')||'<p>Hesabınıza bağlı sipariş bulunamadı.</p>'))}
+async function syncAccountFavorites(){if(!accountUser)return;try{const r=await fetch('/api/account/favorites').then(x=>x.json());const server=new Set(r.productIds||[]);favorites=new Set([...favorites,...server]);localStorage.setItem('shazFavs',JSON.stringify([...favorites]));await fetch('/api/account/favorites',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({productIds:[...favorites]})});accountFavoritesLoaded=true;updateFavoriteBadge()}catch(_){}}
 
 init();
 
