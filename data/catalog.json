@@ -4574,7 +4574,7 @@
   "personalizationPricing": {
     "first": 75,
     "second": 50,
-    "thirdPlus": 25
+    "thirdPlus": 50
   },
   "walletPhotoFee": 25,
   "checkoutCampaigns": [
@@ -4717,11 +4717,15 @@
     "urun-1786899570443-9-k358",
     "urun-1786899570443-12-xe9r",
     "urun-1786899570443-6-90hj",
-    "urun-1786910492353-4-ukzz",
+    "urun-1786910492353-0-cc9w",
     "urun-1786910492353-1-p6qf",
     "urun-1786910492353-2-zuew",
     "urun-1786910492353-3-rxft",
-    "urun-1786910492353-0-cc9w",
-    "urun-1787917150247"
+    "urun-1786910492353-4-ukzz",
+    "urun-1787917150247",
+    "urun-1787919769422",
+    "urun-1787920334952",
+    "urun-1787926526304",
+    "urun-1788310312841"
   ]
 }
