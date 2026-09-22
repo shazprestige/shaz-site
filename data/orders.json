@@ -6,7 +6,7 @@
     "status": "new",
     "statusUpdatedAt": "2026-09-22T18:40:56.239Z",
     "requestId": "efe7dce9-eb7b-480d-9c1f-d0067b124ed9",
-    "sheetSyncStatus": "pending",
+    "sheetSyncStatus": "synced",
     "sheetSyncError": "",
     "items": [
       {
@@ -473,7 +473,9 @@
     "subtotal": 2525,
     "discountTotal": 0,
     "appliedCampaigns": [],
-    "total": 2525
+    "total": 2525,
+    "sheetSyncedAt": "2026-09-22T18:41:35.432Z",
+    "sheetId": "SHZ86"
   },
   {
     "id": "SHZ85",
