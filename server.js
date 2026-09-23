@@ -28,7 +28,7 @@ const uploadDir = path.join(persistRoot,'uploads');
 fs.mkdirSync(dataDir,{recursive:true});
 fs.mkdirSync(uploadDir,{recursive:true});
 // İlk kullanımda repodaki başlangıç JSON'larını kalıcı alana yalnızca bir kez kopyala.
-for(const name of ['settings.json','catalog.json','orders.json','users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','legal_documents.json','legal_acceptances.json','phone_verifications.json']){
+for(const name of ['settings.json','catalog.json','orders.json','users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','legal_documents.json','legal_acceptances.json','phone_verifications.json','password_resets.json']){
   const dst=path.join(dataDir,name);
   const seed=path.join(root,'data',name);
   if(!fs.existsSync(dst) && fs.existsSync(seed)) fs.copyFileSync(seed,dst);
@@ -188,9 +188,15 @@ const USER_SESSION_SECRET=(process.env.USER_SESSION_SECRET||SESSION_SECRET||'').
 const USER_SESSION_MAX_AGE_MS=30*24*60*60*1000;
 const PHONE_VERIFICATION_REQUIRED=String(process.env.PHONE_VERIFICATION_REQUIRED||'false').toLowerCase()==='true';
 const SMS_PROVIDER=String(process.env.SMS_PROVIDER||'verimor').toLowerCase();
+const GOOGLE_CLIENT_ID=String(process.env.GOOGLE_CLIENT_ID||'').trim();
+const APPLE_CLIENT_ID=String(process.env.APPLE_CLIENT_ID||'').trim();
+const APPLE_REDIRECT_URI=String(process.env.APPLE_REDIRECT_URI||'').trim();
+const RESEND_API_KEY=String(process.env.RESEND_API_KEY||'').trim();
+const PASSWORD_RESET_FROM=String(process.env.PASSWORD_RESET_FROM||'SHAZ <noreply@shaz.com.tr>').trim();
+const PUBLIC_BASE_URL=String(process.env.PUBLIC_BASE_URL||'https://shaz.com.tr').replace(/\/$/,'');
 const accountLoginAttempts=new Map();
 for(const [name,fallback] of Object.entries({
-  'users.json':[],'customers.json':[],'addresses.json':[],'favorites.json':[],'marketing_consents.json':[],'legal_acceptances.json':[],'phone_verifications.json':[],
+  'users.json':[],'customers.json':[],'addresses.json':[],'favorites.json':[],'marketing_consents.json':[],'legal_acceptances.json':[],'phone_verifications.json':[],'password_resets.json':[],
   'legal_documents.json':[
     {type:'MEMBERSHIP',version:'1',title:'Üyelik Sözleşmesi',content:'',active:true},
     {type:'KVKK',version:'1',title:'KVKK Aydınlatma Metni',content:'',active:true},
@@ -206,7 +212,7 @@ const normalizeAccountPhone=value=>{const d=String(value||'').replace(/\D/g,'');
 const normalizeEmail=value=>String(value||'').trim().toLowerCase();
 function passwordHash(password,salt=crypto.randomBytes(16).toString('hex')){const hash=crypto.scryptSync(String(password),salt,64).toString('hex');return {salt,hash}}
 function passwordMatches(password,user){if(!user?.passwordSalt||!user?.passwordHash)return false;const test=crypto.scryptSync(String(password),user.passwordSalt,64).toString('hex');return safeEqual(test,user.passwordHash)}
-function publicUser(u){if(!u)return null;return {id:u.id,customerId:u.customerId,firstName:u.firstName,lastName:u.lastName,email:u.email,phone:u.phone,birthDate:u.birthDate||'',phoneVerifiedAt:u.phoneVerifiedAt||null,smsMarketingConsent:!!u.smsMarketingConsent,emailMarketingConsent:!!u.emailMarketingConsent,createdAt:u.createdAt}}
+function publicUser(u){if(!u)return null;return {id:u.id,customerId:u.customerId,firstName:u.firstName,lastName:u.lastName,email:u.email,phone:u.phone,birthDate:u.birthDate||'',phoneVerifiedAt:u.phoneVerifiedAt||null,smsMarketingConsent:!!u.smsMarketingConsent,emailMarketingConsent:!!u.emailMarketingConsent,createdAt:u.createdAt,authProviders:Array.isArray(u.authProviders)?u.authProviders:(u.passwordHash?['password']:[])}}
 function signUserSession(user){if(!USER_SESSION_SECRET)return '';const payload=Buffer.from(JSON.stringify({uid:user.id,iat:Date.now(),v:Number(user.authVersion||1)})).toString('base64url');const sig=crypto.createHmac('sha256',USER_SESSION_SECRET).update(payload).digest('base64url');return payload+'.'+sig}
 function accountUserFromReq(req){if(!USER_SESSION_SECRET)return null;const token=parseCookies(req)[USER_SESSION_COOKIE];if(!token)return null;const [payload,sig]=token.split('.');if(!payload||!sig)return null;const exp=crypto.createHmac('sha256',USER_SESSION_SECRET).update(payload).digest('base64url');if(!safeEqual(sig,exp))return null;let data;try{data=JSON.parse(Buffer.from(payload,'base64url').toString('utf8'))}catch{return null}if(!data.uid||Date.now()-Number(data.iat||0)>USER_SESSION_MAX_AGE_MS)return null;const u=readJson('users.json',[]).find(x=>x.id===data.uid);if(!u||u.disabled||Number(u.authVersion||1)!==Number(data.v||1))return null;return u}
 function setUserSession(res,user,req){const secure=process.env.NODE_ENV==='production'||String(req.headers['x-forwarded-proto']||'').includes('https');const token=signUserSession(user);res.setHeader('Set-Cookie',`${USER_SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${USER_SESSION_MAX_AGE_MS/1000}${secure?'; Secure':''}`)}
@@ -929,7 +935,30 @@ app.get('/api/media',requireAdmin,(req,res)=>{
 });
 
 
+function base64UrlJson(part){try{return JSON.parse(Buffer.from(String(part||''),'base64url').toString('utf8'))}catch{return null}}
+async function googleIdentity(credential){
+  if(!GOOGLE_CLIENT_ID)throw new Error('Google ile giriş yapılandırılmadı.');
+  const r=await fetch('https://oauth2.googleapis.com/tokeninfo?id_token='+encodeURIComponent(String(credential||'')));const j=await r.json();
+  if(!r.ok||j.aud!==GOOGLE_CLIENT_ID||!j.email||j.email_verified==='false')throw new Error('Google hesabı doğrulanamadı.');
+  return {sub:String(j.sub||''),email:normalizeEmail(j.email),firstName:String(j.given_name||''),lastName:String(j.family_name||''),provider:'google'};
+}
+let appleKeysCache={at:0,keys:[]};
+async function appleKeys(){if(Date.now()-appleKeysCache.at<6*60*60*1000&&appleKeysCache.keys.length)return appleKeysCache.keys;const r=await fetch('https://appleid.apple.com/auth/keys');const j=await r.json();if(!r.ok||!Array.isArray(j.keys))throw new Error('Apple doğrulama anahtarları alınamadı.');appleKeysCache={at:Date.now(),keys:j.keys};return j.keys}
+async function appleIdentity(token){
+  if(!APPLE_CLIENT_ID)throw new Error('Apple ile giriş yapılandırılmadı.');const parts=String(token||'').split('.');if(parts.length!==3)throw new Error('Apple oturum bilgisi geçersiz.');const head=base64UrlJson(parts[0]),payload=base64UrlJson(parts[1]);if(!head||!payload)throw new Error('Apple oturum bilgisi geçersiz.');
+  const keys=await appleKeys(),jwk=keys.find(k=>k.kid===head.kid);if(!jwk)throw new Error('Apple imza anahtarı bulunamadı.');const key=crypto.createPublicKey({key:jwk,format:'jwk'}),ok=crypto.verify('RSA-SHA256',Buffer.from(parts[0]+'.'+parts[1]),key,Buffer.from(parts[2],'base64url'));if(!ok)throw new Error('Apple hesabı doğrulanamadı.');
+  if(payload.iss!=='https://appleid.apple.com'||payload.aud!==APPLE_CLIENT_ID||Number(payload.exp||0)*1000<Date.now()||!payload.sub)throw new Error('Apple oturumu geçersiz veya süresi dolmuş.');
+  return {sub:String(payload.sub),email:normalizeEmail(payload.email||''),firstName:'',lastName:'',provider:'apple'};
+}
+function socialLoginUser(identity,extra={}){
+  const users=readJson('users.json',[]);let u=users.find(x=>(x.socialIds&&x.socialIds[identity.provider]===identity.sub)||(identity.email&&x.email===identity.email));const now=new Date().toISOString();
+  if(!u){if(!identity.email)throw new Error('Hesap e-postası alınamadı.');const id='USR-'+crypto.randomUUID(),customerId='CUS-'+crypto.randomUUID();u={id,customerId,firstName:String(extra.firstName||identity.firstName||'').trim()||'SHAZ',lastName:String(extra.lastName||identity.lastName||'').trim(),email:identity.email,phone:'',birthDate:'',phoneVerifiedAt:null,passwordSalt:'',passwordHash:'',authVersion:1,authProviders:['password'],socialIds:{},smsMarketingConsent:false,emailMarketingConsent:false,authProviders:[identity.provider],socialIds:{[identity.provider]:identity.sub},createdAt:now,updatedAt:now,disabled:false};users.push(u);writeJson('users.json',users);const customers=readJson('customers.json',[]);customers.push({id:customerId,userId:id,firstName:u.firstName,lastName:u.lastName,email:u.email,phone:'',createdAt:now,updatedAt:now});writeJson('customers.json',customers)}else{u.authProviders=Array.from(new Set([...(u.authProviders||[]),identity.provider]));u.socialIds={...(u.socialIds||{}),[identity.provider]:identity.sub};if(!u.firstName&&extra.firstName)u.firstName=String(extra.firstName);if(!u.lastName&&extra.lastName)u.lastName=String(extra.lastName);u.updatedAt=now;writeJson('users.json',users)}
+  return u;
+}
+async function sendPasswordResetMail(email,link){if(!RESEND_API_KEY)return false;const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:PASSWORD_RESET_FROM,to:[email],subject:'SHAZ Şifre Sıfırlama',html:`<p>SHAZ hesabınızın şifresini yenilemek için aşağıdaki bağlantıyı kullanın.</p><p><a href="${link}">Şifremi yenile</a></p><p>Bu bağlantı 30 dakika geçerlidir.</p>`})});return r.ok}
+
 // ---------- v153 hukuki metin yönetimi (mevcut admin içinde minimum ekran) ----------
+app.get('/api/admin/users',requireAdmin,(req,res)=>{const users=readJson('users.json',[]),addresses=readJson('addresses.json',[]),orders=readJson('orders.json',[]);res.json({ok:true,users:users.map(u=>({id:u.id,customerId:u.customerId,firstName:u.firstName||'',lastName:u.lastName||'',email:u.email||'',phone:u.phone||'',birthDate:u.birthDate||'',phoneVerifiedAt:u.phoneVerifiedAt||null,smsMarketingConsent:!!u.smsMarketingConsent,emailMarketingConsent:!!u.emailMarketingConsent,authProviders:Array.isArray(u.authProviders)?u.authProviders:(u.passwordHash?['password']:[]),createdAt:u.createdAt||'',addressCount:addresses.filter(a=>a.userId===u.id).length,orderCount:orders.filter(o=>o.userId===u.id||o.customerId===u.customerId).length}))})});
 app.get('/api/admin/legal-documents',requireAdmin,(req,res)=>res.json({ok:true,documents:readJson('legal_documents.json',[]).filter(d=>d.active!==false)}));
 app.put('/api/admin/legal-documents',requireAdmin,(req,res)=>{
   const incoming=Array.isArray(req.body.documents)?req.body.documents:[],allowed=new Set(['MEMBERSHIP','KVKK','PRIVACY','COOKIE','PRE_INFORMATION','DISTANCE_SALES']);
@@ -948,7 +977,13 @@ app.put('/api/admin/legal-documents',requireAdmin,(req,res)=>{
 
 // ---------- v153 müşteri auth/account API ----------
 app.get('/api/legal-documents',(req,res)=>res.json({ok:true,documents:readJson('legal_documents.json',[]).filter(d=>d.active!==false).map(d=>({type:d.type,version:d.version,title:d.title,content:d.content||'',active:d.active!==false}))}));
-app.get(['/giris','/kayit','/hesabim','/hesabim/siparisler','/hesabim/bilgiler','/hesabim/adresler','/hesabim/favoriler','/hesabim/kuponlar','/hesabim/sifre'],(req,res)=>{res.setHeader('X-Robots-Tag','noindex, nofollow');res.sendFile(path.join(root,'public','index.html'))});
+app.get('/api/auth/social-config',(req,res)=>res.json({ok:true,googleClientId:GOOGLE_CLIENT_ID||'',appleClientId:APPLE_CLIENT_ID||'',appleRedirectUri:APPLE_REDIRECT_URI||'',passwordResetEnabled:!!RESEND_API_KEY}));
+app.post('/api/auth/social/google',sameOriginGuard,async(req,res)=>{try{const identity=await googleIdentity(req.body.credential);const u=socialLoginUser(identity);setUserSession(res,u,req);res.json({ok:true,user:publicUser(u)})}catch(e){res.status(401).json({ok:false,message:e.message||'Google ile giriş tamamlanamadı.'})}});
+app.post('/api/auth/social/apple',sameOriginGuard,async(req,res)=>{try{const identity=await appleIdentity(req.body.identityToken);const u=socialLoginUser(identity,{firstName:req.body.firstName,lastName:req.body.lastName});setUserSession(res,u,req);res.json({ok:true,user:publicUser(u)})}catch(e){res.status(401).json({ok:false,message:e.message||'Apple ile giriş tamamlanamadı.'})}});
+app.post('/api/auth/forgot-password',sameOriginGuard,async(req,res)=>{const email=normalizeEmail(req.body.email),users=readJson('users.json',[]),u=users.find(x=>x.email===email);if(!email.includes('@'))return res.status(400).json({ok:false,message:'Lütfen geçerli bir e-posta adresi girin.'});const generic='E-posta hesabınızla eşleşiyorsa şifre sıfırlama bağlantısı gönderildi.';if(!RESEND_API_KEY)return res.status(503).json({ok:false,message:'Şifre sıfırlama e-posta servisi henüz yapılandırılmadı.'});if(!u)return res.json({ok:true,message:generic});const raw=crypto.randomBytes(32).toString('base64url'),hash=crypto.createHash('sha256').update(raw).digest('hex'),arr=readJson('password_resets.json',[]).filter(x=>x.userId!==u.id&&new Date(x.expiresAt).getTime()>Date.now());arr.push({id:crypto.randomUUID(),userId:u.id,tokenHash:hash,createdAt:new Date().toISOString(),expiresAt:new Date(Date.now()+30*60*1000).toISOString(),usedAt:null});writeJson('password_resets.json',arr);const sent=await sendPasswordResetMail(u.email,`${PUBLIC_BASE_URL}/sifre-sifirla?token=${encodeURIComponent(raw)}`);if(!sent)return res.status(502).json({ok:false,message:'Şifre sıfırlama e-postası gönderilemedi.'});res.json({ok:true,message:generic})});
+app.post('/api/auth/reset-password',sameOriginGuard,(req,res)=>{const raw=String(req.body.token||''),password=String(req.body.password||'');if(password.length<8)return res.status(400).json({ok:false,message:'Yeni şifre en az 8 karakter olmalıdır.'});const hash=crypto.createHash('sha256').update(raw).digest('hex'),arr=readJson('password_resets.json',[]),x=arr.find(v=>v.tokenHash===hash&&!v.usedAt&&new Date(v.expiresAt).getTime()>Date.now());if(!x)return res.status(400).json({ok:false,message:'Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.'});const users=readJson('users.json',[]),i=users.findIndex(u=>u.id===x.userId);if(i<0)return res.status(400).json({ok:false,message:'Hesap bulunamadı.'});const ph=passwordHash(password);users[i].passwordSalt=ph.salt;users[i].passwordHash=ph.hash;users[i].authVersion=Number(users[i].authVersion||1)+1;users[i].authProviders=Array.from(new Set([...(users[i].authProviders||[]),'password']));users[i].updatedAt=new Date().toISOString();x.usedAt=users[i].updatedAt;writeJson('users.json',users);writeJson('password_resets.json',arr);res.json({ok:true})});
+
+app.get(['/giris','/kayit','/sifre-sifirla','/hesabim','/hesabim/siparisler','/hesabim/bilgiler','/hesabim/adresler','/hesabim/favoriler','/hesabim/kuponlar','/hesabim/sifre'],(req,res)=>{res.setHeader('X-Robots-Tag','noindex, nofollow');res.sendFile(path.join(root,'public','index.html'))});
 app.get('/hesabim/siparisler/:id',(req,res)=>{res.setHeader('X-Robots-Tag','noindex, nofollow');res.sendFile(path.join(root,'public','index.html'))});
 app.post('/api/auth/register',sameOriginGuard,(req,res)=>{
   if(!USER_SESSION_SECRET)return res.status(503).json({ok:false,message:'Üyelik oturum anahtarı sunucuda yapılandırılmadı.'});
@@ -957,7 +992,7 @@ app.post('/api/auth/register',sameOriginGuard,(req,res)=>{
   const users=readJson('users.json',[]);if(users.some(u=>u.email===email))return res.status(409).json({ok:false,message:'Bu e-posta adresiyle daha önce hesap oluşturulmuş.'});if(users.some(u=>u.phone===phone))return res.status(409).json({ok:false,message:'Bu telefon numarasıyla daha önce hesap oluşturulmuş.'});
   if(PHONE_VERIFICATION_REQUIRED)return res.status(503).json({ok:false,message:'Telefon doğrulama özelliği etkin ancak SMS sağlayıcısı henüz canlı kullanıma açılmadı.'});
   const now=new Date().toISOString(),id='USR-'+crypto.randomUUID(),customerId='CUS-'+crypto.randomUUID(),ph=passwordHash(password);
-  const user={id,customerId,firstName,lastName,email,phone,birthDate,phoneVerifiedAt:null,passwordSalt:ph.salt,passwordHash:ph.hash,authVersion:1,smsMarketingConsent:!!req.body.smsMarketingConsent,emailMarketingConsent:!!req.body.emailMarketingConsent,createdAt:now,updatedAt:now,disabled:false};users.push(user);writeJson('users.json',users);
+  const user={id,customerId,firstName,lastName,email,phone,birthDate,phoneVerifiedAt:null,passwordSalt:ph.salt,passwordHash:ph.hash,authVersion:1,authProviders:['password'],socialIds:{},smsMarketingConsent:!!req.body.smsMarketingConsent,emailMarketingConsent:!!req.body.emailMarketingConsent,createdAt:now,updatedAt:now,disabled:false};users.push(user);writeJson('users.json',users);
   const customers=readJson('customers.json',[]);customers.push({id:customerId,userId:id,firstName,lastName,email,phone,createdAt:now,updatedAt:now});writeJson('customers.json',customers);
   // Eski siparişleri yalnız telefon + e-posta birlikte aynıysa bağla; yalnız isim/telefon ile otomatik eşleştirme yapma.
   const oldOrders=readJson('orders.json',[]);let linked=false;for(const o of oldOrders){const oe=normalizeEmail(o?.customer?.email||'');const op=normalizeAccountPhone(o?.customer?.phone||'');if(oe&&oe===email&&op&&op===phone&&!o.userId){o.userId=id;o.customerId=customerId;linked=true}}if(linked)writeJson('orders.json',oldOrders);

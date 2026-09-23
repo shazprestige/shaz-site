@@ -1,5 +1,5 @@
 
-let settings={},catalog={},legalDocuments=[];
+let settings={},catalog={},legalDocuments=[],members=[];
 let adminOpenCategory=sessionStorage.getItem('shazAdminCategory')||null,adminProductSearch="",adminOpenProduct=null;
 let adminDraggedCategory=null;
 let adminDraggedProduct=null;
@@ -41,6 +41,7 @@ async function load(){
   settings=await fetch('/api/settings').then(r=>r.json());
   catalog=await fetch('/api/catalog').then(r=>r.json());
   try{legalDocuments=(await fetch('/api/admin/legal-documents').then(r=>r.json())).documents||[]}catch(_){legalDocuments=[]}
+  try{members=(await fetch('/api/admin/users').then(r=>r.json())).users||[]}catch(_){members=[]}
   catalog.walletPhotoFee=Number(catalog.walletPhotoFee??25);
   catalog.checkoutCampaigns=Array.isArray(catalog.checkoutCampaigns)?catalog.checkoutCampaigns:[];
   catalog.checkoutUpsells=Array.isArray(catalog.checkoutUpsells)?catalog.checkoutUpsells:[];
@@ -87,7 +88,7 @@ async function load(){
   if(settings.paymentMethods.cod===undefined)settings.paymentMethods.cod=true;
   if(settings.paymentMethods.online===undefined)settings.paymentMethods.online=true;
   const savedTab=sessionStorage.getItem('shazAdminTab')||'site';
-  show(['site','catalog','custom','discounts','upsells','orders','builderAccess','soldout','legal'].includes(savedTab)?savedTab:'site');
+  show(['site','catalog','custom','discounts','upsells','orders','builderAccess','soldout','legal','members'].includes(savedTab)?savedTab:'site');
   setTimeout(()=>{sendPreview();previewTo('header')},600);
 }
 async function saveAll(){
@@ -191,7 +192,7 @@ function show(tab){
   try{sessionStorage.setItem('shazAdminTab',tab)}catch(_){}
   const adminRoot=document.querySelector('.simpleAdmin');
   const preview=document.querySelector('.previewPane');
-  const isOrders=tab==='orders';
+  const isOrders=tab==='orders'||tab==='members';
   if(preview) preview.style.display=isOrders?'none':'block';
   if(adminRoot) adminRoot.classList.toggle('ordersMode',isOrders);
 
@@ -204,6 +205,14 @@ function show(tab){
   if(tab==='soldout')return renderSoldOutPanel();
   if(tab==='orders')return renderOrders();
   if(tab==='legal')return renderLegalDocuments();
+  if(tab==='members')return renderMembers();
+}
+
+function formatAdminDate(v){if(!v)return '—';try{return new Date(v).toLocaleString('tr-TR')}catch{return String(v)}}
+async function renderMembers(){
+  try{members=(await fetch('/api/admin/users').then(r=>r.json())).users||members}catch(_){}
+  const rows=(members||[]).map(u=>`<details class="memberAdminRow"><summary><span class="memberAdminName"><b>${esc([u.firstName,u.lastName].filter(Boolean).join(' ')||'İsimsiz Üye')}</b><small>${esc(u.email||'')}</small></span><strong>${esc(u.phone||'Telefon yok')}</strong><span class="memberAdminArrow">⌄</span></summary><div class="memberAdminDetail"><div><span>E-posta</span><b>${esc(u.email||'—')}</b></div><div><span>Telefon</span><b>${esc(u.phone||'—')}</b></div><div><span>Doğum Tarihi</span><b>${esc(u.birthDate||'—')}</b></div><div><span>Üyelik Tarihi</span><b>${esc(formatAdminDate(u.createdAt))}</b></div><div><span>Telefon Doğrulama</span><b>${u.phoneVerifiedAt?'Doğrulandı':'Doğrulanmadı'}</b></div><div><span>SMS İzni</span><b>${u.smsMarketingConsent?'Açık':'Kapalı'}</b></div><div><span>E-posta İzni</span><b>${u.emailMarketingConsent?'Açık':'Kapalı'}</b></div><div><span>Giriş Yöntemi</span><b>${esc((u.authProviders||['password']).join(', '))}</b></div><div><span>Kayıtlı Adres</span><b>${Number(u.addressCount||0)}</b></div><div><span>Sipariş</span><b>${Number(u.orderCount||0)}</b></div></div></details>`).join('')||'<div class="panel">Henüz kayıtlı üye yok.</div>';
+  $('#view').innerHTML=`<h1>Üyeler</h1><div class="sectionTip">Toplam <b>${(members||[]).length}</b> üye. İsim, soyisim ve telefon özetini görürsün; üyeye tıklayınca diğer bilgileri aşağı doğru açılır.</div><div class="memberAdminList">${rows}</div>`;
 }
 
 function renderLegalDocuments(){

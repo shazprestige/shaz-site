@@ -5372,3 +5372,86 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 }
 
 .accountOrderMeta{display:grid;grid-template-columns:1fr 1fr;gap:10px}.accountOrderMeta>div{display:flex;flex-direction:column;gap:3px}.accountOrderMeta span{font-size:12px;color:#5d6268}.accountOrderAddress{grid-column:1/-1}.accountOrderItem{padding:10px 0;border-top:1px solid #eceff2}.accountOrderItem:first-of-type{border-top:0}.accountPersonalBox{margin-top:8px;padding:9px 10px;border-radius:9px;background:#f7f7f7;display:grid;gap:7px}.accountPersonalBox>strong{font-size:12px}.accountPersonalLine{display:grid;gap:2px;font-size:11px;color:#565b61}.accountPersonalLine b{color:#222}@media(max-width:700px){.accountOrderMeta{grid-template-columns:1fr}}
+
+
+/* ===== v155 — yalnız header hizası, Kiğılı referanslı üyelik arayüzü ve admin üyeler ===== */
+/* Sol header: Kargom Nerede + WhatsApp + Instagram aynı hizada, birbirine yakın; merkez logodan bağımsız. */
+.headLeftContacts{left:52px!important;gap:2px!important;height:42px!important;align-items:center!important}
+.headerContactAction{width:30px!important;min-width:30px!important;height:38px!important;padding:1px!important;display:flex!important;align-items:center!important;justify-content:center!important}
+.cargoHeaderContact{width:42px!important;min-width:42px!important;height:42px!important;gap:1px!important}
+.cargoHeaderContact .headerIconWrap{width:24px!important;height:21px!important;min-width:24px!important;min-height:21px!important}
+.headLeftContacts .headerContactIcon{width:22px!important;height:22px!important}
+.headerMiniText{font-size:6.4px!important;line-height:.95!important;letter-spacing:-.05px!important}
+@media(max-width:700px){
+  .headLeftContacts{left:42px!important;gap:2px!important;height:40px!important}
+  .headerContactAction{width:26px!important;min-width:26px!important;height:36px!important}
+  .cargoHeaderContact{width:35px!important;min-width:35px!important;height:40px!important}
+  .cargoHeaderContact .headerIconWrap{width:20px!important;height:18px!important;min-width:20px!important;min-height:18px!important}
+  .headLeftContacts .headerContactIcon{width:19px!important;height:19px!important}
+  .headerMiniText{font-size:5.7px!important;line-height:.92!important}
+}
+@media(max-width:365px){
+  .headLeftContacts{left:38px!important;gap:1px!important}
+  .headerContactAction{width:24px!important;min-width:24px!important}
+  .cargoHeaderContact{width:32px!important;min-width:32px!important}
+  .headerMiniText{font-size:5.3px!important}
+}
+
+/* Üyelik ekranları artık sağdan dar panel değil; yalnız account için tam ve simetrik çalışma alanı. */
+.drawer.drawerAccountMode{left:0!important;right:0!important;top:0!important;width:100%!important;max-width:none!important;height:100dvh!important;max-height:100dvh!important;padding:0!important;background:#fff!important;overflow:auto!important;z-index:2147483100!important}
+.drawer.drawerAccountMode .accountPageShell{min-height:100dvh;width:100%;background:#fff;display:grid;grid-template-columns:minmax(320px,1fr) minmax(520px,1fr)}
+.accountBrandPane{background:#f4f4f2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:48px;overflow:hidden;position:relative}
+.accountBrandPane:after{content:"";position:absolute;inset:8%;border:1px solid #e2e2df;pointer-events:none}
+.accountBrandPane img{position:relative;z-index:1;width:min(44%,280px);max-height:220px;object-fit:contain}
+.accountBrandWord{position:relative;z-index:1;font:500 clamp(34px,4vw,64px)/1 Georgia,"Times New Roman",serif;letter-spacing:.18em;color:#111}
+.accountPagePanel{min-width:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 7vw;position:relative}
+.accountMobileBar{position:absolute;left:0;right:0;top:0;height:72px;border-bottom:1px solid #ececec;display:flex;align-items:center;justify-content:center;background:#fff;z-index:4}
+.accountMobileBar img{width:92px;max-height:48px;object-fit:contain}
+.accountMobileBack,.accountMobileClose{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border:0;background:transparent;font-size:27px;cursor:pointer;color:#111}
+.accountMobileBack{left:18px}.accountMobileClose{right:18px;font-size:32px;font-weight:300}
+.authAccountPage .accountMobileBar{display:none}
+.authCenter{width:min(100%,640px);margin:auto;text-align:center;padding-top:12px}
+.authCenter h1{font:400 32px/1.2 Georgia,"Times New Roman",serif;margin:0 0 26px;color:#171717}
+.authLead{font-size:15px;line-height:1.5;color:#333;margin:0 auto 26px;max-width:620px}
+.kigiliAuthForm{gap:10px!important;width:100%}
+.kigiliAuthForm .formControl{height:54px!important;border:0!important;border-radius:0!important;background:#f0f0f0!important;padding:0 18px!important;color:#222!important;box-shadow:none!important}
+.kigiliAuthForm .formControl::placeholder{color:#777!important;opacity:1}
+.authPasswordWrap{position:relative;width:100%}.authPasswordWrap .formControl{padding-right:56px!important}.authEye{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:42px;height:42px;border:0;background:transparent;font-size:22px;cursor:pointer;color:#222}.authEye.active{opacity:.55}
+.authSubmit{height:48px!important;border-radius:0!important;background:#9f9f9f!important;color:#fff!important;letter-spacing:1.2px;font-size:12px!important;margin-top:1px}
+.authSubmit:hover{background:#111!important}
+.authTextLink{border:0;background:none;text-decoration:underline;text-underline-offset:4px;color:#a35f5f;font-size:12px;letter-spacing:.6px;cursor:pointer;margin:17px auto 7px;display:block}
+.authSwitch{font-size:14px;color:#222;margin:8px 0 0}.authSwitch button{border:0;background:none;color:#a35f5f;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0 2px;font-size:12px;letter-spacing:.5px}
+.authOr{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;margin:22px 0 16px}.authOr span{height:1px;background:#222}.authOr b{font-size:12px;font-weight:500;letter-spacing:.5px}
+.socialAuthButtons{display:flex;justify-content:center;gap:12px}.socialAuthBtn{width:44px;height:44px;border:1px solid #aaa;border-radius:50%;background:#fff;color:#111;font-size:25px;font-weight:700;display:grid;place-items:center;cursor:pointer}.socialAuthBtn.apple{font-size:27px;font-family:Arial,sans-serif}.socialAuthBtn:disabled{opacity:.5;cursor:wait}
+.birthDateField{position:relative;text-align:left}.birthDateField label{position:absolute;left:14px;top:-7px;z-index:2;background:#fff;padding:0 4px;font-size:11px;color:#777}.birthDateField .formControl{padding-top:7px!important}
+.authInfoLine{text-align:left;font-size:11px;line-height:1.45;color:#303030;padding:2px 4px}.authInfoLine button{border:0;background:none;text-decoration:underline;padding:0;cursor:pointer;color:inherit;font:inherit}
+.authChecks{text-align:left!important;margin:3px 0!important;gap:9px!important}.authCheck{font-size:11px!important;line-height:1.35!important;color:#333}.authCheck input{width:18px;height:18px;flex:0 0 auto;margin:0}
+.authLegalLinks{justify-content:center!important;margin:1px 0 4px}.authLegalLinks button{font-size:10px!important;color:#555}
+.accountStandardPage{display:block!important;min-height:100dvh!important;background:#fff!important}.accountPagePanelSingle{min-height:100dvh;padding:112px 24px 54px!important;justify-content:flex-start!important}.accountCenteredContent{width:min(100%,720px);margin:0 auto}
+.accountShell{max-width:720px!important;width:100%;margin:0 auto!important;padding:0 4px 26px!important}.accountShell .wizardHead{width:100%;align-items:center!important}.accountShell .wizardHead h2{margin:0 auto;text-align:center}.accountShellMenu{max-width:660px!important}.accountMenuHero{padding:24px 4px 28px!important;border-bottom:0!important}.accountMenuHero h2{font-size:34px!important;font-weight:400!important;text-align:left!important;margin:0!important;color:#222}.accountMenuList{padding:8px 0!important}.accountMenuRow{grid-template-columns:38px 1fr 28px!important;padding:17px 8px!important;border-radius:0!important;color:#696969!important}.accountMenuRow:hover{background:#f7f7f7!important}.accountMenuRow b{font-size:18px!important;color:#666!important}.accountMenuIcon{width:27px!important;height:27px!important}.accountMenuIcon svg{width:25px!important;height:25px!important}.accountMenuArrow{font-size:32px!important;color:#999!important}.accountMenuList .accountMenuDivider{margin:9px 0!important}
+.accountEntryPopover{position:fixed;z-index:2147483200;right:16px;top:96px;width:250px;background:#fff;border:1px solid #eee;box-shadow:0 12px 28px #0002;padding:12px;display:grid;gap:5px}.accountEntryPrimary{height:44px;border:0;background:#242424;color:#fff;font-weight:700;cursor:pointer}.accountEntryRow{display:grid;grid-template-columns:28px 1fr;align-items:center;gap:8px;min-height:42px;border:0;background:#fff;color:#222;text-decoration:none;text-align:left;padding:6px 8px;cursor:pointer}.accountEntryRow:hover{background:#f5f5f5}.accountEntryRow span{width:22px;height:22px}.accountEntryRow svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5}.accountEntryRow b{font-size:14px;font-weight:500}
+.accountSubPage{width:min(100%,820px);margin:92px auto 40px;padding:0 20px}
+
+/* Yönetim: 9. Üyeler */
+.memberAdminList{display:grid;gap:8px}.memberAdminRow{background:#fff;border:1px solid #e1e4e8;border-radius:12px;overflow:hidden}.memberAdminRow summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(180px,1fr) minmax(140px,220px) 22px;gap:12px;align-items:center;padding:13px 14px}.memberAdminRow summary::-webkit-details-marker{display:none}.memberAdminName{display:grid;gap:3px;min-width:0}.memberAdminName b{font-size:13px}.memberAdminName small{font-size:10px;color:#777;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.memberAdminRow summary>strong{font-size:12px;font-weight:600;color:#3e444b}.memberAdminArrow{text-align:right;font-size:18px;color:#888}.memberAdminRow[open] .memberAdminArrow{transform:rotate(180deg)}.memberAdminDetail{border-top:1px solid #eceff2;background:#fafafa;padding:12px 14px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.memberAdminDetail>div{display:grid;gap:2px;padding:8px;background:#fff;border:1px solid #eceff2;border-radius:8px}.memberAdminDetail span{font-size:10px;color:#737981}.memberAdminDetail b{font-size:12px;color:#222;overflow-wrap:anywhere}
+
+@media(max-width:800px){
+  .drawer.drawerAccountMode .accountPageShell{display:block!important;min-height:100dvh!important}
+  .accountBrandPane{display:none!important}
+  .accountPagePanel{min-height:100dvh!important;padding:100px 22px 44px!important;justify-content:flex-start!important}
+  .authAccountPage .accountMobileBar{display:flex!important}
+  .authCenter{width:100%;max-width:620px;padding-top:28px!important}
+  .authCenter h1{font-size:31px;margin-bottom:24px}.authLead{font-size:16px;margin-bottom:26px;max-width:540px}
+  .kigiliAuthForm .formControl{height:56px!important;font-size:16px!important}
+  .authPair{grid-template-columns:1fr!important}
+  .accountPagePanelSingle{padding:100px 28px 50px!important}
+  .accountMenuHero{padding-top:18px!important}.accountMenuHero h2{font-size:31px!important}
+  .accountMenuRow{padding:16px 4px!important;grid-template-columns:36px 1fr 24px!important}.accountMenuRow b{font-size:17px!important}
+  .accountEntryPopover{right:12px;top:91px;width:min(310px,calc(100vw - 24px))}
+  .memberAdminRow summary{grid-template-columns:1fr auto 18px}.memberAdminName small{display:none}.memberAdminDetail{grid-template-columns:1fr}
+}
+@media(max-width:430px){
+  .accountPagePanel{padding:94px 20px 38px!important}.accountMobileBar{height:70px}.accountMobileBar img{width:86px}.accountMobileBack{left:10px}.accountMobileClose{right:10px}
+  .authCenter{padding-top:20px!important}.authCenter h1{font-size:29px;margin-bottom:22px}.authLead{font-size:15px;line-height:1.55;margin-bottom:24px}
+  .authSubmit{height:52px!important}.authChecks{gap:10px!important}.authCheck{font-size:11px!important}.accountPagePanelSingle{padding:92px 28px 44px!important}.accountMenuHero h2{font-size:30px!important}.accountMenuRow b{font-size:17px!important}
+}
