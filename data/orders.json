@@ -6,7 +6,7 @@
     "status": "new",
     "statusUpdatedAt": "2026-09-23T23:25:38.351Z",
     "requestId": "bc4b3e63-a211-4d9d-8838-86382b0a5ef5",
-    "sheetSyncStatus": "pending",
+    "sheetSyncStatus": "synced",
     "sheetSyncError": "",
     "items": [
       {
@@ -387,7 +387,9 @@
         "customerValue": "asss",
         "fee": 75
       }
-    ]
+    ],
+    "sheetSyncedAt": "2026-09-23T23:25:42.803Z",
+    "sheetId": "SHZ88"
   },
   {
     "id": "SHZ87",
