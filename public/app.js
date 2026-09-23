@@ -674,7 +674,7 @@ function openDrawer(html){
   else if(markup.includes('wizardHead'))drawer?.classList.add('drawerWizardMode');
   document.body.classList.add('drawerOpen');
   document.documentElement.classList.add('drawerOpen');
-  if(isAccount)$('#overlay').classList.add('hidden');else $('#overlay').classList.remove('hidden');drawer.classList.remove('hidden');drawer.innerHTML=html;
+  if(isAccount)$('#overlay').classList.add('hidden');else $('#overlay').classList.remove('hidden');drawer.classList.remove('hidden');drawer.innerHTML=html;if(isAccount)finishAccountRouteBoot();
   if(isProductDetail||isWizard)drawer.scrollTop=0;
   requestAnimationFrame(()=>{
     if(isProductDetail||isWizard)drawer.scrollTop=0;
@@ -683,7 +683,7 @@ function openDrawer(html){
     // Böylece set kişiselleştirme/yazı ekranlarında da alttaki katalog klavye arkasından görünmez.
     bindDrawerInputFocus();
     bindDrawerScrollGuard();
-    if(isAccount){protectAuthInputOverlays();document.documentElement.classList.remove('accountRouteBoot')}
+    if(isAccount)protectAuthInputOverlays()
   });
 }
 function closeDrawer(){
@@ -708,6 +708,7 @@ function closeProductDetail(source=activeProductDetailSource||'catalog'){
 }
 function toast(msg){const t=$('#toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
 function centerToast(msg,ms=1350){const t=$('#toast');if(!t)return;t.textContent=msg;t.classList.add('toastCenter','show');clearTimeout(t._centerTimer);t._centerTimer=setTimeout(()=>t.classList.remove('show','toastCenter'),ms)}
+function finishAccountRouteBoot(){clearTimeout(window.__shazAccountBootTimer);document.documentElement.classList.remove('accountRouteBootSafe')}
 function personalizationFeeAt(i){return i===0?75:50}
 function cartPersonalizationSlotCount(){
   let slot=0;
@@ -2379,12 +2380,12 @@ function memberCheckoutPrefill(){
 }
 async function apiJson(url,options={}){const r=await fetch(url,{credentials:'same-origin',...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});let j={};try{j=await r.json()}catch{}if(!r.ok||j.ok===false)throw new Error(j.message||'İşlem tamamlanamadı.');return j}
 async function loadAccountState(){
-  try{const r=await apiJson('/api/auth/me');currentAccountUser=r.user||null;if(currentAccountUser){const [a,f]=await Promise.all([apiJson('/api/account/addresses'),apiJson('/api/account/favorites')]);currentAccountAddresses=a.addresses||[];const serverFavs=new Set(f.productIds||[]);const localFavs=[...favorites];for(const id of localFavs)if(!serverFavs.has(id))await apiJson('/api/account/favorites/'+encodeURIComponent(id),{method:'POST'}).catch(()=>{});favorites=new Set([...serverFavs,...localFavs]);}else{currentAccountAddresses=[];favorites.clear()}updateAccountHeader();updateFavoriteBadge();renderProducts($('#search')?.value||'');openAccountRouteIfNeeded();}catch(_){currentAccountUser=null;currentAccountAddresses=[];updateAccountHeader();openAccountRouteIfNeeded();document.documentElement.classList.remove('accountRouteBoot')}
+  try{const r=await apiJson('/api/auth/me');currentAccountUser=r.user||null;if(currentAccountUser){const [a,f]=await Promise.all([apiJson('/api/account/addresses'),apiJson('/api/account/favorites')]);currentAccountAddresses=a.addresses||[];const serverFavs=new Set(f.productIds||[]);const localFavs=[...favorites];for(const id of localFavs)if(!serverFavs.has(id))await apiJson('/api/account/favorites/'+encodeURIComponent(id),{method:'POST'}).catch(()=>{});favorites=new Set([...serverFavs,...localFavs]);}else{currentAccountAddresses=[];favorites.clear()}updateAccountHeader();updateFavoriteBadge();renderProducts($('#search')?.value||'');openAccountRouteIfNeeded();}catch(_){currentAccountUser=null;currentAccountAddresses=[];updateAccountHeader();openAccountRouteIfNeeded();finishAccountRouteBoot()}
 }
 function updateAccountHeader(){const t=$('#accountBtnText');if(t)t.textContent=currentAccountUser?(currentAccountUser.firstName||'Hesabım'):'Üyelik'}
 function isAccountPath(pathname=location.pathname){return pathname==='/giris'||pathname==='/kayit'||pathname==='/sifre-sifirla'||pathname.startsWith('/hesabim')}
 function syncAccountRoute(path,mode='push'){if(location.pathname===path)return;history[mode==='replace'?'replaceState':'pushState']({...history.state,shazAccount:true},'',path)}
-function leaveAccountArea(){document.documentElement.classList.remove('accountRouteBoot');closeAccountPopover();closeDrawer();if(location.pathname!=='/')history.replaceState({...history.state,shazAccount:false},'','/');window.scrollTo({top:0,left:0,behavior:'auto'})}
+function leaveAccountArea(){finishAccountRouteBoot();closeAccountPopover();closeDrawer();if(location.pathname!=='/')history.replaceState({...history.state,shazAccount:false},'','/');window.scrollTo({top:0,left:0,behavior:'auto'})}
 function accountNeedsCompletion(u){return !!u&&(!String(u.firstName||'').trim()||!String(u.lastName||'').trim()||!String(u.phone||'').trim()||!String(u.birthDate||'').trim())}
 function openAccountRouteIfNeeded(){const path=location.pathname;if(path==='/giris')return showLogin(false);if(path==='/kayit')return showRegister(false);if(path==='/sifre-sifirla')return showResetPassword(false);if(!path.startsWith('/hesabim'))return;if(!currentAccountUser)return showLogin(false);if(accountNeedsCompletion(currentAccountUser))return showSocialProfileCompletion(false);if(path==='/hesabim/siparisler')return showAccountOrders(false);if(/^\/hesabim\/siparisler\/[^/]+$/.test(path))return showAccountOrderDetail(decodeURIComponent(path.split('/').pop()),false);if(path==='/hesabim/bilgiler')return showAccountProfile(false);if(path==='/hesabim/adresler')return showAccountAddresses(false);if(path==='/hesabim/favoriler')return showAccountFavorites(false);if(path==='/hesabim/kuponlar')return showAccountCoupons(false);if(path==='/hesabim/sifre')return showChangePassword(false);showAccountHome(false)}
 function closeAccountPopover(){document.querySelector('.accountEntryPopover')?.remove()}
@@ -2409,6 +2410,11 @@ function authInputShield(inner){return `<div class="authInputShield">${inner}</d
 function protectAuthInputOverlays(){document.querySelectorAll('.authInputShield').forEach(w=>{const clean=()=>[...w.children].forEach(n=>{if(!(n instanceof HTMLInputElement)&&!n.classList?.contains('authShieldAllowed')){n.style.setProperty('display','none','important');n.setAttribute('aria-hidden','true')}});clean();if(w._shazObserver)w._shazObserver.disconnect();w._shazObserver=new MutationObserver(clean);w._shazObserver.observe(w,{childList:true})})}
 function validAccountIdentifier(v){const x=String(v||'').trim();if(!x)return false;if(x.includes('@'))return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x);return x.replace(/\D/g,'').length>=10}
 function updateAuthSubmitState(mode){let ready=false,btn=null;if(mode==='login'){btn=$('#loginSubmit');ready=validAccountIdentifier($('#loginEmail')?.value)&&String($('#loginPassword')?.value||'').length>0}else if(mode==='register'){btn=$('#registerSubmit');const email=String($('#regEmail')?.value||'').trim(),phone=String($('#regPhone')?.value||'').replace(/\D/g,''),birth=String($('#regBirth')?.value||'').trim();ready=!!String($('#regFirst')?.value||'').trim()&&!!String($('#regLast')?.value||'').trim()&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)&&phone.length>=10&&String($('#regPass')?.value||'').length>0&&String($('#regPass2')?.value||'').length>0&&birth.length===10}else if(mode==='forgot'){btn=$('#forgotSubmit');ready=validAccountIdentifier($('#forgotIdentifier')?.value)}if(btn){btn.classList.toggle('is-ready',!!ready);btn.setAttribute('aria-disabled',ready?'false':'true')}}
+function socialAuthButtons(){return `<div class="authOr"><span></span><b>YA DA</b><span></span></div><div class="socialAuthButtons"><button type="button" class="socialAuthBtn google" onclick="startGoogleLogin(this)" aria-label="Google ile devam et">G</button><button type="button" class="socialAuthBtn apple" onclick="startAppleLogin(this)" aria-label="Apple ile devam et"></button></div>`}
+function formatBirthDateInput(el){let d=String(el.value||'').replace(/\D/g,'').slice(0,8);if(d.length>4)d=d.slice(0,2)+'.'+d.slice(2,4)+'.'+d.slice(4);else if(d.length>2)d=d.slice(0,2)+'.'+d.slice(2);el.value=d;clearAuthFieldError(el)}
+function clearAuthFieldError(el){if(!el)return;el.classList.remove('authFieldError');el.removeAttribute('aria-invalid')}
+function setAuthFieldError(el){if(!el)return;el.classList.add('authFieldError');el.setAttribute('aria-invalid','true');el.addEventListener('input',()=>clearAuthFieldError(el),{once:true})}
+function showAuthErrors(message,ids=[]){ids.forEach(id=>setAuthFieldError(document.getElementById(id)));const box=document.getElementById('authFormMessage');if(box){box.textContent=message;box.classList.remove('hidden')}else alert(message);document.getElementById(ids[0])?.focus()}
 function protectedEmailAttrs(){return ' data-1p-ignore="true" data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true" data-form-type="other" data-ignore="true" spellcheck="false" '}
 async function finishAccountLogin(user){currentAccountUser=user;await loadAccountState();if(accountNeedsCompletion(currentAccountUser))showSocialProfileCompletion();else showAccountHome()}
 function showLogin(updateRoute=true){closeAccountPopover();if(updateRoute)syncAccountRoute('/giris');const body=`<div id="authFormMessage" class="authFormMessage hidden"></div><div class="authForm kigiliAuthForm">${authInputShield(`<input id="loginEmail" class="formControl" type="text" inputmode="email" autocomplete="username" ${protectedEmailAttrs()} placeholder="E-posta adresi veya telefon" oninput="updateAuthSubmitState('login')">`)}${authPasswordField('loginPassword','Şifre','current-password','login')}<button id="loginSubmit" class="btn authSubmit" onclick="loginAccount(this)">OTURUM AÇ</button></div><button class="authTextLink authForgot" type="button" onclick="showForgotPassword()">ŞİFREMİ UNUTTUM</button><div class="authSwitch">Hesabınız yok mu? <button type="button" onclick="showRegister()">HESAP OLUŞTUR</button></div>${socialAuthButtons()}`;openDrawer(accountAuthPage('Giriş yap','Hesabınız varsa lütfen giriş yapın.',body));requestAnimationFrame(()=>updateAuthSubmitState('login'))}
