@@ -28,7 +28,7 @@ const uploadDir = path.join(persistRoot,'uploads');
 fs.mkdirSync(dataDir,{recursive:true});
 fs.mkdirSync(uploadDir,{recursive:true});
 // İlk kullanımda repodaki başlangıç JSON'larını kalıcı alana yalnızca bir kez kopyala.
-for(const name of ['settings.json','catalog.json','orders.json','users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','legal_documents.json','legal_documents_backup.json','legal_acceptances.json','phone_verifications.json','password_resets.json']){
+for(const name of ['settings.json','catalog.json','orders.json','users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','legal_documents.json','legal_documents_backup.json','legal_acceptances.json','phone_verifications.json','password_resets.json','coupons.json']){
   const dst=path.join(dataDir,name);
   const seed=path.join(root,'data',name);
   if(!fs.existsSync(dst) && fs.existsSync(seed)) fs.copyFileSync(seed,dst);
@@ -980,8 +980,9 @@ function adminMemberRows(){
   });
 }
 function filterAdminMembers(rows,q={}){
-  const search=String(q.search||'').trim().toLocaleLowerCase('tr-TR'),province=String(q.province||'').trim().toLocaleLowerCase('tr-TR'),district=String(q.district||'').trim().toLocaleLowerCase('tr-TR'),sms=String(q.sms||''),emailMarketing=String(q.emailMarketing||''),provider=String(q.provider||'').trim().toLowerCase();
-  let out=rows.filter(u=>{const hay=[u.firstName,u.lastName,u.email,u.phone,u.province,u.district,u.address].join(' ').toLocaleLowerCase('tr-TR');const providers=(u.authProviders||[]).map(x=>String(x).toLowerCase());return (!search||hay.includes(search))&&(!province||String(u.province||'').toLocaleLowerCase('tr-TR')===province)&&(!district||String(u.district||'').toLocaleLowerCase('tr-TR')===district)&&(!sms||String(!!u.smsMarketingConsent)===sms)&&(!emailMarketing||String(!!u.emailMarketingConsent)===emailMarketing)&&(!provider||providers.includes(provider))});
+  const search=String(q.search||'').trim().toLocaleLowerCase('tr-TR'),province=String(q.province||'').trim().toLocaleLowerCase('tr-TR'),district=String(q.district||'').trim().toLocaleLowerCase('tr-TR'),sms=String(q.sms||''),emailMarketing=String(q.emailMarketing||''),provider=String(q.provider||'').trim().toLowerCase(),dateFrom=String(q.dateFrom||'').trim(),dateTo=String(q.dateTo||'').trim();
+  const fromTs=dateFrom?new Date(dateFrom+'T00:00:00').getTime():0,toTs=dateTo?new Date(dateTo+'T23:59:59.999').getTime():0;
+  let out=rows.filter(u=>{const hay=[u.firstName,u.lastName,u.email,u.phone,u.province,u.district,u.address].join(' ').toLocaleLowerCase('tr-TR');const providers=(u.authProviders||[]).map(x=>String(x).toLowerCase()),createdTs=new Date(u.createdAt||0).getTime();return (!search||hay.includes(search))&&(!province||String(u.province||'').toLocaleLowerCase('tr-TR')===province)&&(!district||String(u.district||'').toLocaleLowerCase('tr-TR')===district)&&(!sms||String(!!u.smsMarketingConsent)===sms)&&(!emailMarketing||String(!!u.emailMarketingConsent)===emailMarketing)&&(!provider||providers.includes(provider))&&(!fromTs||createdTs>=fromTs)&&(!toTs||createdTs<=toTs)});
   const sort=String(q.sort||'newest');
   out.sort((a,b)=>sort==='name'?`${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`,'tr'):sort==='orders'?Number(b.orderCount||0)-Number(a.orderCount||0):sort==='province'?`${a.province} ${a.district}`.localeCompare(`${b.province} ${b.district}`,'tr'):new Date(b.createdAt||0)-new Date(a.createdAt||0));
   return out;
@@ -993,6 +994,25 @@ app.get('/api/admin/users/export.xlsx',requireAdmin,(req,res)=>{
   }));
   const wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,'Üyeler');
   const buf=XLSX.write(wb,{type:'buffer',bookType:'xlsx'});res.setHeader('Content-Type','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');res.setHeader('Content-Disposition','attachment; filename="SHAZ-Uyeler.xlsx"');res.send(buf);
+});
+app.post('/api/admin/users/coupons',requireAdmin,(req,res)=>{
+  const userIds=Array.isArray(req.body.userIds)?[...new Set(req.body.userIds.map(x=>String(x||'').trim()).filter(Boolean))]:[];
+  const code=String(req.body.code||'').trim().toUpperCase().replace(/\s+/g,'');
+  const discountType=String(req.body.discountType||'percent')==='fixed'?'fixed':'percent';
+  const value=Number(req.body.value||0),expiresAt=String(req.body.expiresAt||'').trim(),title=String(req.body.title||'').trim();
+  if(!userIds.length)return res.status(400).json({ok:false,message:'Lütfen en az bir üye seçin.'});
+  if(!/^[A-Z0-9_-]{3,32}$/.test(code))return res.status(400).json({ok:false,message:'Kupon kodu 3-32 karakter olmalı; harf, rakam, _ veya - kullanın.'});
+  if(!Number.isFinite(value)||value<=0||(discountType==='percent'&&value>100))return res.status(400).json({ok:false,message:'Geçerli bir indirim değeri girin.'});
+  if(expiresAt&&!/^\d{4}-\d{2}-\d{2}$/.test(expiresAt))return res.status(400).json({ok:false,message:'Son kullanma tarihi geçerli değil.'});
+  const validUsers=new Set(readJson('users.json',[]).map(u=>String(u.id)));
+  const targetIds=userIds.filter(id=>validUsers.has(id));if(!targetIds.length)return res.status(404).json({ok:false,message:'Seçilen üyeler bulunamadı.'});
+  const coupons=readJson('coupons.json',[]),now=new Date().toISOString();
+  for(const userId of targetIds){
+    const existing=coupons.find(c=>c.userId===userId&&String(c.code||'').toUpperCase()===code&&c.status!=='used');
+    const row={id:existing?.id||('CPN-'+crypto.randomUUID()),userId,code,discountType,value,title,expiresAt:expiresAt?expiresAt+'T23:59:59.999Z':'',status:'active',createdAt:existing?.createdAt||now,updatedAt:now};
+    if(existing)Object.assign(existing,row);else coupons.push(row);
+  }
+  writeJson('coupons.json',coupons);res.json({ok:true,assigned:targetIds.length,code});
 });
 app.get('/api/admin/legal-documents',requireAdmin,(req,res)=>res.json({ok:true,documents:readLegalDocuments().filter(d=>d.active!==false)}));
 app.put('/api/admin/legal-documents',requireAdmin,(req,res)=>{
@@ -1054,7 +1074,7 @@ app.delete('/api/account/addresses/:id',sameOriginGuard,requireUser,(req,res)=>{
 app.get('/api/account/favorites',requireUser,(req,res)=>res.json({ok:true,productIds:readJson('favorites.json',[]).filter(x=>x.userId===req.accountUser.id).map(x=>x.productId)}));
 app.post('/api/account/favorites/:productId',sameOriginGuard,requireUser,(req,res)=>{const arr=readJson('favorites.json',[]),pid=String(req.params.productId||'');if(!arr.some(x=>x.userId===req.accountUser.id&&x.productId===pid)){arr.push({id:crypto.randomUUID(),userId:req.accountUser.id,productId:pid,createdAt:new Date().toISOString()});writeJson('favorites.json',arr)}res.json({ok:true})});
 app.delete('/api/account/favorites/:productId',sameOriginGuard,requireUser,(req,res)=>{const arr=readJson('favorites.json',[]).filter(x=>!(x.userId===req.accountUser.id&&x.productId===String(req.params.productId||'')));writeJson('favorites.json',arr);res.json({ok:true})});
-app.get('/api/account/coupons',requireUser,(req,res)=>res.json({ok:true,coupons:[]}));
+app.get('/api/account/coupons',requireUser,(req,res)=>{const now=Date.now(),rows=readJson('coupons.json',[]).filter(c=>c.userId===req.accountUser.id).map(c=>({...c,status:c.status==='used'?'used':(c.expiresAt&&new Date(c.expiresAt).getTime()<now?'expired':'active')}));res.json({ok:true,coupons:rows})});
 app.get('/api/account/orders',requireUser,(req,res)=>{const orders=ordersWithDailyDisplayIds(readJson('orders.json',[])).filter(o=>o.userId===req.accountUser.id||o.customerId===req.accountUser.customerId);res.json({ok:true,orders:orders.map(o=>({id:o.id,dailyDisplayId:o.dailyDisplayId,createdAt:o.createdAt,createdAtTR:o.createdAtTR,total:o.total,status:o.status,payment:o.payment}))})});
 app.get('/api/account/orders/:id',requireUser,(req,res)=>{const o=ordersWithDailyDisplayIds(readJson('orders.json',[])).find(o=>String(o.id)===String(req.params.id)&&(o.userId===req.accountUser.id||o.customerId===req.accountUser.customerId));if(!o)return res.status(404).json({ok:false,message:'Sipariş bulunamadı.'});res.json({ok:true,order:o})});
 app.get('/admin/login',(req,res)=>{
