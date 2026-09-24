@@ -5657,3 +5657,67 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 @media(max-width:760px){
   .accountCenteredSubPage .wizardHead{grid-template-columns:76px 1fr 76px!important}.accountCenteredSubPage .wizardHead>h2{font-size:19px!important}.accountCenteredSubPage .wizardHead>.pill{font-size:10px!important;padding:7px 8px!important}.accountAddress{margin:10px 0!important}.savedCheckoutAddress{padding:13px 12px}.savedCheckoutAddressHead{padding-left:28px;padding-right:28px}.memberSelectionBar{align-items:stretch;flex-direction:column}.memberSelectionBar .btn{width:100%}.memberCouponGrid{grid-template-columns:1fr}.memberCouponWide{grid-column:auto}.memberAdminRow summary{grid-template-columns:48px 1fr!important}.memberAdminPick{grid-row:auto}.memberAdminLocation{grid-column:1/-1!important}.memberAdminOrders{grid-column:2!important}.memberAdminArrow{display:none!important}
 }
+
+/* v158 — yalnız istenen üyelik/kupon/adres davranışlarının görsel düzeltmeleri. */
+/* Üyelik alanında üst/logo bölgesi sabit; içerik paneli kendi içinde kayar. */
+.drawer.drawerAccountMode{overflow:hidden!important}
+.drawer.drawerAccountMode .accountPageShell{height:100dvh!important;min-height:100dvh!important;overflow:hidden!important}
+.drawer.drawerAccountMode .accountPagePanel{height:100dvh!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch}
+@media(min-width:801px){
+  .drawer.drawerAccountMode .authAccountPage .accountBrandPane{height:100dvh!important;position:sticky!important;top:0!important;align-self:start!important}
+}
+@media(max-width:800px){
+  .drawer.drawerAccountMode .accountPageShell{height:100dvh!important;overflow:hidden!important}
+  .drawer.drawerAccountMode .accountPagePanel{height:100dvh!important;overflow-y:auto!important}
+  .drawer.drawerAccountMode .accountMobileBar{position:fixed!important;top:0!important;left:0!important;right:0!important;z-index:8!important}
+}
+
+/* Maskeli şifrede geçici son karakterin imleci karakterin tam dibinde yanıp söner. */
+.authLastCharFlash{display:flex!important;align-items:center!important;justify-content:flex-start!important;letter-spacing:normal!important}
+.authLastCharText{display:inline-block!important;white-space:pre!important;letter-spacing:1.2px!important}
+.authFlashCaret{display:inline-block!important;flex:0 0 1px!important;width:1px!important;height:19px!important;margin-left:1px!important;background:#111!important;animation:shazPasswordCaret .72s step-end infinite!important}
+.authPasswordWrap.maskFlashActive .formControl{caret-color:transparent!important}
+@keyframes shazPasswordCaret{0%,48%{opacity:1}49%,100%{opacity:0}}
+
+/* Adres kartının varsayılan seçimi kartın yanında radyo ile görünür. */
+.accountAddress{display:grid!important;grid-template-columns:28px minmax(0,1fr)!important;column-gap:8px!important;align-items:start!important;cursor:pointer!important}
+.accountAddressDefaultPick{padding-top:1px!important;display:flex!important;justify-content:center!important}
+.accountAddressDefaultPick input{width:19px!important;height:19px!important;margin:0!important;accent-color:#111!important;cursor:pointer!important}
+.accountAddressBody{min-width:0!important}
+.accountAddressPhone{display:block!important;text-align:center!important;margin-top:5px!important;font-size:11px!important;color:#666!important}
+
+/* Kupon bildirimleri ve kupon bilgisinin net görünümü. */
+.headerAction{position:relative}
+.couponNoticeBadge{position:absolute!important;top:-4px!important;right:-2px!important;min-width:17px!important;height:17px!important;padding:0 4px!important;border-radius:999px!important;background:#d71920!important;color:#fff!important;font-size:10px!important;font-weight:900!important;line-height:17px!important;text-align:center!important;z-index:8!important;box-shadow:0 0 0 2px #fff!important}
+.accountMenuRow{position:relative!important}
+.accountMenuNoticeBadge{position:absolute!important;right:42px!important;top:50%!important;transform:translateY(-50%)!important;min-width:18px!important;height:18px!important;padding:0 5px!important;border-radius:999px!important;background:#d71920!important;color:#fff!important;font-size:10px!important;font-weight:900!important;line-height:18px!important;text-align:center!important}
+.couponExpiryUrgent{color:#c71f25!important;font-weight:850!important}
+.accountCouponCard{align-items:center!important}
+.accountCouponMain{display:grid!important;gap:6px!important}
+.accountCouponCode,.couponNoticeCode{display:flex!important;align-items:center!important;gap:8px!important;justify-content:flex-start!important}
+.accountCouponCode b,.couponNoticeCode b{font-size:14px!important;letter-spacing:.7px!important;overflow-wrap:anywhere!important}
+.couponCopyBtn{width:30px!important;height:30px!important;border:1px solid #d9dde1!important;border-radius:8px!important;background:#fff!important;display:grid!important;place-items:center!important;cursor:pointer!important;color:#222!important;padding:0!important;flex:0 0 auto!important}
+.couponCopyBtn svg{width:16px!important;height:16px!important;fill:none!important;stroke:currentColor!important;stroke-width:1.7!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+.couponCopyBtn.copied{border-color:#18854a!important;color:#18854a!important;background:#f1fbf5!important}
+.accountCouponCard>strong{font-size:14px!important;font-weight:900!important;letter-spacing:.2px!important;text-align:right!important}
+.accountCouponCard>small{font-size:11px!important}
+
+.couponNoticeOverlay{position:fixed!important;inset:0!important;z-index:2147483500!important;background:rgba(10,12,15,.5)!important;display:grid!important;place-items:center!important;padding:18px!important}
+.couponNoticeCard{position:relative!important;width:min(520px,94vw)!important;max-height:88vh!important;overflow:auto!important;background:#fff!important;border-radius:15px!important;padding:24px!important;box-shadow:0 22px 70px rgba(0,0,0,.28)!important;text-align:center!important}
+.couponNoticeClose{position:absolute!important;right:10px!important;top:8px!important;width:36px!important;height:36px!important;border:0!important;background:transparent!important;font-size:30px!important;line-height:1!important;color:#333!important;cursor:pointer!important}
+.couponNoticeEyebrow{display:block!important;font-size:10px!important;font-weight:900!important;letter-spacing:1.4px!important;color:#777!important;margin-bottom:7px!important}
+.couponNoticeCard h3{margin:0 32px 17px!important;font-size:21px!important;color:#171717!important}
+.couponNoticeList{display:grid!important;gap:10px!important;margin:0 0 16px!important;text-align:left!important}
+.couponNoticeItem{border:1px solid #e0e3e6!important;border-radius:12px!important;padding:13px!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:5px 12px!important;align-items:center!important}
+.couponNoticeItem .couponNoticeCode{grid-column:1!important}
+.couponNoticeItem>strong{grid-column:2!important;grid-row:1!important;font-size:13px!important;font-weight:900!important;text-align:right!important}
+.couponNoticeItem>p{grid-column:1/-1!important;margin:2px 0!important;font-size:12px!important;line-height:1.45!important;color:#4d535a!important}
+.couponNoticeItem>small{grid-column:1/-1!important;font-size:10.5px!important;color:#6b7076!important}
+.couponNoticeItem>small.couponExpiryUrgent{color:#c71f25!important}
+.couponNoticeCard>.btn{width:100%!important}
+@media(max-width:560px){
+  .accountMenuNoticeBadge{right:34px!important}
+  .couponNoticeCard{padding:22px 15px 16px!important}
+  .couponNoticeItem{grid-template-columns:1fr!important}
+  .couponNoticeItem>strong{grid-column:1!important;grid-row:auto!important;text-align:left!important}
+}

@@ -23,7 +23,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=156">
 <style>html.accountRouteBootSafe body::before{content:"";position:fixed;inset:0;background:#fff;z-index:2147483000;pointer-events:none}</style>
 <script>(function(){if(/^\/(?:giris|kayit|sifre-sifirla|hesabim(?:\/|$))/.test(location.pathname)){document.documentElement.classList.add('accountRouteBootSafe');window.__shazAccountBootTimer=setTimeout(function(){document.documentElement.classList.remove('accountRouteBootSafe')},15000);window.addEventListener('error',function(){document.documentElement.classList.remove('accountRouteBootSafe')},{once:true});window.addEventListener('unhandledrejection',function(){document.documentElement.classList.remove('accountRouteBootSafe')},{once:true})}})();</script>
-<link rel="stylesheet" href="/styles.css?v=157">
+<link rel="stylesheet" href="/styles.css?v=158">
 </head>
 <body>
 <div class="announce" id="announceWrap"><div class="track" id="campaign"></div></div>
@@ -38,13 +38,14 @@
     </div>
     <img class="logo" id="brandLogo" alt="SHAZ" fetchpriority="high" decoding="async" role="button" tabindex="0" aria-label="Sayfanın başına dön">
     <div class="headActions">
-      <button class="headerAction accountAction" id="accountBtn" aria-label="Üyelik ve hesabım"><span class="headerIconWrap"><svg class="headerUnifiedIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="3.5"/><path d="M5 21v-2.3a7 7 0 0 1 14 0V21"/></svg></span><span class="headerActionText" id="accountBtnText">Üyelik</span></button>
+      <button class="headerAction accountAction" id="accountBtn" aria-label="Üyelik ve hesabım"><span class="headerIconWrap"><span class="headerCountBadge couponNoticeBadge hidden" id="accountCouponBadge">1</span><svg class="headerUnifiedIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="3.5"/><path d="M5 21v-2.3a7 7 0 0 1 14 0V21"/></svg></span><span class="headerActionText" id="accountBtnText">Üyelik</span></button>
       <button class="headerAction" id="favLink" aria-label="Favorilerim"><span class="headerIconWrap"><span class="headerCountBadge" id="favBadge">0</span><svg class="headerUnifiedIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 4.8a5.4 5.4 0 0 0-7.6 0L12 5.7l-.9-.9a5.4 5.4 0 0 0-7.6 7.6L12 21l8.5-8.6a5.4 5.4 0 0 0 0-7.6Z"/></svg></span><span class="headerActionText">Favorilerim</span></button>
       <button class="headerAction cartAction" id="cartBtn" aria-label="Sepetim"><span class="headerIconWrap"><span class="headerCountBadge" id="cartBadge">0</span><svg class="headerUnifiedIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 13H6L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span><span class="headerActionText">Sepetim</span></button>
     </div>
   </div>
   <div class="tabs" id="catalogNav"></div>
 </header>
+<script>try{const n=localStorage.getItem('shazAccountHeaderHint');if(n){const el=document.getElementById('accountBtnText');if(el)el.textContent=n}}catch(_){}</script>
 
 <div id="campaignCards" class="campaignCards"></div>
 
@@ -89,6 +90,6 @@
 <div id="toast" class="toast"></div>
 <div class="overlay hidden" id="overlay"></div>
 <div class="drawer hidden" id="drawer"></div>
-<script src="/app.js?v=157"></script>
+<script src="/app.js?v=158"></script>
 </body>
 </html>
