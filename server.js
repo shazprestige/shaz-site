@@ -225,7 +225,14 @@ function validBirthDateIso(value){
 }
 function passwordHash(password,salt=crypto.randomBytes(16).toString('hex')){const hash=crypto.scryptSync(String(password),salt,64).toString('hex');return {salt,hash}}
 function passwordMatches(password,user){if(!user?.passwordSalt||!user?.passwordHash)return false;const test=crypto.scryptSync(String(password),user.passwordSalt,64).toString('hex');return safeEqual(test,user.passwordHash)}
-function publicUser(u){if(!u)return null;return {id:u.id,customerId:u.customerId,firstName:u.firstName,lastName:u.lastName,email:u.email,phone:normalizeAccountPhone(u.phone)||u.phone,birthDate:u.birthDate||'',phoneVerifiedAt:u.phoneVerifiedAt||null,smsMarketingConsent:!!u.smsMarketingConsent,emailMarketingConsent:!!u.emailMarketingConsent,createdAt:u.createdAt,authProviders:Array.isArray(u.authProviders)?u.authProviders:(u.passwordHash?['password']:[])}}
+const PROFILE_NAME_COOLDOWN_MS=30*24*60*60*1000;
+const PROFILE_PHONE_COOLDOWN_MS=7*24*60*60*1000;
+const PROFILE_VERIFY_TTL_MS=30*60*1000;
+function profileChangeMeta(u){const m=(u&&u.profileChangeMeta&&typeof u.profileChangeMeta==='object')?u.profileChangeMeta:{};return {nameChangedAt:m.nameChangedAt||null,phoneChangedAt:m.phoneChangedAt||null,emailChangedAt:m.emailChangedAt||null,birthDateUserChangeCount:Number(m.birthDateUserChangeCount||0)}}
+function profileWaitMs(at,period){const t=at?new Date(at).getTime():0;return t?Math.max(0,t+period-Date.now()):0}
+function humanWait(ms){const d=Math.floor(ms/86400000),h=Math.floor((ms%86400000)/3600000),m=Math.ceil((ms%3600000)/60000);return [d?`${d} gün`:'' ,h?`${h} saat`:'' ,(!d&&!h&&m)?`${m} dakika`:'' ].filter(Boolean).join(' ')||'kısa bir süre'}
+function pushProfileHistory(u,field,oldValue,newValue,source='account'){const oldText=String(oldValue??''),newText=String(newValue??'');if(oldText===newText)return;u.profileChangeHistory=Array.isArray(u.profileChangeHistory)?u.profileChangeHistory:[];u.profileChangeHistory.push({at:new Date().toISOString(),field,oldValue:oldText,newValue:newText,source});}
+function publicUser(u){if(!u)return null;const meta=profileChangeMeta(u);return {id:u.id,customerId:u.customerId,firstName:u.firstName,lastName:u.lastName,email:u.email,phone:normalizeAccountPhone(u.phone)||u.phone,birthDate:u.birthDate||'',phoneVerifiedAt:u.phoneVerifiedAt||null,smsMarketingConsent:!!u.smsMarketingConsent,emailMarketingConsent:!!u.emailMarketingConsent,createdAt:u.createdAt,authProviders:Array.isArray(u.authProviders)?u.authProviders:(u.passwordHash?['password']:[]),profileChangeMeta:meta,profileRules:{nameWaitMs:profileWaitMs(meta.nameChangedAt,PROFILE_NAME_COOLDOWN_MS),phoneWaitMs:profileWaitMs(meta.phoneChangedAt,PROFILE_PHONE_COOLDOWN_MS),birthDateChangeAvailable:meta.birthDateUserChangeCount<1},pendingEmailChange:u.pendingEmailChange?{email:u.pendingEmailChange.email,requestedAt:u.pendingEmailChange.requestedAt,expiresAt:u.pendingEmailChange.expiresAt}:null,pendingPhoneChange:u.pendingPhoneChange?{phone:u.pendingPhoneChange.phone,requestedAt:u.pendingPhoneChange.requestedAt,expiresAt:u.pendingPhoneChange.expiresAt}:null}}
 function signUserSession(user){if(!USER_SESSION_SECRET)return '';const payload=Buffer.from(JSON.stringify({uid:user.id,iat:Date.now(),v:Number(user.authVersion||1)})).toString('base64url');const sig=crypto.createHmac('sha256',USER_SESSION_SECRET).update(payload).digest('base64url');return payload+'.'+sig}
 function accountUserFromReq(req){if(!USER_SESSION_SECRET)return null;const token=parseCookies(req)[USER_SESSION_COOKIE];if(!token)return null;const [payload,sig]=token.split('.');if(!payload||!sig)return null;const exp=crypto.createHmac('sha256',USER_SESSION_SECRET).update(payload).digest('base64url');if(!safeEqual(sig,exp))return null;let data;try{data=JSON.parse(Buffer.from(payload,'base64url').toString('utf8'))}catch{return null}if(!data.uid||Date.now()-Number(data.iat||0)>USER_SESSION_MAX_AGE_MS)return null;const u=readJson('users.json',[]).find(x=>x.id===data.uid);if(!u||u.disabled||Number(u.authVersion||1)!==Number(data.v||1))return null;return u}
 function setUserSession(res,user,req){const secure=process.env.NODE_ENV==='production'||String(req.headers['x-forwarded-proto']||'').includes('https');const token=signUserSession(user);res.setHeader('Set-Cookie',`${USER_SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${USER_SESSION_MAX_AGE_MS/1000}${secure?'; Secure':''}`)}
@@ -1031,14 +1038,15 @@ function socialLoginUser(identity,extra={}){
   return u;
 }
 async function sendPasswordResetMail(email,link){if(!RESEND_API_KEY)return false;const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:PASSWORD_RESET_FROM,to:[email],subject:'SHAZ Şifre Sıfırlama',html:`<p>SHAZ hesabınızın şifresini yenilemek için aşağıdaki bağlantıyı kullanın.</p><p><a href="${link}">Şifremi yenile</a></p><p>Bu bağlantı 30 dakika geçerlidir.</p>`})});return r.ok}
+async function sendAccountEmailVerificationMail(email,link){if(!RESEND_API_KEY)return false;const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:PASSWORD_RESET_FROM,to:[email],subject:'SHAZ E-posta Değişikliği Doğrulama',html:`<p>SHAZ hesabınızda yeni e-posta adresini doğrulamak için aşağıdaki bağlantıya tıklayın.</p><p><a href="${link}">Yeni e-posta adresimi doğrula</a></p><p>Bu bağlantı 30 dakika geçerlidir. Siz istemediyseniz bu e-postayı dikkate almayın.</p>`})});return r.ok}
 
 // ---------- v153 hukuki metin yönetimi (mevcut admin içinde minimum ekran) ----------
 function adminMemberRows(){
   const users=readJson('users.json',[]),addresses=readJson('addresses.json',[]),orders=readJson('orders.json',[]),coupons=readJson('coupons.json',[]);
   return users.map(u=>{
     const userAddresses=addresses.filter(a=>a.userId===u.id).map(a=>({...a,phone:normalizeAccountPhone(a.phone)||a.phone||'',extraPhone:normalizeAccountPhone(a.extraPhone)||a.extraPhone||''}));
-    const primary=userAddresses.find(a=>a.isDefault)||userAddresses[0]||{};
-    return {id:u.id,customerId:u.customerId,firstName:u.firstName||'',lastName:u.lastName||'',email:u.email||'',phone:normalizeAccountPhone(u.phone)||u.phone||'',birthDate:u.birthDate||'',phoneVerifiedAt:u.phoneVerifiedAt||null,smsMarketingConsent:!!u.smsMarketingConsent,emailMarketingConsent:!!u.emailMarketingConsent,authProviders:Array.isArray(u.authProviders)?u.authProviders:(u.passwordHash?['password']:[]),createdAt:u.createdAt||'',addressCount:userAddresses.length,orderCount:orders.filter(o=>o.userId===u.id||o.customerId===u.customerId).length,couponCount:coupons.filter(c=>c.userId===u.id).length,province:primary.province||'',district:primary.district||'',address:[primary.neighborhood,primary.avenue,primary.street,primary.fullAddress,primary.buildingNo?`Bina ${primary.buildingNo}`:'',primary.floor?`Kat ${primary.floor}`:'',primary.doorNo?`Daire ${primary.doorNo}`:''].filter(Boolean).join(' · '),addresses:userAddresses};
+    const primary=userAddresses.find(a=>a.isDefault)||userAddresses[0]||{},userCoupons=coupons.filter(c=>c.userId===u.id).map(c=>({...c}));
+    return {id:u.id,customerId:u.customerId,firstName:u.firstName||'',lastName:u.lastName||'',email:u.email||'',phone:normalizeAccountPhone(u.phone)||u.phone||'',birthDate:u.birthDate||'',phoneVerifiedAt:u.phoneVerifiedAt||null,smsMarketingConsent:!!u.smsMarketingConsent,emailMarketingConsent:!!u.emailMarketingConsent,authProviders:Array.isArray(u.authProviders)?u.authProviders:(u.passwordHash?['password']:[]),createdAt:u.createdAt||'',addressCount:userAddresses.length,orderCount:orders.filter(o=>o.userId===u.id||o.customerId===u.customerId).length,couponCount:userCoupons.length,coupons:userCoupons,profileChangeHistory:Array.isArray(u.profileChangeHistory)?u.profileChangeHistory:[],province:primary.province||'',district:primary.district||'',address:[primary.neighborhood,primary.avenue,primary.street,primary.fullAddress,primary.buildingNo?`Bina ${primary.buildingNo}`:'',primary.floor?`Kat ${primary.floor}`:'',primary.doorNo?`Daire ${primary.doorNo}`:''].filter(Boolean).join(' · '),addresses:userAddresses};
   });
 }
 function filterAdminMembers(rows,q={}){
@@ -1057,27 +1065,41 @@ app.get('/api/admin/users/export.xlsx',requireAdmin,(req,res)=>{
   const wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,'Üyeler');
   const buf=XLSX.write(wb,{type:'buffer',bookType:'xlsx'});res.setHeader('Content-Type','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');res.setHeader('Content-Disposition','attachment; filename="SHAZ-Uyeler.xlsx"');res.send(buf);
 });
+function normalizeAdminCouponInput(body,current={}){
+  const code=String(body.code??current.code??'').trim().toUpperCase().replace(/\s+/g,''),discountType=String(body.discountType??current.discountType??'percent')==='fixed'?'fixed':'percent';
+  const value=Number(body.value??current.value??0),expiresAt=String((body.expiresAt ?? couponExpiryDateKey(current.expiresAt) ?? '')).trim(),title=String(body.title??current.title??'').trim();
+  const minRaw=body.minCartAmount??current.minCartAmount??'',minCartAmount=String(minRaw).trim()===''?0:Number(minRaw);
+  const requestedStackable=String(body.stackable??(current.stackable?'yes':'no'))==='yes'||body.stackable===true,stackable=discountType==='percent'?false:requestedStackable;
+  const maxRaw=body.maxDiscountAmount??current.maxDiscountAmount??'',maxDiscountAmount=discountType==='percent'&&String(maxRaw).trim()!==''?Number(maxRaw):0;
+  if(!/^[A-Z0-9_-]{3,32}$/.test(code))throw new Error('Kupon kodu 3-32 karakter olmalı; harf, rakam, _ veya - kullanın.');
+  if(!Number.isFinite(value)||value<=0||(discountType==='percent'&&value>100))throw new Error('Geçerli bir indirim değeri girin.');
+  if(!Number.isFinite(minCartAmount)||minCartAmount<0)throw new Error('Minimum sepet tutarı geçerli değil.');
+  if(discountType==='percent'&&(!Number.isFinite(maxDiscountAmount)||maxDiscountAmount<0))throw new Error('Maksimum indirim tutarı geçerli değil.');
+  if(expiresAt&&!/^\d{4}-\d{2}-\d{2}$/.test(expiresAt))throw new Error('Son kullanma tarihi geçerli değil.');
+  if(expiresAt&&expiresAt<istanbulDateKey())throw new Error('Geçmiş bir tarihe kupon tanımlanamaz. Son kullanma tarihi bugün veya daha ileri bir tarih olmalı.');
+  return {code,discountType,value,expiresAt,title,minCartAmount,stackable,maxDiscountAmount};
+}
 app.post('/api/admin/users/coupons',requireAdmin,(req,res)=>{
   const userIds=Array.isArray(req.body.userIds)?[...new Set(req.body.userIds.map(x=>String(x||'').trim()).filter(Boolean))]:[];
-  const code=String(req.body.code||'').trim().toUpperCase().replace(/\s+/g,'');
-  const discountType=String(req.body.discountType||'percent')==='fixed'?'fixed':'percent';
-  const value=Number(req.body.value||0),expiresAt=String(req.body.expiresAt||'').trim(),title=String(req.body.title||'').trim();
-  const minCartAmount=String(req.body.minCartAmount??'').trim()===''?0:Number(req.body.minCartAmount);
-  const stackable=String(req.body.stackable||'no')==='yes'||req.body.stackable===true;
-  const maxDiscountAmount=discountType==='percent'&&String(req.body.maxDiscountAmount??'').trim()!==''?Number(req.body.maxDiscountAmount):0;
   if(!userIds.length)return res.status(400).json({ok:false,message:'Lütfen en az bir üye seçin.'});
-  if(!/^[A-Z0-9_-]{3,32}$/.test(code))return res.status(400).json({ok:false,message:'Kupon kodu 3-32 karakter olmalı; harf, rakam, _ veya - kullanın.'});
-  if(!Number.isFinite(value)||value<=0||(discountType==='percent'&&value>100))return res.status(400).json({ok:false,message:'Geçerli bir indirim değeri girin.'});
-  if(!Number.isFinite(minCartAmount)||minCartAmount<0)return res.status(400).json({ok:false,message:'Minimum sepet tutarı geçerli değil.'});
-  if(discountType==='percent'&&(!Number.isFinite(maxDiscountAmount)||maxDiscountAmount<0))return res.status(400).json({ok:false,message:'Maksimum indirim tutarı geçerli değil.'});
-  if(expiresAt&&!/^\d{4}-\d{2}-\d{2}$/.test(expiresAt))return res.status(400).json({ok:false,message:'Son kullanma tarihi geçerli değil.'});
-  const validUsers=new Set(readJson('users.json',[]).map(u=>String(u.id)));
-  const targetIds=userIds.filter(id=>validUsers.has(id));if(!targetIds.length)return res.status(404).json({ok:false,message:'Seçilen üyeler bulunamadı.'});
-  const coupons=readJson('coupons.json',[]),now=new Date().toISOString();
-  for(const userId of targetIds){
-    coupons.push({id:'CPN-'+crypto.randomUUID(),userId,code,discountType,value,title,expiresAt:expiresAt?expiresAt+'T23:59:59.999Z':'',minCartAmount,stackable,maxDiscountAmount,status:'active',createdAt:now,updatedAt:now});
-  }
-  writeJson('coupons.json',coupons);persistAccountStateAsync();res.json({ok:true,assigned:targetIds.length,code});
+  let data;try{data=normalizeAdminCouponInput(req.body)}catch(e){return res.status(400).json({ok:false,message:e.message})}
+  const validUsers=new Set(readJson('users.json',[]).map(u=>String(u.id))),targetIds=userIds.filter(id=>validUsers.has(id));if(!targetIds.length)return res.status(404).json({ok:false,message:'Seçilen üyeler bulunamadı.'});
+  const coupons=readJson('coupons.json',[]),now=new Date().toISOString();for(const userId of targetIds)coupons.push({id:'CPN-'+crypto.randomUUID(),userId,...data,expiresAt:data.expiresAt||'',status:'active',createdAt:now,updatedAt:now});
+  writeJson('coupons.json',coupons);persistAccountStateAsync();res.json({ok:true,assigned:targetIds.length,code:data.code});
+});
+app.patch('/api/admin/coupons/:id',requireAdmin,(req,res)=>{
+  const coupons=readJson('coupons.json',[]),i=coupons.findIndex(c=>String(c.id)===String(req.params.id));if(i<0)return res.status(404).json({ok:false,message:'Kupon bulunamadı.'});
+  let data;try{data=normalizeAdminCouponInput(req.body,coupons[i])}catch(e){return res.status(400).json({ok:false,message:e.message})}
+  coupons[i]={...coupons[i],...data,expiresAt:data.expiresAt||'',updatedAt:new Date().toISOString()};writeJson('coupons.json',coupons);persistAccountStateAsync();res.json({ok:true,coupon:coupons[i]});
+});
+app.delete('/api/admin/coupons/:id',requireAdmin,(req,res)=>{
+  const coupons=readJson('coupons.json',[]),i=coupons.findIndex(c=>String(c.id)===String(req.params.id));if(i<0)return res.status(404).json({ok:false,message:'Kupon bulunamadı.'});
+  coupons.splice(i,1);writeJson('coupons.json',coupons);persistAccountStateAsync();res.json({ok:true});
+});
+app.patch('/api/admin/users/:id/profile',requireAdmin,(req,res)=>{
+  const users=readJson('users.json',[]),i=users.findIndex(u=>String(u.id)===String(req.params.id));if(i<0)return res.status(404).json({ok:false,message:'Üye bulunamadı.'});
+  const u=users[i],birthDate=String(req.body.birthDate||'').trim();if(!validBirthDateIso(birthDate))return res.status(400).json({ok:false,message:'Geçerli bir doğum tarihi girin.'});
+  pushProfileHistory(u,'Doğum Tarihi',u.birthDate||'',birthDate,'admin');u.birthDate=birthDate;u.updatedAt=new Date().toISOString();writeJson('users.json',users);persistAccountStateAsync();res.json({ok:true,user:publicUser(u)});
 });
 app.get('/api/admin/legal-documents',requireAdmin,(req,res)=>res.json({ok:true,documents:readLegalDocuments().filter(d=>d.active!==false)}));
 app.put('/api/admin/legal-documents',requireAdmin,(req,res)=>{
@@ -1130,7 +1152,48 @@ app.post('/api/auth/register',sameOriginGuard,(req,res)=>{
 app.post('/api/auth/login',sameOriginGuard,(req,res)=>{if(accountRateLimited(req))return res.status(429).json({ok:false,message:'Çok fazla giriş denemesi. Daha sonra tekrar deneyin.'});const login=String(req.body.login??req.body.email??'').trim(),email=normalizeEmail(login),phone=normalizeAccountPhone(login),users=readJson('users.json',[]),u=users.find(x=>x.email===email||(phone&&normalizeAccountPhone(x.phone)===phone));if(!u||!passwordMatches(req.body.password,u)){accountFail(req);return res.status(401).json({ok:false,message:'E-posta/telefon veya şifre hatalı.'})}accountLoginAttempts.delete(accountRateKey(req));setUserSession(res,u,req);res.json({ok:true,user:publicUser(u)})});
 app.post('/api/auth/logout',sameOriginGuard,(req,res)=>{clearUserSession(res,req);res.json({ok:true})});
 app.get('/api/auth/me',(req,res)=>{const u=accountUserFromReq(req);res.json({ok:true,authenticated:!!u,user:publicUser(u)})});
-app.patch('/api/account/profile',sameOriginGuard,requireUser,(req,res)=>{const users=readJson('users.json',[]),i=users.findIndex(u=>u.id===req.accountUser.id),u=users[i];const email=normalizeEmail(req.body.email),phone=normalizeAccountPhone(req.body.phone),firstName=String(req.body.firstName||'').trim(),lastName=String(req.body.lastName||'').trim(),birthDate=String(req.body.birthDate||'').trim();if(!firstName||!lastName)return res.status(400).json({ok:false,message:'Ad ve soyad zorunludur.'});if(!email.includes('@'))return res.status(400).json({ok:false,message:'Lütfen geçerli bir e-posta adresi girin.'});if(!phone)return res.status(400).json({ok:false,message:'Lütfen geçerli bir telefon numarası girin.'});if(!validBirthDateIso(birthDate))return res.status(400).json({ok:false,message:'Doğum tarihi zorunludur ve geçerli olmalıdır.'});if(users.some(x=>x.id!==u.id&&x.email===email))return res.status(409).json({ok:false,message:'Bu e-posta adresiyle daha önce hesap oluşturulmuş.'});if(users.some(x=>x.id!==u.id&&normalizeAccountPhone(x.phone)===phone))return res.status(409).json({ok:false,message:'Bu telefon numarasıyla daha önce hesap oluşturulmuş.'});const oldSms=!!u.smsMarketingConsent,oldMail=!!u.emailMarketingConsent;Object.assign(u,{firstName,lastName,email,phone,birthDate,smsMarketingConsent:!!req.body.smsMarketingConsent,emailMarketingConsent:!!req.body.emailMarketingConsent,updatedAt:new Date().toISOString()});users[i]=u;writeJson('users.json',users);const customers=readJson('customers.json',[]),ci=customers.findIndex(c=>c.id===u.customerId);if(ci>=0){Object.assign(customers[ci],{firstName:u.firstName,lastName:u.lastName,email:u.email,phone:u.phone,updatedAt:u.updatedAt});writeJson('customers.json',customers)}if(oldSms!==u.smsMarketingConsent||oldMail!==u.emailMarketingConsent){const cons=readJson('marketing_consents.json',[]);if(oldSms!==u.smsMarketingConsent)cons.push({id:crypto.randomUUID(),userId:u.id,channel:'sms',granted:u.smsMarketingConsent,at:u.updatedAt,source:'account',textVersion:'1',ip:consentIp(req),userAgent:String(req.headers['user-agent']||'')});if(oldMail!==u.emailMarketingConsent)cons.push({id:crypto.randomUUID(),userId:u.id,channel:'email',granted:u.emailMarketingConsent,at:u.updatedAt,source:'account',textVersion:'1',ip:consentIp(req),userAgent:String(req.headers['user-agent']||'')});writeJson('marketing_consents.json',cons)}persistAccountStateAsync();res.json({ok:true,user:publicUser(u)})});
+app.patch('/api/account/profile',sameOriginGuard,requireUser,async(req,res)=>{
+  const users=readJson('users.json',[]),i=users.findIndex(x=>x.id===req.accountUser.id),u=users[i],now=new Date().toISOString(),meta=profileChangeMeta(u);
+  const email=normalizeEmail(req.body.email),phone=normalizeAccountPhone(req.body.phone),firstName=String(req.body.firstName||'').trim(),lastName=String(req.body.lastName||'').trim(),birthDate=String(req.body.birthDate||'').trim();
+  if(!firstName||!lastName)return res.status(400).json({ok:false,message:'Ad ve soyad zorunludur.'});if(!email.includes('@'))return res.status(400).json({ok:false,message:'Lütfen geçerli bir e-posta adresi girin.'});if(!phone)return res.status(400).json({ok:false,message:'Lütfen geçerli bir telefon numarası girin.'});if(!validBirthDateIso(birthDate))return res.status(400).json({ok:false,message:'Doğum tarihi zorunludur ve geçerli olmalıdır.'});
+  const nameChanged=firstName!==String(u.firstName||'')||lastName!==String(u.lastName||''),phoneChanged=phone!==normalizeAccountPhone(u.phone),emailChanged=email!==normalizeEmail(u.email),birthChanged=birthDate!==String(u.birthDate||'');
+  if(nameChanged){const wait=profileWaitMs(meta.nameChangedAt,PROFILE_NAME_COOLDOWN_MS);if(wait>0)return res.status(429).json({ok:false,message:`Ad / Soyad bilgisi 30 günde 1 kez değiştirilebilir. Tekrar değiştirebilmeniz için ${humanWait(wait)} kaldı.`})}
+  if(phoneChanged){const wait=profileWaitMs(meta.phoneChangedAt,PROFILE_PHONE_COOLDOWN_MS);if(wait>0)return res.status(429).json({ok:false,message:`Telefon numarası 7 günde 1 kez değiştirilebilir. Tekrar değiştirebilmeniz için ${humanWait(wait)} kaldı.`});if(users.some(x=>x.id!==u.id&&normalizeAccountPhone(x.phone)===phone))return res.status(409).json({ok:false,message:'Bu telefon numarasıyla daha önce hesap oluşturulmuş.'})}
+  if(emailChanged&&users.some(x=>x.id!==u.id&&normalizeEmail(x.email)===email))return res.status(409).json({ok:false,message:'Bu e-posta adresiyle daha önce hesap oluşturulmuş.'});
+  if(birthChanged&&meta.birthDateUserChangeCount>=1)return res.status(429).json({ok:false,message:'Doğum tarihinizi kullanıcı hesabından yalnızca 1 kez değiştirebilirsiniz. Bundan sonraki değişiklik için yönetim desteği gerekir.'});
+  let pendingMessage='';
+  if(emailChanged){
+    if(!RESEND_API_KEY)return res.status(503).json({ok:false,message:'Yeni e-posta adresini doğrulamak için e-posta servisi henüz yapılandırılmadı. Mevcut e-posta adresiniz değiştirilmedi.'});
+    const raw=crypto.randomBytes(32).toString('base64url'),tokenHash=crypto.createHash('sha256').update(raw).digest('hex'),pending={email,tokenHash,requestedAt:now,expiresAt:new Date(Date.now()+PROFILE_VERIFY_TTL_MS).toISOString()};
+    const sent=await sendAccountEmailVerificationMail(email,`${PUBLIC_BASE_URL}/api/account/verify-email-change?token=${encodeURIComponent(raw)}`);if(!sent)return res.status(502).json({ok:false,message:'Yeni e-posta adresine doğrulama bağlantısı gönderilemedi. Mevcut e-posta adresiniz değiştirilmedi.'});u.pendingEmailChange=pending;pendingMessage='Yeni e-posta adresinize doğrulama bağlantısı gönderildi. Doğrulanana kadar mevcut e-posta adresiniz aktif kalır.';
+  }
+  if(phoneChanged){
+    try{await SmsVerificationProvider.sendOtp(phone,u.id)}catch(e){return res.status(503).json({ok:false,message:'Yeni telefon numarası doğrulanmadan aktif edilemez. SMS doğrulama servisi şu anda yapılandırılmamış; mevcut telefon numaranız değiştirilmedi.'})}
+    u.pendingPhoneChange={phone,requestedAt:now,expiresAt:new Date(Date.now()+PROFILE_VERIFY_TTL_MS).toISOString()};pendingMessage+=(pendingMessage?' ':'')+'Yeni telefon numaranıza doğrulama kodu gönderildi. Doğrulanana kadar mevcut numaranız aktif kalır.';
+  }
+  if(nameChanged){pushProfileHistory(u,'Ad / Soyad',[u.firstName,u.lastName].filter(Boolean).join(' '),[firstName,lastName].filter(Boolean).join(' '));u.firstName=firstName;u.lastName=lastName;meta.nameChangedAt=now}
+  if(birthChanged){pushProfileHistory(u,'Doğum Tarihi',u.birthDate||'',birthDate);u.birthDate=birthDate;meta.birthDateUserChangeCount+=1}
+  const oldSms=!!u.smsMarketingConsent,oldMail=!!u.emailMarketingConsent,newSms=!!req.body.smsMarketingConsent,newMail=!!req.body.emailMarketingConsent;
+  if(oldSms!==newSms)pushProfileHistory(u,'SMS İzni',oldSms?'Açık':'Kapalı',newSms?'Açık':'Kapalı');if(oldMail!==newMail)pushProfileHistory(u,'E-posta İzni',oldMail?'Açık':'Kapalı',newMail?'Açık':'Kapalı');
+  u.smsMarketingConsent=newSms;u.emailMarketingConsent=newMail;u.profileChangeMeta=meta;u.updatedAt=now;users[i]=u;writeJson('users.json',users);
+  const customers=readJson('customers.json',[]),ci=customers.findIndex(c=>c.id===u.customerId);if(ci>=0){Object.assign(customers[ci],{firstName:u.firstName,lastName:u.lastName,email:u.email,phone:u.phone,updatedAt:now});writeJson('customers.json',customers)}
+  if(oldSms!==newSms||oldMail!==newMail){const cons=readJson('marketing_consents.json',[]);if(oldSms!==newSms)cons.push({id:crypto.randomUUID(),userId:u.id,channel:'sms',granted:newSms,at:now,source:'account',textVersion:'1',ip:consentIp(req),userAgent:String(req.headers['user-agent']||'')});if(oldMail!==newMail)cons.push({id:crypto.randomUUID(),userId:u.id,channel:'email',granted:newMail,at:now,source:'account',textVersion:'1',ip:consentIp(req),userAgent:String(req.headers['user-agent']||'')});writeJson('marketing_consents.json',cons)}
+  persistAccountStateAsync();res.json({ok:true,user:publicUser(u),pendingEmailVerification:emailChanged,pendingPhoneVerification:phoneChanged,message:pendingMessage||'Hesap bilgileri güncellendi.'});
+});
+app.get('/api/account/verify-email-change',async(req,res)=>{
+  const token=String(req.query.token||''),hash=token?crypto.createHash('sha256').update(token).digest('hex'):'',users=readJson('users.json',[]),u=users.find(x=>x.pendingEmailChange?.tokenHash===hash);
+  if(!u||!u.pendingEmailChange||new Date(u.pendingEmailChange.expiresAt).getTime()<Date.now())return res.status(400).send('<!doctype html><meta charset="utf-8"><title>SHAZ</title><p>Doğrulama bağlantısı geçersiz veya süresi dolmuş.</p>');
+  const email=normalizeEmail(u.pendingEmailChange.email);if(users.some(x=>x.id!==u.id&&normalizeEmail(x.email)===email))return res.status(409).send('<!doctype html><meta charset="utf-8"><title>SHAZ</title><p>Bu e-posta adresi başka bir hesapta kullanılıyor.</p>');
+  const old=u.email;pushProfileHistory(u,'E-posta',old,email);u.email=email;u.pendingEmailChange=null;u.profileChangeMeta={...profileChangeMeta(u),emailChangedAt:new Date().toISOString()};u.updatedAt=new Date().toISOString();writeJson('users.json',users);
+  const customers=readJson('customers.json',[]),ci=customers.findIndex(c=>c.id===u.customerId);if(ci>=0){customers[ci].email=email;customers[ci].updatedAt=u.updatedAt;writeJson('customers.json',customers)}persistAccountStateAsync();
+  res.send('<!doctype html><meta charset="utf-8"><title>SHAZ</title><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font-family:Arial;text-align:center;padding:50px"><h2>E-posta adresiniz doğrulandı.</h2><p>Yeni e-posta adresiniz artık hesabınızda aktif.</p><a href="/">Web sitesine dön</a></body>');
+});
+app.post('/api/account/verify-phone-change',sameOriginGuard,requireUser,async(req,res)=>{
+  const users=readJson('users.json',[]),i=users.findIndex(x=>x.id===req.accountUser.id),u=users[i],pending=u.pendingPhoneChange,code=String(req.body.code||'').trim();if(!pending)return res.status(400).json({ok:false,message:'Bekleyen telefon numarası değişikliği yok.'});if(new Date(pending.expiresAt).getTime()<Date.now())return res.status(400).json({ok:false,message:'Telefon doğrulama süresi dolmuş. Değişikliği yeniden başlatın.'});
+  const ok=await SmsVerificationProvider.verifyOtp(pending.phone,code,u.id);if(!ok)return res.status(400).json({ok:false,message:'Doğrulama kodu hatalı veya süresi dolmuş.'});if(users.some(x=>x.id!==u.id&&normalizeAccountPhone(x.phone)===pending.phone))return res.status(409).json({ok:false,message:'Bu telefon numarası başka bir hesapta kullanılıyor.'});
+  const old=normalizeAccountPhone(u.phone)||u.phone;pushProfileHistory(u,'Telefon',old,pending.phone);u.phone=pending.phone;u.phoneVerifiedAt=new Date().toISOString();u.pendingPhoneChange=null;u.profileChangeMeta={...profileChangeMeta(u),phoneChangedAt:u.phoneVerifiedAt};u.updatedAt=u.phoneVerifiedAt;writeJson('users.json',users);
+  const customers=readJson('customers.json',[]),ci=customers.findIndex(c=>c.id===u.customerId);if(ci>=0){customers[ci].phone=u.phone;customers[ci].updatedAt=u.updatedAt;writeJson('customers.json',customers)}persistAccountStateAsync();res.json({ok:true,user:publicUser(u)});
+});
 app.post('/api/account/password',sameOriginGuard,requireUser,(req,res)=>{if(!passwordMatches(req.body.currentPassword,req.accountUser))return res.status(400).json({ok:false,message:'Mevcut şifre hatalı.'});const np=String(req.body.newPassword||'');if(np.length<8)return res.status(400).json({ok:false,message:'Yeni şifre en az 8 karakter olmalıdır.'});const users=readJson('users.json',[]),i=users.findIndex(u=>u.id===req.accountUser.id),ph=passwordHash(np);users[i].passwordSalt=ph.salt;users[i].passwordHash=ph.hash;users[i].authVersion=Number(users[i].authVersion||1)+1;users[i].updatedAt=new Date().toISOString();writeJson('users.json',users);persistAccountStateAsync();setUserSession(res,users[i],req);res.json({ok:true})});
 app.get('/api/account/addresses',requireUser,(req,res)=>res.json({ok:true,addresses:readJson('addresses.json',[]).filter(a=>a.userId===req.accountUser.id)}));
 app.post('/api/account/addresses',sameOriginGuard,requireUser,(req,res)=>{const arr=readJson('addresses.json',[]),now=new Date().toISOString(),extraPhone=String(req.body.extraPhone||'').trim()?normalizeAccountPhone(req.body.extraPhone):'',a={id:'ADR-'+crypto.randomUUID(),userId:req.accountUser.id,title:String(req.body.title||'Adres').trim(),fullName:String(req.body.fullName||'').trim(),phone:normalizeAccountPhone(req.body.phone)||normalizeAccountPhone(req.accountUser.phone)||req.accountUser.phone,extraPhone,province:String(req.body.province||'').trim(),district:String(req.body.district||'').trim(),neighborhood:normalizeAccountAddressPart(req.body.neighborhood,'neighborhood'),avenue:normalizeAccountAddressPart(req.body.avenue,'avenue'),street:normalizeAccountAddressPart(req.body.street,'street'),fullAddress:String(req.body.fullAddress||'').trim(),buildingNo:String(req.body.buildingNo||'').trim(),floor:String(req.body.floor||'').trim(),doorNo:String(req.body.doorNo||'').trim(),isDefault:!!req.body.isDefault||!arr.some(x=>x.userId===req.accountUser.id),createdAt:now,updatedAt:now};if(String(req.body.extraPhone||'').trim()&&!extraPhone)return res.status(400).json({ok:false,message:'2. telefon numarası geçerli değil.'});if(extraPhone&&extraPhone===a.phone)return res.status(400).json({ok:false,message:'2. telefon numarası ana telefonla aynı olamaz.'});if(a.isDefault)arr.forEach(x=>{if(x.userId===a.userId)x.isDefault=false});arr.push(a);writeJson('addresses.json',arr);persistAccountStateAsync();res.json({ok:true,address:a})});
@@ -1142,30 +1205,12 @@ app.delete('/api/account/favorites/:productId',sameOriginGuard,requireUser,(req,
 function istanbulDateKey(date=new Date()){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date),map=Object.fromEntries(parts.map(x=>[x.type,x.value]));return `${map.year}-${map.month}-${map.day}`}
 function couponExpiryDateKey(value){const m=String(value||'').match(/^(\d{4}-\d{2}-\d{2})/);return m?m[1]:''}
 function evaluateOrderCoupons(userId,ids,baseTotal){
-  const unique=[...new Set((Array.isArray(ids)?ids:[]).map(x=>String(x||'').trim()).filter(Boolean))];
-  const base=Math.max(0,Number(baseTotal||0));
-  if(!unique.length)return {ok:true,discount:0,total:base,coupons:[]};
-  if(!userId)return {ok:false,message:'Kupon kullanmak için üye hesabıyla giriş yapmalısınız.'};
-  const today=istanbulDateKey(),all=readJson('coupons.json',[]),selected=[];
-  for(const id of unique){
-    const c=all.find(x=>String(x.id)===id&&x.userId===userId);
-    if(!c)return {ok:false,message:'Seçilen kupon hesabınıza ait değil.'};
-    const expiry=couponExpiryDateKey(c.expiresAt);
-    if(c.status==='used')return {ok:false,message:`${c.code||'Kupon'} daha önce kullanılmış.`};
-    if(expiry&&expiry<today)return {ok:false,message:`${c.code||'Kupon'} kuponunun süresi dolmuş.`};
-    if(base<Number(c.minCartAmount||0))return {ok:false,message:`${c.code||'Kupon'} için minimum sepet tutarı ${Number(c.minCartAmount||0).toLocaleString('tr-TR')} TL.`};
-    selected.push(c);
-  }
-  if(selected.length>1&&selected.some(c=>c.stackable!==true))return {ok:false,message:'Bu kuponlardan biri diğer kuponlarla birlikte kullanılamaz.'};
-  let remaining=base,discount=0;
-  const applied=[];
-  for(const c of selected){
-    let amount=c.discountType==='fixed'?Number(c.value||0):remaining*(Number(c.value||0)/100);
-    if(c.discountType==='percent'&&Number(c.maxDiscountAmount||0)>0)amount=Math.min(amount,Number(c.maxDiscountAmount));
-    amount=Math.max(0,Math.min(remaining,Math.round(amount*100)/100));
-    remaining=Math.max(0,Math.round((remaining-amount)*100)/100);discount=Math.round((discount+amount)*100)/100;
-    applied.push({id:c.id,code:c.code,discountType:c.discountType,value:Number(c.value||0),title:c.title||'',minCartAmount:Number(c.minCartAmount||0),stackable:!!c.stackable,maxDiscountAmount:Number(c.maxDiscountAmount||0),discount:amount});
-  }
+  const unique=[...new Set((Array.isArray(ids)?ids:[]).map(x=>String(x||'').trim()).filter(Boolean))],base=Math.max(0,Number(baseTotal||0));
+  if(!unique.length)return {ok:true,discount:0,total:base,coupons:[]};if(!userId)return {ok:false,message:'Kupon kullanmak için üye hesabıyla giriş yapmalısınız.'};
+  const today=istanbulDateKey(),all=readJson('coupons.json',[]),selected=[];for(const id of unique){const c=all.find(x=>String(x.id)===id&&x.userId===userId);if(!c)return {ok:false,message:'Seçilen kupon hesabınıza ait değil.'};const expiry=couponExpiryDateKey(c.expiresAt);if(c.status==='used')return {ok:false,message:`${c.code||'Kupon'} daha önce kullanılmış.`};if(expiry&&expiry<today)return {ok:false,message:`${c.code||'Kupon'} kuponunun süresi dolmuş.`};selected.push(c)}
+  if(selected.length===1&&base<Number(selected[0].minCartAmount||0))return {ok:false,message:`${selected[0].code||'Kupon'} için minimum sepet tutarı ${Number(selected[0].minCartAmount||0).toLocaleString('tr-TR')} TL.`};
+  if(selected.length>1){if(selected.some(c=>c.discountType==='percent'))return {ok:false,message:'Yüzdelik kuponlar başka kuponlarla birleştirilemez.'};if(selected.some(c=>c.stackable!==true))return {ok:false,message:'Bu kuponlardan biri diğer kuponlarla birlikte kullanılamaz.'};const requiredMin=selected.reduce((n,c)=>n+Math.max(0,Number(c.minCartAmount||0)),0);if(base<requiredMin)return {ok:false,message:`Seçtiğiniz kuponları birlikte kullanmak için indirim öncesi sepet toplamınız en az ${requiredMin.toLocaleString('tr-TR')} TL olmalı.`}}
+  let remaining=base,discount=0;const applied=[];for(const c of selected){let amount=c.discountType==='fixed'?Number(c.value||0):remaining*(Number(c.value||0)/100);if(c.discountType==='percent'&&Number(c.maxDiscountAmount||0)>0)amount=Math.min(amount,Number(c.maxDiscountAmount));amount=Math.max(0,Math.min(remaining,Math.round(amount*100)/100));remaining=Math.max(0,Math.round((remaining-amount)*100)/100);discount=Math.round((discount+amount)*100)/100;applied.push({id:c.id,code:c.code,discountType:c.discountType,value:Number(c.value||0),title:c.title||'',minCartAmount:Number(c.minCartAmount||0),stackable:!!c.stackable,maxDiscountAmount:Number(c.maxDiscountAmount||0),discount:amount})}
   return {ok:true,discount,total:remaining,coupons:applied};
 }
 function saveOrderAddressForUser(user,customer){
