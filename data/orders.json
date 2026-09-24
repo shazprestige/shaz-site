@@ -6,7 +6,7 @@
     "status": "new",
     "statusUpdatedAt": "2026-09-24T20:14:36.927Z",
     "requestId": "9a6ef58b-dc84-4010-a314-df89829e9695",
-    "sheetSyncStatus": "pending",
+    "sheetSyncStatus": "synced",
     "sheetSyncError": "",
     "items": [
       {
@@ -260,7 +260,9 @@
     "couponDiscountTotal": 0,
     "total": 1550,
     "appliedCoupons": [],
-    "personalizationSnapshots": []
+    "personalizationSnapshots": [],
+    "sheetSyncedAt": "2026-09-24T20:14:41.203Z",
+    "sheetId": "SHZ93"
   },
   {
     "id": "SHZ92",
