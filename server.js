@@ -876,6 +876,10 @@ app.post('/api/orders',async(req,res)=>{
    // v153: Üye/misafir aynı sipariş oluşturma mantığını kullanır; yalnız ilişki ve hukuki kayıt eklenir.
    const signedUser=accountUserFromReq(req);
    body.userId=signedUser?.id||null;body.customerId=signedUser?.customerId||null;
+   const preCouponTotal=Math.max(0,Number(body.preCouponTotal??body.total??0));
+   const couponResult=evaluateOrderCoupons(signedUser?.id||null,body.appliedCouponIds,preCouponTotal);
+   if(!couponResult.ok)return res.status(400).json({ok:false,message:couponResult.message});
+   body.preCouponTotal=preCouponTotal;body.couponDiscountTotal=couponResult.discount;body.appliedCoupons=couponResult.coupons;body.total=couponResult.total;
    const hasPersonal=(body.items||[]).some(x=>!!x.personalized);
    const legal=body.legalAcceptances&&typeof body.legalAcceptances==='object'?body.legalAcceptances:{};
    if(!legal.preInformation||!legal.distanceSales)return res.status(400).json({ok:false,message:'Lütfen sözleşmeleri onaylayın.'});
@@ -890,6 +894,11 @@ app.post('/api/orders',async(req,res)=>{
    };
    orders.unshift(order);
    writeJson('orders.json',orders);
+   if(signedUser){
+     const coupons=readJson('coupons.json',[]),usedIds=new Set((couponResult.coupons||[]).map(c=>String(c.id)));
+     if(usedIds.size){for(const c of coupons){if(c.userId===signedUser.id&&usedIds.has(String(c.id))){c.status='used';c.usedAt=createdAt;c.usedOrderId=order.id;c.updatedAt=createdAt}}writeJson('coupons.json',coupons)}
+     saveOrderAddressForUser(signedUser,body.customer);
+   }
    const legalRows=readJson('legal_acceptances.json',[]),acceptedAt=new Date().toISOString(),ua=String(req.headers['user-agent']||''),ip=consentIp(req);
    for(const type of ['PRE_INFORMATION','DISTANCE_SALES']){const doc=currentLegalDoc(type);legalRows.push({id:crypto.randomUUID(),orderId:order.id,userId:body.userId||null,customerId:body.customerId||null,legalDocumentType:type,documentVersion:doc?.version||'',documentHash:legalHash(doc),acceptedAt,ipAddress:ip,userAgent:ua})}
    if(hasPersonal){const doc=currentLegalDoc('DISTANCE_SALES');legalRows.push({id:crypto.randomUUID(),orderId:order.id,userId:body.userId||null,customerId:body.customerId||null,legalDocumentType:'PERSONALIZATION_CONFIRMATION',documentVersion:doc?.version||'',documentHash:legalHash(doc),acceptedAt,ipAddress:ip,userAgent:ua});}
@@ -1025,11 +1034,11 @@ async function sendPasswordResetMail(email,link){if(!RESEND_API_KEY)return false
 
 // ---------- v153 hukuki metin yönetimi (mevcut admin içinde minimum ekran) ----------
 function adminMemberRows(){
-  const users=readJson('users.json',[]),addresses=readJson('addresses.json',[]),orders=readJson('orders.json',[]);
+  const users=readJson('users.json',[]),addresses=readJson('addresses.json',[]),orders=readJson('orders.json',[]),coupons=readJson('coupons.json',[]);
   return users.map(u=>{
     const userAddresses=addresses.filter(a=>a.userId===u.id).map(a=>({...a,phone:normalizeAccountPhone(a.phone)||a.phone||'',extraPhone:normalizeAccountPhone(a.extraPhone)||a.extraPhone||''}));
     const primary=userAddresses.find(a=>a.isDefault)||userAddresses[0]||{};
-    return {id:u.id,customerId:u.customerId,firstName:u.firstName||'',lastName:u.lastName||'',email:u.email||'',phone:normalizeAccountPhone(u.phone)||u.phone||'',birthDate:u.birthDate||'',phoneVerifiedAt:u.phoneVerifiedAt||null,smsMarketingConsent:!!u.smsMarketingConsent,emailMarketingConsent:!!u.emailMarketingConsent,authProviders:Array.isArray(u.authProviders)?u.authProviders:(u.passwordHash?['password']:[]),createdAt:u.createdAt||'',addressCount:userAddresses.length,orderCount:orders.filter(o=>o.userId===u.id||o.customerId===u.customerId).length,province:primary.province||'',district:primary.district||'',address:[primary.neighborhood,primary.avenue,primary.street,primary.fullAddress,primary.buildingNo?`Bina ${primary.buildingNo}`:'',primary.floor?`Kat ${primary.floor}`:'',primary.doorNo?`Daire ${primary.doorNo}`:''].filter(Boolean).join(' · '),addresses:userAddresses};
+    return {id:u.id,customerId:u.customerId,firstName:u.firstName||'',lastName:u.lastName||'',email:u.email||'',phone:normalizeAccountPhone(u.phone)||u.phone||'',birthDate:u.birthDate||'',phoneVerifiedAt:u.phoneVerifiedAt||null,smsMarketingConsent:!!u.smsMarketingConsent,emailMarketingConsent:!!u.emailMarketingConsent,authProviders:Array.isArray(u.authProviders)?u.authProviders:(u.passwordHash?['password']:[]),createdAt:u.createdAt||'',addressCount:userAddresses.length,orderCount:orders.filter(o=>o.userId===u.id||o.customerId===u.customerId).length,couponCount:coupons.filter(c=>c.userId===u.id).length,province:primary.province||'',district:primary.district||'',address:[primary.neighborhood,primary.avenue,primary.street,primary.fullAddress,primary.buildingNo?`Bina ${primary.buildingNo}`:'',primary.floor?`Kat ${primary.floor}`:'',primary.doorNo?`Daire ${primary.doorNo}`:''].filter(Boolean).join(' · '),addresses:userAddresses};
   });
 }
 function filterAdminMembers(rows,q={}){
@@ -1053,17 +1062,20 @@ app.post('/api/admin/users/coupons',requireAdmin,(req,res)=>{
   const code=String(req.body.code||'').trim().toUpperCase().replace(/\s+/g,'');
   const discountType=String(req.body.discountType||'percent')==='fixed'?'fixed':'percent';
   const value=Number(req.body.value||0),expiresAt=String(req.body.expiresAt||'').trim(),title=String(req.body.title||'').trim();
+  const minCartAmount=String(req.body.minCartAmount??'').trim()===''?0:Number(req.body.minCartAmount);
+  const stackable=String(req.body.stackable||'no')==='yes'||req.body.stackable===true;
+  const maxDiscountAmount=discountType==='percent'&&String(req.body.maxDiscountAmount??'').trim()!==''?Number(req.body.maxDiscountAmount):0;
   if(!userIds.length)return res.status(400).json({ok:false,message:'Lütfen en az bir üye seçin.'});
   if(!/^[A-Z0-9_-]{3,32}$/.test(code))return res.status(400).json({ok:false,message:'Kupon kodu 3-32 karakter olmalı; harf, rakam, _ veya - kullanın.'});
   if(!Number.isFinite(value)||value<=0||(discountType==='percent'&&value>100))return res.status(400).json({ok:false,message:'Geçerli bir indirim değeri girin.'});
+  if(!Number.isFinite(minCartAmount)||minCartAmount<0)return res.status(400).json({ok:false,message:'Minimum sepet tutarı geçerli değil.'});
+  if(discountType==='percent'&&(!Number.isFinite(maxDiscountAmount)||maxDiscountAmount<0))return res.status(400).json({ok:false,message:'Maksimum indirim tutarı geçerli değil.'});
   if(expiresAt&&!/^\d{4}-\d{2}-\d{2}$/.test(expiresAt))return res.status(400).json({ok:false,message:'Son kullanma tarihi geçerli değil.'});
   const validUsers=new Set(readJson('users.json',[]).map(u=>String(u.id)));
   const targetIds=userIds.filter(id=>validUsers.has(id));if(!targetIds.length)return res.status(404).json({ok:false,message:'Seçilen üyeler bulunamadı.'});
   const coupons=readJson('coupons.json',[]),now=new Date().toISOString();
   for(const userId of targetIds){
-    const existing=coupons.find(c=>c.userId===userId&&String(c.code||'').toUpperCase()===code&&c.status!=='used');
-    const row={id:existing?.id||('CPN-'+crypto.randomUUID()),userId,code,discountType,value,title,expiresAt:expiresAt?expiresAt+'T23:59:59.999Z':'',status:'active',createdAt:existing?.createdAt||now,updatedAt:now};
-    if(existing)Object.assign(existing,row);else coupons.push(row);
+    coupons.push({id:'CPN-'+crypto.randomUUID(),userId,code,discountType,value,title,expiresAt:expiresAt?expiresAt+'T23:59:59.999Z':'',minCartAmount,stackable,maxDiscountAmount,status:'active',createdAt:now,updatedAt:now});
   }
   writeJson('coupons.json',coupons);persistAccountStateAsync();res.json({ok:true,assigned:targetIds.length,code});
 });
@@ -1129,8 +1141,47 @@ app.post('/api/account/favorites/:productId',sameOriginGuard,requireUser,(req,re
 app.delete('/api/account/favorites/:productId',sameOriginGuard,requireUser,(req,res)=>{const arr=readJson('favorites.json',[]).filter(x=>!(x.userId===req.accountUser.id&&x.productId===String(req.params.productId||'')));writeJson('favorites.json',arr);persistAccountStateAsync();res.json({ok:true})});
 function istanbulDateKey(date=new Date()){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date),map=Object.fromEntries(parts.map(x=>[x.type,x.value]));return `${map.year}-${map.month}-${map.day}`}
 function couponExpiryDateKey(value){const m=String(value||'').match(/^(\d{4}-\d{2}-\d{2})/);return m?m[1]:''}
+function evaluateOrderCoupons(userId,ids,baseTotal){
+  const unique=[...new Set((Array.isArray(ids)?ids:[]).map(x=>String(x||'').trim()).filter(Boolean))];
+  const base=Math.max(0,Number(baseTotal||0));
+  if(!unique.length)return {ok:true,discount:0,total:base,coupons:[]};
+  if(!userId)return {ok:false,message:'Kupon kullanmak için üye hesabıyla giriş yapmalısınız.'};
+  const today=istanbulDateKey(),all=readJson('coupons.json',[]),selected=[];
+  for(const id of unique){
+    const c=all.find(x=>String(x.id)===id&&x.userId===userId);
+    if(!c)return {ok:false,message:'Seçilen kupon hesabınıza ait değil.'};
+    const expiry=couponExpiryDateKey(c.expiresAt);
+    if(c.status==='used')return {ok:false,message:`${c.code||'Kupon'} daha önce kullanılmış.`};
+    if(expiry&&expiry<today)return {ok:false,message:`${c.code||'Kupon'} kuponunun süresi dolmuş.`};
+    if(base<Number(c.minCartAmount||0))return {ok:false,message:`${c.code||'Kupon'} için minimum sepet tutarı ${Number(c.minCartAmount||0).toLocaleString('tr-TR')} TL.`};
+    selected.push(c);
+  }
+  if(selected.length>1&&selected.some(c=>c.stackable!==true))return {ok:false,message:'Bu kuponlardan biri diğer kuponlarla birlikte kullanılamaz.'};
+  let remaining=base,discount=0;
+  const applied=[];
+  for(const c of selected){
+    let amount=c.discountType==='fixed'?Number(c.value||0):remaining*(Number(c.value||0)/100);
+    if(c.discountType==='percent'&&Number(c.maxDiscountAmount||0)>0)amount=Math.min(amount,Number(c.maxDiscountAmount));
+    amount=Math.max(0,Math.min(remaining,Math.round(amount*100)/100));
+    remaining=Math.max(0,Math.round((remaining-amount)*100)/100);discount=Math.round((discount+amount)*100)/100;
+    applied.push({id:c.id,code:c.code,discountType:c.discountType,value:Number(c.value||0),title:c.title||'',minCartAmount:Number(c.minCartAmount||0),stackable:!!c.stackable,maxDiscountAmount:Number(c.maxDiscountAmount||0),discount:amount});
+  }
+  return {ok:true,discount,total:remaining,coupons:applied};
+}
+function saveOrderAddressForUser(user,customer){
+  if(!user||!customer||customer.deliveryMode==='branch')return false;
+  const arr=readJson('addresses.json',[]),userRows=arr.filter(a=>a.userId===user.id);
+  if(customer.savedAddressId&&userRows.some(a=>String(a.id)===String(customer.savedAddressId)))return false;
+  const phone=normalizeAccountPhone(customer.phone)||normalizeAccountPhone(user.phone)||user.phone||'';
+  const extraPhone=normalizeAccountPhone(customer.extraPhone)||'';
+  const normalized={fullName:String(customer.fullName||'').trim(),phone,extraPhone,province:String(customer.province||'').trim(),district:String(customer.district||'').trim(),neighborhood:normalizeAccountAddressPart(customer.neighborhood,'neighborhood'),avenue:normalizeAccountAddressPart(customer.avenue,'avenue'),street:normalizeAccountAddressPart(customer.street,'street'),fullAddress:String(customer.fullAddress||'').trim(),buildingNo:String(customer.buildingNo||'').trim(),floor:String(customer.floor||'').trim(),doorNo:String(customer.doorNo||'').trim()};
+  const key=a=>[a.fullName,a.phone,a.extraPhone,a.province,a.district,a.neighborhood,a.avenue,a.street,a.fullAddress,a.buildingNo,a.floor,a.doorNo].map(v=>String(v||'').trim().toLocaleLowerCase('tr-TR')).join('|');
+  if(userRows.some(a=>key(a)===key(normalized)))return false;
+  const now=new Date().toISOString(),row={id:'ADR-'+crypto.randomUUID(),userId:user.id,title:'Sipariş Adresi',...normalized,isDefault:userRows.length===0,createdAt:now,updatedAt:now};
+  arr.push(row);writeJson('addresses.json',arr);return true;
+}
 app.get('/api/account/coupons',requireUser,(req,res)=>{const today=istanbulDateKey(),rows=readJson('coupons.json',[]).filter(c=>c.userId===req.accountUser.id).map(c=>{const expiry=couponExpiryDateKey(c.expiresAt);return {...c,status:c.status==='used'?'used':(expiry&&expiry<today?'expired':'active')}});res.json({ok:true,coupons:rows})});
-app.get('/api/account/orders',requireUser,(req,res)=>{const orders=ordersWithDailyDisplayIds(readJson('orders.json',[])).filter(o=>o.userId===req.accountUser.id||o.customerId===req.accountUser.customerId);res.json({ok:true,orders:orders.map(o=>({id:o.id,dailyDisplayId:o.dailyDisplayId,createdAt:o.createdAt,createdAtTR:o.createdAtTR,total:o.total,status:o.status,payment:o.payment}))})});
+app.get('/api/account/orders',requireUser,(req,res)=>{const orders=ordersWithDailyDisplayIds(readJson('orders.json',[])).filter(o=>o.userId===req.accountUser.id||o.customerId===req.accountUser.customerId);res.json({ok:true,orders:orders.map(o=>({id:o.id,dailyDisplayId:o.dailyDisplayId,createdAt:o.createdAt,createdAtTR:o.createdAtTR,total:o.total,status:o.status,payment:o.payment,items:Array.isArray(o.items)?o.items:[]}))})});
 app.get('/api/account/orders/:id',requireUser,(req,res)=>{const o=ordersWithDailyDisplayIds(readJson('orders.json',[])).find(o=>String(o.id)===String(req.params.id)&&(o.userId===req.accountUser.id||o.customerId===req.accountUser.customerId));if(!o)return res.status(404).json({ok:false,message:'Sipariş bulunamadı.'});res.json({ok:true,order:o})});
 app.get('/admin/login',(req,res)=>{
  if(validSession(req))return res.redirect('/admin');

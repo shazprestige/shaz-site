@@ -21,9 +21,9 @@
 <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png?v=156">
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=156">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=156">
-<style>html.accountRouteBootSafe body::before{content:"";position:fixed;inset:0;background:#fff;z-index:2147483000;pointer-events:none}</style>
+<style>html.accountRouteBootSafe body{overflow:hidden!important;background:#fff!important}html.accountRouteBootSafe body>*{visibility:hidden!important}html.accountRouteBootSafe body::before{content:"";position:fixed;inset:0;background:#fff;z-index:2147483000;pointer-events:none;visibility:visible!important}</style>
 <script>(function(){if(/^\/(?:giris|kayit|sifre-sifirla|hesabim(?:\/|$))/.test(location.pathname)){document.documentElement.classList.add('accountRouteBootSafe');window.__shazAccountBootTimer=setTimeout(function(){document.documentElement.classList.remove('accountRouteBootSafe')},15000);window.addEventListener('error',function(){document.documentElement.classList.remove('accountRouteBootSafe')},{once:true});window.addEventListener('unhandledrejection',function(){document.documentElement.classList.remove('accountRouteBootSafe')},{once:true})}})();</script>
-<link rel="stylesheet" href="/styles.css?v=158">
+<link rel="stylesheet" href="/styles.css?v=159">
 </head>
 <body>
 <div class="announce" id="announceWrap"><div class="track" id="campaign"></div></div>
@@ -90,6 +90,6 @@
 <div id="toast" class="toast"></div>
 <div class="overlay hidden" id="overlay"></div>
 <div class="drawer hidden" id="drawer"></div>
-<script src="/app.js?v=158"></script>
+<script src="/app.js?v=159"></script>
 </body>
 </html>
