@@ -1,5 +1,125 @@
 [
   {
+    "id": "SHZ97",
+    "createdAt": "2026-09-25T00:31:58.532Z",
+    "createdAtTR": "25.09.2026 03:31:58",
+    "status": "new",
+    "statusUpdatedAt": "2026-09-25T00:31:58.532Z",
+    "requestId": "ded59fdb-9f0a-47bd-b249-262b388627d6",
+    "sheetSyncStatus": "pending",
+    "sheetSyncError": "",
+    "items": [
+      {
+        "product": {
+          "id": "urun-1786817515929-2-ux88",
+          "name": "SHAZ - NOVA",
+          "description": "",
+          "features": [
+            "Paslanma ve solmaya dayanıklı",
+            "Çelik kordon",
+            "3 ATM suya dayanıklılık (günlük el yüz yıkama)",
+            "Safir çizilmelere dayanıklı cam",
+            "takvim",
+            "Ayarlanabilir kordon",
+            "Kasa çapı 32-36 mm",
+            "Kordon uzunluk 19 cm",
+            "Kordon genişlik 2 cm"
+          ],
+          "category": "saatler",
+          "price": 600,
+          "oldPrice": 0,
+          "badge": "",
+          "badgeColor": "orange",
+          "image": "/uploads/1786817507308-mh5ma4.jpeg",
+          "images": [
+            "/uploads/1786817507308-mh5ma4.jpeg"
+          ],
+          "hidden": false,
+          "setEligible": true,
+          "isSet": false,
+          "setItems": [],
+          "writePositions": [
+            "Kordon",
+            "Arka kapak"
+          ],
+          "preferredWritePosition": "Kordon",
+          "writeEnabled": true,
+          "walletPhotoEnabled": true,
+          "descriptionEditorWidth": 320,
+          "descriptionWrapCh": 40,
+          "featuresEditorWidth": 320,
+          "featuresWrapCh": 40,
+          "shippingRibbonEnabled": false,
+          "shippingRibbonText": "Kargo Bedava",
+          "subtitle": "Erkek kol saati",
+          "shippingRibbonColor": "#444444",
+          "soldOutEnabled": false,
+          "soldOutUntil": "",
+          "badgeShape": "circle",
+          "internalCode": "SHAZ 1"
+        },
+        "qty": 1,
+        "personalized": false
+      }
+    ],
+    "customer": {
+      "savedAddressId": "ADR-e4a249bf-a502-46e8-9538-2c01835bf05b",
+      "fullName": "Asef şaz",
+      "phone": "5375298472",
+      "extraPhone": "5384316141",
+      "email": "dkskd@göail.com",
+      "province": "kocaeli",
+      "district": "darıca",
+      "deliveryMode": "address",
+      "branchName": "",
+      "neighborhood": "nenehatun MH.",
+      "avenue": "ertu CD.",
+      "street": "reşat SK.",
+      "fullAddress": "bo:12",
+      "buildingNo": "",
+      "floor": "",
+      "doorNo": "",
+      "placeType": "home",
+      "businessName": "",
+      "note": ""
+    },
+    "payment": "cod",
+    "orderNote": "",
+    "personalApproval": null,
+    "shippingNoticeAccepted": true,
+    "legalAcceptances": {
+      "preInformation": true,
+      "distanceSales": true,
+      "personalization": true,
+      "personalizationNotice": true
+    },
+    "userId": "USR-d7e7094f-e28e-4cb6-9956-7d742f6ea2fe",
+    "customerId": "CUS-41d1af3f-d70e-4d0a-bf6c-265511b4c79c",
+    "subtotal": 600,
+    "discountTotal": 0,
+    "appliedCampaigns": [],
+    "preCouponTotal": 600,
+    "appliedCouponIds": [
+      "CPN-52c26884-c9c5-4b12-b832-44ab6bcd5c1b"
+    ],
+    "couponDiscountTotal": 50,
+    "total": 550,
+    "appliedCoupons": [
+      {
+        "id": "CPN-52c26884-c9c5-4b12-b832-44ab6bcd5c1b",
+        "code": "DENEME3",
+        "discountType": "percent",
+        "value": 10,
+        "title": "",
+        "minCartAmount": 500,
+        "stackable": false,
+        "maxDiscountAmount": 50,
+        "discount": 50
+      }
+    ],
+    "personalizationSnapshots": []
+  },
+  {
     "id": "SHZ96",
     "createdAt": "2026-09-25T00:08:00.452Z",
     "createdAtTR": "25.09.2026 03:08:00",
