@@ -5892,3 +5892,53 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 @media(max-width:700px){.memberDateRange>div{grid-template-columns:1fr!important}.memberProfileHistory>div{grid-template-columns:1fr!important;gap:2px!important}.memberCouponInventoryRow{grid-template-columns:1fr!important}}
 .pendingPhoneVerify{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:6px!important;margin-top:5px!important}.pendingPhoneVerify .formControl{min-height:38px!important}.pendingPhoneVerify .smallBtn{min-width:110px!important}
 @media(max-width:520px){.pendingPhoneVerify{grid-template-columns:1fr!important}.pendingPhoneVerify .smallBtn{width:100%!important}}
+
+/* ===== v161 — yalnız son isteklerdeki hesap/adres/giriş hizalama ve davranış düzeltmeleri ===== */
+/* Giriş/üye ol küçük penceresi biraz daha dar. */
+.accountEntryPopover{width:198px!important}
+@media(max-width:700px){.accountEntryPopover{width:min(222px,calc(100vw - 24px))!important}}
+.accountEntryPopoverReplay{animation:shazPopoverReplay .16s ease-out both!important}
+@keyframes shazPopoverReplay{from{opacity:0;transform:translateY(-4px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* Kargom Nerede ikon kutusu WhatsApp/Instagram ile birebir aynı geometriyi kullanır. */
+.cargoHeaderContact .headerIconWrap{width:24px!important;min-width:24px!important;height:24px!important;min-height:24px!important;flex-basis:24px!important;display:flex!important;align-items:center!important;justify-content:center!important}
+.cargoHeaderContact .headerUnifiedIcon{width:22px!important;height:22px!important}
+@media(max-width:700px){.cargoHeaderContact .headerIconWrap{width:21px!important;min-width:21px!important;height:21px!important;min-height:21px!important;flex-basis:21px!important}.cargoHeaderContact .headerUnifiedIcon{width:20px!important;height:20px!important}}
+@media(max-width:380px){.cargoHeaderContact .headerIconWrap{width:20px!important;min-width:20px!important;height:20px!important;min-height:20px!important;flex-basis:20px!important}.cargoHeaderContact .headerUnifiedIcon{width:19px!important;height:19px!important}}
+
+/* Favoriler: referans fotoğraf daha büyük ve tamamı görünür; kart fotoğrafa sıkı oturur. */
+.memberFavoritesGrid{gap:9px!important}
+.memberFavoriteCard{grid-template-columns:138px minmax(0,1fr)!important;gap:10px!important;padding:5px!important;min-height:148px!important;align-items:center!important}
+.memberFavoritePhoto{width:138px!important;height:138px!important;padding:0!important;background:#fff!important;overflow:hidden!important;border:0!important}
+.memberFavoritePhoto img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;background:#fff!important}
+.memberFavoriteInfo{min-width:0!important;gap:5px!important}.memberFavoriteInfo>b{font-size:12px!important;line-height:1.3!important}.memberFavoriteInfo>span{font-size:11px!important}.memberFavoriteActions{gap:5px!important}.memberFavoriteActions .favoriteUnifiedAction{min-height:34px!important;font-size:9.5px!important;padding:6px 8px!important}
+@media(max-width:560px){.memberFavoriteCard{grid-template-columns:116px minmax(0,1fr)!important;padding:4px!important;min-height:124px!important;gap:8px!important}.memberFavoritePhoto{width:116px!important;height:116px!important}.memberFavoriteInfo>b{font-size:11px!important}.memberFavoriteActions .favoriteUnifiedAction{font-size:9px!important;padding:5px 6px!important}}
+
+/* Hesap alt sayfa başlıkları sabit mobil barın hemen altında; Yeni Adres tam çerçeveli ve sağ kenardan içeride. */
+.accountTopSubPage>.wizardHead{transform:translateY(-18px)!important;margin-bottom:3px!important}
+.accountAddressHead{grid-template-columns:92px minmax(0,1fr) 92px!important}
+.accountNewAddressTop{max-width:none!important;width:max-content!important;min-width:0!important;justify-self:end!important;transform:translateX(-7px)!important;padding:6px 9px!important;box-sizing:border-box!important;overflow:visible!important;white-space:nowrap!important}
+@media(max-width:700px){.accountTopSubPage>.wizardHead{transform:translateY(-13px)!important;margin-bottom:4px!important}.accountAddressHead{grid-template-columns:78px minmax(0,1fr) 78px!important}.accountNewAddressTop{max-width:none!important;transform:translateX(-5px)!important;padding:5px 7px!important;font-size:8.5px!important}}
+
+/* Adres kartında adres metni başlık/telefon gibi güçlü görünür. */
+.accountAddressText{font-weight:800!important;color:#222!important}
+
+/* Şifre gözünde görünür/gizli geçişinde giriş geometrisi ve nokta boyutu sabit. */
+.authPasswordWrap>.formControl,.authPasswordWrap>.formControl.authCssPasswordMask,.authPasswordWrap>.formControl.authCssPasswordMask.is-visible{font-family:Arial,sans-serif!important;font-size:16px!important;line-height:1.2!important;letter-spacing:.08em!important;font-weight:400!important;-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}
+.authEye{touch-action:manipulation!important;-webkit-tap-highlight-color:transparent!important;user-select:none!important;-webkit-user-select:none!important}
+
+/* Kupon kullanmadan geçiş uyarısı her viewportta gerçek merkezde. */
+.couponSkipConfirm{display:flex!important;align-items:center!important;justify-content:center!important;min-height:100dvh!important;padding:18px!important;overflow:auto!important}
+.couponSkipConfirmCard{margin:auto!important;position:relative!important;left:auto!important;top:auto!important;transform:none!important}
+
+/* Sepet kuponlarında son 3 gün rengi Hesabım > Kuponlarım ile aynı. */
+.checkoutCouponChoice small.couponExpiryUrgent{color:#c71f25!important;font-weight:850!important}
+
+/* Kayıtlı adres önerisi aktif inputun üstünde/altında sabit, taşmadan görünür. */
+.savedAddressSuggestionMenu{position:fixed!important;margin:0!important;transform:none!important;box-sizing:border-box!important;min-width:160px!important;max-width:calc(100vw - 16px)!important;z-index:2147483650!important}
+
+/* Yönetim: tek tarih butonu ve açılır tarih aralığı. */
+.memberDateSingle{display:grid!important;gap:3px!important}.memberDateRangeButton{text-align:left!important;cursor:pointer!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;background:#fff!important}
+.memberDatePickerOverlay{position:fixed!important;inset:0!important;z-index:2147483600!important;background:rgba(12,15,18,.48)!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:18px!important}
+.memberDatePickerCard{width:min(520px,96vw)!important;background:#fff!important;border:1px solid #e3e6e8!important;box-shadow:0 20px 64px rgba(0,0,0,.24)!important;padding:17px!important;border-radius:12px!important}.memberDatePickerHead{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important}.memberDatePickerHead>b{font-size:17px!important}.memberDatePickerCard>p{margin:8px 0 14px!important;color:#656a70!important;font-size:11px!important;line-height:1.45!important}.memberDatePickerGrid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important}.memberDatePickerGrid label{display:grid!important;gap:4px!important}.memberDatePickerGrid label>span{font-size:10px!important;font-weight:800!important;color:#444!important}.memberDatePickerActions{display:flex!important;justify-content:flex-end!important;gap:8px!important;margin-top:14px!important}.memberStatusCancelled{color:#b22222!important}.memberStatusActive{color:#16743b!important}
+@media(max-width:560px){.memberDatePickerGrid{grid-template-columns:1fr!important}}
