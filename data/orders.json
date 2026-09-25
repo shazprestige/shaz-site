@@ -6,7 +6,7 @@
     "status": "new",
     "statusUpdatedAt": "2026-09-25T00:31:58.532Z",
     "requestId": "ded59fdb-9f0a-47bd-b249-262b388627d6",
-    "sheetSyncStatus": "pending",
+    "sheetSyncStatus": "synced",
     "sheetSyncError": "",
     "items": [
       {
@@ -117,7 +117,9 @@
         "discount": 50
       }
     ],
-    "personalizationSnapshots": []
+    "personalizationSnapshots": [],
+    "sheetSyncedAt": "2026-09-25T00:32:11.358Z",
+    "sheetId": "SHZ97"
   },
   {
     "id": "SHZ96",
