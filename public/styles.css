@@ -5942,3 +5942,49 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 .memberDatePickerOverlay{position:fixed!important;inset:0!important;z-index:2147483600!important;background:rgba(12,15,18,.48)!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:18px!important}
 .memberDatePickerCard{width:min(520px,96vw)!important;background:#fff!important;border:1px solid #e3e6e8!important;box-shadow:0 20px 64px rgba(0,0,0,.24)!important;padding:17px!important;border-radius:12px!important}.memberDatePickerHead{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important}.memberDatePickerHead>b{font-size:17px!important}.memberDatePickerCard>p{margin:8px 0 14px!important;color:#656a70!important;font-size:11px!important;line-height:1.45!important}.memberDatePickerGrid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important}.memberDatePickerGrid label{display:grid!important;gap:4px!important}.memberDatePickerGrid label>span{font-size:10px!important;font-weight:800!important;color:#444!important}.memberDatePickerActions{display:flex!important;justify-content:flex-end!important;gap:8px!important;margin-top:14px!important}.memberStatusCancelled{color:#b22222!important}.memberStatusActive{color:#16743b!important}
 @media(max-width:560px){.memberDatePickerGrid{grid-template-columns:1fr!important}}
+
+/* ===== v162 — yalnız yeni üye kuponu / giriş / adres / hesap davranış düzeltmeleri ===== */
+/* Favorilerde fiyat, ürün adıyla aynı güçlü tipografiyi kullanır. */
+.memberFavoriteInfo>span{font-family:inherit!important;font-size:12px!important;font-weight:800!important;line-height:1.3!important;color:#222!important}
+@media(max-width:560px){.memberFavoriteInfo>span{font-size:11px!important}}
+
+/* Kargom Nerede yazısı ikonun hizasını bozmaz; ikon WhatsApp/Instagram ile aynı merkezde kalır. */
+.cargoHeaderContact{position:relative!important;justify-content:center!important}
+.cargoHeaderContact .headerMiniText{position:absolute!important;left:50%!important;top:calc(50% + 10px)!important;transform:translateX(-50%)!important;width:100%!important;pointer-events:none!important}
+@media(max-width:700px){.cargoHeaderContact .headerMiniText{display:flex!important;top:calc(50% + 8px)!important;font-size:5.7px!important;line-height:6px!important}}
+@media(max-width:365px){.cargoHeaderContact .headerMiniText{top:calc(50% + 7px)!important;font-size:5.2px!important}}
+
+/* Hesap alt sayfalarında başlık yukarıda kalır; geri/yeni adres düğmeleri başlığın alt çaprazında simetriktir. */
+.accountTopSubPage>.wizardHead>.pill{transform:translateY(8px)!important;white-space:nowrap!important}
+.accountAddressHead>.accountNewAddressTop{transform:translate(-7px,8px)!important}
+.favoritesHomeBack{white-space:nowrap!important}
+@media(max-width:700px){.accountTopSubPage>.wizardHead>.pill{transform:translateY(7px)!important}.accountAddressHead>.accountNewAddressTop{transform:translate(-5px,7px)!important}}
+
+/* Adres kartındaki telefonlar başlık ve adresle aynı kalınlıkta. */
+.accountAddressPhones b{font-family:inherit!important;font-weight:800!important;color:#222!important}
+
+/* Dokunmatik form alanları ilk dokunuşta odaklanır; göz düğmesi klavye odağını çalmaz. */
+.authAccountPage input,.accountAddressEditForm input,.accountAddressEditForm textarea,[id^="addr-"]{touch-action:manipulation!important}
+.authEye{touch-action:none!important}
+
+/* Otomatik yeni üye kuponu ve kompakt üye detayı. */
+.memberCouponActionButtons{display:flex!important;gap:7px!important;align-items:center!important;flex-wrap:wrap!important;justify-content:flex-end!important}
+.autoMemberCouponDialog{max-height:min(88vh,820px)!important;overflow:auto!important}
+.autoCouponExisting{border:1px solid #e4e6e8!important;background:#fafafa!important;padding:10px!important;margin-bottom:12px!important}
+.autoCouponExisting>h3{margin:0 0 8px!important;font-size:12px!important}
+.autoCouponTemplateList{display:grid!important;gap:6px!important}
+.autoCouponTemplateRow{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:8px!important;border:1px solid #e2e5e7!important;background:#fff!important;padding:8px!important}
+.autoCouponTemplateRow>div:first-child{display:grid!important;gap:2px!important}.autoCouponTemplateRow>div:last-child{display:flex!important;gap:5px!important}
+.autoCouponTemplateRow b{font-size:11px!important}.autoCouponTemplateRow strong{font-size:10px!important}.autoCouponTemplateRow small{font-size:9px!important;color:#6b7075!important}
+.memberAdminDetailCompact{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:12px!important;align-items:start!important}
+.memberInfoPanel,.memberSidePanel{min-width:0!important}.memberInfoPanel{border:1px solid #e2e5e7!important;background:#fff!important;padding:11px!important;display:grid!important;gap:0!important}
+.memberInfoPanelHead{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;border-bottom:1px solid #eceeef!important;padding-bottom:8px!important;margin-bottom:2px!important}
+.memberInfoLine{display:grid!important;grid-template-columns:122px minmax(0,1fr)!important;gap:8px!important;padding:6px 0!important;border-bottom:1px solid #f0f1f2!important;font-size:10px!important;align-items:start!important}
+.memberInfoLine:last-child{border-bottom:0!important}.memberInfoLine>span:first-child{font-weight:800!important;color:#555!important}.memberInfoLine>span:last-child{word-break:break-word!important}
+.memberSidePanel{display:grid!important;gap:10px!important}.memberSideCard{border:1px solid #e2e5e7!important;background:#fff!important;padding:10px!important}.memberSideCard>h3{font-size:11px!important;margin:0 0 7px!important}
+.memberHistoryWide{grid-column:1/-1!important;border-top:1px solid #e5e7e9!important;padding-top:10px!important}.memberHistoryWide>h3{font-size:11px!important;margin:0 0 6px!important}
+.memberJoinedInline{font-size:9px!important;color:#777!important;font-weight:700!important}
+@media(max-width:780px){.memberAdminDetailCompact{grid-template-columns:1fr!important}.memberHistoryWide{grid-column:auto!important}.memberInfoLine{grid-template-columns:108px minmax(0,1fr)!important}.memberCouponActionButtons{justify-content:stretch!important}.memberCouponActionButtons .btn{flex:1 1 160px!important}}
+
+/* Yeni üye kuponu başlığı popup içinde ayrı ve dengeli görünür. */
+.couponNoticeItemHeadline{margin:0 0 5px!important;font-size:13px!important;line-height:1.25!important;font-weight:850!important;color:#202326!important}

@@ -28,7 +28,7 @@ const uploadDir = path.join(persistRoot,'uploads');
 fs.mkdirSync(dataDir,{recursive:true});
 fs.mkdirSync(uploadDir,{recursive:true});
 // İlk kullanımda repodaki başlangıç JSON'larını kalıcı alana yalnızca bir kez kopyala.
-for(const name of ['settings.json','catalog.json','orders.json','users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','legal_documents.json','legal_documents_backup.json','legal_acceptances.json','phone_verifications.json','password_resets.json','coupons.json','account_state.enc']){
+for(const name of ['settings.json','catalog.json','orders.json','users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','legal_documents.json','legal_documents_backup.json','legal_acceptances.json','phone_verifications.json','password_resets.json','coupons.json','new_member_coupon_templates.json','account_state.enc']){
   const dst=path.join(dataDir,name);
   const seed=path.join(root,'data',name);
   if(!fs.existsSync(dst) && fs.existsSync(seed)) fs.copyFileSync(seed,dst);
@@ -196,7 +196,7 @@ const PASSWORD_RESET_FROM=String(process.env.PASSWORD_RESET_FROM||'SHAZ <noreply
 const PUBLIC_BASE_URL=String(process.env.PUBLIC_BASE_URL||'https://shaz.com.tr').replace(/\/$/,'');
 const accountLoginAttempts=new Map();
 for(const [name,fallback] of Object.entries({
-  'users.json':[],'customers.json':[],'addresses.json':[],'favorites.json':[],'marketing_consents.json':[],'legal_acceptances.json':[],'phone_verifications.json':[],'password_resets.json':[],'legal_documents_backup.json':[],
+  'users.json':[],'customers.json':[],'addresses.json':[],'favorites.json':[],'marketing_consents.json':[],'legal_acceptances.json':[],'phone_verifications.json':[],'password_resets.json':[],'new_member_coupon_templates.json':[],'legal_documents_backup.json':[],
   'legal_documents.json':[
     {type:'MEMBERSHIP',version:'1',title:'Üyelik Sözleşmesi',content:'',active:true},
     {type:'KVKK',version:'1',title:'KVKK Aydınlatma Metni',content:'',active:true},
@@ -240,11 +240,12 @@ function clearUserSession(res,req){const secure=process.env.NODE_ENV==='producti
 function requireUser(req,res,next){const u=accountUserFromReq(req);if(!u)return res.status(401).json({ok:false,message:'Giriş yapmanız gerekiyor.'});req.accountUser=u;next()}
 function sameOriginGuard(req,res,next){if(['GET','HEAD','OPTIONS'].includes(req.method))return next();const origin=String(req.headers.origin||'');const host=String(req.headers.host||'');if(origin){try{if(new URL(origin).host!==host)return res.status(403).json({ok:false,message:'Geçersiz istek kaynağı.'})}catch{return res.status(403).json({ok:false,message:'Geçersiz istek kaynağı.'})}}next()}
 const accountRateKey=req=>String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0].trim();
-const ACCOUNT_LOGIN_MAX_ATTEMPTS=5,ACCOUNT_LOGIN_WINDOW_MS=15*60*1000;
-function accountLoginAttemptKey(req,login=''){const id=String(login||'').trim().toLocaleLowerCase('tr-TR');return `${accountRateKey(req)}|${id}`}
-function accountAttemptState(key){const now=Date.now(),x=accountLoginAttempts.get(key);if(!x||now-x.start>ACCOUNT_LOGIN_WINDOW_MS){const fresh={start:now,count:0};accountLoginAttempts.set(key,fresh);return fresh}return x}
-function accountFailKey(key){const x=accountAttemptState(key);x.count+=1;accountLoginAttempts.set(key,x);return Math.max(0,ACCOUNT_LOGIN_MAX_ATTEMPTS-x.count)}
-function accountBlockedMessage(key){const x=accountAttemptState(key),remainingMs=Math.max(0,ACCOUNT_LOGIN_WINDOW_MS-(Date.now()-x.start)),mins=Math.max(1,Math.ceil(remainingMs/60000));return `5 hatalı giriş hakkınız doldu. ${mins} dakika sonra tekrar deneyin.`}
+const ACCOUNT_LOGIN_MAX_ATTEMPTS=5,ACCOUNT_LOGIN_LOCK_MS=3*60*1000;
+function accountLoginDeviceId(req){const raw=String(req.body?.deviceId||req.headers['x-shaz-device-id']||'').trim();return /^[A-Za-z0-9._:-]{8,120}$/.test(raw)?raw:accountRateKey(req)}
+function accountLoginAttemptKey(req,login=''){const id=String(login||'').trim().toLocaleLowerCase('tr-TR');return `${accountLoginDeviceId(req)}|${id}`}
+function accountAttemptState(key){const now=Date.now(),x=accountLoginAttempts.get(key);if(!x){const fresh={count:0,blockedUntil:0,lastFailureAt:0};accountLoginAttempts.set(key,fresh);return fresh}if(x.blockedUntil&&now>=x.blockedUntil){const fresh={count:0,blockedUntil:0,lastFailureAt:0};accountLoginAttempts.set(key,fresh);return fresh}return x}
+function accountFailKey(key){const now=Date.now(),x=accountAttemptState(key);x.count=Math.min(ACCOUNT_LOGIN_MAX_ATTEMPTS,Number(x.count||0)+1);x.lastFailureAt=now;if(x.count>=ACCOUNT_LOGIN_MAX_ATTEMPTS)x.blockedUntil=now+ACCOUNT_LOGIN_LOCK_MS;accountLoginAttempts.set(key,x);return Math.max(0,ACCOUNT_LOGIN_MAX_ATTEMPTS-x.count)}
+function accountBlockedMessage(key){const x=accountAttemptState(key),remainingMs=Math.max(0,Number(x.blockedUntil||0)-Date.now()),secs=Math.max(1,Math.ceil(remainingMs/1000)),mins=Math.ceil(secs/60);return `5 hatalı giriş hakkınız doldu. ${mins} dakika sonra tekrar deneyin.`}
 function consentIp(req){return String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0].trim()}
 function readLegalDocuments(){
   let docs=readJson('legal_documents.json',[]);const backup=readJson('legal_documents_backup.json',[]);
@@ -384,7 +385,7 @@ async function persistOrdersToGithub(){
 }
 
 const ACCOUNT_SNAPSHOT_FILE='account_state.enc';
-const ACCOUNT_SNAPSHOT_NAMES=['users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','phone_verifications.json','password_resets.json','coupons.json'];
+const ACCOUNT_SNAPSHOT_NAMES=['users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','phone_verifications.json','password_resets.json','coupons.json','new_member_coupon_templates.json'];
 function accountSnapshotKey(){return USER_SESSION_SECRET?crypto.createHash('sha256').update(USER_SESSION_SECRET).digest():null}
 function buildEncryptedAccountSnapshot(){
   const key=accountSnapshotKey();if(!key)return '';
@@ -1037,9 +1038,9 @@ async function appleIdentity(token){
   return {sub:String(payload.sub),email:normalizeEmail(payload.email||''),firstName:'',lastName:'',provider:'apple'};
 }
 function socialLoginUser(identity,extra={}){
-  const users=readJson('users.json',[]);let u=users.find(x=>(x.socialIds&&x.socialIds[identity.provider]===identity.sub)||(identity.email&&x.email===identity.email));const now=new Date().toISOString();
-  if(!u){if(!identity.email)throw new Error('Hesap e-postası alınamadı.');const id='USR-'+crypto.randomUUID(),customerId='CUS-'+crypto.randomUUID();u={id,customerId,firstName:String(extra.firstName||identity.firstName||'').trim()||'SHAZ',lastName:String(extra.lastName||identity.lastName||'').trim(),email:identity.email,phone:'',birthDate:'',phoneVerifiedAt:null,passwordSalt:'',passwordHash:'',authVersion:1,authProviders:['password'],socialIds:{},smsMarketingConsent:false,emailMarketingConsent:false,authProviders:[identity.provider],socialIds:{[identity.provider]:identity.sub},createdAt:now,updatedAt:now,disabled:false};users.push(u);writeJson('users.json',users);const customers=readJson('customers.json',[]);customers.push({id:customerId,userId:id,firstName:u.firstName,lastName:u.lastName,email:u.email,phone:'',createdAt:now,updatedAt:now});writeJson('customers.json',customers)}else{if(u.disabled)throw new Error('Bu üyelik yönetim tarafından iptal edilmiş.');u.authProviders=Array.from(new Set([...(u.authProviders||[]),identity.provider]));u.socialIds={...(u.socialIds||{}),[identity.provider]:identity.sub};if(!u.firstName&&extra.firstName)u.firstName=String(extra.firstName);if(!u.lastName&&extra.lastName)u.lastName=String(extra.lastName);u.updatedAt=now;writeJson('users.json',users)}
-  return u;
+  const users=readJson('users.json',[]);let u=users.find(x=>(x.socialIds&&x.socialIds[identity.provider]===identity.sub)||(identity.email&&x.email===identity.email));const now=new Date().toISOString();let created=false;
+  if(!u){if(!identity.email)throw new Error('Hesap e-postası alınamadı.');const id='USR-'+crypto.randomUUID(),customerId='CUS-'+crypto.randomUUID();u={id,customerId,firstName:String(extra.firstName||identity.firstName||'').trim()||'SHAZ',lastName:String(extra.lastName||identity.lastName||'').trim(),email:identity.email,phone:'',birthDate:'',phoneVerifiedAt:null,passwordSalt:'',passwordHash:'',authVersion:1,authProviders:['password'],socialIds:{},smsMarketingConsent:false,emailMarketingConsent:false,authProviders:[identity.provider],socialIds:{[identity.provider]:identity.sub},createdAt:now,updatedAt:now,disabled:false};users.push(u);writeJson('users.json',users);const customers=readJson('customers.json',[]);customers.push({id:customerId,userId:id,firstName:u.firstName,lastName:u.lastName,email:u.email,phone:'',createdAt:now,updatedAt:now});writeJson('customers.json',customers);created=true}else{if(u.disabled)throw new Error('Bu üyelik yönetim tarafından iptal edilmiş.');u.authProviders=Array.from(new Set([...(u.authProviders||[]),identity.provider]));u.socialIds={...(u.socialIds||{}),[identity.provider]:identity.sub};if(!u.firstName&&extra.firstName)u.firstName=String(extra.firstName);if(!u.lastName&&extra.lastName)u.lastName=String(extra.lastName);u.updatedAt=now;writeJson('users.json',users)}
+  if(created)assignNewMemberCoupons(u.id,now);return u;
 }
 async function sendPasswordResetMail(email,link){if(!RESEND_API_KEY)return false;const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:PASSWORD_RESET_FROM,to:[email],subject:'SHAZ Şifre Sıfırlama',html:`<p>SHAZ hesabınızın şifresini yenilemek için aşağıdaki bağlantıyı kullanın.</p><p><a href="${link}">Şifremi yenile</a></p><p>Bu bağlantı 30 dakika geçerlidir.</p>`})});return r.ok}
 async function sendAccountEmailVerificationMail(email,link){if(!RESEND_API_KEY)return false;const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:PASSWORD_RESET_FROM,to:[email],subject:'SHAZ E-posta Değişikliği Doğrulama',html:`<p>SHAZ hesabınızda yeni e-posta adresini doğrulamak için aşağıdaki bağlantıya tıklayın.</p><p><a href="${link}">Yeni e-posta adresimi doğrula</a></p><p>Bu bağlantı 30 dakika geçerlidir. Siz istemediyseniz bu e-postayı dikkate almayın.</p>`})});return r.ok}
@@ -1071,7 +1072,7 @@ app.get('/api/admin/users/export.xlsx',requireAdmin,(req,res)=>{
 });
 function normalizeAdminCouponInput(body,current={}){
   const code=String(body.code??current.code??'').trim().toUpperCase().replace(/\s+/g,''),discountType=String(body.discountType??current.discountType??'percent')==='fixed'?'fixed':'percent';
-  const value=Number(body.value??current.value??0),expiresAt=String((body.expiresAt ?? couponExpiryDateKey(current.expiresAt) ?? '')).trim(),title=String(body.title??current.title??'').trim();
+  const value=Number(body.value??current.value??0),expiresAt=String((body.expiresAt ?? couponExpiryDateKey(current.expiresAt) ?? '')).trim(),title=String(body.title??current.title??'').trim(),headline=String(body.headline??current.headline??'').trim();
   const minRaw=body.minCartAmount??current.minCartAmount??'',minCartAmount=String(minRaw).trim()===''?0:Number(minRaw);
   const requestedStackable=String(body.stackable??(current.stackable?'yes':'no'))==='yes'||body.stackable===true,stackable=discountType==='percent'?false:requestedStackable;
   const maxRaw=body.maxDiscountAmount??current.maxDiscountAmount??'',maxDiscountAmount=discountType==='percent'&&String(maxRaw).trim()!==''?Number(maxRaw):0;
@@ -1081,8 +1082,21 @@ function normalizeAdminCouponInput(body,current={}){
   if(discountType==='percent'&&(!Number.isFinite(maxDiscountAmount)||maxDiscountAmount<0))throw new Error('Maksimum indirim tutarı geçerli değil.');
   if(expiresAt&&!/^\d{4}-\d{2}-\d{2}$/.test(expiresAt))throw new Error('Son kullanma tarihi geçerli değil.');
   if(expiresAt&&expiresAt<istanbulDateKey())throw new Error('Geçmiş bir tarihe kupon tanımlanamaz. Son kullanma tarihi bugün veya daha ileri bir tarih olmalı.');
-  return {code,discountType,value,expiresAt,title,minCartAmount,stackable,maxDiscountAmount};
+  return {code,discountType,value,expiresAt,title,headline,minCartAmount,stackable,maxDiscountAmount};
 }
+
+function newMemberCouponTemplates(){return readJson('new_member_coupon_templates.json',[])}
+function assignNewMemberCoupons(userId,now=new Date().toISOString()){
+  const today=istanbulDateKey(),templates=newMemberCouponTemplates().filter(t=>t&&t.enabled!==false&&(!couponExpiryDateKey(t.expiresAt)||couponExpiryDateKey(t.expiresAt)>=today));
+  if(!templates.length)return [];
+  const coupons=readJson('coupons.json',[]),created=[];
+  for(const t of templates){const c={id:'CPN-'+crypto.randomUUID(),userId,code:t.code,discountType:t.discountType,value:Number(t.value||0),expiresAt:t.expiresAt||'',title:t.title||'',headline:t.headline||'',minCartAmount:Number(t.minCartAmount||0),stackable:!!t.stackable,maxDiscountAmount:Number(t.maxDiscountAmount||0),status:'active',source:'new-member-auto',templateId:t.id,createdAt:now,updatedAt:now};coupons.push(c);created.push(c)}
+  writeJson('coupons.json',coupons);return created;
+}
+app.get('/api/admin/new-member-coupons',requireAdmin,(req,res)=>res.json({ok:true,templates:newMemberCouponTemplates()}));
+app.post('/api/admin/new-member-coupons',requireAdmin,(req,res)=>{let data;try{data=normalizeAdminCouponInput(req.body)}catch(e){return res.status(400).json({ok:false,message:e.message})}const rows=newMemberCouponTemplates(),now=new Date().toISOString(),row={id:'NMC-'+crypto.randomUUID(),...data,enabled:true,createdAt:now,updatedAt:now};rows.push(row);writeJson('new_member_coupon_templates.json',rows);persistAccountStateAsync();res.json({ok:true,template:row})});
+app.patch('/api/admin/new-member-coupons/:id',requireAdmin,(req,res)=>{const rows=newMemberCouponTemplates(),i=rows.findIndex(x=>String(x.id)===String(req.params.id));if(i<0)return res.status(404).json({ok:false,message:'Otomatik kupon bulunamadı.'});let data;try{data=normalizeAdminCouponInput(req.body,rows[i])}catch(e){return res.status(400).json({ok:false,message:e.message})}rows[i]={...rows[i],...data,enabled:req.body.enabled===undefined?rows[i].enabled:req.body.enabled!==false,updatedAt:new Date().toISOString()};writeJson('new_member_coupon_templates.json',rows);persistAccountStateAsync();res.json({ok:true,template:rows[i]})});
+app.delete('/api/admin/new-member-coupons/:id',requireAdmin,(req,res)=>{const rows=newMemberCouponTemplates(),i=rows.findIndex(x=>String(x.id)===String(req.params.id));if(i<0)return res.status(404).json({ok:false,message:'Otomatik kupon bulunamadı.'});rows.splice(i,1);writeJson('new_member_coupon_templates.json',rows);persistAccountStateAsync();res.json({ok:true})});
 app.post('/api/admin/users/coupons',requireAdmin,(req,res)=>{
   const userIds=Array.isArray(req.body.userIds)?[...new Set(req.body.userIds.map(x=>String(x||'').trim()).filter(Boolean))]:[];
   if(!userIds.length)return res.status(400).json({ok:false,message:'Lütfen en az bir üye seçin.'});
@@ -1155,9 +1169,10 @@ app.post('/api/auth/register',sameOriginGuard,(req,res)=>{
   // Eski siparişleri yalnız telefon + e-posta birlikte aynıysa bağla; yalnız isim/telefon ile otomatik eşleştirme yapma.
   const oldOrders=readJson('orders.json',[]);let linked=false;for(const o of oldOrders){const oe=normalizeEmail(o?.customer?.email||'');const op=normalizeAccountPhone(o?.customer?.phone||'');if(oe&&oe===email&&op&&op===phone&&!o.userId){o.userId=id;o.customerId=customerId;linked=true}}if(linked)writeJson('orders.json',oldOrders);
   const cons=readJson('marketing_consents.json',[]);for(const [channel,value] of [['sms',!!req.body.smsMarketingConsent],['email',!!req.body.emailMarketingConsent]])cons.push({id:crypto.randomUUID(),userId:id,channel,granted:value,at:now,source:'registration',textVersion:'1',ip:consentIp(req),userAgent:String(req.headers['user-agent']||'')});writeJson('marketing_consents.json',cons);
+  assignNewMemberCoupons(id,now);
   persistAccountStateAsync();setUserSession(res,user,req);res.json({ok:true,user:publicUser(user)});
 });
-app.post('/api/auth/login',sameOriginGuard,(req,res)=>{const login=String(req.body.login??req.body.email??'').trim(),attemptKey=accountLoginAttemptKey(req,login),attempt=accountAttemptState(attemptKey);if(attempt.count>=ACCOUNT_LOGIN_MAX_ATTEMPTS)return res.status(429).json({ok:false,message:accountBlockedMessage(attemptKey),remainingAttempts:0});const email=normalizeEmail(login),phone=normalizeAccountPhone(login),users=readJson('users.json',[]),u=users.find(x=>x.email===email||(phone&&normalizeAccountPhone(x.phone)===phone));if(!u||!passwordMatches(req.body.password,u)){const remaining=accountFailKey(attemptKey);if(remaining<=0)return res.status(429).json({ok:false,message:accountBlockedMessage(attemptKey),remainingAttempts:0});return res.status(401).json({ok:false,message:`E-posta/telefon veya şifre hatalı. ${remaining} hakkınız kaldı.`,remainingAttempts:remaining})}if(u.disabled)return res.status(403).json({ok:false,message:'Bu üyelik yönetim tarafından iptal edilmiş.'});accountLoginAttempts.delete(attemptKey);setUserSession(res,u,req);res.json({ok:true,user:publicUser(u)})});
+app.post('/api/auth/login',sameOriginGuard,(req,res)=>{const login=String(req.body.login??req.body.email??'').trim(),attemptKey=accountLoginAttemptKey(req,login),attempt=accountAttemptState(attemptKey);if(Number(attempt.blockedUntil||0)>Date.now())return res.status(429).json({ok:false,message:accountBlockedMessage(attemptKey),remainingAttempts:0});const email=normalizeEmail(login),phone=normalizeAccountPhone(login),users=readJson('users.json',[]),u=users.find(x=>x.email===email||(phone&&normalizeAccountPhone(x.phone)===phone));if(!u||!passwordMatches(req.body.password,u)){const remaining=accountFailKey(attemptKey);if(remaining<=0)return res.status(429).json({ok:false,message:accountBlockedMessage(attemptKey),remainingAttempts:0});return res.status(401).json({ok:false,message:`E-posta/telefon veya şifre hatalı. ${remaining} hakkınız kaldı.`,remainingAttempts:remaining})}if(u.disabled)return res.status(403).json({ok:false,message:'Bu üyelik yönetim tarafından iptal edilmiş.'});accountLoginAttempts.delete(attemptKey);setUserSession(res,u,req);res.json({ok:true,user:publicUser(u)})});
 app.post('/api/auth/logout',sameOriginGuard,(req,res)=>{clearUserSession(res,req);res.json({ok:true})});
 app.get('/api/auth/me',(req,res)=>{const u=accountUserFromReq(req);res.json({ok:true,authenticated:!!u,user:publicUser(u)})});
 app.patch('/api/account/profile',sameOriginGuard,requireUser,async(req,res)=>{
