@@ -5988,3 +5988,47 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 
 /* Yeni üye kuponu başlığı popup içinde ayrı ve dengeli görünür. */
 .couponNoticeItemHeadline{margin:0 0 5px!important;font-size:13px!important;line-height:1.25!important;font-weight:850!important;color:#202326!important}
+
+/* ===== v163 — yalnız istenen üyelik/adres/sipariş/kupon düzeltmeleri ===== */
+/* Sağ üst üyelik/favori/sepet ikonları yazıya biraz yaklaşır; sol iletişim yazıları değişmez. */
+.headActions{transform:translateY(calc(-50% + 2px))!important}
+@media(max-width:700px){.headActions{transform:translateY(calc(-50% + 2px))!important}}
+
+/* Hesap menüsünde mobil dokunma/focus izi geri dönünce kalmaz. */
+.accountMenuRow{-webkit-tap-highlight-color:transparent!important;touch-action:manipulation!important}
+.accountMenuRow:focus,.accountMenuRow:focus-visible{outline:none!important;background:inherit!important;box-shadow:none!important}
+.accountMenuRow:active{background:#f3f3f3!important}
+.accountLoadingState{padding:28px 12px!important;text-align:center!important;color:#777!important}
+
+/* Adresler başlığında Geri ve + Yeni Adres başlığın alt çaprazlarında, metne binmeden simetrik. */
+.accountAddressHead{display:grid!important;grid-template-columns:minmax(88px,1fr) minmax(120px,auto) minmax(88px,1fr)!important;align-items:start!important;column-gap:10px!important}
+.accountAddressHead>h2{grid-column:2!important;grid-row:1!important;margin:0!important;text-align:center!important;white-space:nowrap!important}
+.accountAddressHead>.pill{grid-column:1!important;grid-row:1!important;justify-self:start!important;transform:translateY(26px)!important}
+.accountAddressHead>.accountNewAddressTop{grid-column:3!important;grid-row:1!important;justify-self:end!important;transform:translate(-10px,26px)!important;width:max-content!important;max-width:calc(100% - 4px)!important;white-space:nowrap!important;padding:5px 8px!important}
+@media(max-width:700px){
+  .accountAddressHead{grid-template-columns:minmax(76px,1fr) minmax(104px,auto) minmax(76px,1fr)!important;column-gap:6px!important}
+  .accountAddressHead>.pill{transform:translateY(24px)!important}
+  .accountAddressHead>.accountNewAddressTop{transform:translate(-6px,24px)!important;padding:4px 6px!important;font-size:8.4px!important}
+}
+.accountAddressFullName{display:block!important;text-align:center!important;font-weight:800!important;color:#222!important;margin:3px 0 5px!important}
+.accountAddressPhones b{font-size:inherit!important;font-weight:800!important;color:#222!important}
+
+/* Şifre gözü her dokunuşta yalnız görünür/gizli durumunu değiştirir. */
+.authEye{touch-action:none!important;-webkit-tap-highlight-color:transparent!important}
+
+/* Kişiselleştirme konum seçeneklerinde ana seçenek yazısı aynı hizada; tavsiye notu altta ayrı satır. */
+.positionChoice{position:relative!important;display:grid!important;grid-template-columns:18px minmax(0,1fr)!important;grid-template-rows:minmax(20px,auto) auto!important;align-items:center!important;column-gap:7px!important;row-gap:1px!important;min-height:52px!important}
+.positionChoice>input{grid-column:1!important;grid-row:1!important;align-self:center!important}
+.positionChoice>span{grid-column:2!important;grid-row:1!important;align-self:center!important;line-height:1.2!important}
+.positionChoice>.recommendedHint{grid-column:2!important;grid-row:2!important;position:static!important;margin:0!important;line-height:1.15!important;align-self:start!important}
+.writeInput{font-size:14px!important}
+.writeInput::placeholder{font-size:12.5px!important;letter-spacing:-.08px!important;opacity:.66!important}
+.removalSplitSummary .removedList>b{display:block!important;white-space:nowrap!important;font-size:clamp(9px,2.3vw,12px)!important;letter-spacing:-.2px!important}
+
+/* Sipariş listesinde sağ üst toplam, Sipariş #... ile aynı ağırlık ve renkte. */
+.accountOrderTopTotal{font:inherit!important;font-weight:800!important;color:inherit!important}
+.accountOrderItem.is-clickable{cursor:pointer!important;-webkit-tap-highlight-color:transparent!important}
+.accountOrderItem.is-clickable:active{background:#fafafa!important}
+
+/* Checkout adres alanı klavye açıldığında görünür merkezde kalır. */
+.drawerAddressMode .addressScrollBody input:focus,.drawerAddressMode .addressScrollBody textarea:focus{scroll-margin-top:38vh!important;scroll-margin-bottom:38vh!important}
