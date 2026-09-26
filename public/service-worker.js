@@ -14,14 +14,17 @@ self.addEventListener('message',event=>{if(event.data?.type==='SHAZ_CLEAR_BADGE'
 self.addEventListener('push',event=>{
   let data={};
   try{data=event.data?event.data.json():{}}catch(_){data={body:event.data?.text?.()||''}}
-  let title=String(data.title??'').trim().slice(0,80);
-  let body=String(data.body??'').trim().slice(0,240);
+  const title=String(data.title??'').trim().slice(0,80);
+  const body=String(data.body??'').trim().slice(0,240);
   if(!title&&!body)return;
+  // Web Notifications API bir title argümanı ister. Admin başlığı boş bıraktığında
+  // mesajı title'a taşımadan görünmez bir ayraç kullan; gerçek mesaj body olarak kalır.
+  const displayTitle=title||'\u2063';
   const rawUrl=String(data.url||data.data?.url||'/');
   let url='/';try{const u=new URL(rawUrl,self.location.origin);if(u.origin===self.location.origin)url=u.pathname+u.search+u.hash}catch(_){}
   const options={icon:data.icon||'/icon-192.png?v=168',badge:data.badge||'/icon-192.png?v=168',tag:String(data.tag||'').trim().slice(0,80)||undefined,data:{url},renotify:false};
   if(body)options.body=body;
-  event.waitUntil(Promise.all([self.registration.showNotification(title,options),incrementBadge()]));
+  event.waitUntil(Promise.all([self.registration.showNotification(displayTitle,options),incrementBadge()]));
 });
 self.addEventListener('notificationclick',event=>{
   event.notification.close();

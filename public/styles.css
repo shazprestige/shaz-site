@@ -6282,3 +6282,55 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 .memberStatusDeleted{
   color:#6d7379!important;
 }
+
+
+/* ===== v169 — yalnız son kullanıcı talebindeki hedefli düzeltmeler ===== */
+
+/* Uzun üye adı, kısa adla aynı etiket kutusunda ve aynı dikey hizada kalır; ikonun konumu değişmez. */
+.headerActionText.isLongAccountName{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  position:relative!important;
+  overflow:hidden!important;
+  white-space:nowrap!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  height:14px!important;
+  min-height:14px!important;
+  line-height:7px!important;
+  text-align:center!important;
+  font-weight:700!important;
+  padding:0!important;
+  margin:0!important;
+}
+.headerActionText.isLongAccountName>span{
+  display:inline-block!important;
+  position:relative!important;
+  min-width:max-content!important;
+  padding:0 8px 0 0!important;
+  margin:0!important;
+  font-family:inherit!important;
+  font-size:inherit!important;
+  font-style:normal!important;
+  font-weight:inherit!important;
+  line-height:7px!important;
+  vertical-align:top!important;
+  animation:shazNameMarqueeV169 5.5s linear infinite alternate!important;
+}
+@keyframes shazNameMarqueeV169{from{transform:translateX(0)}to{transform:translateX(calc(-100% + 44px))}}
+@media(max-width:700px){
+  .headerActionText.isLongAccountName{height:12px!important;min-height:12px!important;line-height:6px!important}
+  .headerActionText.isLongAccountName>span{line-height:6px!important;animation-name:shazNameMarqueeV169Mobile!important}
+  @keyframes shazNameMarqueeV169Mobile{from{transform:translateX(0)}to{transform:translateX(calc(-100% + 34px))}}
+}
+@media(max-width:365px){
+  @keyframes shazNameMarqueeV169Mobile{from{transform:translateX(0)}to{transform:translateX(calc(-100% + 30px))}}
+}
+
+/* WhatsApp ve Instagram yalnız görsel olarak bir piksel sola alınır. */
+#wa,#ig{transform:translateX(-1px)!important}
+
+/* Üyeler listesinde PWA son kullanım bilgisi mevcut son giriş alanının altında görünür. */
+.memberPwaLastSeen{display:block!important;margin-top:2px!important;font-size:8.5px!important;line-height:1.2!important;color:#747b82!important;font-weight:600!important}

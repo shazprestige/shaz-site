@@ -91,7 +91,7 @@ async function init(){
   try{localStorage.setItem('shazFavs',JSON.stringify([...favorites]))}catch(_){}
   syncCatalogViewControls();
   ensureProductHistoryBase();
-  apply(); renderCampaignCards(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart(); bindFloatingContacts(); initFooter(); initCookieConsent(); trackShazVisit().catch(()=>{}); registerShazPwa(); finishSiteBoot(); ensureAccountStateReady().catch(()=>{});
+  apply(); renderCampaignCards(); renderCategories(); renderProducts(); bindCore(); updateFavoriteBadge(); updateCart(); bindFloatingContacts(); initFooter(); initCookieConsent(); registerShazPwa(); finishSiteBoot(); ensureAccountStateReady().then(()=>trackShazVisit()).catch(()=>{});
   const sharedProductId=productRouteId();
   if(sharedProductId&&catalog.products.some(p=>p.id===sharedProductId)) setTimeout(()=>openProductDetail(sharedProductId,'shared'),0);
   else if(sharedProductId) clearProductRoute();
@@ -202,14 +202,13 @@ function renderSiteAnnouncement(force=false){
     else{
       wrap.classList.add('hidden');
       img.classList.add('hidden');
-      img.onload=()=>{img.classList.remove('hidden');wrap.classList.remove('hidden')};
-      img.onerror=()=>{
-        if(img.dataset.fallbackTried==='1')return;
-        img.dataset.fallbackTried='1';
-        try{const fallback=new URL(rawImage,location.origin);fallback.searchParams.set('v',signature);img.src=fallback.href}catch(_){img.src=rawImage}
-      };
-      img.dataset.fallbackTried='0';
-      img.src='/api/announcement-image?v='+encodeURIComponent(signature);
+      const showAnnouncementImage=()=>{img.classList.remove('hidden');wrap.classList.remove('hidden')};
+      const sources=['/api/announcement-image?v='+encodeURIComponent(signature)];
+      try{const fallback=new URL(rawImage,location.origin);fallback.searchParams.set('v',signature);if(fallback.href!==sources[0])sources.push(fallback.href)}catch(_){if(rawImage)sources.push(rawImage)}
+      let sourceIndex=0;
+      img.onload=showAnnouncementImage;
+      img.onerror=()=>{sourceIndex++;if(sourceIndex<sources.length){img.src=sources[sourceIndex];return}img.classList.add('hidden');wrap.classList.add('hidden')};
+      img.src=sources[sourceIndex];
     }
   }
   if($('#siteAnnouncementButton')) $('#siteAnnouncementButton').setAttribute('aria-label',cfg.buttonText||'Duyuruyu kapat');
@@ -2545,7 +2544,7 @@ function setAuthFieldError(el){if(!el)return;el.classList.add('authFieldError');
 function showAuthErrors(message,ids=[]){ids.forEach(id=>setAuthFieldError(document.getElementById(id)));const box=document.getElementById('authFormMessage');if(box){box.textContent=message;box.classList.remove('hidden')}else alert(message);const first=document.getElementById(ids[0]);first?.scrollIntoView({block:'center',behavior:'smooth'});first?.focus()}
 function protectedEmailAttrs(){return ' data-1p-ignore="true" data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true" data-form-type="other" data-ignore="true" spellcheck="false" '}
 function accountDeviceId(){try{let id=localStorage.getItem('shazAccountDeviceId');if(!/^[A-Za-z0-9._:-]{8,120}$/.test(String(id||''))){id='dev-'+(crypto.randomUUID?.()||(`${Date.now()}-${Math.random().toString(36).slice(2)}`));localStorage.setItem('shazAccountDeviceId',id)}return id}catch(_){return 'device-'+Math.random().toString(36).slice(2)+Date.now()}}
-async function finishAccountLogin(user){currentAccountUser=user;setAccountHeaderHint(user);await loadAccountState();if(accountNeedsCompletion(currentAccountUser))return showSocialProfileCompletion();history.replaceState({...history.state,shazAccount:false},'','/');closeDrawer();closeAccountPopover();window.scrollTo({top:0,left:0,behavior:'auto'});centerToast(`Hoşgeldin ${currentAccountUser?.firstName||''}`.trim(),1500)}
+async function finishAccountLogin(user){currentAccountUser=user;setAccountHeaderHint(user);await loadAccountState();await trackShazVisit().catch(()=>{});if(accountNeedsCompletion(currentAccountUser))return showSocialProfileCompletion();history.replaceState({...history.state,shazAccount:false},'','/');closeDrawer();closeAccountPopover();window.scrollTo({top:0,left:0,behavior:'auto'});centerToast(`Hoşgeldin ${currentAccountUser?.firstName||''}`.trim(),1500)}
 function showLogin(updateRoute=true){closeAccountPopover();if(updateRoute)syncAccountRoute('/giris');const body=`<div id="authFormMessage" class="authFormMessage hidden"></div><div class="authForm kigiliAuthForm">${authInputShield(`<input id="loginEmail" class="formControl" type="text" inputmode="email" autocomplete="username" ${protectedEmailAttrs()} placeholder="E-posta adresi veya telefon" oninput="updateAuthSubmitState('login')">`)}${authPasswordField('loginPassword','Şifre','current-password','login')}<button id="loginSubmit" class="btn authSubmit" onclick="loginAccount(this)">OTURUM AÇ</button></div><button class="authTextLink authForgot" type="button" onclick="showForgotPassword()">ŞİFREMİ UNUTTUM</button><div class="authSwitch">Hesabınız yok mu? <button type="button" onclick="showRegister()">HESAP OLUŞTUR</button></div>${socialAuthButtons()}`;openDrawer(accountAuthPage('Giriş yap','Hesabınız varsa lütfen giriş yapın.',body));requestAnimationFrame(()=>updateAuthSubmitState('login'))}
 async function loginAccount(btn){const login=$('#loginEmail'),pass=$('#loginPassword'),missing=[];if(!String(login?.value||'').trim())missing.push('loginEmail');if(!String(pass?.value||''))missing.push('loginPassword');if(missing.length)return showAuthErrors('E-posta/telefon ve şifre alanlarını doldurun.',missing);try{btn.disabled=true;const r=await apiJson('/api/auth/login',{method:'POST',body:JSON.stringify({login:login.value,password:pass.value,deviceId:accountDeviceId()})});await finishAccountLogin(r.user)}catch(e){showAuthErrors(e.message,['loginEmail','loginPassword'])}finally{btn.disabled=false}}
 function birthDateToIso(v){const x=String(v||'').trim();if(!x)return '';if(/^\d{4}-\d{2}-\d{2}$/.test(x))return x;const m=x.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);if(!m)return null;const d=Number(m[1]),mo=Number(m[2]),y=Number(m[3]),dt=new Date(Date.UTC(y,mo-1,d));if(dt.getUTCFullYear()!==y||dt.getUTCMonth()!==mo-1||dt.getUTCDate()!==d)return null;return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`}
