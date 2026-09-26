@@ -6032,3 +6032,40 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 
 /* Checkout adres alanı klavye açıldığında görünür merkezde kalır. */
 .drawerAddressMode .addressScrollBody input:focus,.drawerAddressMode .addressScrollBody textarea:focus{scroll-margin-top:38vh!important;scroll-margin-bottom:38vh!important}
+
+
+/* ===== v164: yalnızca istenen düzeltmeler ===== */
+.productCardLink{color:inherit;text-decoration:none}
+.headerCountBadge.couponNoticeBadge{display:grid!important;place-items:center!important;line-height:1!important;padding:0!important;text-align:center!important}
+.headActions{transform:translateY(calc(-50% + 4px))!important}
+.couponNoticeCard h3,.couponNoticeItemHeadline,.accountCouponMain>span{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important}
+.couponNoticeItemHeadline{grid-column:1/-1!important;margin:0 0 4px!important}
+.detailAddBtn,.favoriteCartBtn,.wizardBottomAction>.btn,.wizardFinalAction>.btn,.checkoutUpsellInfo>.btn,.walletPhotoCartBtn,.builderAddCartBtn{border-radius:0!important}
+.wizardCard>.writeItem + .writeItem{margin-top:12px!important}
+.accountAddressHead{grid-template-columns:minmax(90px,1fr) minmax(0,auto) minmax(90px,1fr)!important;align-items:center!important}
+.accountAddressHead>.pill,.accountAddressHead>.accountNewAddressTop{transform:none!important;align-self:center!important;margin:0!important}
+.accountAddressHead>.pill{justify-self:start!important}
+.accountAddressHead>.accountNewAddressTop{justify-self:end!important;font-size:9.2px!important;padding:6px 9px!important;line-height:1.1!important}
+.accountProfileField{display:grid;gap:6px}
+.accountProfileField>span,.accountProfileField>label{font-size:12px;font-weight:800;color:#222}
+.accountProfileField>small{display:block;font-size:11px;line-height:1.35;color:#6d6d6d;margin-top:0}
+.savedAddressSuggestionMenu{position:fixed!important;z-index:2147482500!important;overscroll-behavior:contain!important}
+.accountLogoutConfirm{touch-action:none!important}
+.siteFooter{margin-top:42px;border-top:1px solid #e7e7e7;background:#fff;padding:30px clamp(18px,4vw,58px) 20px;color:#161616}
+.siteFooterGrid{max-width:1260px;margin:0 auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px}
+.footerGroupTitle{width:100%;border:0;background:transparent;padding:0 0 13px;text-align:left;font:inherit;font-weight:900;font-size:12px;letter-spacing:.04em;color:#111;cursor:default}
+.footerGroupTitle span{display:none}
+.footerLinks{display:grid;gap:9px}
+.footerLinks button{border:0;background:transparent;padding:0;text-align:left;font:inherit;font-size:12px;color:#555;cursor:pointer}
+.footerLinks button:hover{text-decoration:underline;color:#111}
+.siteFooterBottom{max-width:1260px;margin:28px auto 0;padding-top:18px;border-top:1px solid #eee;display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:11px;color:#666}
+.footerFutureSlots{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.footerFutureSlots span{border:1px dashed #bbb;padding:7px 9px;border-radius:3px;background:#fafafa}
+.footerInfoPage{max-width:760px;margin:0 auto;padding:8px 0 24px}.footerInfoBody{display:grid;gap:14px;line-height:1.6;color:#333}.footerInfoBody p{margin:0}.footerInfoRows{display:grid;gap:0;border:1px solid #e7e7e7}.footerInfoRow{display:grid;grid-template-columns:minmax(150px,.8fr) 1.4fr;gap:18px;padding:12px 14px;border-bottom:1px solid #eee}.footerInfoRow:last-child{border-bottom:0}.footerInfoRow span{overflow-wrap:anywhere}
+.cookieConsentOverlay{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:2147483100;display:grid;place-items:center;padding:18px}.cookieConsentCard{width:min(620px,100%);max-height:min(84vh,700px);overflow:auto;background:#fff;padding:22px;border-radius:6px;box-shadow:0 22px 70px rgba(0,0,0,.24)}.cookieConsentCard h3{margin:0 0 8px}.cookieConsentCard>p{margin:0 0 18px;color:#555;line-height:1.45}.cookieCategory{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 0;border-top:1px solid #eee}.cookieCategory span{display:grid;gap:3px}.cookieCategory small{color:#707070}.cookieCategory input{width:18px;height:18px}.cookieConsentActions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px}.cookieConsentActions button{min-height:42px;border:1px solid #111;background:#fff;font-weight:800;cursor:pointer}.cookieConsentActions button:last-child{background:#111;color:#fff}
+.pushPermissionPrompt{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(520px,calc(100% - 24px));z-index:2147483050;background:#fff;border:1px solid #dedede;box-shadow:0 16px 50px rgba(0,0,0,.2);padding:18px;border-radius:6px}.pushPermissionPrompt>div>p{margin:7px 0 14px;color:#555;font-size:13px;line-height:1.4}.pushPermissionPrompt>div>div{display:flex;justify-content:flex-end;gap:8px}.pushPermissionPrompt .btn,.pushPermissionPrompt .pill{min-height:38px;padding:8px 12px}
+@media(max-width:700px){
+  .headActions{transform:translateY(calc(-50% + 4px))!important}
+  .accountAddressHead{grid-template-columns:minmax(78px,1fr) minmax(0,auto) minmax(78px,1fr)!important}
+  .accountAddressHead>.accountNewAddressTop{font-size:8.8px!important;padding:5.5px 7.5px!important}
+  .siteFooter{padding:22px 18px 16px}.siteFooterGrid{display:block}.footerGroup{border-bottom:1px solid #eee}.footerGroupTitle{display:flex;align-items:center;justify-content:space-between;padding:14px 0;cursor:pointer}.footerGroupTitle span{display:inline}.footerLinks{display:none;padding:0 0 14px}.footerGroup.open .footerLinks{display:grid}.siteFooterBottom{margin-top:18px;display:grid}.footerFutureSlots{justify-content:flex-start}.footerInfoRow{grid-template-columns:1fr;gap:4px}.cookieConsentActions{grid-template-columns:1fr}.pushPermissionPrompt>div>div{display:grid;grid-template-columns:1fr 1fr}
+}

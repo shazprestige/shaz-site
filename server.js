@@ -6,6 +6,8 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const sharp = require('sharp');
+let webpush=null;
+try{webpush=require('web-push')}catch(e){console.warn('web-push paketi yüklenmemiş; Web Push gönderimi devre dışı kalacak.')}
 const app = express();
 const PORT = process.env.PORT || 3000;
 const root = __dirname;
@@ -28,7 +30,7 @@ const uploadDir = path.join(persistRoot,'uploads');
 fs.mkdirSync(dataDir,{recursive:true});
 fs.mkdirSync(uploadDir,{recursive:true});
 // İlk kullanımda repodaki başlangıç JSON'larını kalıcı alana yalnızca bir kez kopyala.
-for(const name of ['settings.json','catalog.json','orders.json','users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','legal_documents.json','legal_documents_backup.json','legal_acceptances.json','phone_verifications.json','password_resets.json','coupons.json','new_member_coupon_templates.json','account_login_attempts.json','account_state.enc']){
+for(const name of ['settings.json','catalog.json','orders.json','users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','legal_documents.json','legal_documents_backup.json','legal_acceptances.json','phone_verifications.json','password_resets.json','coupons.json','new_member_coupon_templates.json','account_login_attempts.json','push_subscriptions.json','account_state.enc']){
   const dst=path.join(dataDir,name);
   const seed=path.join(root,'data',name);
   if(!fs.existsSync(dst) && fs.existsSync(seed)) fs.copyFileSync(seed,dst);
@@ -40,7 +42,7 @@ app.use('/uploads', express.static(uploadDir,{maxAge:'7d'}));
 
 // Yeni sürümlerde telefonların eski JS/CSS'i tutup sipariş isteğini eski kodla göndermesini engelle.
 app.use((req,res,next)=>{
-  if (/\.(?:html?|js|css)$/i.test(req.path) || req.path==='/' || req.path==='/admin') {
+  if (/\.(?:html?|js|css)$/i.test(req.path) || req.path==='/' || req.path==='/admin' || req.path==='/manifest.webmanifest') {
     res.setHeader('Cache-Control','no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma','no-cache');
     res.setHeader('Expires','0');
@@ -61,10 +63,36 @@ app.get('/favicon.ico',(req,res)=>sendBrandPng(req,res,64));
 app.get('/favicon-32.png',(req,res)=>sendBrandPng(req,res,32));
 app.get('/favicon-64.png',(req,res)=>sendBrandPng(req,res,64));
 app.get('/favicon-192.png',(req,res)=>sendBrandPng(req,res,192));
-app.get('/apple-touch-icon.png',(req,res)=>sendBrandPng(req,res,180));
+app.get('/apple-touch-icon.png',(req,res)=>sendPwaIcon(req,res,180,.70));
+async function sendPwaIcon(req,res,size,ratio=.70){
+  try{
+    const a=brandAsset();if(a.remote)return res.redirect(302,a.remote);if(!a.file)return res.status(404).end();
+    const safe=Math.max(1,Math.round(size*ratio));
+    const logo=await sharp(a.file).resize(safe,safe,{fit:'inside',withoutEnlargement:false}).png().toBuffer();
+    const canvas=await sharp({create:{width:size,height:size,channels:4,background:{r:255,g:255,b:255,alpha:1}}}).composite([{input:logo,gravity:'center'}]).png().toBuffer();
+    res.type('png').set('Cache-Control','public, max-age=86400, must-revalidate').send(canvas)
+  }catch(e){console.error('PWA ikon üretimi:',e);res.status(500).end()}
+}
+app.get('/icon-192.png',(req,res)=>sendPwaIcon(req,res,192,.70));
+app.get('/icon-512.png',(req,res)=>sendPwaIcon(req,res,512,.70));
+app.get('/icon-maskable-512.png',(req,res)=>sendPwaIcon(req,res,512,.58));
 app.get('/social-card.png',async(req,res)=>{
   try{const a=brandAsset();if(a.remote)return res.redirect(302,a.remote);if(!a.file)return res.status(404).end();const logo=await sharp(a.file).resize(520,220,{fit:'inside',withoutEnlargement:true}).png().toBuffer();const card=await sharp({create:{width:1200,height:630,channels:4,background:{r:255,g:255,b:255,alpha:1}}}).composite([{input:logo,gravity:'center'}]).png().toBuffer();res.type('png').set('Cache-Control','public, max-age=604800').send(card)}catch(e){console.error('sosyal kart üretimi:',e);res.status(500).end()}
 });
+function serverProductCardHtml(p){
+  const name=String(p?.name||'SHAZ Ürün');
+  const image=String(mainProductImage(p)||'').trim();
+  const href='/urun/'+encodeURIComponent(productSeoSlug(p));
+  return `<a class="card productCardLink" data-product-id="${escapeHtmlAttr(p.id||'')}" href="${escapeHtmlAttr(href)}"><div class="photo">${image?`<img src="${escapeHtmlAttr(image)}" alt="${escapeHtmlAttr(name)}">`:'⌚'}</div><div class="info"><h3>${escapeHtmlAttr(name)}</h3><div class="price"><span>${Number(p?.price||0).toLocaleString('tr-TR')} TL</span></div></div></a>`;
+}
+function renderHomeHtml(){
+  const indexPath=path.join(root,'public','index.html');let html=fs.readFileSync(indexPath,'utf8');
+  const catalog=readJson('catalog.json',{products:[]});
+  const cards=(catalog.products||[]).filter(p=>p&&!p.hidden).map(serverProductCardHtml).join('');
+  if(cards)html=html.replace('<div class="grid products" id="productsList"></div>',`<div class="grid products" id="productsList">${cards}</div>`);
+  return html;
+}
+app.get('/',(req,res)=>res.type('html').send(renderHomeHtml()));
 app.use(express.static(path.join(root,'public'),{etag:false,lastModified:false}));
 
 // ---------- SEO: robots, sitemap ve gerçek ürün URL'leri ----------
@@ -196,7 +224,7 @@ const PASSWORD_RESET_FROM=String(process.env.PASSWORD_RESET_FROM||'SHAZ <noreply
 const PUBLIC_BASE_URL=String(process.env.PUBLIC_BASE_URL||'https://shaz.com.tr').replace(/\/$/,'');
 const accountLoginAttempts=new Map();
 for(const [name,fallback] of Object.entries({
-  'users.json':[],'customers.json':[],'addresses.json':[],'favorites.json':[],'marketing_consents.json':[],'legal_acceptances.json':[],'phone_verifications.json':[],'password_resets.json':[],'new_member_coupon_templates.json':[],'account_login_attempts.json':{},'legal_documents_backup.json':[],
+  'users.json':[],'customers.json':[],'addresses.json':[],'favorites.json':[],'marketing_consents.json':[],'legal_acceptances.json':[],'phone_verifications.json':[],'password_resets.json':[],'new_member_coupon_templates.json':[],'account_login_attempts.json':{},'push_subscriptions.json':[],'legal_documents_backup.json':[],
   'legal_documents.json':[
     {type:'MEMBERSHIP',version:'1',title:'Üyelik Sözleşmesi',content:'',active:true},
     {type:'KVKK',version:'1',title:'KVKK Aydınlatma Metni',content:'',active:true},
@@ -242,7 +270,12 @@ function sameOriginGuard(req,res,next){if(['GET','HEAD','OPTIONS'].includes(req.
 const accountRateKey=req=>String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0].trim();
 const ACCOUNT_LOGIN_MAX_ATTEMPTS=5;
 function accountLoginDeviceId(req){const raw=String(req.body?.deviceId||req.headers['x-shaz-device-id']||'').trim();return /^[A-Za-z0-9._:-]{8,120}$/.test(raw)?raw:accountRateKey(req)}
-function accountLoginAttemptKey(req){return accountLoginDeviceId(req)}
+function accountLoginAttemptKeys(req,login=''){
+  const device='device:'+accountLoginDeviceId(req),identity=normalizeEmail(login)||normalizeAccountPhone(login)||String(login||'').trim().toLocaleLowerCase('tr-TR');
+  const identityKey=identity?'identity:'+crypto.createHash('sha256').update(identity).digest('hex').slice(0,32):'';
+  const network=identity?'network:'+crypto.createHash('sha256').update(identity+'|'+accountRateKey(req)).digest('hex').slice(0,32):'';
+  return [...new Set([device,identityKey,network].filter(Boolean))];
+}
 function readAccountLoginAttempts(){const x=readJson('account_login_attempts.json',{});return x&&typeof x==='object'&&!Array.isArray(x)?x:{}}
 function writeAccountLoginAttempts(x){writeJson('account_login_attempts.json',x)}
 function accountAttemptState(key){const now=Date.now(),all=readAccountLoginAttempts(),x=all[key]||{count:0,blockedUntil:0,lastFailureAt:0,lockCount:0};if(x.blockedUntil&&now>=x.blockedUntil){x.count=0;x.blockedUntil=0;all[key]=x;writeAccountLoginAttempts(all)}return x}
@@ -388,7 +421,7 @@ async function persistOrdersToGithub(){
 }
 
 const ACCOUNT_SNAPSHOT_FILE='account_state.enc';
-const ACCOUNT_SNAPSHOT_NAMES=['users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','phone_verifications.json','password_resets.json','coupons.json','new_member_coupon_templates.json','account_login_attempts.json'];
+const ACCOUNT_SNAPSHOT_NAMES=['users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','phone_verifications.json','password_resets.json','coupons.json','new_member_coupon_templates.json','account_login_attempts.json','push_subscriptions.json'];
 function accountSnapshotKey(){return USER_SESSION_SECRET?crypto.createHash('sha256').update(USER_SESSION_SECRET).digest():null}
 function buildEncryptedAccountSnapshot(){
   const key=accountSnapshotKey();if(!key)return '';
@@ -1074,12 +1107,11 @@ app.get('/api/admin/users/export.xlsx',requireAdmin,(req,res)=>{
   const buf=XLSX.write(wb,{type:'buffer',bookType:'xlsx'});res.setHeader('Content-Type','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');res.setHeader('Content-Disposition','attachment; filename="SHAZ-Uyeler.xlsx"');res.send(buf);
 });
 function normalizeAdminCouponInput(body,current={}){
-  const code=String(body.code??current.code??'').trim().toUpperCase().replace(/\s+/g,''),discountType=String(body.discountType??current.discountType??'percent')==='fixed'?'fixed':'percent';
+  const rawCode=String(body.code??current.code??'').trim().toLocaleUpperCase('tr-TR'),code=(rawCode.replaceAll('İ','I').replaceAll('Ş','S').replaceAll('Ğ','G').replaceAll('Ü','U').replaceAll('Ö','O').replaceAll('Ç','C').replaceAll('İ','I').replace(/[^A-Z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,32)||('SHAZ'+crypto.randomBytes(3).toString('hex').toUpperCase())),discountType=String(body.discountType??current.discountType??'percent')==='fixed'?'fixed':'percent';
   const value=Number(body.value??current.value??0),expiresAt=String((body.expiresAt ?? couponExpiryDateKey(current.expiresAt) ?? '')).trim(),title=String(body.title??current.title??'').trim(),headline=String(body.headline??current.headline??'').trim();
   const minRaw=body.minCartAmount??current.minCartAmount??'',minCartAmount=String(minRaw).trim()===''?0:Number(minRaw);
   const requestedStackable=String(body.stackable??(current.stackable?'yes':'no'))==='yes'||body.stackable===true,stackable=discountType==='percent'?false:requestedStackable;
   const maxRaw=body.maxDiscountAmount??current.maxDiscountAmount??'',maxDiscountAmount=discountType==='percent'&&String(maxRaw).trim()!==''?Number(maxRaw):0;
-  if(!/^[A-Z0-9_-]{3,32}$/.test(code))throw new Error('Kupon kodu 3-32 karakter olmalı; harf, rakam, _ veya - kullanın.');
   if(!Number.isFinite(value)||value<=0||(discountType==='percent'&&value>100))throw new Error('Geçerli bir indirim değeri girin.');
   if(!Number.isFinite(minCartAmount)||minCartAmount<0)throw new Error('Minimum sepet tutarı geçerli değil.');
   if(discountType==='percent'&&(!Number.isFinite(maxDiscountAmount)||maxDiscountAmount<0))throw new Error('Maksimum indirim tutarı geçerli değil.');
@@ -1146,6 +1178,18 @@ app.put('/api/admin/legal-documents',requireAdmin,(req,res)=>{
 
 // ---------- v153 müşteri auth/account API ----------
 app.get('/api/legal-documents',(req,res)=>res.json({ok:true,documents:readLegalDocuments().filter(d=>d.active!==false).map(d=>({type:d.type,version:d.version,title:d.title,content:d.content||'',active:d.active!==false}))}));
+
+// ---------- PWA / Web Push ----------
+const VAPID_PUBLIC_KEY=String(process.env.VAPID_PUBLIC_KEY||'').trim();
+const VAPID_PRIVATE_KEY=String(process.env.VAPID_PRIVATE_KEY||'').trim();
+const VAPID_SUBJECT=String(process.env.VAPID_SUBJECT||'').trim();
+const webPushReady=!!(webpush&&VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY&&VAPID_SUBJECT);
+if(webPushReady){try{webpush.setVapidDetails(VAPID_SUBJECT,VAPID_PUBLIC_KEY,VAPID_PRIVATE_KEY)}catch(e){console.warn('VAPID yapılandırması geçersiz:',e.message)}}
+function cleanPushSubscription(body={}){const endpoint=String(body.endpoint||'').trim(),p256dh=String(body.keys?.p256dh||body.p256dh||'').trim(),auth=String(body.keys?.auth||body.auth||'').trim();if(!/^https:\/\//i.test(endpoint)||!p256dh||!auth)return null;return {endpoint,keys:{p256dh,auth}}}
+app.get('/api/push/public-key',(req,res)=>res.json({ok:true,enabled:webPushReady,publicKey:VAPID_PUBLIC_KEY||''}));
+app.post('/api/push/subscribe',sameOriginGuard,(req,res)=>{const sub=cleanPushSubscription(req.body);if(!sub)return res.status(400).json({ok:false,message:'Geçersiz push aboneliği.'});const rows=readJson('push_subscriptions.json',[]),now=new Date().toISOString(),user=accountUserFromReq(req),i=rows.findIndex(x=>x.endpoint===sub.endpoint),row={id:i>=0?rows[i].id:'PUSH-'+crypto.randomUUID(),userId:user?.id||null,endpoint:sub.endpoint,p256dh:sub.keys.p256dh,auth:sub.keys.auth,userAgent:String(req.headers['user-agent']||'').slice(0,500),createdAt:i>=0?(rows[i].createdAt||now):now,updatedAt:now};if(i>=0)rows[i]=row;else rows.push(row);writeJson('push_subscriptions.json',rows);persistAccountStateAsync();res.json({ok:true})});
+app.delete('/api/push/unsubscribe',sameOriginGuard,(req,res)=>{const endpoint=String(req.body?.endpoint||'').trim(),rows=readJson('push_subscriptions.json',[]),next=rows.filter(x=>x.endpoint!==endpoint);if(next.length!==rows.length){writeJson('push_subscriptions.json',next);persistAccountStateAsync()}res.json({ok:true})});
+app.post('/api/admin/push/send',sameOriginGuard,requireAdmin,async(req,res)=>{if(!webPushReady)return res.status(503).json({ok:false,message:'VAPID anahtarları yapılandırılmamış.'});const title=String(req.body.title||'SHAZ').trim().slice(0,80)||'SHAZ',body=String(req.body.body||'').trim().slice(0,240),tag=String(req.body.tag||'').trim().slice(0,80),rawUrl=String(req.body.url||'/').trim();let url='/';try{const u=new URL(rawUrl,SHAZ_ORIGIN);if(u.origin===SHAZ_ORIGIN)url=u.pathname+u.search+u.hash}catch{}const payload=JSON.stringify({title,body,icon:'/icon-192.png',badge:'/icon-192.png',url,tag,data:{url}}),rows=readJson('push_subscriptions.json',[]),invalid=new Set(),results=[];for(const row of rows){try{await webpush.sendNotification({endpoint:row.endpoint,keys:{p256dh:row.p256dh,auth:row.auth}},payload,{TTL:60*60});results.push({ok:true})}catch(e){const status=Number(e.statusCode||0);if(status===404||status===410)invalid.add(row.endpoint);results.push({ok:false,status})}}if(invalid.size){writeJson('push_subscriptions.json',rows.filter(x=>!invalid.has(x.endpoint)));persistAccountStateAsync()}res.json({ok:true,sent:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,cleaned:invalid.size})});
 app.get('/api/auth/social-config',(req,res)=>res.json({ok:true,googleClientId:GOOGLE_CLIENT_ID||'',appleClientId:APPLE_CLIENT_ID||'',appleRedirectUri:APPLE_REDIRECT_URI||'',passwordResetEnabled:!!RESEND_API_KEY}));
 app.post('/api/auth/social/google',sameOriginGuard,async(req,res)=>{try{const identity=await googleIdentity(req.body.credential);const u=socialLoginUser(identity);persistAccountStateAsync();setUserSession(res,u,req);res.json({ok:true,user:publicUser(u)})}catch(e){res.status(401).json({ok:false,message:e.message||'Google ile giriş tamamlanamadı.'})}});
 app.post('/api/auth/social/apple',sameOriginGuard,async(req,res)=>{try{const identity=await appleIdentity(req.body.identityToken);const u=socialLoginUser(identity,{firstName:req.body.firstName,lastName:req.body.lastName});persistAccountStateAsync();setUserSession(res,u,req);res.json({ok:true,user:publicUser(u)})}catch(e){res.status(401).json({ok:false,message:e.message||'Apple ile giriş tamamlanamadı.'})}});
@@ -1177,7 +1221,7 @@ app.post('/api/auth/register',sameOriginGuard,(req,res)=>{
   assignNewMemberCoupons(id,now);
   persistAccountStateAsync();setUserSession(res,user,req);res.json({ok:true,user:publicUser(user)});
 });
-app.post('/api/auth/login',sameOriginGuard,(req,res)=>{const login=String(req.body.login??req.body.email??'').trim(),attemptKey=accountLoginAttemptKey(req),attempt=accountAttemptState(attemptKey);if(Number(attempt.blockedUntil||0)>Date.now())return res.status(429).json({ok:false,message:accountBlockedMessage(attemptKey),remainingAttempts:0});const email=normalizeEmail(login),phone=normalizeAccountPhone(login),users=readJson('users.json',[]),u=users.find(x=>x.email===email||(phone&&normalizeAccountPhone(x.phone)===phone));if(!u||!passwordMatches(req.body.password,u)){const remaining=accountFailKey(attemptKey);if(remaining<=0)return res.status(429).json({ok:false,message:accountBlockedMessage(attemptKey),remainingAttempts:0});return res.status(401).json({ok:false,message:`E-posta/telefon veya şifre hatalı. ${remaining} hakkınız kaldı.`,remainingAttempts:remaining})}if(u.disabled)return res.status(403).json({ok:false,message:'Bu üyelik yönetim tarafından iptal edilmiş.'});clearAccountLoginAttempts(attemptKey);setUserSession(res,u,req);res.json({ok:true,user:publicUser(u)})});
+app.post('/api/auth/login',sameOriginGuard,(req,res)=>{const login=String(req.body.login??req.body.email??'').trim(),attemptKeys=accountLoginAttemptKeys(req,login),blockedKey=attemptKeys.find(k=>Number(accountAttemptState(k).blockedUntil||0)>Date.now());if(blockedKey)return res.status(429).json({ok:false,message:accountBlockedMessage(blockedKey),remainingAttempts:0});const email=normalizeEmail(login),phone=normalizeAccountPhone(login),users=readJson('users.json',[]),u=users.find(x=>x.email===email||(phone&&normalizeAccountPhone(x.phone)===phone));if(!u||!passwordMatches(req.body.password,u)){const remainings=attemptKeys.map(accountFailKey),remaining=Math.min(...remainings);if(remaining<=0){const key=attemptKeys.find(k=>Number(accountAttemptState(k).blockedUntil||0)>Date.now())||attemptKeys[0];return res.status(429).json({ok:false,message:accountBlockedMessage(key),remainingAttempts:0})}return res.status(401).json({ok:false,message:`E-posta/telefon veya şifre hatalı. ${remaining} hakkınız kaldı.`,remainingAttempts:remaining})}if(u.disabled)return res.status(403).json({ok:false,message:'Bu üyelik yönetim tarafından iptal edilmiş.'});attemptKeys.forEach(clearAccountLoginAttempts);setUserSession(res,u,req);res.json({ok:true,user:publicUser(u)})});
 app.post('/api/auth/logout',sameOriginGuard,(req,res)=>{clearUserSession(res,req);res.json({ok:true})});
 app.get('/api/auth/me',(req,res)=>{const u=accountUserFromReq(req);res.json({ok:true,authenticated:!!u,user:publicUser(u)})});
 app.patch('/api/account/profile',sameOriginGuard,requireUser,async(req,res)=>{

@@ -1,8 +1,13 @@
 <!doctype html>
-<html lang="tr">
+<html lang="tr" class="siteBooting">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="SHAZ">
+<link rel="manifest" href="/manifest.webmanifest">
 <title>SHAZ | Erkek Aksesuarları</title>
 <meta name="description" content="SHAZ erkek aksesuarları: saat, cüzdan, kemer, bileklik, tesbih, çakmak, gözlük ve özel set seçenekleri.">
 <link rel="canonical" href="https://shaz.com.tr/">
@@ -16,14 +21,16 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:type" content="image/png">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SHAZ | Erkek Aksesuarları">
+<meta name="twitter:description" content="SHAZ erkek aksesuarları ve özel set seçeneklerini keşfedin.">
 <meta name="twitter:image" content="https://shaz.com.tr/social-card.png?v=156">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=156">
-<link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png?v=156">
-<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=156">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=156">
-<style>html.accountRouteBootSafe body{overflow:hidden!important;background:#fff!important}html.accountRouteBootSafe body>*{visibility:hidden!important}html.accountRouteBootSafe body::before{content:"";position:fixed;inset:0;background:#fff;z-index:2147483000;pointer-events:none;visibility:visible!important}</style>
-<script>(function(){if(/^\/(?:giris|kayit|sifre-sifirla|hesabim(?:\/|$))/.test(location.pathname)){document.documentElement.classList.add('accountRouteBootSafe');window.__shazAccountBootTimer=setTimeout(function(){document.documentElement.classList.remove('accountRouteBootSafe')},15000);window.addEventListener('error',function(){document.documentElement.classList.remove('accountRouteBootSafe')},{once:true});window.addEventListener('unhandledrejection',function(){document.documentElement.classList.remove('accountRouteBootSafe')},{once:true})}})();</script>
-<link rel="stylesheet" href="/styles.css?v=163">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=164">
+<link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png?v=164">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=164">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=164">
+<style>html.siteBooting body{background:#fff!important}html.siteBooting body>*{visibility:hidden!important}html.siteBooting body::before{content:"";position:fixed;inset:0;background:#fff;z-index:2147482999;visibility:visible!important}html.accountRouteBootSafe body{overflow:hidden!important;background:#fff!important}html.accountRouteBootSafe body>*{visibility:hidden!important}html.accountRouteBootSafe body::before{content:"";position:fixed;inset:0;background:#fff;z-index:2147483000;pointer-events:none;visibility:visible!important}</style>
+<script>(function(){window.__shazSiteBootTimer=setTimeout(function(){document.documentElement.classList.remove('siteBooting')},8000);if(/^\/(?:giris|kayit|sifre-sifirla|hesabim(?:\/|$))/.test(location.pathname)){document.documentElement.classList.add('accountRouteBootSafe');window.__shazAccountBootTimer=setTimeout(function(){document.documentElement.classList.remove('accountRouteBootSafe')},15000);window.addEventListener('error',function(){document.documentElement.classList.remove('accountRouteBootSafe')},{once:true});window.addEventListener('unhandledrejection',function(){document.documentElement.classList.remove('accountRouteBootSafe')},{once:true})}})();</script>
+<link rel="stylesheet" href="/styles.css?v=164">
 </head>
 <body>
 <div class="announce" id="announceWrap"><div class="track" id="campaign"></div></div>
@@ -50,7 +57,7 @@
 <div id="campaignCards" class="campaignCards"></div>
 
 <div class="categoryHub hidden" id="categoryHub">
-  <div class="categoryHubTop"><button class="categoryBack" id="categoryHubClose">←</button><div><b>Kategoriler</b><small>Tüm kategoriler</small></div></div>
+  <div class="categoryHubTop"><button class="categoryBack" id="categoryHubClose">←</button><div><b>Tüm Kategoriler</b></div></div>
   <div class="categoryHubFreshGrid" id="categoryHubGrid"></div>
 </div>
 
@@ -75,6 +82,15 @@
 </section>
 
 
+<footer class="siteFooter" id="siteFooter">
+  <div class="siteFooterGrid">
+    <section class="footerGroup"><button class="footerGroupTitle" type="button">SHAZ <span>⌄</span></button><div class="footerLinks"><button type="button" onclick="openFooterInfoPage('about')">Hakkımızda</button><button type="button" onclick="openFooterInfoPage('contact')">İletişim</button><button type="button" onclick="openFooterInfoPage('guide')">İşlem Rehberi</button></div></section>
+    <section class="footerGroup"><button class="footerGroupTitle" type="button">MÜŞTERİ HİZMETLERİ <span>⌄</span></button><div class="footerLinks"><button type="button" onclick="openFooterInfoPage('contact')">İletişim</button><button type="button" onclick="openFooterInfoPage('order')">Sipariş Sorgulama</button><button type="button" onclick="openFooterInfoPage('shipping')">Kargo ve Teslimat</button><button type="button" onclick="openFooterInfoPage('returns')">İade ve Cayma</button></div></section>
+    <section class="footerGroup"><button class="footerGroupTitle" type="button">YASAL <span>⌄</span></button><div class="footerLinks"><button type="button" onclick="openFooterInfoPage('terms')">Kullanım Koşulları</button><button type="button" onclick="openLegalDocument('DISTANCE_SALES')">Mesafeli Satış Sözleşmesi</button><button type="button" onclick="openLegalDocument('PRE_INFORMATION')">Ön Bilgilendirme Formu</button></div></section>
+    <section class="footerGroup"><button class="footerGroupTitle" type="button">KVKK VE GİZLİLİK <span>⌄</span></button><div class="footerLinks"><button type="button" onclick="openLegalDocument('KVKK')">KVKK Aydınlatma Metni</button><button type="button" onclick="openLegalDocument('PRIVACY')">Gizlilik ve Veri Güvenliği Politikası</button><button type="button" onclick="openLegalDocument('COOKIE')">Çerez Politikası</button><button type="button" onclick="openFooterInfoPage('commercial')">Elektronik Ticari İleti Aydınlatma Metni</button><button type="button" onclick="openCookiePreferences()">Çerez Tercihleri</button></div></section>
+  </div>
+  <div class="siteFooterBottom"><span>© 2026 SHAZ. Tüm hakları saklıdır.</span><div class="footerFutureSlots"><span class="footerEtbisSlot">ETBİS kayıt/karekod alanı</span><span class="footerPaymentSlot">Ödeme yöntemleri alanı</span></div></div>
+</footer>
 
 <div class="siteAnnouncement hidden" id="siteAnnouncement" role="dialog" aria-modal="true" aria-labelledby="siteAnnouncementTitle">
   <div class="siteAnnouncementCard">
@@ -90,6 +106,6 @@
 <div id="toast" class="toast"></div>
 <div class="overlay hidden" id="overlay"></div>
 <div class="drawer hidden" id="drawer"></div>
-<script src="/app.js?v=163"></script>
+<script src="/app.js?v=164"></script>
 </body>
 </html>
