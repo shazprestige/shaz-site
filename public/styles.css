@@ -6140,3 +6140,145 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 
 .memberSortControl{display:grid!important;gap:4px!important;min-width:0!important}.memberSortControl>label{font-size:10px!important;font-weight:750!important;color:#555!important;padding-left:2px!important}.memberSortControl .formControl{width:100%!important}
 .memberAccountActions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:6px!important;flex-wrap:wrap!important}
+
+
+/* ===== v168 — yalnız son kullanıcı talebindeki hedefli düzeltmeler ===== */
+
+/* Uzun üye adı: tek satır, üst üste binmeden Favorilerim/Sepetim ile aynı hizada kayar. */
+.headerActionText.isLongAccountName{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:flex-start!important;
+  position:relative!important;
+  overflow:hidden!important;
+  white-space:nowrap!important;
+  width:46px!important;
+  max-width:46px!important;
+  min-width:0!important;
+  height:12px!important;
+  min-height:12px!important;
+  line-height:1!important;
+  text-align:left!important;
+}
+.headerActionText.isLongAccountName>span{
+  display:block!important;
+  flex:0 0 auto!important;
+  min-width:max-content!important;
+  padding:0 12px 0 0!important;
+  margin:0!important;
+  font:inherit!important;
+  line-height:inherit!important;
+  animation:shazNameMarqueeV168 5.5s linear infinite alternate!important;
+}
+@keyframes shazNameMarqueeV168{
+  from{transform:translateX(0)}
+  to{transform:translateX(calc(-100% + 46px))}
+}
+@media(max-width:700px){
+  .headerActionText.isLongAccountName{
+    height:11px!important;
+    min-height:11px!important;
+    width:42px!important;
+    max-width:42px!important;
+  }
+  .headerActionText.isLongAccountName>span{
+    animation-name:shazNameMarqueeV168Mobile!important;
+  }
+  @keyframes shazNameMarqueeV168Mobile{
+    from{transform:translateX(0)}
+    to{transform:translateX(calc(-100% + 42px))}
+  }
+}
+
+/* Duyuru görseli: masaüstünde orta boy, telefonda biraz daha küçük; oran korunur. */
+.siteAnnouncementCard{
+  max-width:min(560px,calc(100vw - 72px))!important;
+  max-height:76dvh!important;
+}
+.siteAnnouncementImage{
+  max-width:min(560px,calc(100vw - 72px))!important;
+  max-height:76dvh!important;
+}
+@media(max-width:700px){
+  .siteAnnouncement{padding:24px!important}
+  .siteAnnouncementCard,.siteAnnouncementImage{
+    max-width:calc(100vw - 64px)!important;
+    max-height:70dvh!important;
+  }
+}
+
+/* Kupon popup: indirim kesin ortada; başlık ile içerik arasında kenarlarda yumuşayan kısa çizgi. */
+.couponNoticeCard h3::after{
+  content:""!important;
+  display:block!important;
+  width:72%!important;
+  height:1px!important;
+  margin:11px auto 0!important;
+  background:linear-gradient(90deg,transparent,#d9dde1 18%,#d9dde1 82%,transparent)!important;
+}
+.couponNoticeItem>.couponNoticeDiscount{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+  text-align:center!important;
+}
+
+/* Adresler: + Yeni Adres başlıkta değil, ilk adres çerçevesinin hemen üstünde sağda. */
+.accountAddressHead{
+  grid-template-columns:76px minmax(0,1fr) 76px!important;
+}
+.accountAddressTopActions{
+  display:flex!important;
+  justify-content:flex-end!important;
+  align-items:center!important;
+  width:100%!important;
+  padding:0 18px!important;
+  margin:0 0 12px!important;
+}
+.accountAddressTopActions>.accountNewAddressTop{
+  position:static!important;
+  transform:none!important;
+  margin:0!important;
+  width:max-content!important;
+  max-width:none!important;
+  padding:6px 9px!important;
+  font-size:9px!important;
+}
+@media(max-width:700px){
+  .accountAddressTopActions{padding:0 10px!important;margin-bottom:11px!important}
+  .accountAddressTopActions>.accountNewAddressTop{padding:5px 7px!important;font-size:8.5px!important}
+}
+
+/* Kayıtlı adres önerisi: yalnız genişlik düzeltmesi. Dikey konum ve davranış aynen korunur. */
+.savedAddressSuggestWrap{min-width:0!important;max-width:100%!important}
+.savedAddressSuggestionMenu{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+.savedAddressSuggestionMenu button{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+}
+
+/* Silinmiş üyeler listede kalır ve gri tonla ayırt edilir. */
+.memberAdminRow.memberAdminRowDeleted{
+  background:#eceeef!important;
+  border-color:#cfd4d8!important;
+}
+.memberAdminRow.memberAdminRowDeleted>summary{
+  background:#eceeef!important;
+}
+.memberAdminRow.memberAdminRowDeleted .memberAdminDetail{
+  background:#e4e7e9!important;
+}
+.memberStatusDeleted{
+  color:#6d7379!important;
+}

@@ -1,4 +1,4 @@
-const SHAZ_SW_VERSION='167';
+const SHAZ_SW_VERSION='168';
 const SHAZ_BADGE_DB='shaz-pwa-badge';
 const SHAZ_BADGE_STORE='state';
 const SHAZ_BADGE_KEY='unreadCount';
@@ -16,11 +16,10 @@ self.addEventListener('push',event=>{
   try{data=event.data?event.data.json():{}}catch(_){data={body:event.data?.text?.()||''}}
   let title=String(data.title??'').trim().slice(0,80);
   let body=String(data.body??'').trim().slice(0,240);
-  if(!title&&body){title=body;body=''}
   if(!title&&!body)return;
   const rawUrl=String(data.url||data.data?.url||'/');
   let url='/';try{const u=new URL(rawUrl,self.location.origin);if(u.origin===self.location.origin)url=u.pathname+u.search+u.hash}catch(_){}
-  const options={icon:data.icon||'/icon-192.png?v=167',badge:data.badge||'/icon-192.png?v=167',tag:String(data.tag||'').trim().slice(0,80)||undefined,data:{url},renotify:false};
+  const options={icon:data.icon||'/icon-192.png?v=168',badge:data.badge||'/icon-192.png?v=168',tag:String(data.tag||'').trim().slice(0,80)||undefined,data:{url},renotify:false};
   if(body)options.body=body;
   event.waitUntil(Promise.all([self.registration.showNotification(title,options),incrementBadge()]));
 });
