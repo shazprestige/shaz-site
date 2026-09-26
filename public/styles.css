@@ -6089,3 +6089,54 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 .accountAddress{position:relative;padding-top:34px!important}.accountNewAddressCard{position:absolute;right:12px;top:10px;border:1px solid #111;background:#fff;padding:6px 9px;font-size:10px;line-height:1;border-radius:0;z-index:3}.accountNewAddressEmpty{position:relative;float:right;right:auto;top:auto;margin:0 0 10px 12px}.accountAddressHead{grid-template-columns:auto 1fr auto!important}.accountAddressHead h2{text-align:center!important}
 .allCustomerFilters{display:grid;grid-template-columns:2fr repeat(3,minmax(140px,1fr));gap:8px;margin:12px 0}.allCustomerList{display:grid;gap:7px}.allCustomerRow{display:grid;grid-template-columns:1.6fr 1fr .6fr .75fr .85fr 1fr auto;gap:8px;align-items:center;border:1px solid #e5e5e5;padding:9px;background:#fff}.customerStats{display:grid;grid-template-columns:repeat(6,minmax(100px,1fr));gap:8px}.customerStats>div{border:1px solid #e7e7e7;padding:10px;background:#fff;display:grid;gap:3px}.customerStats b{font-size:20px}.customerStats span{font-size:11px;color:#666}
 @media(max-width:800px){.allCustomerFilters{grid-template-columns:1fr 1fr}.allCustomerRow{grid-template-columns:1fr 1fr}.customerStats{grid-template-columns:repeat(2,1fr)}.accountAddress{padding-top:40px!important}.accountNewAddressCard{right:10px;top:10px}}
+
+
+/* v167 - yalnız Yapıştırılan metin(9) kapsamındaki hedefli düzeltmeler */
+.accountEntryPopover.accountEntryPopoverAnchored{left:var(--account-popover-left)!important;top:var(--account-popover-top)!important;right:auto!important;transform:none!important}
+.headerActionText.isLongAccountName,.headerActionText.isLongAccountName>span{font-family:inherit!important;font-style:normal!important;font-weight:400!important;text-decoration:none!important}
+
+.savedAddressSuggestWrap{position:relative!important;width:100%!important;min-width:0!important}
+.savedAddressSuggestionMenu{position:absolute!important;top:calc(100% + 4px)!important;left:0!important;right:auto!important;width:100%!important;max-width:100%!important;max-height:210px!important;margin:0!important;z-index:2147483300!important;overflow:auto!important;transform:none!important;background:#fff!important;border:1px solid #ddd!important;border-radius:0!important;box-shadow:0 8px 24px rgba(0,0,0,.14)!important;box-sizing:border-box!important}
+.savedAddressSuggestionMenu button{width:100%!important;box-sizing:border-box!important}
+
+.accountAddress{padding-top:14px!important}
+.accountAddressHead{grid-template-columns:auto 1fr auto!important;margin-bottom:12px!important}
+.accountAddressHead>.pill{justify-self:start!important;margin-left:16px!important}
+.accountAddressHead>.accountNewAddressTop{position:static!important;grid-column:3!important;grid-row:1!important;justify-self:end!important;margin-right:16px!important;transform:none!important;width:max-content!important;max-width:none!important;padding:6px 9px!important;font-size:9px!important;line-height:1.1!important}
+.accountAddressEmpty{margin-top:0!important}
+@media(max-width:700px){.accountAddressHead{grid-template-columns:76px minmax(0,1fr) 76px!important}.accountAddressHead>.pill{margin-left:8px!important}.accountAddressHead>.accountNewAddressTop{margin-right:8px!important;font-size:8.5px!important;padding:5px 7px!important}}
+
+.siteAnnouncement{background:rgba(0,0,0,.50)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:18px!important;place-items:center!important}
+.siteAnnouncementCard{position:relative!important;width:auto!important;max-width:min(760px,calc(100vw - 36px))!important;max-height:calc(100dvh - 36px)!important;margin:auto!important;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important;text-align:center!important}
+.siteAnnouncementEyebrow,.siteAnnouncementCard>h2,.siteAnnouncementCard>p{display:none!important}
+.siteAnnouncementImage{display:block!important;width:auto!important;height:auto!important;max-width:min(760px,calc(100vw - 36px))!important;max-height:calc(100dvh - 44px)!important;object-fit:contain!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:0 20px 60px rgba(0,0,0,.28)!important}
+.siteAnnouncementImage.hidden{display:none!important}
+.siteAnnouncementClose{display:grid!important;place-items:center!important;position:absolute!important;right:8px!important;top:8px!important;z-index:3!important;width:34px!important;height:34px!important;border:0!important;border-radius:50%!important;background:rgba(255,255,255,.94)!important;color:#111!important;font-size:24px!important;line-height:1!important;box-shadow:0 2px 10px rgba(0,0,0,.18)!important;cursor:pointer!important}
+@media(max-width:700px){.siteAnnouncement{padding:14px!important}.siteAnnouncementCard,.siteAnnouncementImage{max-width:calc(100vw - 28px)!important;max-height:calc(100dvh - 34px)!important}.siteAnnouncementClose{right:7px!important;top:7px!important;width:32px!important;height:32px!important;font-size:22px!important}}
+
+.couponNoticeCard{width:min(470px,calc(100vw - 30px))!important;padding:20px 18px 17px!important;border-radius:14px!important;text-align:center!important}
+.couponNoticeCard h3{font-size:14px!important;line-height:1.3!important;font-weight:700!important;margin:0 34px 10px!important;color:#30343a!important}
+.couponNoticeList{display:grid!important;gap:0!important}
+.couponNoticeItem{display:block!important;border:0!important;border-radius:0!important;background:transparent!important;padding:15px 2px!important;text-align:center!important}
+.couponNoticeItem+.couponNoticeItem{border-top:1px solid #eceef0!important}
+.couponNoticeItemHeadline{font-size:12px!important;font-weight:650!important;margin:0 0 7px!important;color:#555b62!important;white-space:normal!important}
+.couponNoticeDiscount{display:block!important;font-size:30px!important;line-height:1.08!important;font-weight:900!important;color:#141414!important;text-align:center!important;margin:0 0 7px!important}
+.couponNoticeMinimum{font-size:12px!important;line-height:1.35!important;color:#3f444a!important;margin:0 0 6px!important}
+.couponNoticeDescription{font-size:11.5px!important;line-height:1.4!important;color:#5f656c!important;margin:0 0 7px!important}
+.couponNoticeCodeSecondary{font-size:10.5px!important;line-height:1.35!important;color:#666c72!important;margin:6px 0!important}
+.couponNoticeCodeSecondary b{font-weight:750!important;color:#30343a!important}
+.couponNoticeRules{display:grid!important;gap:2px!important;margin-top:5px!important}
+.couponNoticeRules small,.couponNoticeExpiry{display:block!important;font-size:10px!important;line-height:1.35!important;color:#7a7f85!important}
+.couponNoticeExpiry{margin-top:4px!important}
+.couponNoticeCard>.btn{min-height:38px!important;height:38px!important;padding:0 14px!important;margin-top:6px!important}
+@media(max-width:520px){.couponNoticeCard{padding:17px 14px 14px!important}.couponNoticeDiscount{font-size:26px!important}.couponNoticeItem{padding:12px 2px!important}}
+
+.accountOrderList{display:grid!important;gap:10px!important}
+.accountOrderListCard{width:100%!important;border:1px solid #e6e8ea!important;background:#fff!important;color:#222!important;text-align:left!important;cursor:pointer!important;padding:14px!important}
+.accountOrderListHead{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:12px!important}
+.accountOrderListHead b{font-size:12px!important}.accountOrderListHead span{font-size:10px!important;color:#777!important;text-align:right!important}
+.accountOrderListCard>strong{display:block!important;text-align:center!important;margin-top:6px!important;font-size:13px!important}
+.accountOrderTrack{height:2px!important;background:#c7cbd0!important;align-self:start!important;margin-top:8px!important;min-width:12px!important}
+
+.memberSortControl{display:grid!important;gap:4px!important;min-width:0!important}.memberSortControl>label{font-size:10px!important;font-weight:750!important;color:#555!important;padding-left:2px!important}.memberSortControl .formControl{width:100%!important}
+.memberAccountActions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:6px!important;flex-wrap:wrap!important}

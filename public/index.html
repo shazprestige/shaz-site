@@ -7,7 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="SHAZ">
-<link rel="manifest" href="/manifest.webmanifest">
+<meta name="application-name" content="SHAZ">
+<link rel="manifest" href="/manifest.webmanifest?v=167">
 <title>SHAZ | Erkek Aksesuarları</title>
 <meta name="description" content="SHAZ erkek aksesuarları: saat, cüzdan, kemer, bileklik, tesbih, çakmak, gözlük ve özel set seçenekleri.">
 <link rel="canonical" href="https://shaz.com.tr/">
@@ -26,11 +27,11 @@
 <meta name="twitter:image" content="https://shaz.com.tr/social-card.png?v=156">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=164">
 <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png?v=164">
-<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=164">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=164">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=167">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=167">
 <style>html.siteBooting body{background:#fff!important}html.siteBooting body>*{visibility:hidden!important}html.siteBooting body::before{content:"";position:fixed;inset:0;background:#fff;z-index:2147482999;visibility:visible!important}html.accountRouteBootSafe body{overflow:hidden!important;background:#fff!important}html.accountRouteBootSafe body>*{visibility:hidden!important}html.accountRouteBootSafe body::before{content:"";position:fixed;inset:0;background:#fff;z-index:2147483000;pointer-events:none;visibility:visible!important}</style>
 <script>(function(){window.__shazSiteBootTimer=setTimeout(function(){document.documentElement.classList.remove('siteBooting')},8000);if(/^\/(?:giris|kayit|sifre-sifirla|hesabim(?:\/|$))/.test(location.pathname)){document.documentElement.classList.add('accountRouteBootSafe');window.__shazAccountBootTimer=setTimeout(function(){document.documentElement.classList.remove('accountRouteBootSafe')},15000);window.addEventListener('error',function(){document.documentElement.classList.remove('accountRouteBootSafe')},{once:true});window.addEventListener('unhandledrejection',function(){document.documentElement.classList.remove('accountRouteBootSafe')},{once:true})}})();</script>
-<link rel="stylesheet" href="/styles.css?v=166">
+<link rel="stylesheet" href="/styles.css?v=167">
 </head>
 <body>
 <div class="announce" id="announceWrap"><div class="track" id="campaign"></div></div>
@@ -92,20 +93,19 @@
   <div class="siteFooterBottom"><span>© 2026 SHAZ. Tüm hakları saklıdır.</span><div class="footerFutureSlots"><span class="footerEtbisSlot">ETBİS kayıt/karekod alanı</span><span class="footerPaymentSlot">Ödeme yöntemleri alanı</span></div></div>
 </footer>
 
-<div class="siteAnnouncement hidden" id="siteAnnouncement" role="dialog" aria-modal="true" aria-labelledby="siteAnnouncementTitle">
+<div class="siteAnnouncement hidden" id="siteAnnouncement" role="dialog" aria-modal="true" aria-label="Duyuru">
   <div class="siteAnnouncementCard">
+    <button class="siteAnnouncementClose" id="siteAnnouncementButton" type="button" aria-label="Duyuruyu kapat">×</button>
     <div class="siteAnnouncementEyebrow" id="siteAnnouncementEyebrow">DUYURU</div>
-    <div class="siteAnnouncementTitleRow">
-      <h2 id="siteAnnouncementTitle"></h2>
-      <button class="siteAnnouncementClose" id="siteAnnouncementButton" type="button" aria-label="Duyuruyu kapat">×</button>
-    </div>
-    <img id="siteAnnouncementImage" class="siteAnnouncementImage hidden" alt=""><p id="siteAnnouncementText"></p>
+    <h2 id="siteAnnouncementTitle"></h2>
+    <img id="siteAnnouncementImage" class="siteAnnouncementImage hidden" alt="">
+    <p id="siteAnnouncementText"></p>
   </div>
 </div>
 
 <div id="toast" class="toast"></div>
 <div class="overlay hidden" id="overlay"></div>
 <div class="drawer hidden" id="drawer"></div>
-<script src="/app.js?v=166"></script>
+<script src="/app.js?v=167"></script>
 </body>
 </html>
