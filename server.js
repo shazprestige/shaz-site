@@ -79,9 +79,14 @@ app.get('/icon-maskable-512.png',(req,res)=>sendPwaIcon(req,res,512,.58));
 app.get('/social-card.png',async(req,res)=>{
   try{const a=brandAsset();if(a.remote)return res.redirect(302,a.remote);if(!a.file)return res.status(404).end();const logo=await sharp(a.file).resize(520,220,{fit:'inside',withoutEnlargement:true}).png().toBuffer();const card=await sharp({create:{width:1200,height:630,channels:4,background:{r:255,g:255,b:255,alpha:1}}}).composite([{input:logo,gravity:'center'}]).png().toBuffer();res.type('png').set('Cache-Control','public, max-age=604800').send(card)}catch(e){console.error('sosyal kart üretimi:',e);res.status(500).end()}
 });
+function serverMainProductImage(p){
+  const list=Array.isArray(p?.images)?p.images.filter(Boolean):[];
+  if(p?.image&&!list.includes(p.image))list.unshift(p.image);
+  return p?.image||list[0]||'';
+}
 function serverProductCardHtml(p){
   const name=String(p?.name||'SHAZ Ürün');
-  const image=String(mainProductImage(p)||'').trim();
+  const image=String(serverMainProductImage(p)||'').trim();
   const href='/urun/'+encodeURIComponent(productSeoSlug(p));
   return `<a class="card productCardLink" data-product-id="${escapeHtmlAttr(p.id||'')}" href="${escapeHtmlAttr(href)}"><div class="photo">${image?`<img src="${escapeHtmlAttr(image)}" alt="${escapeHtmlAttr(name)}">`:'⌚'}</div><div class="info"><h3>${escapeHtmlAttr(name)}</h3><div class="price"><span>${Number(p?.price||0).toLocaleString('tr-TR')} TL</span></div></div></a>`;
 }
