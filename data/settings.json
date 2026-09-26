@@ -136,14 +136,15 @@
   "campaignMarqueePosition": "full",
   "siteAnnouncement": {
     "enabled": true,
-    "eyebrow": "TÜM ALIMLARDA KARGO ÜCRETSİZ",
+    "eyebrow": "",
     "title": " ",
-    "text": "TÜM SAATLER İÇİN 2'Lİ VE 3'LÜ ALIMLAR KAMPANYADA",
+    "text": "",
     "buttonText": "Kapat",
     "fontScale": 100,
     "titleFontSize": 30,
     "textFontSize": 14,
-    "buttonFontSize": 14
+    "buttonFontSize": 14,
+    "imageUrl": "/uploads/1790458724487-l8g47x.png"
   },
   "paymentMethods": {
     "cod": true,
