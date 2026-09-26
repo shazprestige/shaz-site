@@ -30,7 +30,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=164">
 <style>html.siteBooting body{background:#fff!important}html.siteBooting body>*{visibility:hidden!important}html.siteBooting body::before{content:"";position:fixed;inset:0;background:#fff;z-index:2147482999;visibility:visible!important}html.accountRouteBootSafe body{overflow:hidden!important;background:#fff!important}html.accountRouteBootSafe body>*{visibility:hidden!important}html.accountRouteBootSafe body::before{content:"";position:fixed;inset:0;background:#fff;z-index:2147483000;pointer-events:none;visibility:visible!important}</style>
 <script>(function(){window.__shazSiteBootTimer=setTimeout(function(){document.documentElement.classList.remove('siteBooting')},8000);if(/^\/(?:giris|kayit|sifre-sifirla|hesabim(?:\/|$))/.test(location.pathname)){document.documentElement.classList.add('accountRouteBootSafe');window.__shazAccountBootTimer=setTimeout(function(){document.documentElement.classList.remove('accountRouteBootSafe')},15000);window.addEventListener('error',function(){document.documentElement.classList.remove('accountRouteBootSafe')},{once:true});window.addEventListener('unhandledrejection',function(){document.documentElement.classList.remove('accountRouteBootSafe')},{once:true})}})();</script>
-<link rel="stylesheet" href="/styles.css?v=164">
+<link rel="stylesheet" href="/styles.css?v=166">
 </head>
 <body>
 <div class="announce" id="announceWrap"><div class="track" id="campaign"></div></div>
@@ -72,7 +72,7 @@
 </section>
 
 <section class="section" id="products">
-  <div class="sectionHead"><h2 id="catalogTitle">Tüm Ürünler</h2></div>
+  <div class="sectionHead"><h2 id="catalogTitle">Tüm ürünler</h2></div>
   <div class="catalogToolsBar">
     <button type="button" class="catalogToolBtn" id="sortProductsBtn" aria-label="Sıralama seçeneklerini aç"><span class="catalogToolIcon catalogSortIcon" aria-hidden="true"><svg viewBox="0 0 20 20" focusable="false"><path d="M6 3v12M3.5 5.5 6 3l2.5 2.5M14 17V5M11.5 14.5 14 17l2.5-2.5"/></svg></span><span>Sıralama</span></button>
     <button type="button" class="catalogToolBtn" id="filterProductsBtn" aria-label="Filtreleme seçeneklerini aç"><span class="catalogToolIcon">☷</span><span>Filtreleme</span></button>
@@ -99,13 +99,13 @@
       <h2 id="siteAnnouncementTitle"></h2>
       <button class="siteAnnouncementClose" id="siteAnnouncementButton" type="button" aria-label="Duyuruyu kapat">×</button>
     </div>
-    <p id="siteAnnouncementText"></p>
+    <img id="siteAnnouncementImage" class="siteAnnouncementImage hidden" alt=""><p id="siteAnnouncementText"></p>
   </div>
 </div>
 
 <div id="toast" class="toast"></div>
 <div class="overlay hidden" id="overlay"></div>
 <div class="drawer hidden" id="drawer"></div>
-<script src="/app.js?v=164"></script>
+<script src="/app.js?v=166"></script>
 </body>
 </html>

@@ -1,0 +1,24 @@
+{
+  "statuses": {
+    "new": {
+      "enabled": true,
+      "title": "SHAZ",
+      "body": "Siparişiniz alındı. Bizi tercih ettiğiniz için teşekkür ederiz."
+    },
+    "prepared": {
+      "enabled": true,
+      "title": "SHAZ",
+      "body": "Siparişiniz hazırlanıyor."
+    },
+    "shipped": {
+      "enabled": true,
+      "title": "SHAZ",
+      "body": "Siparişiniz kargoya verildi. Kargo sürecinizi takip etmek için bildirime dokunun."
+    },
+    "delivered": {
+      "enabled": true,
+      "title": "SHAZ",
+      "body": "Siparişiniz teslim edildi. SHAZ’ı tercih ettiğiniz için teşekkür ederiz."
+    }
+  }
+}
