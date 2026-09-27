@@ -1,5 +1,9 @@
 
 let settings={},catalog={},legalDocuments=[],members=[];
+let memberActivityRefreshBusy=false,memberActivityStream=null;
+async function refreshMemberActivityNow(){if(memberActivityRefreshBusy||!document.getElementById('memberRows'))return;memberActivityRefreshBusy=true;try{const r=await fetch('/api/admin/users',{cache:'no-store'}).then(x=>x.json());if(r?.ok!==false&&Array.isArray(r?.users)){members=r.users;updateMemberRows()}}catch(_){}finally{memberActivityRefreshBusy=false}}
+function initMemberActivityStream(){if(memberActivityStream||!('EventSource'in window))return;memberActivityStream=new EventSource('/api/admin/activity-stream');memberActivityStream.onmessage=()=>refreshMemberActivityNow();memberActivityStream.onerror=()=>{try{memberActivityStream?.close()}catch(_){}memberActivityStream=null;setTimeout(initMemberActivityStream,3000)}}
+initMemberActivityStream();
 let memberFilterState={search:'',province:'',district:'',sms:'',emailMarketing:'',provider:'',coupon:'',status:'',dateFrom:'',dateTo:'',sort:'newest'};
 let selectedMemberIds=new Set();
 let newMemberCouponTemplates=[];

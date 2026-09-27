@@ -1,4 +1,4 @@
-const SHAZ_SW_VERSION='168';
+const SHAZ_SW_VERSION='170';
 const SHAZ_BADGE_DB='shaz-pwa-badge';
 const SHAZ_BADGE_STORE='state';
 const SHAZ_BADGE_KEY='unreadCount';
@@ -19,10 +19,10 @@ self.addEventListener('push',event=>{
   if(!title&&!body)return;
   // Web Notifications API bir title argümanı ister. Admin başlığı boş bıraktığında
   // mesajı title'a taşımadan görünmez bir ayraç kullan; gerçek mesaj body olarak kalır.
-  const displayTitle=title||'\u2063';
+  const displayTitle=title||'\u3164';
   const rawUrl=String(data.url||data.data?.url||'/');
   let url='/';try{const u=new URL(rawUrl,self.location.origin);if(u.origin===self.location.origin)url=u.pathname+u.search+u.hash}catch(_){}
-  const options={icon:data.icon||'/icon-192.png?v=168',badge:data.badge||'/icon-192.png?v=168',tag:String(data.tag||'').trim().slice(0,80)||undefined,data:{url},renotify:false};
+  const options={icon:data.icon||'/icon-192.png?v=170',badge:data.badge||'/icon-192.png?v=170',tag:String(data.tag||'').trim().slice(0,80)||undefined,data:{url},renotify:false};
   if(body)options.body=body;
   event.waitUntil(Promise.all([self.registration.showNotification(displayTitle,options),incrementBadge()]));
 });

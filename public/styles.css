@@ -6329,8 +6329,8 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
   @keyframes shazNameMarqueeV169Mobile{from{transform:translateX(0)}to{transform:translateX(calc(-100% + 30px))}}
 }
 
-/* WhatsApp ve Instagram yalnız görsel olarak bir piksel sola alınır. */
-#wa,#ig{transform:translateX(-1px)!important}
+/* WhatsApp ve Instagram yalnız yatay eksende 2px sola alınır; boyut ve dikey konum değişmez. */
+#wa,#ig{transform:translateX(-2px)!important}
 
 /* Üyeler listesinde PWA son kullanım bilgisi mevcut son giriş alanının altında görünür. */
 .memberPwaLastSeen{display:block!important;margin-top:2px!important;font-size:8.5px!important;line-height:1.2!important;color:#747b82!important;font-weight:600!important}
