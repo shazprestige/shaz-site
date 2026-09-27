@@ -6,7 +6,7 @@
     "status": "new",
     "statusUpdatedAt": "2026-09-27T11:37:00.881Z",
     "requestId": "b3b51302-1e74-4c68-827f-cd695a4416f5",
-    "sheetSyncStatus": "pending",
+    "sheetSyncStatus": "synced",
     "sheetSyncError": "",
     "deviceId": "DEV-bf73536e-e25c-4b5a-901b-e6a57b7439fa",
     "items": [
@@ -258,7 +258,9 @@
     "couponDiscountTotal": 0,
     "total": 1300,
     "appliedCoupons": [],
-    "personalizationSnapshots": []
+    "personalizationSnapshots": [],
+    "sheetSyncedAt": "2026-09-27T11:37:15.014Z",
+    "sheetId": "SHZ100"
   },
   {
     "id": "SHZ99",
