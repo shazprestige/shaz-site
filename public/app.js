@@ -62,7 +62,7 @@ function syncCatalogViewControls(){
 
 async function init(){
   loadLocalState();applyAccountHeaderHint();
-  const settingsRequest=fetch('/api/settings').then(r=>r.json());
+  const settingsRequest=fetch('/api/settings?t='+Date.now(),{cache:'no-store',credentials:'same-origin'}).then(r=>{if(!r.ok)throw new Error('Site ayarları alınamadı.');return r.json()});
   const catalogRequest=fetch('/api/catalog').then(r=>r.json());
   [settings,catalog]=await Promise.all([settingsRequest,catalogRequest]);
   const priorityLogoUrl=settings.logoUrl||'/uploads/shaz-logo-transparent.png';
@@ -180,48 +180,37 @@ function announcementSignature(cfg={}){
   return (h>>>0).toString(36);
 }
 function renderSiteAnnouncement(force=false){
-  const wrap=$('#siteAnnouncement'); if(!wrap)return;
-  const cfg=settings.siteAnnouncement||{};
-  if(cfg.enabled===false||(!cfg.title&&!cfg.text&&!cfg.imageUrl)){wrap.classList.add('hidden');clearTimeout(window.__shazCouponAfterAnnouncement);window.__shazCouponAfterAnnouncement=setTimeout(()=>maybeShowCouponAnnouncement(),3000);return}
-  const isPreview=new URLSearchParams(location.search).get('adminpreview')==='1';
-  const signature=announcementSignature(cfg);
-  if(!force && !isPreview && sessionStorage.getItem('shazAnnouncementClosed:'+signature)==='1'){wrap.classList.add('hidden');clearTimeout(window.__shazCouponAfterAnnouncement);window.__shazCouponAfterAnnouncement=setTimeout(()=>maybeShowCouponAnnouncement(),3000);return}
-  const titleSize=Math.max(14,Math.min(32,Number(cfg.titleFontSize)||30));
-  const textSize=Math.max(12,Math.min(24,Number(cfg.textFontSize)||14));
-  const buttonSize=Math.max(12,Math.min(22,Number(cfg.buttonFontSize)||14));
-  wrap.style.setProperty('--announcement-title-size',titleSize+'px');
-  wrap.style.setProperty('--announcement-text-size',textSize+'px');
-  wrap.style.setProperty('--announcement-button-size',buttonSize+'px');
-  if($('#siteAnnouncementEyebrow')) $('#siteAnnouncementEyebrow').textContent=cfg.eyebrow||'DUYURU';
-  if($('#siteAnnouncementTitle')) $('#siteAnnouncementTitle').textContent=cfg.title||'Duyuru';
-  if($('#siteAnnouncementText')) $('#siteAnnouncementText').textContent=cfg.text||'';
-  const img=$('#siteAnnouncementImage'),rawImage=String(cfg.imageUrl||'').trim();
-  if(img){
-    img.onload=null;img.onerror=null;
-    if(!rawImage){img.removeAttribute('src');img.classList.add('hidden')}
-    else{
-      wrap.classList.add('hidden');
-      img.classList.add('hidden');
-      const proxy='/api/announcement-image?v='+encodeURIComponent(signature)+'&t='+Date.now();
-      const showLoaded=()=>{img.classList.remove('hidden');wrap.classList.remove('hidden')};
-      const directFallback=()=>{
-        img.onload=showLoaded;
-        img.onerror=()=>{img.classList.add('hidden');wrap.classList.add('hidden')};
-        try{const u=new URL(rawImage,location.origin);u.searchParams.set('v',signature);u.searchParams.set('t',Date.now());img.src=u.href}catch(_){img.src=rawImage}
-      };
-      fetch(proxy,{cache:'no-store',credentials:'same-origin'}).then(async r=>{
-        if(!r.ok)throw new Error('announcement image '+r.status);
-        const blob=await r.blob();if(!String(blob.type||'').startsWith('image/'))throw new Error('announcement image type');
-        const objectUrl=URL.createObjectURL(blob);
-        img.onload=()=>{showLoaded();setTimeout(()=>URL.revokeObjectURL(objectUrl),1000)};
-        img.onerror=()=>{URL.revokeObjectURL(objectUrl);directFallback()};
-        img.src=objectUrl;
-      }).catch(directFallback);
-    }
-  }
-  if($('#siteAnnouncementButton')) $('#siteAnnouncementButton').setAttribute('aria-label',cfg.buttonText||'Duyuruyu kapat');
+  const wrap=$('#siteAnnouncement');if(!wrap)return;
+  const cfg=settings.siteAnnouncement||{},img=$('#siteAnnouncementImage'),rawImage=String(cfg.imageUrl||'').trim();
+  const scheduleCoupon=()=>{clearTimeout(window.__shazCouponAfterAnnouncement);window.__shazCouponAfterAnnouncement=setTimeout(()=>maybeShowCouponAnnouncement(),3000)};
+  wrap.classList.add('hidden');
+  if(img){img.onload=null;img.onerror=null;img.classList.add('hidden');img.removeAttribute('src')}
+  if(cfg.enabled===false||!rawImage){scheduleCoupon();return}
+  const isPreview=new URLSearchParams(location.search).get('adminpreview')==='1',signature=announcementSignature(cfg);
+  if(!force&&!isPreview&&sessionStorage.getItem('shazAnnouncementClosed:'+signature)==='1'){scheduleCoupon();return}
+  const titleSize=Math.max(14,Math.min(32,Number(cfg.titleFontSize)||30)),textSize=Math.max(12,Math.min(24,Number(cfg.textFontSize)||14)),buttonSize=Math.max(12,Math.min(22,Number(cfg.buttonFontSize)||14));
+  wrap.style.setProperty('--announcement-title-size',titleSize+'px');wrap.style.setProperty('--announcement-text-size',textSize+'px');wrap.style.setProperty('--announcement-button-size',buttonSize+'px');
+  if($('#siteAnnouncementEyebrow'))$('#siteAnnouncementEyebrow').textContent=cfg.eyebrow||'DUYURU';
+  if($('#siteAnnouncementTitle'))$('#siteAnnouncementTitle').textContent=cfg.title||'Duyuru';
+  if($('#siteAnnouncementText'))$('#siteAnnouncementText').textContent=cfg.text||'';
+  if($('#siteAnnouncementButton'))$('#siteAnnouncementButton').setAttribute('aria-label',cfg.buttonText||'Duyuruyu kapat');
   wrap.dataset.announcementSignature=signature;
-  if(!rawImage)wrap.classList.remove('hidden');
+  if(!img){scheduleCoupon();return}
+  const loadToken=(window.__shazAnnouncementLoadToken||0)+1;window.__shazAnnouncementLoadToken=loadToken;
+  const loadIntoImage=url=>new Promise((resolve,reject)=>{
+    let settled=false;
+    const fail=()=>{if(settled)return;settled=true;reject(new Error('Duyuru görseli yüklenemedi.'))};
+    const ready=async()=>{if(settled)return;try{if(typeof img.decode==='function')await img.decode()}catch(_){}if(!img.naturalWidth||!img.naturalHeight)return fail();settled=true;resolve()};
+    img.onload=ready;img.onerror=fail;img.decoding='async';img.src=url;
+    if(img.complete&&img.naturalWidth)ready();
+  });
+  const proxy='/api/announcement-image?v=171&s='+encodeURIComponent(signature)+'&t='+Date.now();
+  const direct=()=>{try{const u=new URL(rawImage,location.origin);u.searchParams.set('v',signature);u.searchParams.set('t',Date.now());return u.href}catch(_){return rawImage}};
+  (async()=>{
+    try{await loadIntoImage(proxy)}catch(_){try{await loadIntoImage(direct())}catch(__){if(window.__shazAnnouncementLoadToken===loadToken){wrap.classList.add('hidden');img.classList.add('hidden');scheduleCoupon()}return}}
+    if(window.__shazAnnouncementLoadToken!==loadToken)return;
+    img.classList.remove('hidden');wrap.classList.remove('hidden');
+  })();
 }
 function closeSiteAnnouncement(){
   const wrap=$('#siteAnnouncement');
@@ -2689,25 +2678,36 @@ function closeCookiePreferences(){document.querySelector('.cookieConsentOverlay'
 function openCookiePreferences(firstVisit=false){closeCookiePreferences();const p=cookiePreferences()||{functional:false,analytics:false,marketing:false};const el=document.createElement('div');el.className='cookieConsentOverlay';el.innerHTML=`<div class="cookieConsentCard"><h3>Çerez Tercihleri</h3><p>Zorunlu çerezler sitenin çalışması için gereklidir. Diğer kategoriler yalnızca açık rıza verdiğinizde etkinleştirilir.</p><div class="cookieCategory"><span><b>Zorunlu Çerezler</b><small>Oturum, güvenlik ve temel site işlevleri.</small></span><input type="checkbox" checked disabled></div><div class="cookieCategory"><span><b>İşlevsel Çerezler</b><small>Tercihlerinizi hatırlayan isteğe bağlı işlevler.</small></span><input id="cookieFunctional" type="checkbox" ${p.functional?'checked':''}></div><div class="cookieCategory"><span><b>Analitik / Performans</b><small>Site kullanımını ölçmeye yarayan isteğe bağlı teknolojiler.</small></span><input id="cookieAnalytics" type="checkbox" ${p.analytics?'checked':''}></div><div class="cookieCategory"><span><b>Reklam / Pazarlama</b><small>Reklam ve pazarlama amaçlı isteğe bağlı teknolojiler.</small></span><input id="cookieMarketing" type="checkbox" ${p.marketing?'checked':''}></div><div class="cookieConsentActions"><button type="button" data-cookie-reject>Tümünü Reddet</button><button type="button" data-cookie-save>Tercihleri Kaydet</button><button type="button" data-cookie-accept>Tümünü Kabul Et</button></div></div>`;document.body.appendChild(el);el.querySelector('[data-cookie-reject]').onclick=()=>{saveCookiePreferences({functional:false,analytics:false,marketing:false});closeCookiePreferences()};el.querySelector('[data-cookie-save]').onclick=()=>{saveCookiePreferences({functional:!!el.querySelector('#cookieFunctional')?.checked,analytics:!!el.querySelector('#cookieAnalytics')?.checked,marketing:!!el.querySelector('#cookieMarketing')?.checked});closeCookiePreferences()};el.querySelector('[data-cookie-accept]').onclick=()=>{saveCookiePreferences({functional:true,analytics:true,marketing:true});closeCookiePreferences()};if(!firstVisit)el.addEventListener('click',e=>{if(e.target===el)closeCookiePreferences()})}
 function initCookieConsent(){/* Bu sürümde analitik/reklam çerezi yok; banner gereksiz yere gösterilmez. Gelecekte non-essential script eklenirse bu bayrakla izin öncesi engellenebilir. */if(window.SHAZ_NONESSENTIAL_COOKIES===true&&!cookiePreferences())openCookiePreferences(true)}
 function base64UrlToUint8Array(v){const pad='='.repeat((4-v.length%4)%4),base64=(v+pad).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(base64),out=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out}
+function arrayBufferToBase64Url(buffer){if(!buffer)return '';const bytes=new Uint8Array(buffer);let s='';for(const b of bytes)s+=String.fromCharCode(b);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
 function hasPwaLaunchSignal(){try{const mode=matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||window.navigator.standalone===true,query=new URLSearchParams(location.search).get('source')==='pwa';if(mode||query)sessionStorage.setItem('shazPwaSession','1');return mode||query||sessionStorage.getItem('shazPwaSession')==='1'}catch(_){return matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true}}
 function isStandalonePwa(){return hasPwaLaunchSignal()}
 function isAppleMobile(){return /iphone|ipad|ipod/i.test(navigator.userAgent)}
 function shazDeviceId(){let id='';try{id=localStorage.getItem('shazDeviceId')||'';if(!id){id='DEV-'+(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now());localStorage.setItem('shazDeviceId',id)}}catch(_){}return id}
-let shazLastVisitTrackAt=0;
+let shazLastVisitTrackAt=0,shazLastPushSyncAt=0;
 async function trackShazVisit(){const id=shazDeviceId(),now=Date.now();if(!id||now-shazLastVisitTrackAt<15000)return;shazLastVisitTrackAt=now;await fetch('/api/activity/visit',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:id,pwa:isStandalonePwa(),permission:('Notification'in window?Notification.permission:'unsupported')})}).catch(()=>{})}
-async function subscribeShazPush(reg,publicKey){let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:base64UrlToUint8Array(publicKey)});const body=sub.toJSON();body.deviceId=shazDeviceId();body.pwa=isStandalonePwa();await apiJson('/api/push/subscribe',{method:'POST',body:JSON.stringify(body)});return sub}
+async function fetchShazPushConfig(){const r=await fetch('/api/push/public-key?t='+Date.now(),{cache:'no-store',credentials:'same-origin'});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.message||'Bildirim anahtarı alınamadı.');return j}
+function subscriptionUsesVapidKey(sub,publicKey){try{const current=arrayBufferToBase64Url(sub?.options?.applicationServerKey);return !current||current===String(publicKey||'')}catch(_){return true}}
+async function removeServerPushEndpoint(endpoint){if(!endpoint)return;await fetch('/api/push/unsubscribe',{method:'DELETE',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint})}).catch(()=>{})}
+async function subscribeShazPush(reg,publicKey){
+  let sub=await reg.pushManager.getSubscription(),oldEndpoint='';
+  if(sub&&!subscriptionUsesVapidKey(sub,publicKey)){oldEndpoint=sub.endpoint||'';try{await sub.unsubscribe()}catch(_){}await removeServerPushEndpoint(oldEndpoint);sub=null}
+  if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:base64UrlToUint8Array(publicKey)});
+  const body=sub.toJSON();body.deviceId=shazDeviceId();body.pwa=isStandalonePwa();if(oldEndpoint)body.oldEndpoint=oldEndpoint;
+  await apiJson('/api/push/subscribe',{method:'POST',body:JSON.stringify(body)});return sub;
+}
+async function cleanupRevokedPush(reg){try{const sub=await reg.pushManager.getSubscription();if(sub){const endpoint=sub.endpoint;try{await sub.unsubscribe()}catch(_){}await removeServerPushEndpoint(endpoint)}}catch(_){} }
+async function reconcileShazPush(reg,force=false){const now=Date.now();if(!force&&now-shazLastPushSyncAt<10*60*1000)return;if(!('Notification'in window)||Notification.permission!=='granted')return;shazLastPushSyncAt=now;const cfg=await fetchShazPushConfig();if(!cfg?.enabled||!cfg.publicKey)throw new Error(cfg?.error||'Bildirim servisi hazır değil.');await subscribeShazPush(reg,cfg.publicKey)}
 function removePushPrompt(){document.querySelector('.pushPermissionPrompt')?.remove()}
 function schedulePostPermissionExperience(){clearTimeout(window.__shazAnnouncementTimer);window.__shazAnnouncementTimer=setTimeout(()=>renderSiteAnnouncement(),5000)}
 function pushPromptState(){try{return JSON.parse(localStorage.getItem('shazPushPromptStateV2')||'{"dismissals":0,"lastDismissedAt":0,"done":false}')}catch{return {dismissals:0,lastDismissedAt:0,done:false}}}
 function savePushPromptState(s){try{localStorage.setItem('shazPushPromptStateV2',JSON.stringify(s))}catch{}}
 function dismissPushPrompt(){const s=pushPromptState();s.dismissals=Number(s.dismissals||0)+1;s.lastDismissedAt=Date.now();if(s.dismissals>=2)s.done=true;savePushPromptState(s);removePushPrompt();schedulePostPermissionExperience()}
-async function enableShazNotifications(btn){try{btn.disabled=true;removePushPrompt();const permission=await Notification.requestPermission();if(permission!=='granted'){savePushPromptState({...pushPromptState(),done:true,systemDenied:true});schedulePostPermissionExperience();return}const cfg=await apiJson('/api/push/public-key');if(!cfg.enabled||!cfg.publicKey)throw new Error('Bildirim servisi henüz yapılandırılmamış.');const reg=await navigator.serviceWorker.ready;await subscribeShazPush(reg,cfg.publicKey);savePushPromptState({...pushPromptState(),done:true,granted:true});schedulePostPermissionExperience();toast('✓ SHAZ bildirimleri açıldı')}catch(e){schedulePostPermissionExperience();alert(e.message||'Bildirimler açılamadı.')}finally{if(btn)btn.disabled=false}}
-function showPushPermissionPrompt(){if(document.querySelector('.pushPermissionPrompt'))return;const el=document.createElement('div');el.className='pushPermissionPrompt';el.innerHTML=`<div><b>SHAZ bildirimlerini aç</b><p>Siparişinizin hazırlanma, kargoya verilme ve teslimat süreçlerini anlık bildirim olarak takip edin. Ayrıca size özel kampanya ve fırsatları da kaçırmayın.</p><div><button type="button" class="pushLaterBtn" data-push-later>ŞİMDİ DEĞİL</button><button type="button" class="pushEnableBtn" data-push-enable>BİLDİRİMLERİ AÇ</button></div></div>`;document.body.appendChild(el);el.querySelector('[data-push-later]').onclick=dismissPushPrompt;el.querySelector('[data-push-enable]').onclick=function(){enableShazNotifications(this)}}
-async function clearShazPwaBadge(reg){if(!isStandalonePwa())return;try{reg?.active?.postMessage({type:'SHAZ_CLEAR_BADGE'});navigator.serviceWorker.controller?.postMessage({type:'SHAZ_CLEAR_BADGE'});if(typeof navigator.clearAppBadge==='function')await navigator.clearAppBadge()}catch(_){}}
-async function registerShazPwa(){let promptWasRelevant=false;if(!('serviceWorker'in navigator)){schedulePostPermissionExperience();return}try{const reg=await navigator.serviceWorker.register('/service-worker.js?v=170',{scope:'/'});await clearShazPwaBadge(reg);if(!('PushManager'in window)||!('Notification'in window)){schedulePostPermissionExperience();return}const cfg=await apiJson('/api/push/public-key').catch(()=>null);if(!cfg?.enabled||!cfg.publicKey){schedulePostPermissionExperience();return}if(Notification.permission==='granted'){await subscribeShazPush(reg,cfg.publicKey).catch(()=>{});savePushPromptState({...pushPromptState(),done:true,granted:true});schedulePostPermissionExperience();return}if(Notification.permission==='denied'){savePushPromptState({...pushPromptState(),done:true,systemDenied:true});schedulePostPermissionExperience();return}if(!isStandalonePwa()){schedulePostPermissionExperience();return}const s=pushPromptState();if(s.done){schedulePostPermissionExperience();return}if(Number(s.dismissals||0)===1&&Date.now()-Number(s.lastDismissedAt||0)<24*60*60*1000){schedulePostPermissionExperience();return}promptWasRelevant=true;showPushPermissionPrompt()}catch(e){console.warn('PWA kaydı başarısız:',e.message);schedulePostPermissionExperience()}}
-
+async function enableShazNotifications(btn){try{btn.disabled=true;removePushPrompt();const permission=await Notification.requestPermission();if(permission!=='granted'){savePushPromptState({...pushPromptState(),done:true,systemDenied:true});schedulePostPermissionExperience();return}const cfg=await fetchShazPushConfig();if(!cfg.enabled||!cfg.publicKey)throw new Error(cfg.error||'Bildirim servisi henüz yapılandırılmamış.');const reg=await navigator.serviceWorker.ready;await subscribeShazPush(reg,cfg.publicKey);shazLastPushSyncAt=Date.now();savePushPromptState({...pushPromptState(),done:true,granted:true});schedulePostPermissionExperience();toast('✓ SHAZ bildirimleri açıldı')}catch(e){console.warn('Push subscribe failed:',e);schedulePostPermissionExperience();alert(e.message||'Bildirimler açılamadı.')}finally{if(btn)btn.disabled=false}}
+function showPushPermissionPrompt(){removePushPrompt();const el=document.createElement('div');el.className='pushPermissionPrompt';el.innerHTML=`<div><b>SHAZ bildirimlerini aç</b><p>Siparişinizin hazırlanma, kargoya verilme ve teslimat süreçlerini anlık bildirim olarak takip edin. Ayrıca size özel kampanya ve fırsatları da kaçırmayın.</p><div><button type="button" class="pill pushLaterBtn">ŞİMDİ DEĞİL</button><button type="button" class="btn pushOpenBtn">BİLDİRİMLERİ AÇ</button></div></div>`;document.body.appendChild(el);el.querySelector('.pushLaterBtn').onclick=dismissPushPrompt;el.querySelector('.pushOpenBtn').onclick=e=>enableShazNotifications(e.currentTarget)}
+async function clearShazPwaBadge(reg){try{reg?.active?.postMessage({type:'SHAZ_CLEAR_BADGE'})}catch(_){}try{if(typeof navigator.clearAppBadge==='function')await navigator.clearAppBadge()}catch(_){} }
+async function registerShazPwa(){if(!('serviceWorker'in navigator)){schedulePostPermissionExperience();return}try{const reg=await navigator.serviceWorker.register('/service-worker.js?v=171',{scope:'/'});await clearShazPwaBadge(reg);if(!('PushManager'in window)||!('Notification'in window)){schedulePostPermissionExperience();return}if(Notification.permission==='granted'){await reconcileShazPush(reg,true).catch(e=>console.warn('Push server sync failed:',e));savePushPromptState({...pushPromptState(),done:true,granted:true});schedulePostPermissionExperience();return}if(Notification.permission==='denied'){await cleanupRevokedPush(reg);savePushPromptState({...pushPromptState(),done:true,systemDenied:true});schedulePostPermissionExperience();return}const cfg=await fetchShazPushConfig().catch(e=>{console.warn('Push public key unavailable:',e);return null});if(!cfg?.enabled||!cfg.publicKey){schedulePostPermissionExperience();return}if(!isStandalonePwa()){schedulePostPermissionExperience();return}const s=pushPromptState();if(s.done){schedulePostPermissionExperience();return}if(Number(s.dismissals||0)===1&&Date.now()-Number(s.lastDismissedAt||0)<24*60*60*1000){schedulePostPermissionExperience();return}showPushPermissionPrompt()}catch(e){console.warn('Service Worker registration failed:',e);schedulePostPermissionExperience()}}
 if(!window._shazBadgeVisibilityBound){window._shazBadgeVisibilityBound=true;document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&isStandalonePwa()&&'serviceWorker'in navigator)navigator.serviceWorker.ready.then(clearShazPwaBadge).catch(()=>{})})}
-if(!window._shazPwaVisitTrackingBound){window._shazPwaVisitTrackingBound=true;window.addEventListener('pageshow',()=>ensureAccountStateReady().then(()=>trackShazVisit()).catch(()=>{}));document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&isStandalonePwa())ensureAccountStateReady().then(()=>trackShazVisit()).catch(()=>{})})}
+if(!window._shazPwaVisitTrackingBound){window._shazPwaVisitTrackingBound=true;window.addEventListener('pageshow',()=>{ensureAccountStateReady().then(()=>trackShazVisit()).catch(()=>{});if('serviceWorker'in navigator&&'Notification'in window&&Notification.permission==='granted')navigator.serviceWorker.ready.then(reg=>reconcileShazPush(reg)).catch(e=>console.warn('Push reconciliation failed:',e))});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&isStandalonePwa()){ensureAccountStateReady().then(()=>trackShazVisit()).catch(()=>{});if('serviceWorker'in navigator&&'Notification'in window&&Notification.permission==='granted')navigator.serviceWorker.ready.then(reg=>reconcileShazPush(reg)).catch(e=>console.warn('Push reconciliation failed:',e))}})}
 
 init();
 

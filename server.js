@@ -30,7 +30,7 @@ const uploadDir = path.join(persistRoot,'uploads');
 fs.mkdirSync(dataDir,{recursive:true});
 fs.mkdirSync(uploadDir,{recursive:true});
 // İlk kullanımda repodaki başlangıç JSON'larını kalıcı alana yalnızca bir kez kopyala.
-for(const name of ['settings.json','catalog.json','orders.json','users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','legal_documents.json','legal_documents_backup.json','legal_acceptances.json','phone_verifications.json','password_resets.json','coupons.json','new_member_coupon_templates.json','account_login_attempts.json','push_subscriptions.json','account_state.enc']){
+for(const name of ['settings.json','catalog.json','orders.json','users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','legal_documents.json','legal_documents_backup.json','legal_acceptances.json','phone_verifications.json','password_resets.json','coupons.json','new_member_coupon_templates.json','account_login_attempts.json','push_subscriptions.json','push_delivery_log.json','account_state.enc']){
   const dst=path.join(dataDir,name);
   const seed=path.join(root,'data',name);
   if(!fs.existsSync(dst) && fs.existsSync(seed)) fs.copyFileSync(seed,dst);
@@ -622,7 +622,7 @@ app.get('/api/shared-cart/:id',(req,res)=>{
   try{res.json({ok:true,cart:JSON.parse(fs.readFileSync(f,'utf8'))})}catch(e){res.status(404).json({ok:false})}
 });
 
-app.get('/api/settings',(req,res)=>res.json(readJson('settings.json',{})));
+app.get('/api/settings',(req,res)=>{res.setHeader('Cache-Control','no-store, no-cache, must-revalidate');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');res.json(readJson('settings.json',{}))});
 app.get('/api/catalog',(req,res)=>res.json(stripLegacyStockRecords(readJson('catalog.json',{categories:[],products:[],builder:{}}))));
 
 app.post('/api/admin/state',requireAdmin,async(req,res)=>{
@@ -681,7 +681,7 @@ app.patch('/api/orders/status',requireAdmin,async(req,res)=>{
    return res.status(503).json({ok:false,message:'Durum Google E-Tablo’ya kaydedilemedi. Tekrar deneyin.'});
  }
  const orders=readJson('orders.json',[]); const now=new Date().toISOString();
- const changed=[];orders.forEach(o=>{if(ids.includes(o.id)&&o.status!==status){o.status=status;o.statusUpdatedAt=now;changed.push(o)}});writeJson('orders.json',orders);for(const o of changed)await sendOrderStatusPush(o,status);if(changed.length)writeJson('orders.json',orders);res.json({ok:true,orders});
+ const changed=[];orders.forEach(o=>{if(ids.includes(o.id)&&o.status!==status){o.status=status;o.statusUpdatedAt=now;changed.push(o)}});writeJson('orders.json',orders);for(const o of changed)await sendOrderStatusPush(o,status);if(changed.length){writeJson('orders.json',orders);persistOrdersToGithub().catch(e=>console.error('Push geçmişi sipariş kalıcı kayıt:',e.message))}res.json({ok:true,orders});
 });
 app.patch('/api/orders/:id',requireAdmin,(req,res)=>{
   const id=String(req.params.id||'').trim();
@@ -1218,23 +1218,126 @@ function activityRows(){return readJson('customer_activity.json',[])}
 const adminActivityStreams=new Set();
 function publishAdminActivityVisit(row){const data=`data: ${JSON.stringify({type:'visit',userId:row?.userId||null,customerId:row?.customerId||null,pwa:!!row?.pwa,at:row?.lastSeenAt||new Date().toISOString()})}\n\n`;for(const stream of [...adminActivityStreams]){try{stream.write(data)}catch(_){adminActivityStreams.delete(stream)}}}
 function recordCustomerVisit(req,body={}){const now=new Date().toISOString(),user=accountUserFromReq(req),deviceId=String(body.deviceId||'').trim();if(!deviceId)return;const rows=activityRows();let r=rows.find(x=>x.deviceId===deviceId);if(!r){r={id:'ACT-'+crypto.randomUUID(),deviceId,userId:user?.id||null,customerId:user?.customerId||null,visits:[],createdAt:now};rows.push(r)}if(user){r.userId=user.id;r.customerId=user.customerId}r.lastSeenAt=now;r.permission=String(body.permission||r.permission||'');if(body.pwa){r.pwa=true;r.lastPwaAt=now;r.firstPwaAt=r.firstPwaAt||now}r.visits=Array.isArray(r.visits)?r.visits:[];r.visits.push(now);if(r.visits.length>500)r.visits=r.visits.slice(-500);writeJson('customer_activity.json',rows);persistAccountStateAsync();publishAdminActivityVisit(r)}
-async function sendPushRows(rows,payload){const invalid=new Set(),results=[];for(const row of rows){try{await webpush.sendNotification({endpoint:row.endpoint,keys:{p256dh:row.p256dh,auth:row.auth}},JSON.stringify(payload),{TTL:60*60});results.push({ok:true})}catch(e){const status=Number(e.statusCode||0);if(status===404||status===410)invalid.add(row.endpoint);results.push({ok:false,status})}}if(invalid.size){const all=readJson('push_subscriptions.json',[]);writeJson('push_subscriptions.json',all.filter(x=>!invalid.has(x.endpoint)));persistAccountStateAsync()}return {sent:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,cleaned:invalid.size}}
-async function sendOrderStatusPush(order,status){if(!webPushReady||!order)return;const cfg=notificationSettings().statuses?.[status];if(!cfg||cfg.enabled===false)return;const all=readJson('push_subscriptions.json',[]);const targets=all.filter(x=>(order.userId&&x.userId===order.userId)||(order.customerId&&x.customerId===order.customerId)||(order.deviceId&&x.deviceId===order.deviceId));if(!targets.length)return;order.notificationHistory=Array.isArray(order.notificationHistory)?order.notificationHistory:[];const dedupe=status+':'+String(order.statusUpdatedAt||order.createdAt||'');if(order.notificationHistory.includes(dedupe))return;const url='/hesabim/siparisler/'+encodeURIComponent(order.id);await sendPushRows(targets,{title:String(cfg.title||'SHAZ'),body:String(cfg.body||''),icon:'/icon-192.png',badge:'/icon-192.png',url,tag:'order-'+order.id+'-'+status,data:{url}});order.notificationHistory.push(dedupe)}
-
 // ---------- PWA / Web Push ----------
 const VAPID_PUBLIC_KEY=String(process.env.VAPID_PUBLIC_KEY||'').trim();
 const VAPID_PRIVATE_KEY=String(process.env.VAPID_PRIVATE_KEY||'').trim();
 const VAPID_SUBJECT=String(process.env.VAPID_SUBJECT||'').trim();
-const webPushReady=!!(webpush&&VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY&&VAPID_SUBJECT);
-if(webPushReady){try{webpush.setVapidDetails(VAPID_SUBJECT,VAPID_PUBLIC_KEY,VAPID_PRIVATE_KEY)}catch(e){console.warn('VAPID yapılandırması geçersiz:',e.message)}}
-function cleanPushSubscription(body={}){const endpoint=String(body.endpoint||'').trim(),p256dh=String(body.keys?.p256dh||body.p256dh||'').trim(),auth=String(body.keys?.auth||body.auth||'').trim();if(!/^https:\/\//i.test(endpoint)||!p256dh||!auth)return null;return {endpoint,keys:{p256dh,auth}}}
-app.get('/api/push/public-key',(req,res)=>res.json({ok:true,enabled:webPushReady,publicKey:VAPID_PUBLIC_KEY||''}));
-app.post('/api/push/subscribe',sameOriginGuard,(req,res)=>{const sub=cleanPushSubscription(req.body);if(!sub)return res.status(400).json({ok:false,message:'Geçersiz push aboneliği.'});const rows=readJson('push_subscriptions.json',[]),now=new Date().toISOString(),user=accountUserFromReq(req),deviceId=String(req.body.deviceId||'').trim(),i=rows.findIndex(x=>x.endpoint===sub.endpoint),row={id:i>=0?rows[i].id:'PUSH-'+crypto.randomUUID(),userId:user?.id||null,customerId:user?.customerId||null,deviceId:deviceId||rows[i]?.deviceId||null,pwa:!!req.body.pwa,endpoint:sub.endpoint,p256dh:sub.keys.p256dh,auth:sub.keys.auth,userAgent:String(req.headers['user-agent']||'').slice(0,500),createdAt:i>=0?(rows[i].createdAt||now):now,updatedAt:now};if(i>=0)rows[i]=row;else rows.push(row);writeJson('push_subscriptions.json',rows);res.json({ok:true})});
-app.delete('/api/push/unsubscribe',sameOriginGuard,(req,res)=>{const endpoint=String(req.body?.endpoint||'').trim(),rows=readJson('push_subscriptions.json',[]),next=rows.filter(x=>x.endpoint!==endpoint);if(next.length!==rows.length){writeJson('push_subscriptions.json',next);persistAccountStateAsync()}res.json({ok:true})});
-app.post('/api/admin/push/send',sameOriginGuard,requireAdmin,async(req,res)=>{if(!webPushReady)return res.status(503).json({ok:false,message:'VAPID anahtarları yapılandırılmamış.'});const rawTitle=String(req.body.title??'').trim().slice(0,80),rawBody=String(req.body.body??'').trim().slice(0,240),tag=String(req.body.tag||'').trim().slice(0,80),rawUrl=String(req.body.url||'/').trim();if(!rawTitle&&!rawBody)return res.status(400).json({ok:false,message:'Bildirim mesajı boş olamaz.'});let url='/';try{const u=new URL(rawUrl,SHAZ_ORIGIN);if(u.origin===SHAZ_ORIGIN)url=u.pathname+u.search+u.hash}catch{}const payload={title:rawTitle||'\u3164',icon:'/icon-192.png?v=170',badge:'/icon-192.png?v=170',url,tag,data:{url}};if(rawBody)payload.body=rawBody;const result=await sendPushRows(readJson('push_subscriptions.json',[]),payload);res.json({ok:true,...result})});
+let webPushReady=false,webPushConfigError='';
+function decodeBase64Url(v){try{const s=String(v||'').replace(/-/g,'+').replace(/_/g,'/'),pad='='.repeat((4-s.length%4)%4);return Buffer.from(s+pad,'base64')}catch(_){return Buffer.alloc(0)}}
+function validVapidSubject(v){if(/^mailto:[^\s@]+@[^\s@]+$/i.test(v))return true;try{const u=new URL(v);return u.protocol==='https:'}catch(_){return false}}
+function validateVapidPair(){
+  if(!webpush)throw new Error('web-push paketi kullanılamıyor.');
+  if(!VAPID_PUBLIC_KEY||!VAPID_PRIVATE_KEY||!VAPID_SUBJECT)throw new Error('VAPID environment değişkenleri eksik.');
+  if(!validVapidSubject(VAPID_SUBJECT))throw new Error('VAPID_SUBJECT geçersiz.');
+  const pub=decodeBase64Url(VAPID_PUBLIC_KEY),priv=decodeBase64Url(VAPID_PRIVATE_KEY);
+  if(pub.length!==65||priv.length!==32)throw new Error('VAPID anahtar formatı geçersiz.');
+  const ecdh=crypto.createECDH('prime256v1');ecdh.setPrivateKey(priv);const derived=ecdh.getPublicKey();
+  if(derived.length!==pub.length||!crypto.timingSafeEqual(derived,pub))throw new Error('VAPID public/private anahtarları aynı key pair değil.');
+  webpush.setVapidDetails(VAPID_SUBJECT,VAPID_PUBLIC_KEY,VAPID_PRIVATE_KEY);
+  return true;
+}
+try{webPushReady=validateVapidPair()}catch(e){webPushConfigError=String(e?.message||'VAPID yapılandırması geçersiz.');console.warn('VAPID yapılandırması geçersiz:',webPushConfigError)}
+
+const PUSH_DELIVERY_LOG_FILE='push_delivery_log.json';
+const pushSendIdempotency=new Map();
+const pushSubscribeRate=new Map();
+function safePushRecordId(row){return String(row?.id||crypto.createHash('sha256').update(String(row?.endpoint||'')).digest('hex').slice(0,12))}
+function pushDeliveryLogs(){return readJson(PUSH_DELIVERY_LOG_FILE,[])}
+function writePushDeliveryLogs(rows){writeJson(PUSH_DELIVERY_LOG_FILE,(Array.isArray(rows)?rows:[]).slice(-200))}
+function createPushDeliveryLog(targetCount,kind){const rows=pushDeliveryLogs(),row={deliveryId:'DEL-'+crypto.randomUUID(),createdAt:new Date().toISOString(),kind:String(kind||'manual').slice(0,40),targetCount:Number(targetCount||0),providerAccepted:0,failed:0,cleaned:0,deviceAckCount:0,ackedSubscriptionIds:[],failureStatuses:{}};rows.push(row);writePushDeliveryLogs(rows);return row}
+function updatePushDeliveryLog(deliveryId,patch){const rows=pushDeliveryLogs(),i=rows.findIndex(x=>x.deliveryId===deliveryId);if(i<0)return null;rows[i]={...rows[i],...patch};writePushDeliveryLogs(rows);return rows[i]}
+function pushStats(){const rows=readJson('push_subscriptions.json',[]),cut=Date.now()-30*86400000;return {registered:rows.length,active30:rows.filter(x=>{const d=new Date(x.lastPushSuccessAt||x.updatedAt||x.createdAt||0).getTime();return Number.isFinite(d)&&d>=cut}).length,enabled:webPushReady,configError:webPushReady?'':webPushConfigError}}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function pushRetryAfterMs(e,attempt){const raw=e?.headers?.['retry-after']||e?.headers?.get?.('retry-after');const n=Number(raw);if(Number.isFinite(n)&&n>=0)return Math.min(10000,n*1000);return Math.min(2500,500*Math.pow(2,attempt))}
+function pushErrorStatus(e){return Number(e?.statusCode||e?.status||0)||0}
+function pushIsTransient(status){return status===429||status>=500||status===0}
+async function runWithConcurrency(items,limit,worker){const out=new Array(items.length),next={i:0};async function run(){while(true){const i=next.i++;if(i>=items.length)return;try{out[i]=await worker(items[i],i)}catch(e){out[i]={ok:false,status:pushErrorStatus(e),error:String(e?.message||e)}}}}await Promise.all(Array.from({length:Math.max(1,Math.min(limit,items.length||1))},run));return out}
+async function sendPushRows(rows,payload,opts={}){
+  rows=Array.isArray(rows)?rows.filter(Boolean):[];
+  const log=createPushDeliveryLog(rows.length,opts.kind||'manual'),deliveryId=log.deliveryId,all=readJson('push_subscriptions.json',[]),invalid=new Set();
+  const ttl=Math.max(60,Math.min(86400,Number(opts.ttl||3600))),urgency=['very-low','low','normal','high'].includes(opts.urgency)?opts.urgency:'normal';
+  const results=await runWithConcurrency(rows,6,async row=>{
+    const id=safePushRecordId(row),target=all.find(x=>x.endpoint===row.endpoint),attemptAt=new Date().toISOString();if(target)target.lastPushAttemptAt=attemptAt;
+    let lastStatus=0,lastError='',attempts=0;
+    for(let attempt=0;attempt<2;attempt++){
+      attempts=attempt+1;
+      try{
+        const perPayload={...payload,deliveryId,subscriptionId:id};
+        await webpush.sendNotification({endpoint:row.endpoint,keys:{p256dh:row.p256dh,auth:row.auth}},JSON.stringify(perPayload),{TTL:ttl,urgency,timeout:10000});
+        const at=new Date().toISOString();if(target){target.lastPushSuccessAt=at;target.lastPushFailureAt=null;target.lastPushFailureStatus=null;target.updatedAt=at}
+        return {id,ok:true,status:201,cleaned:false,attempts};
+      }catch(e){
+        const status=pushErrorStatus(e);lastStatus=status;lastError=String(e?.message||'Push gönderim hatası.').slice(0,180);
+        if(status===404||status===410){invalid.add(row.endpoint);break}
+        if(!pushIsTransient(status)||attempt===1)break;
+        await sleep(pushRetryAfterMs(e,attempt));
+      }
+    }
+    const at=new Date().toISOString();if(target){target.lastPushFailureAt=at;target.lastPushFailureStatus=lastStatus||'network';target.updatedAt=at}
+    if(lastStatus===401||lastStatus===403)console.warn('Push VAPID/auth hatası:',lastStatus,'kayıt',id);
+    else console.warn('Push gönderim hatası:',lastStatus||'network','kayıt',id,lastError);
+    return {id,ok:false,status:lastStatus,cleaned:invalid.has(row.endpoint),attempts};
+  });
+  let changed=false,next=all;
+  if(invalid.size){next=all.filter(x=>!invalid.has(x.endpoint));changed=true}
+  if(results.length)changed=true;
+  if(changed){writeJson('push_subscriptions.json',next);try{await persistAccountStateToGithub()}catch(e){console.error('Push aboneliği kalıcı kayıt:',e.message)}}
+  const accepted=results.filter(x=>x.ok).length,failed=results.length-accepted,cleaned=invalid.size,failureStatuses={};
+  for(const r of results.filter(x=>!x.ok)){const k=String(r.status||'network');failureStatuses[k]=(failureStatuses[k]||0)+1}
+  updatePushDeliveryLog(deliveryId,{providerAccepted:accepted,failed,cleaned,failureStatuses,finishedAt:new Date().toISOString()});
+  console.log('Push delivery',deliveryId,'hedef',rows.length,'accepted',accepted,'failed',failed,'cleaned',cleaned,'statuses',JSON.stringify(failureStatuses));
+  return {deliveryId,targetCount:rows.length,providerAccepted:accepted,sent:accepted,failed,cleaned,configurationError:!!(failureStatuses['401']||failureStatuses['403']),results};
+}
+async function sendOrderStatusPush(order,status){
+  if(!webPushReady||!order)return {skipped:true,reason:webPushConfigError||'push-disabled'};
+  const cfg=notificationSettings().statuses?.[status];if(!cfg||cfg.enabled===false)return {skipped:true,reason:'disabled'};
+  const all=readJson('push_subscriptions.json',[]),targets=all.filter(x=>(order.userId&&x.userId===order.userId)||(order.customerId&&x.customerId===order.customerId)||(order.deviceId&&x.deviceId===order.deviceId));if(!targets.length)return {skipped:true,reason:'no-target'};
+  order.notificationHistory=Array.isArray(order.notificationHistory)?order.notificationHistory:[];
+  const eventKey=status+':'+String(order.statusUpdatedAt||order.createdAt||'');
+  if(order.notificationHistory.includes(eventKey))return {skipped:true,reason:'legacy-dedupe'};
+  const succeeded=new Set(order.notificationHistory.filter(x=>x&&typeof x==='object'&&x.eventKey===eventKey&&x.subscriptionId&&x.success===true).map(x=>String(x.subscriptionId)));
+  const pending=targets.filter(x=>!succeeded.has(safePushRecordId(x)));if(!pending.length)return {skipped:true,reason:'deduped'};
+  const url='/hesabim/siparisler/'+encodeURIComponent(order.id),tag='order-'+String(order.id).slice(0,40)+'-'+status+'-'+crypto.createHash('sha1').update(eventKey).digest('hex').slice(0,10);
+  const result=await sendPushRows(pending,{title:String(cfg.title||'SHAZ').trim()||'SHAZ',body:String(cfg.body||'').trim(),icon:'/icon-192.png?v=171',badge:'/icon-192.png?v=171',url,tag,data:{url}},{kind:'order:'+status,ttl:12*60*60,urgency:'high'});
+  const now=new Date().toISOString();for(const r of result.results.filter(x=>x.ok))order.notificationHistory.push({eventKey,subscriptionId:String(r.id),success:true,sentAt:now,deliveryId:result.deliveryId});
+  if(order.notificationHistory.length>300)order.notificationHistory=order.notificationHistory.slice(-300);
+  return result;
+}
+function cleanPushSubscription(body={}){const endpoint=String(body.endpoint||'').trim(),p256dh=String(body.keys?.p256dh||body.p256dh||'').trim(),auth=String(body.keys?.auth||body.auth||'').trim();if(!/^https:\/\//i.test(endpoint)||endpoint.length>2048||p256dh.length<20||p256dh.length>512||auth.length<8||auth.length>512)return null;return {endpoint,keys:{p256dh,auth}}}
+function pushSubscribeAllowed(req){const key=String(req.ip||req.socket?.remoteAddress||'unknown'),now=Date.now(),old=pushSubscribeRate.get(key)||[];const fresh=old.filter(t=>now-t<10*60*1000);if(fresh.length>=40)return false;fresh.push(now);pushSubscribeRate.set(key,fresh);return true}
+app.get('/api/push/public-key',(req,res)=>{res.setHeader('Cache-Control','no-store, no-cache, must-revalidate');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');res.json({ok:true,enabled:webPushReady,publicKey:webPushReady?VAPID_PUBLIC_KEY:'',error:webPushReady?'':webPushConfigError})});
+app.post('/api/push/subscribe',sameOriginGuard,async(req,res)=>{
+  if(!pushSubscribeAllowed(req))return res.status(429).json({ok:false,message:'Çok fazla abonelik isteği.'});
+  let bodySize=0;try{bodySize=Buffer.byteLength(JSON.stringify(req.body||{}),'utf8')}catch{}if(bodySize>12000)return res.status(413).json({ok:false,message:'Push abonelik verisi çok büyük.'});
+  const sub=cleanPushSubscription(req.body);if(!sub)return res.status(400).json({ok:false,message:'Geçersiz push aboneliği.'});
+  const rows=readJson('push_subscriptions.json',[]),now=new Date().toISOString(),user=accountUserFromReq(req),deviceId=String(req.body.deviceId||'').trim().slice(0,120),oldEndpoint=String(req.body.oldEndpoint||'').trim(),ua=String(req.headers['user-agent']||'').slice(0,500);
+  let i=rows.findIndex(x=>x.endpoint===sub.endpoint);if(i<0&&oldEndpoint)i=rows.findIndex(x=>x.endpoint===oldEndpoint);
+  const previous=i>=0?rows[i]:null,row={id:previous?.id||'PUSH-'+crypto.randomUUID(),userId:user?.id||previous?.userId||null,customerId:user?.customerId||previous?.customerId||null,deviceId:deviceId||previous?.deviceId||null,pwa:req.body.pwa===undefined?!!previous?.pwa:!!req.body.pwa,endpoint:sub.endpoint,p256dh:sub.keys.p256dh,auth:sub.keys.auth,userAgent:ua||previous?.userAgent||'',createdAt:previous?.createdAt||now,updatedAt:now,lastPushAttemptAt:previous?.lastPushAttemptAt||null,lastPushSuccessAt:previous?.lastPushSuccessAt||null,lastPushFailureAt:previous?.lastPushFailureAt||null,lastPushFailureStatus:previous?.lastPushFailureStatus||null};
+  if(i>=0)rows[i]=row;else rows.push(row);
+  const deduped=rows.filter((x,idx)=>{if(idx===i||x.endpoint===sub.endpoint)return true;if(deviceId&&x.deviceId===deviceId&&x.endpoint!==sub.endpoint)return false;return true});
+  const currentIndex=deduped.findIndex(x=>x.endpoint===sub.endpoint);if(currentIndex<0)deduped.push(row);
+  writeJson('push_subscriptions.json',deduped);
+  let persistence={ok:false,skipped:true};try{persistence=await persistAccountStateToGithub()}catch(e){console.error('Push subscribe kalıcı kayıt:',e.message)}
+  res.json({ok:true,persisted:!!persistence?.ok||persistRoot!==root,updated:!!previous});
+});
+app.delete('/api/push/unsubscribe',sameOriginGuard,async(req,res)=>{const endpoint=String(req.body?.endpoint||'').trim(),rows=readJson('push_subscriptions.json',[]),next=rows.filter(x=>x.endpoint!==endpoint);if(next.length!==rows.length){writeJson('push_subscriptions.json',next);try{await persistAccountStateToGithub()}catch(e){console.error('Push unsubscribe kalıcı kayıt:',e.message)}}res.json({ok:true})});
+app.post('/api/push/ack',sameOriginGuard,(req,res)=>{const deliveryId=String(req.body?.deliveryId||'').trim(),subscriptionId=String(req.body?.subscriptionId||'').trim().slice(0,120);if(!/^DEL-[0-9a-f-]{20,}$/i.test(deliveryId))return res.status(400).json({ok:false});const rows=pushDeliveryLogs(),i=rows.findIndex(x=>x.deliveryId===deliveryId);if(i<0)return res.status(404).json({ok:false});const acked=new Set(Array.isArray(rows[i].ackedSubscriptionIds)?rows[i].ackedSubscriptionIds:[]);if(subscriptionId)acked.add(subscriptionId);else acked.add('anonymous:'+String(req.body?.receivedAt||Date.now()));rows[i].ackedSubscriptionIds=[...acked].slice(-500);rows[i].deviceAckCount=rows[i].ackedSubscriptionIds.length;rows[i].lastAckAt=new Date().toISOString();writePushDeliveryLogs(rows);res.json({ok:true})});
+app.get('/api/admin/push/deliveries/:id',requireAdmin,(req,res)=>{const row=pushDeliveryLogs().find(x=>x.deliveryId===String(req.params.id));if(!row)return res.status(404).json({ok:false});res.json({ok:true,delivery:{deliveryId:row.deliveryId,createdAt:row.createdAt,targetCount:row.targetCount,providerAccepted:row.providerAccepted,failed:row.failed,cleaned:row.cleaned,deviceAckCount:row.deviceAckCount,failureStatuses:row.failureStatuses||{}}})});
+app.post('/api/admin/push/send',sameOriginGuard,requireAdmin,async(req,res)=>{
+  if(!webPushReady)return res.status(503).json({ok:false,message:'Web Push yapılandırması aktif değil: '+(webPushConfigError||'VAPID geçersiz.')});
+  const rawTitle=String(req.body.title??'').trim().slice(0,80),rawBody=String(req.body.body??'').trim().slice(0,240),rawUrl=String(req.body.url||'/').trim(),clientRequestId=String(req.body.clientRequestId||'').trim().slice(0,120);if(!rawTitle&&!rawBody)return res.status(400).json({ok:false,message:'Bildirim mesajı boş olamaz.'});
+  if(clientRequestId){const old=pushSendIdempotency.get(clientRequestId);if(old&&Date.now()-old.at<15000)return res.json(old.response)}
+  let url='/';try{const u=new URL(rawUrl,SHAZ_ORIGIN);if(u.origin===SHAZ_ORIGIN)url=u.pathname+u.search+u.hash}catch{}
+  // Web Notifications API title argümanını zorunlu tuttuğu için iOS'ta boş title yerine uygulama adı/boş satır oluşabiliyor.
+  // compactNoTitle modunda Service Worker mesajı tek satırlık title olarak gösterir ve body bırakmaz; böylece boş başlık satırı/büyüme oluşmaz.
+  const payload={title:rawTitle,body:rawBody,compactNoTitle:!rawTitle&&!!rawBody,icon:'/icon-192.png?v=171',badge:'/icon-192.png?v=171',url,data:{url}};
+  const result=await sendPushRows(readJson('push_subscriptions.json',[]),payload,{kind:'manual',ttl:24*60*60,urgency:'normal'}),response={ok:true,...result,deviceAckCount:0};
+  if(clientRequestId){pushSendIdempotency.set(clientRequestId,{at:Date.now(),response});for(const [k,v] of pushSendIdempotency)if(Date.now()-v.at>60000)pushSendIdempotency.delete(k)}
+  res.json(response);
+});
 app.post('/api/activity/visit',sameOriginGuard,(req,res)=>{recordCustomerVisit(req,req.body||{});res.json({ok:true})});
 app.get('/api/admin/activity-stream',requireAdmin,(req,res)=>{res.setHeader('Content-Type','text/event-stream');res.setHeader('Cache-Control','no-cache, no-transform');res.setHeader('Connection','keep-alive');res.flushHeaders?.();res.write('event: ready\ndata: {}\n\n');adminActivityStreams.add(res);const keep=setInterval(()=>{try{res.write(': keepalive\n\n')}catch(_){}},25000);req.on('close',()=>{clearInterval(keep);adminActivityStreams.delete(res)})});
-app.get('/api/admin/notification-settings',requireAdmin,(req,res)=>res.json({ok:true,settings:notificationSettings()}));
+app.get('/api/admin/notification-settings',requireAdmin,(req,res)=>res.json({ok:true,settings:notificationSettings(),pushStats:pushStats()}));
 app.put('/api/admin/notification-settings',requireAdmin,(req,res)=>{const current=notificationSettings(),incoming=req.body?.statuses||{};for(const k of ['new','prepared','shipped','delivered'])if(incoming[k])current.statuses[k]={enabled:incoming[k].enabled!==false,title:String(incoming[k].title||'SHAZ').slice(0,80),body:String(incoming[k].body||'').slice(0,240)};writeJson('notification_settings.json',current);persistAccountStateAsync();res.json({ok:true,settings:current})});
 app.get('/api/admin/customers-all',requireAdmin,(req,res)=>{const users=readJson('users.json',[]),orders=readJson('orders.json',[]),push=readJson('push_subscriptions.json',[]),acts=activityRows(),map=new Map();const add=(key,base)=>{if(!map.has(key))map.set(key,{key,name:'',phone:'',email:'',member:false,orderCount:0,lastOrderAt:'',lastOrderStatus:'',lastOrderTotal:0,pushActive:false,permission:'default',pwaStatus:'—',firstPwaAt:'',lastPwaAt:'',lastSeenAt:'',lastNotificationAt:'',visitCount:0,visits:[],orders:[],...base});return map.get(key)};for(const u of users){const key='u:'+u.id,r=add(key,{name:[u.firstName,u.lastName].filter(Boolean).join(' '),phone:u.phone||'',email:u.email||'',member:true,userId:u.id,customerId:u.customerId,disabled:!!u.disabled});const a=acts.filter(x=>x.userId===u.id||x.customerId===u.customerId);r.visits=a.flatMap(x=>x.visits||[]).sort();r.visitCount=r.visits.length;r.lastSeenAt=r.visits.at(-1)||'';r.firstPwaAt=a.map(x=>x.firstPwaAt).filter(Boolean).sort()[0]||'';r.lastPwaAt=a.map(x=>x.lastPwaAt).filter(Boolean).sort().at(-1)||'';r.permission=a.map(x=>x.permission).filter(Boolean).at(-1)||'default';r.pushActive=push.some(x=>x.userId===u.id||x.customerId===u.customerId)}for(const o of orders){const c=o.customer||{},strongGuest=String(c.phone||'').trim()+'|'+String(c.email||'').trim(),key=o.userId?'u:'+o.userId:o.customerId?'c:'+o.customerId:'g:'+crypto.createHash('sha1').update(strongGuest).digest('hex').slice(0,12),r=add(key,{name:c.fullName||[c.firstName,c.lastName].filter(Boolean).join(' '),phone:c.phone||'',email:c.email||'',member:!!o.userId,customerId:o.customerId||null,userId:o.userId||null});r.orderCount++;r.orders.push({id:o.id,createdAt:o.createdAt||'',status:o.status||'',total:Number(o.total||0)});if(!r.lastOrderAt||new Date(o.createdAt)>new Date(r.lastOrderAt)){r.lastOrderAt=o.createdAt;r.lastOrderStatus=o.status||'';r.lastOrderTotal=Number(o.total||0)}const hist=Array.isArray(o.notificationHistory)?o.notificationHistory:[];if(hist.length)r.lastNotificationAt=o.statusUpdatedAt||o.createdAt||r.lastNotificationAt;const a=acts.filter(x=>(o.userId&&x.userId===o.userId)||(o.customerId&&x.customerId===o.customerId)||(o.deviceId&&x.deviceId===o.deviceId));if(a.length){r.visits=[...new Set([...r.visits,...a.flatMap(x=>x.visits||[])])].sort();r.visitCount=r.visits.length;r.lastSeenAt=r.visits.at(-1)||r.lastSeenAt;r.firstPwaAt=[r.firstPwaAt,...a.map(x=>x.firstPwaAt)].filter(Boolean).sort()[0]||'';r.lastPwaAt=a.map(x=>x.lastPwaAt).filter(Boolean).sort().at(-1)||r.lastPwaAt;r.permission=a.map(x=>x.permission).filter(Boolean).at(-1)||r.permission}r.pushActive=r.pushActive||push.some(x=>(o.userId&&x.userId===o.userId)||(o.customerId&&x.customerId===o.customerId)||(o.deviceId&&x.deviceId===o.deviceId))}for(const r of map.values()){if(r.lastPwaAt){const age=Date.now()-new Date(r.lastPwaAt).getTime();r.pwaStatus=age<30*24*60*60*1000?'Aktif':(r.pushActive?'Uzun süredir kullanılmıyor':'Pasif / kaldırılmış olabilir')}r.notificationStatus=r.pushActive?'Açık':(r.permission==='denied'?'Sistemden reddedilmiş':r.permission==='granted'?'Push aboneliği pasif':'Kapalı');r.orders.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))}const list=[...map.values()].sort((a,b)=>new Date(b.lastSeenAt||b.lastOrderAt||0)-new Date(a.lastSeenAt||a.lastOrderAt||0)),stats={total:list.length,members:list.filter(x=>x.member).length,guests:list.filter(x=>!x.member).length,pushActive:list.filter(x=>x.pushActive).length,pwaActive:list.filter(x=>x.pwaStatus==='Aktif').length,notificationOpen:list.filter(x=>x.notificationStatus==='Açık').length};res.json({ok:true,customers:list,stats})});
 app.get('/api/auth/social-config',(req,res)=>res.json({ok:true,googleClientId:GOOGLE_CLIENT_ID||'',appleClientId:APPLE_CLIENT_ID||'',appleRedirectUri:APPLE_REDIRECT_URI||'',passwordResetEnabled:!!RESEND_API_KEY}));
