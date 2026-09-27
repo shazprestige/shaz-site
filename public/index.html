@@ -30,11 +30,11 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=167">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=167">
 <style>html.siteBooting body{background:#fff!important}html.siteBooting body>*{visibility:hidden!important}html.siteBooting body::before{content:"";position:fixed;inset:0;background:#fff;z-index:2147482999;visibility:visible!important}html.iosPwaStandalone.siteBooting body::before{display:none!important}#iosPwaSplash{display:none}html.iosPwaStandalone.siteBooting #iosPwaSplash{display:flex!important;visibility:visible!important;position:fixed;inset:0;z-index:2147483001;background:#fff;align-items:center;justify-content:center;flex-direction:column;gap:16px}html.iosPwaStandalone.siteBooting #iosPwaSplash img{visibility:visible!important;width:min(42vw,170px);height:min(42vw,170px);object-fit:contain}html.iosPwaStandalone.siteBooting #iosPwaSplash b{visibility:visible!important;font:600 24px/1.1 Arial,sans-serif;letter-spacing:.18em;color:#111;margin-left:.18em}html.accountRouteBootSafe body{overflow:hidden!important;background:#fff!important}html.accountRouteBootSafe body>*{visibility:hidden!important}html.accountRouteBootSafe body::before{content:"";position:fixed;inset:0;background:#fff;z-index:2147483000;pointer-events:none;visibility:visible!important}</style>
-<script>(function(){try{var ua=navigator.userAgent||'',iosLike=/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/i.test(ua)&&'ontouchend' in document);if(navigator.standalone===true&&iosLike)document.documentElement.classList.add('iosPwaStandalone')}catch(_){}window.__shazSiteBootTimer=setTimeout(function(){document.documentElement.classList.remove('siteBooting')},8000);if(/^\/(?:giris|kayit|sifre-sifirla|hesabim(?:\/|$))/.test(location.pathname)){document.documentElement.classList.add('accountRouteBootSafe');window.__shazAccountBootTimer=setTimeout(function(){document.documentElement.classList.remove('accountRouteBootSafe')},15000);window.addEventListener('error',function(){document.documentElement.classList.remove('accountRouteBootSafe')},{once:true});window.addEventListener('unhandledrejection',function(){document.documentElement.classList.remove('accountRouteBootSafe')},{once:true})}})();</script>
+<script>(function(){try{var ua=navigator.userAgent||'',iosLike=/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/i.test(ua)&&'ontouchend' in document);if(navigator.standalone===true&&iosLike){document.documentElement.classList.add('iosPwaStandalone');window.__shazPwaSplashUntil=Date.now()+4000}}catch(_){}window.__shazSiteBootTimer=setTimeout(function(){document.documentElement.classList.remove('siteBooting')},8000);if(/^\/(?:giris|kayit|sifre-sifirla|hesabim(?:\/|$))/.test(location.pathname)){document.documentElement.classList.add('accountRouteBootSafe');window.__shazAccountBootTimer=setTimeout(function(){document.documentElement.classList.remove('accountRouteBootSafe')},15000);window.addEventListener('error',function(){document.documentElement.classList.remove('accountRouteBootSafe')},{once:true});window.addEventListener('unhandledrejection',function(){document.documentElement.classList.remove('accountRouteBootSafe')},{once:true})}})();</script>
 <link rel="stylesheet" href="/styles.css?v=171">
 </head>
 <body>
-<div id="iosPwaSplash" aria-hidden="true"><img src="/api/brand-image?v=171" alt=""><b>SHAZ</b></div>
+<div id="iosPwaSplash" aria-hidden="true"><img src="/api/brand-image?v=171" alt="SHAZ"></div>
 <div class="announce" id="announceWrap"><div class="track" id="campaign"></div></div>
 
 <header id="stickyHeader">
@@ -107,6 +107,6 @@
 <div id="toast" class="toast"></div>
 <div class="overlay hidden" id="overlay"></div>
 <div class="drawer hidden" id="drawer"></div>
-<script src="/app.js?v=171"></script>
+<script src="/app.js?v=172"></script>
 </body>
 </html>

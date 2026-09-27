@@ -1328,9 +1328,10 @@ app.post('/api/admin/push/send',sameOriginGuard,requireAdmin,async(req,res)=>{
   const rawTitle=String(req.body.title??'').trim().slice(0,80),rawBody=String(req.body.body??'').trim().slice(0,240),rawUrl=String(req.body.url||'/').trim(),clientRequestId=String(req.body.clientRequestId||'').trim().slice(0,120);if(!rawTitle&&!rawBody)return res.status(400).json({ok:false,message:'Bildirim mesajı boş olamaz.'});
   if(clientRequestId){const old=pushSendIdempotency.get(clientRequestId);if(old&&Date.now()-old.at<15000)return res.json(old.response)}
   let url='/';try{const u=new URL(rawUrl,SHAZ_ORIGIN);if(u.origin===SHAZ_ORIGIN)url=u.pathname+u.search+u.hash}catch{}
-  // Web Notifications API title argümanını zorunlu tuttuğu için iOS'ta boş title yerine uygulama adı/boş satır oluşabiliyor.
-  // compactNoTitle modunda Service Worker mesajı tek satırlık title olarak gösterir ve body bırakmaz; böylece boş başlık satırı/büyüme oluşmaz.
-  const payload={title:rawTitle,body:rawBody,compactNoTitle:!rawTitle&&!!rawBody,icon:'/icon-192.png?v=171',badge:'/icon-192.png?v=171',url,data:{url}};
+  // Manuel bildirimde başlık boşsa mesajı gerçek notification title yap; body alanını payload'a hiç ekleme.
+  // Böylece iOS'ta görünmez/boş title veya boş body için fazladan satır ayrılmaz.
+  const payload={title:rawTitle||rawBody,icon:'/icon-192.png?v=171',badge:'/icon-192.png?v=171',url,data:{url}};
+  if(rawTitle)payload.body=rawBody;
   const result=await sendPushRows(readJson('push_subscriptions.json',[]),payload,{kind:'manual',ttl:24*60*60,urgency:'normal'}),response={ok:true,...result,deviceAckCount:0};
   if(clientRequestId){pushSendIdempotency.set(clientRequestId,{at:Date.now(),response});for(const [k,v] of pushSendIdempotency)if(Date.now()-v.at>60000)pushSendIdempotency.delete(k)}
   res.json(response);
