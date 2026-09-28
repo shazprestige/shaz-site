@@ -67,12 +67,21 @@ function brandAsset(){
   const file=candidates.find(f=>fs.existsSync(f)&&fs.statSync(f).isFile());return {file,raw};
 }
 app.get('/api/brand-image',(req,res)=>{const a=brandAsset();if(a.remote)return res.redirect(302,a.remote);if(a.file){res.setHeader('Cache-Control','public, max-age=86400');return res.sendFile(a.file)}res.status(404).end()});
-app.get('/api/pwa-splash-brand',async(req,res)=>{
-  try{
-    const a=brandAsset();let input=null;if(a.remote){const r=await safeFetchImageUrl(a.remote,{cache:'no-store'});if(!r.ok)throw new Error('Splash marka görseli alınamadı.');input=Buffer.from(await r.arrayBuffer())}else if(a.file)input=a.file;else return res.status(404).end();
-    const buf=await sharp(input,{failOn:'none'}).trim({threshold:10}).png().toBuffer();res.type('png').set('Cache-Control','no-store, max-age=0').send(buf);
-  }catch(e){console.error('PWA splash marka görseli:',e?.message||e);const a=brandAsset();if(a.file)return res.sendFile(a.file);if(a.remote)return res.redirect(302,a.remote);res.status(404).end()}
-});
+let pwaSplashBrandCache={key:'',buffer:null};
+async function getPwaSplashBrandBuffer(){
+  const a=brandAsset();let input=null,key='';
+  if(a.remote){key='remote:'+a.remote;if(pwaSplashBrandCache.key===key&&pwaSplashBrandCache.buffer)return pwaSplashBrandCache.buffer;const r=await safeFetchImageUrl(a.remote,{cache:'no-store'});if(!r.ok)throw new Error('Splash marka görseli alınamadı.');input=Buffer.from(await r.arrayBuffer())}
+  else if(a.file){const st=fs.statSync(a.file);key=`file:${a.file}:${st.size}:${st.mtimeMs}`;if(pwaSplashBrandCache.key===key&&pwaSplashBrandCache.buffer)return pwaSplashBrandCache.buffer;input=a.file}
+  else throw new Error('Splash marka görseli bulunamadı.');
+  const buffer=await sharp(input,{failOn:'none'}).trim({threshold:10}).png().toBuffer();pwaSplashBrandCache={key,buffer};return buffer;
+}
+async function sendPwaSplashBrand(req,res,immutable=false){
+  try{const buf=await getPwaSplashBrandBuffer();res.type('png').set('Cache-Control',immutable?'public, max-age=31536000, immutable':'public, max-age=86400, must-revalidate').send(buf)}
+  catch(e){console.error('PWA splash marka görseli:',e?.message||e);const a=brandAsset();if(a.file)return res.sendFile(a.file);if(a.remote)return res.redirect(302,a.remote);res.status(404).end()}
+}
+app.get('/pwa-splash-brand.png',(req,res)=>sendPwaSplashBrand(req,res,true));
+app.get('/api/pwa-splash-brand',(req,res)=>sendPwaSplashBrand(req,res,false));
+setImmediate(()=>getPwaSplashBrandBuffer().catch(e=>console.warn('PWA splash önbelleği hazırlanamadı:',e?.message||e)));
 function isPrivateHostName(host){host=String(host||'').toLowerCase();if(host==='localhost'||host.endsWith('.localhost'))return true;if(/^127\./.test(host)||/^10\./.test(host)||/^192\.168\./.test(host)||/^169\.254\./.test(host))return true;const m=host.match(/^172\.(\d{1,3})\./);if(m&&Number(m[1])>=16&&Number(m[1])<=31)return true;if(host==='::1'||host.startsWith('fc')||host.startsWith('fd')||host.startsWith('fe80:'))return true;return false}
 function assertSafeRemoteHttpUrl(raw){const u=new URL(raw);if(!['http:','https:'].includes(u.protocol)||isPrivateHostName(u.hostname))throw new Error('Güvensiz uzak URL engellendi.');return u}
 async function safeFetchImageUrl(raw,opts={}){let url=assertSafeRemoteHttpUrl(raw).toString();for(let i=0;i<4;i++){const r=await fetch(url,{...opts,redirect:'manual'});if([301,302,303,307,308].includes(r.status)){const loc=r.headers.get('location');if(!loc)throw new Error('Geçersiz yönlendirme.');url=assertSafeRemoteHttpUrl(new URL(loc,url).toString()).toString();continue}return r}throw new Error('Çok fazla yönlendirme.');}
