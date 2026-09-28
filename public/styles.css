@@ -6340,3 +6340,20 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 .registrationVerifyForm{gap:12px!important}
 .registrationVerifyLead{margin:0 0 4px!important;text-align:center!important;font-size:12px!important;line-height:1.45!important;color:#555!important}
 .registrationOtpInput{text-align:center!important;font-size:24px!important;font-weight:800!important;letter-spacing:8px!important;font-variant-numeric:tabular-nums!important}
+
+
+/* v175 targeted: email change flow + centered notification permission prompt */
+.pushPermissionPrompt{top:50%!important;bottom:auto!important;left:50%!important;transform:translate(-50%,-50%)!important;width:min(500px,calc(100% - 28px))!important;padding:20px!important}
+.pushPermissionPrompt>div>p{margin:0 0 16px!important}
+.pushPermissionPrompt .pushOpenBtn{background:#35a85a!important;color:#fff!important;border:1px solid #2e944e!important}
+.accountEmailField{display:grid!important;gap:7px}
+.accountEmailStatus{display:grid;gap:3px;border:1px solid #e7e7e7;background:#fafafa;padding:11px 12px}
+.accountEmailStatus b{font-size:12px}
+.accountEmailStatus span{font-size:13px;overflow-wrap:anywhere}
+.accountEmailStatus.is-verified b{color:#2f7b46}
+.accountEmailStatus.is-pending b{color:#9a6a12}
+.accountEmailStatus>div{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px}
+.accountEmailChangeBtn{justify-self:start}
+.accountEmailCurrent{display:grid;gap:4px;border:1px solid #e7e7e7;background:#fafafa;padding:11px 12px}
+.accountEmailCurrent small{color:#666}
+.emailChangeVerifyForm{gap:12px}
