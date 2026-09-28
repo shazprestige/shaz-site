@@ -108,7 +108,7 @@ async function saveAll(){
 function sendPreview(){
   if(adminCompactViewport())return;
   const f=$('#previewFrame');
-  if(f?.contentWindow)f.contentWindow.postMessage({type:'shaz-preview',settings,catalog},'*');
+  if(f?.contentWindow)f.contentWindow.postMessage({type:'shaz-preview',settings,catalog},location.origin);
 }
 function previewTo(target,scroll=true){
   if(adminCompactViewport())return;
@@ -117,10 +117,10 @@ function previewTo(target,scroll=true){
   if(!f?.contentWindow||!currentPreviewTarget)return;
   const token=++previewFocusToken;
   // Önce güncel veriyi gönder; render bittikten sonra kesin hedefi işaretle.
-  f.contentWindow.postMessage({type:'shaz-preview',settings,catalog},'*');
+  f.contentWindow.postMessage({type:'shaz-preview',settings,catalog},location.origin);
   setTimeout(()=>{
     if(token!==previewFocusToken)return;
-    f.contentWindow.postMessage({type:'shaz-preview-focus',target:currentPreviewTarget,scroll},'*');
+    f.contentWindow.postMessage({type:'shaz-preview-focus',target:currentPreviewTarget,scroll},location.origin);
   },80);
 }
 function changed(target){
@@ -128,9 +128,9 @@ function changed(target){
   preserveAdminViewport(()=>{
     const f=$('#previewFrame');
     if(!f?.contentWindow)return;
-    f.contentWindow.postMessage({type:'shaz-preview',settings,catalog},'*');
+    f.contentWindow.postMessage({type:'shaz-preview',settings,catalog},location.origin);
     // Yazı yazarken scroll yok. Render sonrası yalnızca aynı küçük alanı tekrar çerçevele.
-    setTimeout(()=>f.contentWindow.postMessage({type:'shaz-preview-focus',target:currentPreviewTarget,scroll:false},'*'),60);
+    setTimeout(()=>f.contentWindow.postMessage({type:'shaz-preview-focus',target:currentPreviewTarget,scroll:false},location.origin),60);
   });
 }
 function previewSetStage(setId,itemId,stage='remove',scroll=true){
@@ -138,10 +138,10 @@ function previewSetStage(setId,itemId,stage='remove',scroll=true){
   const f=$('#previewFrame');
   if(!f?.contentWindow||!setId)return;
   const token=++previewFocusToken;
-  f.contentWindow.postMessage({type:'shaz-preview',settings,catalog},'*');
+  f.contentWindow.postMessage({type:'shaz-preview',settings,catalog},location.origin);
   setTimeout(()=>{
     if(token!==previewFocusToken)return;
-    f.contentWindow.postMessage({type:'shaz-preview-set-stage',setId,itemId,stage,scroll},'*');
+    f.contentWindow.postMessage({type:'shaz-preview-set-stage',setId,itemId,stage,scroll},location.origin);
   },80);
 }
 function changedSetStage(setId,itemId,stage='remove'){
@@ -176,7 +176,7 @@ function previewProductStage(productId,stage='write'){
   if(adminCompactViewport())return;
   const f=$('#previewFrame'); if(!f?.contentWindow)return;
   sendPreview();
-  setTimeout(()=>f.contentWindow.postMessage({type:'shaz-preview-product-stage',productId,stage},'*'),70);
+  setTimeout(()=>f.contentWindow.postMessage({type:'shaz-preview-product-stage',productId,stage},location.origin),70);
 }
 function syncPreferredSelect(input,selectId,productIndex){
   const sel=document.getElementById(selectId); if(!sel)return;
@@ -286,7 +286,7 @@ async function renderNotificationSettings(){const r=await fetch('/api/admin/noti
 async function saveNotificationSettings(){const keys=['new','prepared','shipped','delivered'],statuses={};for(const k of keys)statuses[k]={enabled:document.getElementById('ns-'+k+'-enabled').checked,title:document.getElementById('ns-'+k+'-title').value,body:document.getElementById('ns-'+k+'-body').value};const r=await fetch('/api/admin/notification-settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({statuses})}).then(x=>x.json());alert(r.ok?'Bildirim ayarları kaydedildi.':(r.message||'Kaydedilemedi.'))}
 function renderManualPushResult(r){const el=$('#manualPushResult');if(!el)return;if(!r?.ok){el.textContent=r?.message||'Gönderilemedi.';return}el.textContent=`Toplam hedef: ${r.targetCount||0} · Push servisi kabul etti: ${r.providerAccepted||0} · Başarısız: ${r.failed||0} · Geçersiz abonelik temizlendi: ${r.cleaned||0} · Cihaz tarafından alındı: ${r.deviceAckCount||0}${r.configurationError?' · VAPID/auth yapılandırma hatası olabilir.':''}`}
 async function refreshManualPushDelivery(deliveryId){if(!deliveryId)return;for(const wait of [1400,3000]){await new Promise(r=>setTimeout(r,wait));try{const r=await fetch('/api/admin/push/deliveries/'+encodeURIComponent(deliveryId),{cache:'no-store'}).then(x=>x.json());if(r.ok)renderManualPushResult({ok:true,...r.delivery})}catch(_){}}}
-async function sendManualPush(){const title=String($('#manualPushTitle')?.value||'').trim(),body=String($('#manualPushBody')?.value||'').trim(),url=String($('#manualPushUrl')?.value||'/').trim()||'/';if(!title&&!body)return alert('Bildirim mesajı boş olamaz.');const btn=$('#manualPushSendBtn');if(btn?.disabled)return;const clientRequestId='ADM-'+Date.now()+'-'+Math.random().toString(36).slice(2);try{if(btn)btn.disabled=true;const r=await fetch('/api/admin/push/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,body,url,clientRequestId})}).then(x=>x.json());renderManualPushResult(r);if(!r.ok)return alert(r.message||'Gönderilemedi.');refreshManualPushDelivery(r.deliveryId)}catch(e){alert(e.message||'Gönderilemedi.')}finally{if(btn)btn.disabled=false}}
+async function sendManualPush(){const title=String($('#manualPushTitle')?.value||'').trim(),body=String($('#manualPushBody')?.value||'').trim(),url=String($('#manualPushUrl')?.value||'/').trim()||'/';if(!body)return alert('Bildirim açıklaması boş bırakılamaz.');const btn=$('#manualPushSendBtn');if(btn?.disabled)return;const clientRequestId='ADM-'+Date.now()+'-'+Math.random().toString(36).slice(2);try{if(btn)btn.disabled=true;const r=await fetch('/api/admin/push/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,body,url,clientRequestId})}).then(x=>x.json());renderManualPushResult(r);if(!r.ok)return alert(r.message||'Gönderilemedi.');refreshManualPushDelivery(r.deliveryId)}catch(e){alert(e.message||'Gönderilemedi.')}finally{if(btn)btn.disabled=false}}
 async function renderMembers(refresh=true){
   if(refresh){try{members=(await fetch('/api/admin/users').then(r=>r.json())).users||members}catch(_){}selectedMemberIds=new Set([...selectedMemberIds].filter(id=>(members||[]).some(u=>u.id===id)))}
   const provinces=[...new Set((members||[]).map(u=>u.province).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));

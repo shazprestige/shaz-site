@@ -30,6 +30,8 @@ function doPost(e) {
     if (data.action === 'ping') return json_({ok:true, version:'V150', sheet:SHEET_NAME});
     if (data.action === 'create') return createOrder_(data);
     if (data.action === 'status') return updateStatus_(data);
+    if (data.action === 'update') return updateOrder_(data);
+    if (data.action === 'delete') return deleteOrder_(data);
 
     return json_({ok:false, message:'Geçersiz işlem.'});
   } catch (err) {
@@ -133,7 +135,7 @@ function createOrder_(data) {
       i === 0 ? String(order.createdAtTR || '') : '',
       i === 0 ? requestId : ''
     ]);
-    sh.getRange(start, 1, 9, 8).setValues(rows);
+    sh.getRange(start, 1, 9, 8).setValues(rows.map(row => row.map(plainText_)));
 
     // Sipariş açıklaması ve adet alanları blok boyunca tek parça.
     sh.getRange(start,2,8,1).merge();
@@ -217,6 +219,12 @@ function prepareOrderBlock_(sh, headerRow, separatorRow) {
   sh.getRange(headerRow, 4, rowCount, 2).clearDataValidations();
 }
 
+function plainText_(value) {
+  if (typeof value !== 'string') return value;
+  const text = String(value);
+  return /^[=+@-]/.test(text) ? "'" + text : text;
+}
+
 function phoneNumber_(value) {
   const digits = String(value || '').replace(/\D/g, '');
   const normalized = /^05\d{9}$/.test(digits) ? digits.slice(1) : digits;
@@ -241,10 +249,61 @@ function setRichTextLinks_(range, text) {
   range.setRichTextValue(builder.build());
 }
 
+
+function findOrderStartRow_(sh, id, requestId) {
+  const last = sh.getLastRow();
+  if (last < 2) return 0;
+  if (requestId) {
+    const vals = sh.getRange(2,8,last-1,1).getValues().flat().map(String);
+    const pos = vals.indexOf(String(requestId));
+    if (pos >= 0) return pos + 2;
+  }
+  if (id) {
+    const vals = sh.getRange(2,6,last-1,1).getValues().flat().map(String);
+    const pos = vals.indexOf(String(id));
+    if (pos >= 0) return pos + 2;
+  }
+  return 0;
+}
+
+function updateOrder_(data) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sh = sheet_(), order = data.order || {};
+    const start = findOrderStartRow_(sh, order.id, data.requestId || order.requestId);
+    if (!start) return json_({ok:false, message:'Sipariş Google E-Tablo içinde bulunamadı.'});
+    const c = order.customer || {}, details = orderDetails_(order);
+    const orderNote = orderNoteText_(order), deliveryNote = String(c.note || '').trim();
+    const combinedNotes = 'not: ' + orderNote + ' | teslimat notu: ' + deliveryNote;
+    const left = [String(c.fullName || ''), phoneNumber_(c.phone), fullAddress_(c), [c.province,c.district].filter(Boolean).join(' '), Number(order.total || 0).toLocaleString('tr-TR') + ' TL', paymentText_(order.payment), '@', details, phoneNumber_(c.extraPhone)];
+    const rows = left.map((v,i)=>[v, i===0?details:(i===8?combinedNotes:''), i===0?itemCount_(order):'', '', '', i===0?String(order.id||''):'', i===0?String(order.createdAtTR||''):'', i===0?String(order.requestId||data.requestId||''):'']);
+    sh.getRange(start,1,9,8).breakApart();
+    sh.getRange(start,1,9,8).setValues(rows.map(row=>row.map(plainText_)));
+    sh.getRange(start,2,8,1).merge(); sh.getRange(start,3,9,1).merge();
+    const checkboxRow=start+3; sh.getRange(checkboxRow,4).insertCheckboxes().setValue(['prepared','shipped','delivered'].includes(String(order.status||''))); sh.getRange(checkboxRow,5).insertCheckboxes().setValue(['shipped','delivered'].includes(String(order.status||'')));
+    setRichTextLinks_(sh.getRange(start,2), details); setRichTextLinks_(sh.getRange(start+7,1), details);
+    return json_({ok:true, updated:1});
+  } finally { lock.releaseLock(); }
+}
+
+function deleteOrder_(data) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sh=sheet_(), start=findOrderStartRow_(sh, data.id, data.requestId);
+    if(!start) return json_({ok:true, removed:0});
+    const header=Math.max(2,start-1), separator=start+9;
+    const range=sh.getRange(header,1,separator-header+1,8);
+    range.breakApart(); range.clearContent(); range.clearNote(); range.clearDataValidations();
+    return json_({ok:true, removed:1});
+  } finally { lock.releaseLock(); }
+}
+
 function updateStatus_(data) {
   const ids = Array.isArray(data.ids) ? data.ids.map(String) : [];
   const status = String(data.status || '');
-  if (!['new','prepared','shipped'].includes(status)) throw new Error('Geçersiz durum.');
+  if (!['new','prepared','shipped','delivered'].includes(status)) throw new Error('Geçersiz durum.');
 
   const lock = LockService.getScriptLock();
   lock.waitLock(15000);
@@ -264,8 +323,8 @@ function updateStatus_(data) {
       const orderStartRow = idx + 2;
       const checkboxRow = orderStartRow + 3;
 
-      const ready = status === 'prepared' || status === 'shipped';
-      const shipped = status === 'shipped';
+      const ready = status === 'prepared' || status === 'shipped' || status === 'delivered';
+      const shipped = status === 'shipped' || status === 'delivered';
 
       sh.getRange(checkboxRow,4).setValue(ready);
       sh.getRange(checkboxRow,5).setValue(shipped);

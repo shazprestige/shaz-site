@@ -1,4 +1,4 @@
-const SHAZ_SW_VERSION='172';
+const SHAZ_SW_VERSION='173';
 const SHAZ_BADGE_DB='shaz-pwa-badge';
 const SHAZ_BADGE_STORE='state';
 const SHAZ_BADGE_KEY='unreadCount';
@@ -19,11 +19,12 @@ self.addEventListener('push',event=>{
     try{data=event.data?event.data.json():{}}catch(_){try{const text=event.data?.text?.()||'';try{data=JSON.parse(text)}catch(__){data={body:text}}}catch(__){data={}}}
     let title=String(data.title??'').trim().slice(0,80),body=String(data.body??'').trim().slice(0,240);
     if(!title&&!body)return;
-    // Payload title içermeyen düz/metin push gelirse güvenli fallback olarak metni title yap.
-    // Manuel admin push'ında bu noktaya gelmeden backend zaten title=message üretir ve body alanını hiç göndermez.
-    if(!title&&body){title=body;body=''}
-    if(!title)return;
-    const options={icon:data.icon||'/icon-192.png?v=171',badge:data.badge||'/icon-192.png?v=171',data:{url:safeSameOriginPath(data.url||data.data?.url||'/')}};
+    const isManual=String(data.type||'')==='manual';
+    const ua=String(self.navigator?.userAgent||'');
+    const isIOS=/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/i.test(ua)&&/Mobile/i.test(ua));
+    if(isManual){title=title||(isIOS?'':'SHAZ')}else if(!title&&body){title=body;body=''}
+    if(!title&&!isManual)return;
+    const options={icon:data.icon||'/icon-192.png?v=173',badge:data.badge||'/icon-192.png?v=173',data:{url:safeSameOriginPath(data.url||data.data?.url||'/')}};
     const tag=String(data.tag||'').trim().slice(0,80);if(tag)options.tag=tag;
     if(body)options.body=body;
     await self.registration.showNotification(title,options);

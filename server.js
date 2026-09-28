@@ -27,8 +27,11 @@ if(requestedPersistDir){
 }
 const dataDir = path.join(persistRoot,'data');
 const uploadDir = path.join(persistRoot,'uploads');
+const privateUploadDir = path.join(persistRoot,'private-uploads');
+const BUILD_VERSION='173';
 fs.mkdirSync(dataDir,{recursive:true});
 fs.mkdirSync(uploadDir,{recursive:true});
+fs.mkdirSync(privateUploadDir,{recursive:true});
 // İlk kullanımda repodaki başlangıç JSON'larını kalıcı alana yalnızca bir kez kopyala.
 for(const name of ['settings.json','catalog.json','orders.json','users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','legal_documents.json','legal_documents_backup.json','legal_acceptances.json','phone_verifications.json','password_resets.json','coupons.json','new_member_coupon_templates.json','account_login_attempts.json','push_subscriptions.json','push_delivery_log.json','account_state.enc']){
   const dst=path.join(dataDir,name);
@@ -36,8 +39,16 @@ for(const name of ['settings.json','catalog.json','orders.json','users.json','cu
   if(!fs.existsSync(dst) && fs.existsSync(seed)) fs.copyFileSync(seed,dst);
 }
 console.log('SHAZ veri dizini:',persistRoot);
-app.use(express.json({limit:'5mb'}));
-app.use(express.urlencoded({extended:true}));
+app.use(express.json({limit:'2mb'}));
+app.use(express.urlencoded({extended:true,limit:'2mb'}));
+app.use((req,res,next)=>{
+  res.setHeader('X-Content-Type-Options','nosniff');
+  res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy','camera=(), microphone=(), geolocation=()');
+  res.setHeader('X-Frame-Options','SAMEORIGIN');
+  if(process.env.NODE_ENV==='production' || String(req.headers['x-forwarded-proto']||'').includes('https'))res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');
+  next();
+});
 app.use('/uploads', express.static(uploadDir,{maxAge:'7d'}));
 
 // Yeni sürümlerde telefonların eski JS/CSS'i tutup sipariş isteğini eski kodla göndermesini engelle.
@@ -56,13 +67,16 @@ function brandAsset(){
   const file=candidates.find(f=>fs.existsSync(f)&&fs.statSync(f).isFile());return {file,raw};
 }
 app.get('/api/brand-image',(req,res)=>{const a=brandAsset();if(a.remote)return res.redirect(302,a.remote);if(a.file){res.setHeader('Cache-Control','public, max-age=86400');return res.sendFile(a.file)}res.status(404).end()});
+function isPrivateHostName(host){host=String(host||'').toLowerCase();if(host==='localhost'||host.endsWith('.localhost'))return true;if(/^127\./.test(host)||/^10\./.test(host)||/^192\.168\./.test(host)||/^169\.254\./.test(host))return true;const m=host.match(/^172\.(\d{1,3})\./);if(m&&Number(m[1])>=16&&Number(m[1])<=31)return true;if(host==='::1'||host.startsWith('fc')||host.startsWith('fd')||host.startsWith('fe80:'))return true;return false}
+function assertSafeRemoteHttpUrl(raw){const u=new URL(raw);if(!['http:','https:'].includes(u.protocol)||isPrivateHostName(u.hostname))throw new Error('Güvensiz uzak URL engellendi.');return u}
+async function safeFetchImageUrl(raw,opts={}){let url=assertSafeRemoteHttpUrl(raw).toString();for(let i=0;i<4;i++){const r=await fetch(url,{...opts,redirect:'manual'});if([301,302,303,307,308].includes(r.status)){const loc=r.headers.get('location');if(!loc)throw new Error('Geçersiz yönlendirme.');url=assertSafeRemoteHttpUrl(new URL(loc,url).toString()).toString();continue}return r}throw new Error('Çok fazla yönlendirme.');}
 app.get('/api/announcement-image',async(req,res)=>{
   try{
     const cfg=readJson('settings.json',{}),raw=String(cfg?.siteAnnouncement?.imageUrl||'').trim();
     if(!raw)return res.status(404).end();
     let input=null,fallbackFile='',fallbackType='';
     if(/^https?:\/\//i.test(raw)){
-      const remote=await fetch(raw,{redirect:'follow',cache:'no-store'});
+      const remote=await safeFetchImageUrl(raw,{cache:'no-store'});
       if(!remote.ok)throw new Error('Duyuru görseli uzaktan alınamadı: '+remote.status);
       fallbackType=String(remote.headers.get('content-type')||'image/jpeg').split(';')[0];
       input=Buffer.from(await remote.arrayBuffer());
@@ -246,8 +260,27 @@ const registerLoginFailure=key=>{
   else{x.count++;loginAttempts.set(key,x)}
 };
 
-const readJson=(name,fallback)=>{try{return JSON.parse(fs.readFileSync(path.join(dataDir,name),'utf8'))}catch(e){return fallback}};
-const writeJson=(name,data)=>fs.writeFileSync(path.join(dataDir,name),JSON.stringify(data,null,2),'utf8');
+const CRITICAL_JSON_FILES=new Set(['orders.json','users.json','customers.json','coupons.json','addresses.json','legal_acceptances.json']);
+const readJson=(name,fallback)=>{
+  const file=path.join(dataDir,name);
+  try{return JSON.parse(fs.readFileSync(file,'utf8'))}
+  catch(e){
+    if(e?.code==='ENOENT')return fallback;
+    console.error('JSON okuma/parse hatası',name,e?.message||e);
+    if(CRITICAL_JSON_FILES.has(name))throw new Error('Kritik veri dosyası okunamadı: '+name);
+    return fallback;
+  }
+};
+const writeJson=(name,data)=>{
+  const file=path.join(dataDir,name),tmp=file+'.tmp-'+process.pid+'-'+crypto.randomBytes(4).toString('hex');
+  const text=JSON.stringify(data,null,2);JSON.parse(text);
+  fs.mkdirSync(path.dirname(file),{recursive:true});
+  fs.writeFileSync(tmp,text,'utf8');
+  try{fs.renameSync(tmp,file)}catch(e){try{fs.unlinkSync(tmp)}catch(_){}throw e}
+};
+let orderMutationQueue=Promise.resolve(),accountMutationQueue=Promise.resolve();
+function serializedMutation(kind,fn){const key=kind==='orders'?'orderMutationQueue':'accountMutationQueue';const prev=key==='orderMutationQueue'?orderMutationQueue:accountMutationQueue;let release;const gate=new Promise(r=>release=r);if(key==='orderMutationQueue')orderMutationQueue=prev.then(()=>gate,()=>gate);else accountMutationQueue=prev.then(()=>gate,()=>gate);return prev.then(fn).finally(release)}
+
 
 // ---------- v153 müşteri hesabı: ortak backend/data katmanı ----------
 const USER_SESSION_COOKIE='shaz_user_session';
@@ -275,7 +308,7 @@ for(const [name,fallback] of Object.entries({
 })){
   const f=path.join(dataDir,name);if(!fs.existsSync(f))writeJson(name,fallback);
 }
-const normalizeAccountPhone=value=>{const d=String(value||'').replace(/\D/g,'');if(/^5\d{9}$/.test(d))return '0'+d;if(/^05\d{9}$/.test(d))return d;if(/^905\d{9}$/.test(d))return '0'+d.slice(2);return ''};
+const normalizeAccountPhone=value=>{let d=String(value||'').replace(/\D/g,'');if(/^00905\d{9}$/.test(d))d=d.slice(4);if(/^905\d{9}$/.test(d))d=d.slice(2);if(/^5\d{9}$/.test(d))return '0'+d;if(/^05\d{9}$/.test(d))return d;return ''};
 const normalizeEmail=value=>String(value||'').trim().toLowerCase();
 function normalizeAccountAddressPart(value,type){
   let text=String(value||'').trim();
@@ -290,8 +323,9 @@ function validBirthDateIso(value){
   const today=new Date(),age=today.getUTCFullYear()-y-(Date.UTC(today.getUTCFullYear(),today.getUTCMonth(),today.getUTCDate())<Date.UTC(today.getUTCFullYear(),mo-1,d)?1:0);
   return y>=1900&&age>=0&&age<=120;
 }
-function passwordHash(password,salt=crypto.randomBytes(16).toString('hex')){const hash=crypto.scryptSync(String(password),salt,64).toString('hex');return {salt,hash}}
-function passwordMatches(password,user){if(!user?.passwordSalt||!user?.passwordHash)return false;const test=crypto.scryptSync(String(password),user.passwordSalt,64).toString('hex');return safeEqual(test,user.passwordHash)}
+function validPasswordSize(password){const n=String(password||'').length;return n>=8&&n<=256}
+function passwordHash(password,salt=crypto.randomBytes(16).toString('hex')){const value=String(password);if(value.length>256)throw new Error('Şifre çok uzun.');const hash=crypto.scryptSync(value,salt,64).toString('hex');return {salt,hash}}
+function passwordMatches(password,user){const value=String(password||'');if(!user?.passwordSalt||!user?.passwordHash||value.length>256)return false;const test=crypto.scryptSync(value,user.passwordSalt,64).toString('hex');return safeEqual(test,user.passwordHash)}
 const PROFILE_NAME_COOLDOWN_MS=30*24*60*60*1000;
 const PROFILE_PHONE_COOLDOWN_MS=7*24*60*60*1000;
 const PROFILE_VERIFY_TTL_MS=30*60*1000;
@@ -299,7 +333,7 @@ function profileChangeMeta(u){const m=(u&&u.profileChangeMeta&&typeof u.profileC
 function profileWaitMs(at,period){const t=at?new Date(at).getTime():0;return t?Math.max(0,t+period-Date.now()):0}
 function humanWait(ms){const d=Math.floor(ms/86400000),h=Math.floor((ms%86400000)/3600000),m=Math.ceil((ms%3600000)/60000);return [d?`${d} gün`:'' ,h?`${h} saat`:'' ,(!d&&!h&&m)?`${m} dakika`:'' ].filter(Boolean).join(' ')||'kısa bir süre'}
 function pushProfileHistory(u,field,oldValue,newValue,source='account'){const oldText=String(oldValue??''),newText=String(newValue??'');if(oldText===newText)return;u.profileChangeHistory=Array.isArray(u.profileChangeHistory)?u.profileChangeHistory:[];u.profileChangeHistory.push({at:new Date().toISOString(),field,oldValue:oldText,newValue:newText,source});}
-function publicUser(u){if(!u)return null;const meta=profileChangeMeta(u);return {id:u.id,customerId:u.customerId,firstName:u.firstName,lastName:u.lastName,email:u.email,phone:normalizeAccountPhone(u.phone)||u.phone,birthDate:u.birthDate||'',phoneVerifiedAt:u.phoneVerifiedAt||null,smsMarketingConsent:!!u.smsMarketingConsent,emailMarketingConsent:!!u.emailMarketingConsent,createdAt:u.createdAt,authProviders:Array.isArray(u.authProviders)?u.authProviders:(u.passwordHash?['password']:[]),profileChangeMeta:meta,profileRules:{nameWaitMs:profileWaitMs(meta.nameChangedAt,PROFILE_NAME_COOLDOWN_MS),phoneWaitMs:profileWaitMs(meta.phoneChangedAt,PROFILE_PHONE_COOLDOWN_MS),birthDateChangeAvailable:meta.birthDateUserChangeCount<1},pendingEmailChange:u.pendingEmailChange?{email:u.pendingEmailChange.email,requestedAt:u.pendingEmailChange.requestedAt,expiresAt:u.pendingEmailChange.expiresAt}:null,pendingPhoneChange:u.pendingPhoneChange?{phone:u.pendingPhoneChange.phone,requestedAt:u.pendingPhoneChange.requestedAt,expiresAt:u.pendingPhoneChange.expiresAt}:null}}
+function publicUser(u){if(!u)return null;const meta=profileChangeMeta(u);return {id:u.id,customerId:u.customerId,firstName:u.firstName,lastName:u.lastName,email:u.email,phone:normalizeAccountPhone(u.phone)||u.phone,birthDate:u.birthDate||'',phoneVerifiedAt:u.phoneVerifiedAt||null,smsMarketingConsent:!!u.smsMarketingConsent,emailMarketingConsent:!!u.emailMarketingConsent,pushMarketingConsent:u.pushMarketingConsent!==false,createdAt:u.createdAt,authProviders:Array.isArray(u.authProviders)?u.authProviders:(u.passwordHash?['password']:[]),profileChangeMeta:meta,profileRules:{nameWaitMs:profileWaitMs(meta.nameChangedAt,PROFILE_NAME_COOLDOWN_MS),phoneWaitMs:profileWaitMs(meta.phoneChangedAt,PROFILE_PHONE_COOLDOWN_MS),birthDateChangeAvailable:meta.birthDateUserChangeCount<1},pendingEmailChange:u.pendingEmailChange?{email:u.pendingEmailChange.email,requestedAt:u.pendingEmailChange.requestedAt,expiresAt:u.pendingEmailChange.expiresAt}:null,pendingPhoneChange:u.pendingPhoneChange?{phone:u.pendingPhoneChange.phone,requestedAt:u.pendingPhoneChange.requestedAt,expiresAt:u.pendingPhoneChange.expiresAt}:null}}
 function signUserSession(user){if(!USER_SESSION_SECRET)return '';const payload=Buffer.from(JSON.stringify({uid:user.id,iat:Date.now(),v:Number(user.authVersion||1)})).toString('base64url');const sig=crypto.createHmac('sha256',USER_SESSION_SECRET).update(payload).digest('base64url');return payload+'.'+sig}
 function accountUserFromReq(req){if(!USER_SESSION_SECRET)return null;const token=parseCookies(req)[USER_SESSION_COOKIE];if(!token)return null;const [payload,sig]=token.split('.');if(!payload||!sig)return null;const exp=crypto.createHmac('sha256',USER_SESSION_SECRET).update(payload).digest('base64url');if(!safeEqual(sig,exp))return null;let data;try{data=JSON.parse(Buffer.from(payload,'base64url').toString('utf8'))}catch{return null}if(!data.uid||Date.now()-Number(data.iat||0)>USER_SESSION_MAX_AGE_MS)return null;const u=readJson('users.json',[]).find(x=>x.id===data.uid);if(!u||u.disabled||Number(u.authVersion||1)!==Number(data.v||1))return null;return u}
 function setUserSession(res,user,req){const secure=process.env.NODE_ENV==='production'||String(req.headers['x-forwarded-proto']||'').includes('https');const token=signUserSession(user);res.setHeader('Set-Cookie',`${USER_SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${USER_SESSION_MAX_AGE_MS/1000}${secure?'; Secure':''}`)}
@@ -311,9 +345,10 @@ const ACCOUNT_LOGIN_MAX_ATTEMPTS=5;
 function accountLoginDeviceId(req){const raw=String(req.body?.deviceId||req.headers['x-shaz-device-id']||'').trim();return /^[A-Za-z0-9._:-]{8,120}$/.test(raw)?raw:accountRateKey(req)}
 function accountLoginAttemptKeys(req,login=''){
   const device='device:'+accountLoginDeviceId(req),identity=normalizeEmail(login)||normalizeAccountPhone(login)||String(login||'').trim().toLocaleLowerCase('tr-TR');
-  const identityKey=identity?'identity:'+crypto.createHash('sha256').update(identity).digest('hex').slice(0,32):'';
+  // Hesabı yalnız identifier üzerinden global kilitleme: saldırgan başka ağdan hesabı kilitleyemesin.
+  // Koruma cihaz ve hesap+IP kombinasyonunda kalır.
   const network=identity?'network:'+crypto.createHash('sha256').update(identity+'|'+accountRateKey(req)).digest('hex').slice(0,32):'';
-  return [...new Set([device,identityKey,network].filter(Boolean))];
+  return [...new Set([device,network].filter(Boolean))];
 }
 function readAccountLoginAttempts(){const x=readJson('account_login_attempts.json',{});return x&&typeof x==='object'&&!Array.isArray(x)?x:{}}
 function writeAccountLoginAttempts(x){writeJson('account_login_attempts.json',x)}
@@ -331,6 +366,44 @@ function readLegalDocuments(){
 function currentLegalDoc(type){return readLegalDocuments().find(d=>d.type===type&&d.active!==false)||null}
 function legalHash(doc){return crypto.createHash('sha256').update(String(doc?.content||'')).digest('hex')}
 function personalizationSnapshots(items){const out=[];(items||[]).forEach((item,itemIndex)=>{(item.writes||[]).forEach(w=>out.push({itemIndex,productId:item.product?.id||'',productName:item.product?.name||'',fieldType:'write',placement:w.position||'',customerValue:w.text||'',fee:Number(w.fee||0)}));(item.photoCustomizations||[]).forEach(p=>out.push({itemIndex,productId:item.product?.id||'',productName:item.product?.name||'',fieldType:'photo',placement:p.position||'',customerValue:p.note||'',uploadedImageReference:p.url||p.imageUrl||'',fee:Number(p.fee||0)}))});return out}
+function serverPrepareOrderItems(rawItems){
+  const catalog=readJson('catalog.json',{products:[]}),products=Array.isArray(catalog.products)?catalog.products:[],byId=new Map(products.map(p=>[String(p.id),p]));
+  const rows=Array.isArray(rawItems)?rawItems:[];if(!rows.length||rows.length>100)throw new Error('Sipariş ürünleri geçersiz.');
+  const priceCfg=catalog.personalizationPricing||{},firstFee=Math.max(0,Number(priceCfg.first??75)),nextFee=Math.max(0,Number(priceCfg.second??50)),thirdFee=Math.max(0,Number(priceCfg.thirdPlus??nextFee)),photoExtra=Math.max(0,Number(catalog.walletPhotoFee??25));let slot=0;
+  const rawProductIds=new Set(rows.map(x=>String(x?.product?.id||x?.productId||'')));
+  const triggerCats=new Set([...rawProductIds].map(id=>byId.get(id)?.category).filter(Boolean));
+  const clean=[];
+  for(const src of rows){
+    const pid=String(src?.product?.id||src?.productId||'').trim(),p=byId.get(pid);if(!p||p.hidden===true)throw new Error('Sepette artık satışta olmayan bir ürün var. Sepeti yenileyin.');
+    const qty=Math.floor(Number(src.qty||1));if(!Number.isFinite(qty)||qty<1||qty>20)throw new Error('Ürün adedi geçersiz.');
+    let base=Math.max(0,Number(p.price||0));
+    const up=src.upsell&&typeof src.upsell==='object'?src.upsell:null;
+    if(up?.ruleId){const rule=(catalog.checkoutUpsells||[]).find(r=>String(r.id)===String(up.ruleId)&&r.enabled!==false);if(rule&&triggerCats.has(rule.triggerCategoryId)&&p.category===rule.offerCategoryId&&((rule.offerMode||'all')==='all'||(rule.offerProductIds||[]).includes(p.id))){const v=rule?.productPrices?.[p.id];base=v!==undefined&&v!==null&&v!==''?Math.max(0,Number(v||0)):Math.max(0,Number(rule.specialPrice||0))}}
+    let personalTotal=0;const set=src.setCustomization&&typeof src.setCustomization==='object'?src.setCustomization:null;
+    const cleanWrites=[],cleanPhotos=[];
+    const capText=v=>String(v||'').trim().slice(0,160),capPos=v=>String(v||'').trim().slice(0,80);
+    if(set&&Array.isArray(p.setItems)){
+      const removedIds=[...new Set((set.removedIds||[]).map(String))],removed=p.setItems.filter(si=>removedIds.includes(String(si.id))).reduce((sum,si)=>sum+Math.max(0,Number(si.removeDiscount||0)),0);base=Math.max(0,base-removed);
+      const sw=Array.isArray(set.writes)?set.writes:[],sp=Array.isArray(set.photoCustomizations)?set.photoCustomizations:[],keys=[];[...sw,...sp].forEach(v=>{const k=String(v.itemId||v.item||'set-item').slice(0,120);if(!keys.includes(k))keys.push(k)});
+      for(const k of keys){const tier=slot===0?firstFee:(slot===1?nextFee:thirdFee);slot++;const ws=sw.filter(w=>String(w.itemId||w.item||'set-item')===k),ps=sp.filter(ph=>String(ph.itemId||ph.item||'set-item')===k);ws.forEach((w,i)=>{const fee=i===0?tier:0;personalTotal+=fee;cleanWrites.push({...w,text:capText(w.text),position:capPos(w.position),fee})});ps.forEach((ph,i)=>{const slotFee=!ws.length&&i===0?tier:0,fee=slotFee+photoExtra;personalTotal+=fee;cleanPhotos.push({...ph,note:capText(ph.note),position:capPos(ph.position),slotFee,photoExtraFee:photoExtra,fee})})}
+    }else{
+      const ws=Array.isArray(src.writes)?src.writes:[],ps=Array.isArray(src.photoCustomizations)?src.photoCustomizations:[];if(ws.length||ps.length){const tier=slot===0?firstFee:(slot===1?nextFee:thirdFee);slot++;ws.forEach((w,i)=>{const fee=i===0?tier:0;personalTotal+=fee;cleanWrites.push({...w,text:capText(w.text),position:capPos(w.position),fee})});ps.forEach((ph,i)=>{const slotFee=!ws.length&&i===0?tier:0,fee=slotFee+photoExtra;personalTotal+=fee;cleanPhotos.push({...ph,note:capText(ph.note),position:capPos(ph.position),slotFee,photoExtraFee:photoExtra,fee})})}
+    }
+    const finalPrice=Math.max(0,Math.round((base+personalTotal)*100)/100),product={...p,price:finalPrice};const row={...src,product,basePrice:base,qty,writes:cleanWrites,photoCustomizations:cleanPhotos,personalized:cleanWrites.length>0||cleanPhotos.length>0};
+    if(set)row.setCustomization={...set,writes:cleanWrites,photoCustomizations:cleanPhotos};
+    if('productNote' in row)row.productNote=String(row.productNote||'').trim().slice(0,500);clean.push(row);
+  }
+  return {items:clean,catalog};
+}
+function serverCampaignProductMatches(rule,p){if(!p)return false;if((rule.excludedProductIds||[]).includes(p.id))return false;const scope=rule.scopeType||'category';if(scope==='all')return true;if(scope==='products')return (rule.productIds||[]).includes(p.id);return (rule.categoryIds||[]).includes(p.category)}
+function serverCampaignWeight(rule,p){return Math.max(1,Math.min(10,Number(rule?.productUnitCounts?.[p?.id]||1)))}
+function serverPhysicalUnits(items){const units=[];(items||[]).forEach((x,cartIndex)=>{for(let n=0;n<Math.max(1,Number(x.qty||1));n++)units.push({key:`${cartIndex}:${n}`,price:Number(x.product?.price||0),cartIndex,product:x.product})});return units}
+function serverCampaignDiscount(rule,units){const v=Math.max(0,Number(rule.discountValue||0));if(rule.discountType==='fixed')return v;const subtotal=units.reduce((s,u)=>s+Number(u.price||0),0);if(rule.discountType==='percent')return subtotal*Math.max(0,Math.min(100,v))/100;if(rule.discountType==='bundlePrice')return Math.max(0,subtotal-v);return v}
+function serverCampaignMaxUses(rule,totalWeight){const q=Math.max(1,Number(rule.minQty||1));if(totalWeight<q)return 0;if(!rule.repeatable)return 1;return Math.min(Math.floor(totalWeight/q),Math.max(1,Number(rule.maxApplications||1)))}
+function serverCampaignGroups(rule,allUnits,maxCandidates=700){const q=Math.max(1,Number(rule.minQty||1)),eligible=[];allUnits.forEach((u,index)=>{if(serverCampaignProductMatches(rule,u.product))eligible.push({index,unit:u,weight:serverCampaignWeight(rule,u.product)})});const totalWeight=eligible.reduce((s,x)=>s+x.weight,0),maxUses=serverCampaignMaxUses(rule,totalWeight);if(!maxUses)return {groups:[],maxUses};const groups=[],seen=new Set();function walk(pos,sum,chosen){if(groups.length>=maxCandidates)return;if(sum>=q){const key=chosen.map(x=>x.index).join(',');if(!seen.has(key)){seen.add(key);const units=chosen.map(x=>x.unit);let mask=0n;chosen.forEach(x=>mask|=(1n<<BigInt(x.index)));groups.push({mask,units,discount:Math.max(0,serverCampaignDiscount(rule,units))})}return}if(pos>=eligible.length)return;let possible=sum;for(let i=pos;i<eligible.length;i++)possible+=eligible[i].weight;if(possible<q)return;walk(pos+1,sum+eligible[pos].weight,[...chosen,eligible[pos]]);walk(pos+1,sum,chosen)}walk(0,0,[]);groups.sort((a,b)=>b.discount-a.discount||a.units.length-b.units.length);return {groups,maxUses}}
+function serverOptimizeCampaigns(rules,allUnits){const prepared=rules.map(rule=>({rule,...serverCampaignGroups(rule,allUnits,allUnits.length>22?220:700)})).filter(x=>x.groups.length&&x.maxUses>0);if(!prepared.length)return [];const memo=new Map();function dfs(usedMask,counts){const key=usedMask.toString()+'|'+counts.join(',');if(memo.has(key))return memo.get(key);let best={value:0,apps:[]};for(let ri=0;ri<prepared.length;ri++){const pr=prepared[ri];if((counts[ri]||0)>=pr.maxUses)continue;for(const g of pr.groups){if((usedMask&g.mask)!==0n)continue;const next=counts.slice();next[ri]=(next[ri]||0)+1;const tail=dfs(usedMask|g.mask,next),value=g.discount+tail.value;if(value>best.value+.0001)best={value,apps:[{rule:pr.rule,discount:g.discount,mask:g.mask},...tail.apps]}}}memo.set(key,best);return best}return dfs(0n,Array(prepared.length).fill(0)).apps}
+function serverCampaignPricing(items,catalog){const units=serverPhysicalUnits(items),subtotal=units.reduce((s,u)=>s+u.price,0),active=(catalog.checkoutCampaigns||[]).filter(r=>r&&r.enabled!==false),applied=[];for(const rule of active.filter(r=>r.allowDoubleCount===true)){for(const x of serverOptimizeCampaigns([rule],units))if(x.discount>0)applied.push({id:x.rule.id,name:x.rule.name||'Kampanya',discount:Number(x.discount.toFixed(2)),uses:1})}for(const x of serverOptimizeCampaigns(active.filter(r=>r.allowDoubleCount!==true),units))if(x.discount>0)applied.push({id:x.rule.id,name:x.rule.name||'Kampanya',discount:Number(x.discount.toFixed(2)),uses:1});const merged=[];for(const a of applied){const f=merged.find(x=>x.id===a.id);if(f){f.discount=Number((f.discount+a.discount).toFixed(2));f.uses++}else merged.push({...a})}let remaining=subtotal;merged.sort((a,b)=>b.discount-a.discount).forEach(a=>{a.discount=Math.min(a.discount,Math.max(0,remaining));remaining-=a.discount});const discount=Number(merged.reduce((n,a)=>n+a.discount,0).toFixed(2));return {subtotal:Number(subtotal.toFixed(2)),discount,total:Math.max(0,Number((subtotal-discount).toFixed(2))),applied:merged}}
+
 // Gelecekte Verimor açıldığında provider burada değiştirilecek; şu an SMS gönderilmez.
 const SmsVerificationProvider={sendOtp:async()=>{throw new Error('SMS OTP şu an kapalı.')},verifyOtp:async()=>false};
 
@@ -452,15 +525,28 @@ async function persistStateToGithub(){
   return githubCommitFiles(files,'SHAZ panel: katalog ve site ayarları güncellendi');
 }
 
+const ORDERS_SNAPSHOT_FILE='orders_state.enc';
+function buildEncryptedOrdersSnapshot(){
+  const key=accountSnapshotKey();if(!key)return '';
+  const orders=readJson('orders.json',[]),iv=crypto.randomBytes(12),cipher=crypto.createCipheriv('aes-256-gcm',key,iv),plain=Buffer.from(JSON.stringify({v:1,createdAt:new Date().toISOString(),orders}),'utf8'),enc=Buffer.concat([cipher.update(plain),cipher.final()]),tag=cipher.getAuthTag();
+  return JSON.stringify({v:1,iv:iv.toString('base64'),tag:tag.toString('base64'),data:enc.toString('base64')});
+}
+function restoreEncryptedOrdersSnapshot(){
+  try{const key=accountSnapshotKey(),file=path.join(dataDir,ORDERS_SNAPSHOT_FILE);if(!key||!fs.existsSync(file))return false;const box=JSON.parse(fs.readFileSync(file,'utf8')),iv=Buffer.from(box.iv,'base64'),tag=Buffer.from(box.tag,'base64'),enc=Buffer.from(box.data,'base64'),decipher=crypto.createDecipheriv('aes-256-gcm',key,iv);decipher.setAuthTag(tag);const state=JSON.parse(Buffer.concat([decipher.update(enc),decipher.final()]).toString('utf8'));if(!state||state.v!==1||!Array.isArray(state.orders))return false;writeJson('orders.json',state.orders);return true}catch(e){console.warn('SHAZ sipariş şifreli kayıt geri yüklenemedi:',e.message);return false}
+}
 async function persistOrdersToGithub(){
+  const content=buildEncryptedOrdersSnapshot();if(!content)return {ok:false,skipped:true};
+  fs.writeFileSync(path.join(dataDir,ORDERS_SNAPSHOT_FILE),content,'utf8');
   if(!githubEnabled())return {ok:false,skipped:true};
-  const ordersPath=path.join(dataDir,'orders.json');
-  const content=fs.existsSync(ordersPath)?fs.readFileSync(ordersPath,'utf8'):'[]';
-  return githubCommitFiles([{path:'data/orders.json',content,encoding:'utf-8'}],'SHAZ sipariş: kalıcı sipariş kaydı güncellendi [skip render]');
+  return githubCommitFiles([{path:`data/${ORDERS_SNAPSHOT_FILE}`,content,encoding:'utf-8'}],'SHAZ sipariş: şifreli kalıcı sipariş kaydı güncellendi [skip render]');
+}
+async function restoreOrdersStateFromGithub(){
+  if(!githubEnabled()||!USER_SESSION_SECRET)return restoreEncryptedOrdersSnapshot();
+  try{const remote=await ghApi(`/contents/data/${encodeURIComponent(ORDERS_SNAPSHOT_FILE)}?ref=${encodeURIComponent(GITHUB_BRANCH)}`);if(!remote||remote.encoding!=='base64'||!remote.content)return restoreEncryptedOrdersSnapshot();const content=Buffer.from(String(remote.content).replace(/\s+/g,''),'base64').toString('utf8');fs.writeFileSync(path.join(dataDir,ORDERS_SNAPSHOT_FILE),content,'utf8');return restoreEncryptedOrdersSnapshot()}catch(e){if(!String(e?.message||'').toLowerCase().includes('not found'))console.warn('SHAZ sipariş GitHub şifreli kayıt geri yüklenemedi:',e.message);return restoreEncryptedOrdersSnapshot()}
 }
 
 const ACCOUNT_SNAPSHOT_FILE='account_state.enc';
-const ACCOUNT_SNAPSHOT_NAMES=['users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','phone_verifications.json','password_resets.json','coupons.json','new_member_coupon_templates.json','account_login_attempts.json','push_subscriptions.json','customer_activity.json','notification_settings.json'];
+const ACCOUNT_SNAPSHOT_NAMES=['users.json','customers.json','addresses.json','favorites.json','marketing_consents.json','phone_verifications.json','password_resets.json','coupons.json','new_member_coupon_templates.json','account_login_attempts.json','push_subscriptions.json','customer_activity.json','notification_settings.json','legal_acceptances.json'];
 function accountSnapshotKey(){return USER_SESSION_SECRET?crypto.createHash('sha256').update(USER_SESSION_SECRET).digest():null}
 function buildEncryptedAccountSnapshot(){
   const key=accountSnapshotKey();if(!key)return '';
@@ -591,7 +677,7 @@ async function sheetsRequest(payload){
 
 const storage = multer.diskStorage({
  destination:(req,file,cb)=>cb(null,uploadDir),
- filename:(req,file,cb)=>cb(null,Date.now()+'-'+Math.random().toString(36).slice(2,8)+path.extname(file.originalname).toLowerCase())
+ filename:(req,file,cb)=>cb(null,Date.now()+'-'+crypto.randomBytes(12).toString('hex')+path.extname(file.originalname).toLowerCase())
 });
 const upload=multer({
  storage,
@@ -601,8 +687,9 @@ const upload=multer({
    cb(ok?null:new Error('Sadece görsel dosyaları yüklenebilir.'),ok);
  }
 });
+const customerStorage=multer.diskStorage({destination:(req,file,cb)=>cb(null,privateUploadDir),filename:(req,file,cb)=>cb(null,crypto.randomBytes(24).toString('hex')+'.upload')});
 const customerUpload=multer({
- storage,
+ storage:customerStorage,
  limits:{fileSize:8*1024*1024,files:1},
  fileFilter:(req,file,cb)=>{
    const ok=['image/jpeg','image/png','image/webp'].includes(file.mimetype);
@@ -612,17 +699,35 @@ const customerUpload=multer({
 
 // Kısa, üyelik gerektirmeyen sepet paylaşım bağlantıları.
 const sharedCartDir=path.join(dataDir,'shared-carts');fs.mkdirSync(sharedCartDir,{recursive:true});
+const simpleRateBuckets=new Map();
+function rateLimitHit(req,key,limit,windowMs){const ip=accountRateKey(req),k=key+':'+ip,now=Date.now(),x=simpleRateBuckets.get(k);if(!x||now-x.start>windowMs){simpleRateBuckets.set(k,{start:now,count:1});return false}x.count++;simpleRateBuckets.set(k,x);return x.count>limit}
 app.post('/api/shared-cart',(req,res)=>{
-  try{const id=crypto.randomBytes(4).toString('hex');fs.writeFileSync(path.join(sharedCartDir,id+'.json'),JSON.stringify(req.body||{}));res.json({ok:true,id});}
-  catch(e){res.status(500).json({ok:false})}
+  try{
+    if(rateLimitHit(req,'shared-cart',40,15*60*1000))return res.status(429).json({ok:false,message:'Çok fazla paylaşım isteği. Lütfen biraz sonra tekrar deneyin.'});
+    const cart=req.body||{};
+    if(!cart||typeof cart!=='object'||Array.isArray(cart))return res.status(400).json({ok:false,message:'Paylaşılan sepet verisi geçersiz.'});
+    const raw=JSON.stringify(cart);
+    if(Buffer.byteLength(raw)>180*1024)return res.status(413).json({ok:false,message:'Paylaşılan sepet çok büyük.'});
+    const items=Array.isArray(cart.items)?cart.items:Array.isArray(cart.cart)?cart.cart:null;
+    if(!items)return res.status(400).json({ok:false,message:'Paylaşılan sepet verisi geçersiz.'});
+    if(items.length>100)return res.status(400).json({ok:false,message:'Sepette çok fazla ürün var.'});
+    const textOk=(v,max)=>v===undefined||v===null||(typeof v==='string'&&v.length<=max);
+    const numOk=(v,max)=>v===undefined||v===null||(Number.isFinite(Number(v))&&Number(v)>=0&&Number(v)<=max);
+    const validItem=x=>x&&typeof x==='object'&&!Array.isArray(x)&&textOk(x.name,300)&&textOk(x.image,2000)&&numOk(x.price,10000000)&&numOk(x.basePrice,10000000)&&Number.isInteger(Number(x.qty||1))&&Number(x.qty||1)>=1&&Number(x.qty||1)<=50&&(!x.writes||Array.isArray(x.writes)&&x.writes.length<=20)&&(!x.photos||Array.isArray(x.photos)&&x.photos.length<=20);
+    if(!items.every(validItem))return res.status(400).json({ok:false,message:'Paylaşılan sepet içeriği geçersiz.'});
+    const id=crypto.randomBytes(12).toString('hex');
+    fs.writeFileSync(path.join(sharedCartDir,id+'.json'),raw);
+    res.json({ok:true,id});
+  }catch(e){console.error('Paylaşılan sepet kayıt:',e);res.status(500).json({ok:false})}
 });
 app.get('/api/shared-cart/:id',(req,res)=>{
-  const id=String(req.params.id||'');if(!/^[a-f0-9]{8}$/.test(id))return res.status(404).json({ok:false});
+  const id=String(req.params.id||'');if(!/^[a-f0-9]{24}$/.test(id)&&!/^[a-f0-9]{8}$/.test(id))return res.status(404).json({ok:false});
   const f=path.join(sharedCartDir,id+'.json');if(!fs.existsSync(f))return res.status(404).json({ok:false});
   try{res.json({ok:true,cart:JSON.parse(fs.readFileSync(f,'utf8'))})}catch(e){res.status(404).json({ok:false})}
 });
 
 app.get('/api/settings',(req,res)=>{res.setHeader('Cache-Control','no-store, no-cache, must-revalidate');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');res.json(readJson('settings.json',{}))});
+app.use(['/api/account','/api/addresses','/api/orders','/api/admin/users','/api/admin/customers-all','/api/admin/customer','/api/admin/orders','/api/admin/activity'],(req,res,next)=>{res.setHeader('Cache-Control','no-store');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');next()});
 app.get('/api/catalog',(req,res)=>res.json(stripLegacyStockRecords(readJson('catalog.json',{categories:[],products:[],builder:{}}))));
 
 app.post('/api/admin/state',requireAdmin,async(req,res)=>{
@@ -671,7 +776,7 @@ function ordersWithDailyDisplayIds(orders){
   });
 }
 app.get('/api/orders',requireAdmin,(req,res)=>res.json(ordersWithDailyDisplayIds(readJson('orders.json',[]))));
-app.patch('/api/orders/status',requireAdmin,async(req,res)=>{
+app.patch('/api/orders/status',requireAdmin,async(req,res)=>serializedMutation('orders',async()=>{
  const ids=Array.isArray(req.body.ids)?req.body.ids:[]; const status=req.body.status;
  if(!['new','prepared','shipped','delivered'].includes(status))return res.status(400).json({ok:false});
  try{
@@ -681,88 +786,42 @@ app.patch('/api/orders/status',requireAdmin,async(req,res)=>{
    return res.status(503).json({ok:false,message:'Durum Google E-Tablo’ya kaydedilemedi. Tekrar deneyin.'});
  }
  const orders=readJson('orders.json',[]); const now=new Date().toISOString();
- const changed=[];orders.forEach(o=>{if(ids.includes(o.id)&&o.status!==status){o.status=status;o.statusUpdatedAt=now;changed.push(o)}});writeJson('orders.json',orders);for(const o of changed)await sendOrderStatusPush(o,status);if(changed.length){writeJson('orders.json',orders);persistOrdersToGithub().catch(e=>console.error('Push geçmişi sipariş kalıcı kayıt:',e.message))}res.json({ok:true,orders});
-});
-app.patch('/api/orders/:id',requireAdmin,(req,res)=>{
+ const changed=[];orders.forEach(o=>{if(ids.includes(o.id)&&o.status!==status){o.status=status;o.statusUpdatedAt=now;changed.push(o)}});
+ writeJson('orders.json',orders);for(const o of changed)await sendOrderStatusPush(o,status);if(changed.length){writeJson('orders.json',orders);await persistOrdersToGithub().catch(e=>{console.error('Sipariş durum kalıcı kayıt:',e);throw e})}
+ return res.json({ok:true,orders});
+}));
+app.patch('/api/orders/:id',requireAdmin,async(req,res)=>serializedMutation('orders',async()=>{
   const id=String(req.params.id||'').trim();
   const orders=readJson('orders.json',[]);
   const order=orders.find(o=>String(o.id||'')===id);
   if(!order)return res.status(404).json({ok:false,message:'Sipariş bulunamadı.'});
-
   const body=req.body&&typeof req.body==='object'?req.body:{};
   const customerPatch=body.customer&&typeof body.customer==='object'?body.customer:{};
   order.customer=(order.customer&&typeof order.customer==='object')?order.customer:{};
   const customerFields=['fullName','phone','extraPhone','province','district','neighborhood','avenue','street','fullAddress','buildingNo','floor','doorNo','businessName','branchName','note','deliveryMode','placeType'];
-  for(const key of customerFields){
-    if(Object.prototype.hasOwnProperty.call(customerPatch,key))order.customer[key]=String(customerPatch[key]??'').trim();
-  }
-  if(Object.prototype.hasOwnProperty.call(customerPatch,'phone')){
-    const phone=normalizeTRMobile(customerPatch.phone);
-    if(!phone)return res.status(400).json({ok:false,message:'Telefon numarası geçersiz.'});
-    order.customer.phone=phone;
-  }
-  if(Object.prototype.hasOwnProperty.call(customerPatch,'extraPhone')){
-    const raw=String(customerPatch.extraPhone||'').trim();
-    const extra=raw?normalizeTRMobile(raw):'';
-    if(raw&&!extra)return res.status(400).json({ok:false,message:'2. telefon numarası geçersiz.'});
-    if(extra&&extra===order.customer.phone)return res.status(400).json({ok:false,message:'İki telefon numarası aynı olamaz.'});
-    order.customer.extraPhone=extra;
-  }
+  for(const key of customerFields)if(Object.prototype.hasOwnProperty.call(customerPatch,key))order.customer[key]=String(customerPatch[key]??'').trim();
+  if(Object.prototype.hasOwnProperty.call(customerPatch,'phone')){const phone=normalizeTRMobile(customerPatch.phone);if(!phone)return res.status(400).json({ok:false,message:'Telefon numarası geçersiz.'});order.customer.phone=phone}
+  if(Object.prototype.hasOwnProperty.call(customerPatch,'extraPhone')){const raw=String(customerPatch.extraPhone||'').trim(),extra=raw?normalizeTRMobile(raw):'';if(raw&&!extra)return res.status(400).json({ok:false,message:'2. telefon numarası geçersiz.'});if(extra&&extra===order.customer.phone)return res.status(400).json({ok:false,message:'İki telefon numarası aynı olamaz.'});order.customer.extraPhone=extra}
+  if(Object.prototype.hasOwnProperty.call(body,'payment')){const payment=String(body.payment||'').trim();if(payment)order.payment=payment}
+  if(Object.prototype.hasOwnProperty.call(body,'total')){const total=Number(body.total);if(!Number.isFinite(total)||total<0)return res.status(400).json({ok:false,message:'Toplam tutar geçersiz.'});order.total=total}
+  if(Array.isArray(body.items))body.items.forEach((patch,i)=>{const item=order.items?.[i];if(!item||!patch||typeof patch!=='object')return;item.product=(item.product&&typeof item.product==='object')?item.product:{};if(Object.prototype.hasOwnProperty.call(patch,'name'))item.product.name=String(patch.name||'').trim()||item.product.name||'Ürün';if(Object.prototype.hasOwnProperty.call(patch,'price')){const price=Number(patch.price);if(Number.isFinite(price)&&price>=0)item.product.price=price}if(Object.prototype.hasOwnProperty.call(patch,'qty'))item.qty=Math.max(1,Math.floor(Number(patch.qty)||1))});
+  try{await sheetsRequest({action:'update',requestId:order.requestId,order})}catch(e){console.error('Google E-Tablo sipariş düzenleme hatası:',e);return res.status(503).json({ok:false,message:'Sipariş Google E-Tablo ile eşitlenemedi. Tekrar deneyin.'})}
+  writeJson('orders.json',orders);await persistOrdersToGithub().catch(e=>{console.error('Sipariş düzenleme kalıcı kayıt:',e);throw e});return res.json({ok:true,order});
+}));
+app.delete('/api/orders',requireAdmin,async(req,res)=>serializedMutation('orders',async()=>{
+  const ids=Array.isArray(req.body?.ids)?req.body.ids.map(x=>String(x||'').trim()).filter(Boolean):[];if(!ids.length)return res.status(400).json({ok:false,message:'Silinecek sipariş seçilmedi.'});
+  const idSet=new Set(ids),orders=readJson('orders.json',[]),removed=orders.filter(o=>idSet.has(String(o.id||''))),kept=orders.filter(o=>!idSet.has(String(o.id||'')));
+  if(!removed.length)return res.status(404).json({ok:false,message:'Seçili siparişler bulunamadı.'});
+  for(const o of removed){try{await sheetsRequest({action:'delete',id:o.id,requestId:o.requestId})}catch(e){console.error('Google E-Tablo sipariş silme hatası:',e);return res.status(503).json({ok:false,message:'Sipariş Google E-Tablo ile eşitlenemedi. Tekrar deneyin.'})}}
+  writeJson('orders.json',kept);await persistOrdersToGithub().catch(e=>{console.error('Toplu sipariş silme kalıcı kayıt:',e);throw e});return res.json({ok:true,removedCount:removed.length});
+}));
+app.delete('/api/orders/:id',requireAdmin,async(req,res)=>serializedMutation('orders',async()=>{
+  const id=String(req.params.id||'').trim(),orders=readJson('orders.json',[]),index=orders.findIndex(o=>String(o.id||'')===id);if(index<0)return res.status(404).json({ok:false,message:'Sipariş bulunamadı.'});
+  const removed=orders[index];try{await sheetsRequest({action:'delete',id:removed.id,requestId:removed.requestId})}catch(e){console.error('Google E-Tablo sipariş silme hatası:',e);return res.status(503).json({ok:false,message:'Sipariş Google E-Tablo ile eşitlenemedi. Tekrar deneyin.'})}
+  orders.splice(index,1);writeJson('orders.json',orders);await persistOrdersToGithub().catch(e=>{console.error('Sipariş silme kalıcı kayıt:',e);throw e});return res.json({ok:true,removedId:removed?.id||id});
+}));
 
-  if(Object.prototype.hasOwnProperty.call(body,'payment')){
-    const payment=String(body.payment||'').trim();
-    if(payment)order.payment=payment;
-  }
-  if(Object.prototype.hasOwnProperty.call(body,'total')){
-    const total=Number(body.total);
-    if(!Number.isFinite(total)||total<0)return res.status(400).json({ok:false,message:'Toplam tutar geçersiz.'});
-    order.total=total;
-  }
-  if(Array.isArray(body.items)){
-    body.items.forEach((patch,i)=>{
-      const item=order.items?.[i];
-      if(!item||!patch||typeof patch!=='object')return;
-      item.product=(item.product&&typeof item.product==='object')?item.product:{};
-      if(Object.prototype.hasOwnProperty.call(patch,'name'))item.product.name=String(patch.name||'').trim()||item.product.name||'Ürün';
-      if(Object.prototype.hasOwnProperty.call(patch,'price')){
-        const price=Number(patch.price);
-        if(Number.isFinite(price)&&price>=0)item.product.price=price;
-      }
-      if(Object.prototype.hasOwnProperty.call(patch,'qty')){
-        const qty=Math.max(1,Math.floor(Number(patch.qty)||1));
-        item.qty=qty;
-      }
-    });
-  }
-
-  writeJson('orders.json',orders);
-  persistOrdersToGithub().catch(e=>console.error('Sipariş düzenleme GitHub kalıcı kayıt:',e));
-  res.json({ok:true,order});
-});
-app.delete('/api/orders',requireAdmin,(req,res)=>{
-  const ids=Array.isArray(req.body?.ids)?req.body.ids.map(x=>String(x||'').trim()).filter(Boolean):[];
-  if(!ids.length)return res.status(400).json({ok:false,message:'Silinecek sipariş seçilmedi.'});
-  const idSet=new Set(ids);
-  const orders=readJson('orders.json',[]);
-  const kept=orders.filter(o=>!idSet.has(String(o.id||'')));
-  const removedCount=orders.length-kept.length;
-  if(!removedCount)return res.status(404).json({ok:false,message:'Seçili siparişler bulunamadı.'});
-  writeJson('orders.json',kept);
-  persistOrdersToGithub().catch(e=>console.error('Toplu sipariş silme GitHub kalıcı kayıt:',e));
-  res.json({ok:true,removedCount});
-});
-app.delete('/api/orders/:id',requireAdmin,(req,res)=>{
-  const id=String(req.params.id||'').trim();
-  const orders=readJson('orders.json',[]);
-  const index=orders.findIndex(o=>String(o.id||'')===id);
-  if(index<0)return res.status(404).json({ok:false,message:'Sipariş bulunamadı.'});
-  const [removed]=orders.splice(index,1);
-  writeJson('orders.json',orders);
-  persistOrdersToGithub().catch(e=>console.error('Sipariş silme GitHub kalıcı kayıt:',e));
-  res.json({ok:true,removedId:removed?.id||id});
-});
-
-app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
+app.get('/api/orders/export.xlsx',requireAdmin,async(req,res)=>serializedMutation('orders',async()=>{
  const orders=readJson('orders.json',[]);
  const exportNow=new Date();
  const exportAt=exportNow.toISOString();
@@ -906,6 +965,7 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
    o.excelExportedAtTR=exportAtTR;
  });
  writeJson('orders.json',orders);
+ await persistOrdersToGithub().catch(e=>{console.error('Excel export kalıcı kayıt:',e);throw e});
 
  const stamp=new Intl.DateTimeFormat('sv-SE',{
    timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit',
@@ -915,11 +975,12 @@ app.get('/api/orders/export.xlsx',requireAdmin,(req,res)=>{
  res.setHeader('X-SHAZ-Exported-At',exportAtTR);
  res.setHeader('Content-Disposition',`attachment; filename=SHAZ-Siparisler-${stamp}.xlsx`);
  res.type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet').send(buf);
-});
+}));
 let lastOrderIngress={at:'',requestId:'',ok:null,error:''};
 app.get('/api/orders/last-ingress',requireAdmin,(req,res)=>res.json({ok:true,...lastOrderIngress}));
 
-app.post('/api/orders',async(req,res)=>{
+app.post('/api/orders',async(req,res)=>serializedMutation('orders',async()=>{
+ if(rateLimitHit(req,'order-create',25,15*60*1000))return res.status(429).json({ok:false,message:'Çok fazla sipariş isteği. Lütfen biraz sonra tekrar deneyin.'});
  const ingressAt=new Date().toISOString();
  try{
    const orders=readJson('orders.json',[]);
@@ -961,13 +1022,15 @@ app.post('/api/orders',async(req,res)=>{
    // v153: Üye/misafir aynı sipariş oluşturma mantığını kullanır; yalnız ilişki ve hukuki kayıt eklenir.
    const signedUser=accountUserFromReq(req);
    body.userId=signedUser?.id||null;body.customerId=signedUser?.customerId||null;
-   const preCouponTotal=Math.max(0,Number(body.preCouponTotal??body.total??0));
+   const prepared=serverPrepareOrderItems(body.items);body.items=prepared.items;const campaignResult=serverCampaignPricing(body.items,prepared.catalog),preCouponTotal=campaignResult.total;
+   body.subtotal=campaignResult.subtotal;body.discountTotal=campaignResult.discount;body.appliedCampaigns=campaignResult.applied;
    const couponResult=evaluateOrderCoupons(signedUser?.id||null,body.appliedCouponIds,preCouponTotal);
    if(!couponResult.ok)return res.status(400).json({ok:false,message:couponResult.message});
    body.preCouponTotal=preCouponTotal;body.couponDiscountTotal=couponResult.discount;body.appliedCoupons=couponResult.coupons;body.total=couponResult.total;
    const hasPersonal=(body.items||[]).some(x=>!!x.personalized);
    const legal=body.legalAcceptances&&typeof body.legalAcceptances==='object'?body.legalAcceptances:{};
    if(!legal.preInformation||!legal.distanceSales)return res.status(400).json({ok:false,message:'Lütfen sözleşmeleri onaylayın.'});
+   const legalRefs=body.legalDocumentRefs&&typeof body.legalDocumentRefs==='object'?body.legalDocumentRefs:{};for(const type of ['PRE_INFORMATION','DISTANCE_SALES']){const doc=currentLegalDoc(type),seen=legalRefs[type]||{};if(!doc||String(seen.version||'')!==String(doc.version||'')||String(seen.hash||'')!==String(legalHash(doc)||''))return res.status(409).json({ok:false,message:'Sözleşme metni güncellendi. Lütfen güncel metni tekrar açıp onaylayın.'})}
    if(hasPersonal&&(!legal.personalization||!legal.personalizationNotice))return res.status(400).json({ok:false,message:'Lütfen kişiselleştirme bilgilerinizi kontrol edip onaylayın.'});
    body.personalizationSnapshots=personalizationSnapshots(body.items);
    const savedOrderAddress=signedUser?saveOrderAddressForUser(signedUser,body.customer):null;
@@ -993,7 +1056,7 @@ app.post('/api/orders',async(req,res)=>{
    if(signedUser)persistAccountStateAsync();
    // Render yeniden başlasa/deploy olsa da sipariş kaybolmasın diye GitHub'a da kalıcı kopyayı yaz.
    // Bunlar müşteri cevabını bloke etmez; asıl sipariş zaten orders.json'a kaydedildi.
-   persistOrdersToGithub().catch(e=>console.error('Sipariş GitHub kalıcı kayıt:',e));
+   await persistOrdersToGithub().catch(e=>{console.error('Sipariş kalıcı kayıt:',e);throw e});
    setTimeout(()=>syncPendingOrdersToSheets(),0);
 
    lastOrderIngress={at:ingressAt,requestId,ok:true,error:''};
@@ -1003,7 +1066,8 @@ app.post('/api/orders',async(req,res)=>{
    lastOrderIngress={at:ingressAt,requestId:String(req.body?.requestId||''),ok:false,error:String(e?.message||e)};
    return res.status(500).json({ok:false,message:'Sipariş sunucuya kaydedilemedi. Lütfen tekrar deneyin.'});
  }
-});
+
+}));
 
 // Yönetim panelinden gerektiğinde Google E-Tablo senkronizasyonunu elle tetikleyebilmek için.
 app.get('/api/orders/sync-status',requireAdmin,(req,res)=>{
@@ -1045,23 +1109,19 @@ app.post('/api/orders/sheets-test',requireAdmin,async(req,res)=>{
   }
 });
 
-app.post('/api/customer-upload',customerUpload.array('files',1),async(req,res)=>{
+app.get('/api/customer-image/:token',(req,res)=>{const token=String(req.params.token||'');if(!/^[a-f0-9]{48}\.(?:jpg|png|webp)$/.test(token))return res.status(404).end();const f=path.join(privateUploadDir,token);if(!fs.existsSync(f))return res.status(404).end();res.setHeader('Cache-Control','private, no-store');res.sendFile(f)});
+app.post('/api/customer-upload',sameOriginGuard,customerUpload.array('files',1),async(req,res)=>{
  try{
-   const proto=String(req.headers['x-forwarded-proto']||req.protocol||'https').split(',')[0].trim();
-   const origin=proto+'://'+req.get('host');
-   const files=(req.files||[]).map(f=>({name:f.originalname,filename:f.filename,url:origin+'/uploads/'+f.filename,path:f.path}));
-   if(!files.length)return res.status(400).json({ok:false,message:'Fotoğraf seçilmedi.'});
-   // Müşterinin sipariş fotoğrafı Render yeniden başlasa da kaybolmasın diye mevcut GitHub kalıcılığı varsa aynı sisteme yazılır.
-   let github={ok:false,skipped:true};
-   if(githubEnabled()){
-     const f=files[0];
-     github=await githubCommitFiles([{path:`uploads/${f.filename}`,content:fs.readFileSync(f.path).toString('base64'),encoding:'base64'}],`SHAZ sipariş: kişiye özel fotoğraf eklendi`);
-   }
-   res.json({ok:true,files:files.map(({name,url,filename})=>({name,url,filename})),github});
- }catch(e){
-   console.error('Müşteri fotoğraf yükleme:',e);
-   res.status(500).json({ok:false,message:e.message||'Fotoğraf yüklenemedi.'});
- }
+   if(rateLimitHit(req,'customer-upload',30,15*60*1000))return res.status(429).json({ok:false,message:'Çok fazla fotoğraf yükleme isteği. Lütfen biraz sonra tekrar deneyin.'});
+   const f=(req.files||[])[0];if(!f)return res.status(400).json({ok:false,message:'Fotoğraf seçilmedi.'});
+   let meta;try{meta=await sharp(f.path,{failOn:'error',limitInputPixels:60_000_000}).metadata()}catch(e){try{fs.unlinkSync(f.path)}catch(_){}return res.status(400).json({ok:false,message:'Yüklenen dosya geçerli bir fotoğraf değil.'})}
+   if(!['jpeg','png','webp'].includes(String(meta.format||''))){try{fs.unlinkSync(f.path)}catch(_){}return res.status(400).json({ok:false,message:'Lütfen JPG, PNG veya WEBP fotoğraf yükleyin.'})}
+   if(Number(meta.width||0)>12000||Number(meta.height||0)>12000){try{fs.unlinkSync(f.path)}catch(_){}return res.status(400).json({ok:false,message:'Fotoğraf boyutları çok büyük.'})}
+   const ext=meta.format==='jpeg'?'jpg':meta.format,filename=crypto.randomBytes(24).toString('hex')+'.'+ext,out=path.join(privateUploadDir,filename),img=sharp(f.path,{failOn:'error',limitInputPixels:60_000_000}).rotate();
+   if(ext==='jpg')await img.jpeg({quality:92,mozjpeg:true}).toFile(out);else if(ext==='png')await img.png({compressionLevel:9}).toFile(out);else await img.webp({quality:92}).toFile(out);
+   try{fs.unlinkSync(f.path)}catch(_){}
+   res.json({ok:true,files:[{name:f.originalname,filename,url:'/api/customer-image/'+filename}],github:{ok:false,skipped:true,private:true}});
+ }catch(e){console.error('Müşteri fotoğraf yükleme:',e);res.status(500).json({ok:false,message:'Fotoğraf yüklenemedi. Lütfen tekrar deneyin.'})}
 });
 
 app.post('/api/upload',requireAdmin, upload.array('files',250),async(req,res)=>{
@@ -1187,13 +1247,25 @@ app.delete('/api/admin/coupons/:id',requireAdmin,(req,res)=>{
   const coupons=readJson('coupons.json',[]),i=coupons.findIndex(c=>String(c.id)===String(req.params.id));if(i<0)return res.status(404).json({ok:false,message:'Kupon bulunamadı.'});
   coupons.splice(i,1);writeJson('coupons.json',coupons);persistAccountStateAsync();res.json({ok:true});
 });
-app.post('/api/admin/users/:id/cancel',requireAdmin,(req,res)=>{
+app.post('/api/admin/users/:id/cancel',requireAdmin,async(req,res)=>serializedMutation('accounts',async()=>{
   const users=readJson('users.json',[]),i=users.findIndex(u=>String(u.id)===String(req.params.id));if(i<0)return res.status(404).json({ok:false,message:'Üye bulunamadı.'});
-  const u=users[i];if(u.disabled)return res.json({ok:true,alreadyDisabled:true});const now=new Date().toISOString();pushProfileHistory(u,'Üyelik Durumu','Aktif','İptal Edildi','admin');u.disabled=true;u.disabledAt=now;u.updatedAt=now;u.authVersion=Number(u.authVersion||1)+1;writeJson('users.json',users);persistAccountStateAsync();res.json({ok:true});
-});
-app.post('/api/admin/users/:id/reactivate',requireAdmin,(req,res)=>{const users=readJson('users.json',[]),i=users.findIndex(u=>String(u.id)===String(req.params.id));if(i<0)return res.status(404).json({ok:false,message:'Üye bulunamadı.'});const u=users[i],email=normalizeEmail(u.email),phone=normalizeAccountPhone(u.phone),conflict=users.find(x=>x.id!==u.id&&!x.deleted&&(email&&normalizeEmail(x.email)===email||phone&&normalizeAccountPhone(x.phone)===phone));if(conflict)return res.status(409).json({ok:false,message:'Aynı e-posta veya telefonla aktif başka bir hesap bulunduğu için bu eski kayıt yeniden açılamaz.'});const now=new Date().toISOString(),oldStatus=u.deleted?'Silinmiş':u.disabled?'İptal Edildi':'Aktif';pushProfileHistory(u,'Üyelik Durumu',oldStatus,'Aktif','admin');u.disabled=false;u.disabledAt=null;u.deleted=false;u.deletedAt=null;u.updatedAt=now;u.authVersion=Number(u.authVersion||1)+1;writeJson('users.json',users);const customers=readJson('customers.json',[]);if(!customers.some(c=>c.id===u.customerId||c.userId===u.id))customers.push({id:u.customerId||('CUS-'+crypto.randomUUID()),userId:u.id,firstName:u.firstName||'',lastName:u.lastName||'',email:u.email||'',phone:u.phone||'',createdAt:u.createdAt||now,updatedAt:now});writeJson('customers.json',customers);persistAccountStateAsync();res.json({ok:true})});
-app.delete('/api/admin/users/:id',requireAdmin,(req,res)=>{const id=String(req.params.id),users=readJson('users.json',[]),i=users.findIndex(x=>String(x.id)===id);if(i<0)return res.status(404).json({ok:false,message:'Üye bulunamadı.'});const u=users[i],now=new Date().toISOString();if(!u.deleted)pushProfileHistory(u,'Üyelik Durumu',u.disabled?'İptal Edildi':'Aktif','Silinmiş','admin');u.deleted=true;u.deletedAt=now;u.disabled=true;u.disabledAt=u.disabledAt||now;u.updatedAt=now;u.authVersion=Number(u.authVersion||1)+1;writeJson('users.json',users);writeJson('customers.json',readJson('customers.json',[]).filter(x=>x.id!==u.customerId&&x.userId!==u.id));for(const f of ['addresses.json','favorites.json','coupons.json','marketing_consents.json'])writeJson(f,readJson(f,[]).filter(x=>x.userId!==u.id));writeJson('push_subscriptions.json',readJson('push_subscriptions.json',[]).filter(x=>x.userId!==u.id&&x.customerId!==u.customerId));writeJson('customer_activity.json',readJson('customer_activity.json',[]).filter(x=>x.userId!==u.id&&x.customerId!==u.customerId));persistAccountStateAsync();res.json({ok:true,deleted:true})});
-app.patch('/api/admin/users/:id/profile',requireAdmin,(req,res)=>{const users=readJson('users.json',[]),i=users.findIndex(u=>String(u.id)===String(req.params.id));if(i<0)return res.status(404).json({ok:false,message:'Üye bulunamadı.'});const u=users[i],now=new Date().toISOString(),fields=['firstName','lastName','email','phone','birthDate'];for(const field of fields){if(!Object.prototype.hasOwnProperty.call(req.body,field))continue;let value=String(req.body[field]||'').trim();if(field==='email'){value=normalizeEmail(value);if(!value.includes('@'))return res.status(400).json({ok:false,message:'Geçerli e-posta girin.'})}if(field==='phone'){value=normalizeAccountPhone(value);if(!value)return res.status(400).json({ok:false,message:'Geçerli telefon girin.'})}if(field==='birthDate'&&!validBirthDateIso(value))return res.status(400).json({ok:false,message:'Geçerli doğum tarihi girin.'});const label={firstName:'Ad',lastName:'Soyad',email:'E-posta',phone:'Telefon',birthDate:'Doğum Tarihi'}[field];pushProfileHistory(u,label,u[field]||'',value,'admin');u[field]=value}u.updatedAt=now;writeJson('users.json',users);const customers=readJson('customers.json',[]),ci=customers.findIndex(c=>c.id===u.customerId);if(ci>=0){Object.assign(customers[ci],{firstName:u.firstName,lastName:u.lastName,email:u.email,phone:u.phone,updatedAt:now});writeJson('customers.json',customers)}persistAccountStateAsync();res.json({ok:true,user:publicUser(u)})});
+  const u=users[i];if(u.disabled)return res.json({ok:true,alreadyDisabled:true});const now=new Date().toISOString();pushProfileHistory(u,'Üyelik Durumu','Aktif','İptal Edildi','admin');u.disabled=true;u.disabledAt=now;u.updatedAt=now;u.authVersion=Number(u.authVersion||1)+1;writeJson('users.json',users);
+  await persistAccountStateToGithub().catch(e=>{console.error('Üyelik iptal kalıcı kayıt:',e);throw e});return res.json({ok:true});
+}));
+app.post('/api/admin/users/:id/reactivate',requireAdmin,async(req,res)=>serializedMutation('accounts',async()=>{
+  const users=readJson('users.json',[]),i=users.findIndex(u=>String(u.id)===String(req.params.id));if(i<0)return res.status(404).json({ok:false,message:'Üye bulunamadı.'});
+  const u=users[i],email=normalizeEmail(u.email),phone=normalizeAccountPhone(u.phone),conflict=users.find(x=>x.id!==u.id&&!x.deleted&&((email&&normalizeEmail(x.email)===email)||(phone&&normalizeAccountPhone(x.phone)===phone)));if(conflict)return res.status(409).json({ok:false,message:'Aynı e-posta veya telefonla aktif başka bir hesap bulunduğu için bu eski kayıt yeniden açılamaz.'});
+  const now=new Date().toISOString(),oldStatus=u.deleted?'Silinmiş':u.disabled?'İptal Edildi':'Aktif';pushProfileHistory(u,'Üyelik Durumu',oldStatus,'Aktif','admin');u.disabled=false;u.disabledAt=null;u.deleted=false;u.deletedAt=null;u.updatedAt=now;u.authVersion=Number(u.authVersion||1)+1;writeJson('users.json',users);
+  const customers=readJson('customers.json',[]);if(!customers.some(c=>c.id===u.customerId||c.userId===u.id))customers.push({id:u.customerId||('CUS-'+crypto.randomUUID()),userId:u.id,firstName:u.firstName||'',lastName:u.lastName||'',email:u.email||'',phone:u.phone||'',createdAt:u.createdAt||now,updatedAt:now});writeJson('customers.json',customers);
+  await persistAccountStateToGithub().catch(e=>{console.error('Üye yeniden açma kalıcı kayıt:',e);throw e});return res.json({ok:true});
+}));
+app.delete('/api/admin/users/:id',requireAdmin,async(req,res)=>serializedMutation('accounts',async()=>{
+  const id=String(req.params.id),users=readJson('users.json',[]),i=users.findIndex(x=>String(x.id)===id);if(i<0)return res.status(404).json({ok:false,message:'Üye bulunamadı.'});
+  const u=users[i],now=new Date().toISOString();if(!u.deleted)pushProfileHistory(u,'Üyelik Durumu',u.disabled?'İptal Edildi':'Aktif','Silinmiş','admin');u.deleted=true;u.deletedAt=now;u.disabled=true;u.disabledAt=u.disabledAt||now;u.updatedAt=now;u.authVersion=Number(u.authVersion||1)+1;writeJson('users.json',users);
+  writeJson('customers.json',readJson('customers.json',[]).filter(x=>x.id!==u.customerId&&x.userId!==u.id));for(const f of ['addresses.json','favorites.json','coupons.json','marketing_consents.json'])writeJson(f,readJson(f,[]).filter(x=>x.userId!==u.id));writeJson('push_subscriptions.json',readJson('push_subscriptions.json',[]).filter(x=>x.userId!==u.id&&x.customerId!==u.customerId));writeJson('customer_activity.json',readJson('customer_activity.json',[]).filter(x=>x.userId!==u.id&&x.customerId!==u.customerId));
+  await persistAccountStateToGithub().catch(e=>{console.error('Üye silme kalıcı kayıt:',e);throw e});return res.json({ok:true,deleted:true});
+}));
+app.patch('/api/admin/users/:id/profile',requireAdmin,async(req,res)=>{return serializedMutation('accounts',async()=>{const users=readJson('users.json',[]),i=users.findIndex(u=>String(u.id)===String(req.params.id));if(i<0)return res.status(404).json({ok:false,message:'Üye bulunamadı.'});const u=users[i],now=new Date().toISOString(),fields=['firstName','lastName','email','phone','birthDate'];for(const field of fields){if(!Object.prototype.hasOwnProperty.call(req.body,field))continue;let value=String(req.body[field]||'').trim();if(field==='email'){value=normalizeEmail(value);if(!value.includes('@'))return res.status(400).json({ok:false,message:'Geçerli e-posta girin.'});if(users.some(x=>x.id!==u.id&&!x.deleted&&normalizeEmail(x.email)===value))return res.status(409).json({ok:false,message:'Bu e-posta başka bir üyede kullanılıyor.'})}if(field==='phone'){value=normalizeAccountPhone(value);if(!value)return res.status(400).json({ok:false,message:'Geçerli telefon girin.'});if(users.some(x=>x.id!==u.id&&!x.deleted&&normalizeAccountPhone(x.phone)===value))return res.status(409).json({ok:false,message:'Bu telefon başka bir üyede kullanılıyor.'});if(value!==normalizeAccountPhone(u.phone))u.phoneVerifiedAt=null}if(field==='birthDate'&&!validBirthDateIso(value))return res.status(400).json({ok:false,message:'Geçerli doğum tarihi girin.'});const label={firstName:'Ad',lastName:'Soyad',email:'E-posta',phone:'Telefon',birthDate:'Doğum Tarihi'}[field];pushProfileHistory(u,label,u[field]||'',value,'admin');u[field]=value}u.updatedAt=now;writeJson('users.json',users);const customers=readJson('customers.json',[]),ci=customers.findIndex(c=>c.id===u.customerId);if(ci>=0){Object.assign(customers[ci],{firstName:u.firstName,lastName:u.lastName,email:u.email,phone:u.phone,updatedAt:now});writeJson('customers.json',customers)}await persistAccountStateToGithub().catch(e=>{console.error('Admin üye kalıcı kayıt:',e);throw e});return res.json({ok:true,user:publicUser(u)})})});
 app.get('/api/admin/legal-documents',requireAdmin,(req,res)=>res.json({ok:true,documents:readLegalDocuments().filter(d=>d.active!==false)}));
 app.put('/api/admin/legal-documents',requireAdmin,(req,res)=>{
   const incoming=Array.isArray(req.body.documents)?req.body.documents:[],allowed=new Set(['MEMBERSHIP','KVKK','PRIVACY','COOKIE','PRE_INFORMATION','DISTANCE_SALES']);
@@ -1211,7 +1283,7 @@ app.put('/api/admin/legal-documents',requireAdmin,(req,res)=>{
 });
 
 // ---------- v153 müşteri auth/account API ----------
-app.get('/api/legal-documents',(req,res)=>res.json({ok:true,documents:readLegalDocuments().filter(d=>d.active!==false).map(d=>({type:d.type,version:d.version,title:d.title,content:d.content||'',active:d.active!==false}))}));
+app.get('/api/legal-documents',(req,res)=>res.json({ok:true,documents:readLegalDocuments().filter(d=>d.active!==false).map(d=>({type:d.type,version:d.version,hash:legalHash(d),title:d.title,content:d.content||'',active:d.active!==false}))}));
 
 function notificationSettings(){const d={statuses:{new:{enabled:true,title:'SHAZ',body:'Siparişiniz alındı. Bizi tercih ettiğiniz için teşekkür ederiz.'},prepared:{enabled:true,title:'SHAZ',body:'Siparişiniz hazırlanıyor.'},shipped:{enabled:true,title:'SHAZ',body:'Siparişiniz kargoya verildi. Kargo sürecinizi takip etmek için bildirime dokunun.'},delivered:{enabled:true,title:'SHAZ',body:'Siparişiniz teslim edildi. SHAZ’ı tercih ettiğiniz için teşekkür ederiz.'}}};const s=readJson('notification_settings.json',d);s.statuses={...d.statuses,...(s.statuses||{})};return s}
 function activityRows(){return readJson('customer_activity.json',[])}
@@ -1298,7 +1370,7 @@ async function sendOrderStatusPush(order,status){
   const succeeded=new Set(order.notificationHistory.filter(x=>x&&typeof x==='object'&&x.eventKey===eventKey&&x.subscriptionId&&x.success===true).map(x=>String(x.subscriptionId)));
   const pending=targets.filter(x=>!succeeded.has(safePushRecordId(x)));if(!pending.length)return {skipped:true,reason:'deduped'};
   const url='/hesabim/siparisler/'+encodeURIComponent(order.id),tag='order-'+String(order.id).slice(0,40)+'-'+status+'-'+crypto.createHash('sha1').update(eventKey).digest('hex').slice(0,10);
-  const result=await sendPushRows(pending,{title:String(cfg.title||'SHAZ').trim()||'SHAZ',body:String(cfg.body||'').trim(),icon:'/icon-192.png?v=171',badge:'/icon-192.png?v=171',url,tag,data:{url}},{kind:'order:'+status,ttl:12*60*60,urgency:'high'});
+  const result=await sendPushRows(pending,{title:String(cfg.title||'SHAZ').trim()||'SHAZ',body:String(cfg.body||'').trim(),icon:'/icon-192.png?v=173',badge:'/icon-192.png?v=173',url,tag,data:{url}},{kind:'order:'+status,ttl:12*60*60,urgency:'high'});
   const now=new Date().toISOString();for(const r of result.results.filter(x=>x.ok))order.notificationHistory.push({eventKey,subscriptionId:String(r.id),success:true,sentAt:now,deliveryId:result.deliveryId});
   if(order.notificationHistory.length>300)order.notificationHistory=order.notificationHistory.slice(-300);
   return result;
@@ -1325,14 +1397,13 @@ app.post('/api/push/ack',sameOriginGuard,(req,res)=>{const deliveryId=String(req
 app.get('/api/admin/push/deliveries/:id',requireAdmin,(req,res)=>{const row=pushDeliveryLogs().find(x=>x.deliveryId===String(req.params.id));if(!row)return res.status(404).json({ok:false});res.json({ok:true,delivery:{deliveryId:row.deliveryId,createdAt:row.createdAt,targetCount:row.targetCount,providerAccepted:row.providerAccepted,failed:row.failed,cleaned:row.cleaned,deviceAckCount:row.deviceAckCount,failureStatuses:row.failureStatuses||{}}})});
 app.post('/api/admin/push/send',sameOriginGuard,requireAdmin,async(req,res)=>{
   if(!webPushReady)return res.status(503).json({ok:false,message:'Web Push yapılandırması aktif değil: '+(webPushConfigError||'VAPID geçersiz.')});
-  const rawTitle=String(req.body.title??'').trim().slice(0,80),rawBody=String(req.body.body??'').trim().slice(0,240),rawUrl=String(req.body.url||'/').trim(),clientRequestId=String(req.body.clientRequestId||'').trim().slice(0,120);if(!rawTitle&&!rawBody)return res.status(400).json({ok:false,message:'Bildirim mesajı boş olamaz.'});
+  const rawTitle=String(req.body.title??'').trim().slice(0,80),rawBody=String(req.body.body??'').trim().slice(0,240),rawUrl=String(req.body.url||'/').trim(),clientRequestId=String(req.body.clientRequestId||'').trim().slice(0,120);if(!rawBody)return res.status(400).json({ok:false,message:'Bildirim açıklaması boş bırakılamaz.'});
   if(clientRequestId){const old=pushSendIdempotency.get(clientRequestId);if(old&&Date.now()-old.at<15000)return res.json(old.response)}
   let url='/';try{const u=new URL(rawUrl,SHAZ_ORIGIN);if(u.origin===SHAZ_ORIGIN)url=u.pathname+u.search+u.hash}catch{}
-  // Manuel bildirimde başlık boşsa mesajı gerçek notification title yap; body alanını payload'a hiç ekleme.
-  // Böylece iOS'ta görünmez/boş title veya boş body için fazladan satır ayrılmaz.
-  const payload={title:rawTitle||rawBody,icon:'/icon-192.png?v=171',badge:'/icon-192.png?v=171',url,data:{url}};
-  if(rawTitle)payload.body=rawBody;
-  const result=await sendPushRows(readJson('push_subscriptions.json',[]),payload,{kind:'manual',ttl:24*60*60,urgency:'normal'}),response={ok:true,...result,deviceAckCount:0};
+  // Manuel bildirimde admin başlığı ve açıklamayı ayrı tut. Platform fallback kararı Service Worker'da verilir.
+  const payload={type:'manual',title:rawTitle,body:rawBody,icon:'/icon-192.png?v=173',badge:'/icon-192.png?v=173',url,data:{url}};
+  const manualUsers=readJson('users.json',[]),marketingAllowed=new Set(manualUsers.filter(u=>!u.deleted&&!u.disabled&&u.pushMarketingConsent!==false).map(u=>String(u.id)));const manualTargets=readJson('push_subscriptions.json',[]).filter(x=>!x.userId||marketingAllowed.has(String(x.userId)));
+  const result=await sendPushRows(manualTargets,payload,{kind:'manual',ttl:24*60*60,urgency:'normal'}),response={ok:true,...result,deviceAckCount:0};
   if(clientRequestId){pushSendIdempotency.set(clientRequestId,{at:Date.now(),response});for(const [k,v] of pushSendIdempotency)if(Date.now()-v.at>60000)pushSendIdempotency.delete(k)}
   res.json(response);
 });
@@ -1341,41 +1412,44 @@ app.get('/api/admin/activity-stream',requireAdmin,(req,res)=>{res.setHeader('Con
 app.get('/api/admin/notification-settings',requireAdmin,(req,res)=>res.json({ok:true,settings:notificationSettings(),pushStats:pushStats()}));
 app.put('/api/admin/notification-settings',requireAdmin,(req,res)=>{const current=notificationSettings(),incoming=req.body?.statuses||{};for(const k of ['new','prepared','shipped','delivered'])if(incoming[k])current.statuses[k]={enabled:incoming[k].enabled!==false,title:String(incoming[k].title||'SHAZ').slice(0,80),body:String(incoming[k].body||'').slice(0,240)};writeJson('notification_settings.json',current);persistAccountStateAsync();res.json({ok:true,settings:current})});
 app.get('/api/admin/customers-all',requireAdmin,(req,res)=>{const users=readJson('users.json',[]),orders=readJson('orders.json',[]),push=readJson('push_subscriptions.json',[]),acts=activityRows(),map=new Map();const add=(key,base)=>{if(!map.has(key))map.set(key,{key,name:'',phone:'',email:'',member:false,orderCount:0,lastOrderAt:'',lastOrderStatus:'',lastOrderTotal:0,pushActive:false,permission:'default',pwaStatus:'—',firstPwaAt:'',lastPwaAt:'',lastSeenAt:'',lastNotificationAt:'',visitCount:0,visits:[],orders:[],...base});return map.get(key)};for(const u of users){const key='u:'+u.id,r=add(key,{name:[u.firstName,u.lastName].filter(Boolean).join(' '),phone:u.phone||'',email:u.email||'',member:true,userId:u.id,customerId:u.customerId,disabled:!!u.disabled});const a=acts.filter(x=>x.userId===u.id||x.customerId===u.customerId);r.visits=a.flatMap(x=>x.visits||[]).sort();r.visitCount=r.visits.length;r.lastSeenAt=r.visits.at(-1)||'';r.firstPwaAt=a.map(x=>x.firstPwaAt).filter(Boolean).sort()[0]||'';r.lastPwaAt=a.map(x=>x.lastPwaAt).filter(Boolean).sort().at(-1)||'';r.permission=a.map(x=>x.permission).filter(Boolean).at(-1)||'default';r.pushActive=push.some(x=>x.userId===u.id||x.customerId===u.customerId)}for(const o of orders){const c=o.customer||{},strongGuest=String(c.phone||'').trim()+'|'+String(c.email||'').trim(),key=o.userId?'u:'+o.userId:o.customerId?'c:'+o.customerId:'g:'+crypto.createHash('sha1').update(strongGuest).digest('hex').slice(0,12),r=add(key,{name:c.fullName||[c.firstName,c.lastName].filter(Boolean).join(' '),phone:c.phone||'',email:c.email||'',member:!!o.userId,customerId:o.customerId||null,userId:o.userId||null});r.orderCount++;r.orders.push({id:o.id,createdAt:o.createdAt||'',status:o.status||'',total:Number(o.total||0)});if(!r.lastOrderAt||new Date(o.createdAt)>new Date(r.lastOrderAt)){r.lastOrderAt=o.createdAt;r.lastOrderStatus=o.status||'';r.lastOrderTotal=Number(o.total||0)}const hist=Array.isArray(o.notificationHistory)?o.notificationHistory:[];if(hist.length)r.lastNotificationAt=o.statusUpdatedAt||o.createdAt||r.lastNotificationAt;const a=acts.filter(x=>(o.userId&&x.userId===o.userId)||(o.customerId&&x.customerId===o.customerId)||(o.deviceId&&x.deviceId===o.deviceId));if(a.length){r.visits=[...new Set([...r.visits,...a.flatMap(x=>x.visits||[])])].sort();r.visitCount=r.visits.length;r.lastSeenAt=r.visits.at(-1)||r.lastSeenAt;r.firstPwaAt=[r.firstPwaAt,...a.map(x=>x.firstPwaAt)].filter(Boolean).sort()[0]||'';r.lastPwaAt=a.map(x=>x.lastPwaAt).filter(Boolean).sort().at(-1)||r.lastPwaAt;r.permission=a.map(x=>x.permission).filter(Boolean).at(-1)||r.permission}r.pushActive=r.pushActive||push.some(x=>(o.userId&&x.userId===o.userId)||(o.customerId&&x.customerId===o.customerId)||(o.deviceId&&x.deviceId===o.deviceId))}for(const r of map.values()){if(r.lastPwaAt){const age=Date.now()-new Date(r.lastPwaAt).getTime();r.pwaStatus=age<30*24*60*60*1000?'Aktif':(r.pushActive?'Uzun süredir kullanılmıyor':'Pasif / kaldırılmış olabilir')}r.notificationStatus=r.pushActive?'Açık':(r.permission==='denied'?'Sistemden reddedilmiş':r.permission==='granted'?'Push aboneliği pasif':'Kapalı');r.orders.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))}const list=[...map.values()].sort((a,b)=>new Date(b.lastSeenAt||b.lastOrderAt||0)-new Date(a.lastSeenAt||a.lastOrderAt||0)),stats={total:list.length,members:list.filter(x=>x.member).length,guests:list.filter(x=>!x.member).length,pushActive:list.filter(x=>x.pushActive).length,pwaActive:list.filter(x=>x.pwaStatus==='Aktif').length,notificationOpen:list.filter(x=>x.notificationStatus==='Açık').length};res.json({ok:true,customers:list,stats})});
-app.get('/api/auth/social-config',(req,res)=>res.json({ok:true,googleClientId:GOOGLE_CLIENT_ID||'',appleClientId:APPLE_CLIENT_ID||'',appleRedirectUri:APPLE_REDIRECT_URI||'',passwordResetEnabled:!!RESEND_API_KEY}));
-app.post('/api/auth/social/google',sameOriginGuard,async(req,res)=>{try{const identity=await googleIdentity(req.body.credential);const u=socialLoginUser(identity);persistAccountStateAsync();setUserSession(res,u,req);res.json({ok:true,user:publicUser(u)})}catch(e){res.status(401).json({ok:false,message:e.message||'Google ile giriş tamamlanamadı.'})}});
-app.post('/api/auth/social/apple',sameOriginGuard,async(req,res)=>{try{const identity=await appleIdentity(req.body.identityToken);const u=socialLoginUser(identity,{firstName:req.body.firstName,lastName:req.body.lastName});persistAccountStateAsync();setUserSession(res,u,req);res.json({ok:true,user:publicUser(u)})}catch(e){res.status(401).json({ok:false,message:e.message||'Apple ile giriş tamamlanamadı.'})}});
+app.get('/api/auth/social-config',(req,res)=>res.json({ok:true,googleClientId:'',appleClientId:'',appleRedirectUri:'',passwordResetEnabled:!!RESEND_API_KEY}));
+app.post('/api/auth/social/google',sameOriginGuard,(req,res)=>res.status(410).json({ok:false,message:'Google ile giriş artık kullanılmıyor. E-posta veya telefon ve şifrenizle giriş yapın.'}));
+app.post('/api/auth/social/apple',sameOriginGuard,(req,res)=>res.status(410).json({ok:false,message:'Apple ile giriş artık kullanılmıyor. E-posta veya telefon ve şifrenizle giriş yapın.'}));
 app.post('/api/auth/forgot-password',sameOriginGuard,async(req,res)=>{
+  if(rateLimitHit(req,'forgot-password',12,15*60*1000))return res.status(429).json({ok:false,message:'Çok fazla istek. Lütfen biraz sonra tekrar deneyin.'});
   const identifier=String(req.body.identifier??req.body.email??'').trim(),email=normalizeEmail(identifier),phone=normalizeAccountPhone(identifier),users=readJson('users.json',[]),u=users.find(x=>(email.includes('@')&&x.email===email)||(phone&&normalizeAccountPhone(x.phone)===phone));
   if(!identifier)return res.status(400).json({ok:false,message:'E-posta adresinizi veya telefon numaranızı girin.'});
   const generic='Bilgileriniz bir hesapla eşleşiyorsa şifre sıfırlama bağlantısı kayıtlı e-posta adresinize gönderildi.';
   if(!u)return res.json({ok:true,message:generic});
   if(!RESEND_API_KEY)return res.status(503).json({ok:false,message:'Şifre sıfırlama e-posta servisi henüz yapılandırılmadı.'});
-  const raw=crypto.randomBytes(32).toString('base64url'),hash=crypto.createHash('sha256').update(raw).digest('hex'),arr=readJson('password_resets.json',[]).filter(x=>x.userId!==u.id&&new Date(x.expiresAt).getTime()>Date.now());arr.push({id:crypto.randomUUID(),userId:u.id,tokenHash:hash,createdAt:new Date().toISOString(),expiresAt:new Date(Date.now()+30*60*1000).toISOString(),usedAt:null});writeJson('password_resets.json',arr);const sent=await sendPasswordResetMail(u.email,`${PUBLIC_BASE_URL}/sifre-sifirla?token=${encodeURIComponent(raw)}`);if(!sent)return res.status(502).json({ok:false,message:'Şifre sıfırlama e-postası gönderilemedi.'});res.json({ok:true,message:generic})
+  const raw=crypto.randomBytes(32).toString('base64url'),hash=crypto.createHash('sha256').update(raw).digest('hex'),arr=readJson('password_resets.json',[]).filter(x=>x.userId!==u.id&&new Date(x.expiresAt).getTime()>Date.now());arr.push({id:crypto.randomUUID(),userId:u.id,tokenHash:hash,createdAt:new Date().toISOString(),expiresAt:new Date(Date.now()+30*60*1000).toISOString(),usedAt:null});writeJson('password_resets.json',arr);await persistAccountStateToGithub().catch(e=>{console.error('Şifre sıfırlama token kalıcı kayıt:',e);throw e});const sent=await sendPasswordResetMail(u.email,`${PUBLIC_BASE_URL}/sifre-sifirla?token=${encodeURIComponent(raw)}`);if(!sent)return res.status(502).json({ok:false,message:'Şifre sıfırlama e-postası gönderilemedi.'});res.json({ok:true,message:generic})
 });
-app.post('/api/auth/reset-password',sameOriginGuard,(req,res)=>{const raw=String(req.body.token||''),password=String(req.body.password||'');if(password.length<8)return res.status(400).json({ok:false,message:'Yeni şifre en az 8 karakter olmalıdır.'});const hash=crypto.createHash('sha256').update(raw).digest('hex'),arr=readJson('password_resets.json',[]),x=arr.find(v=>v.tokenHash===hash&&!v.usedAt&&new Date(v.expiresAt).getTime()>Date.now());if(!x)return res.status(400).json({ok:false,message:'Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.'});const users=readJson('users.json',[]),i=users.findIndex(u=>u.id===x.userId);if(i<0)return res.status(400).json({ok:false,message:'Hesap bulunamadı.'});const ph=passwordHash(password);users[i].passwordSalt=ph.salt;users[i].passwordHash=ph.hash;users[i].authVersion=Number(users[i].authVersion||1)+1;users[i].authProviders=Array.from(new Set([...(users[i].authProviders||[]),'password']));users[i].updatedAt=new Date().toISOString();x.usedAt=users[i].updatedAt;writeJson('users.json',users);writeJson('password_resets.json',arr);persistAccountStateAsync();res.json({ok:true})});
+app.post('/api/auth/reset-password',sameOriginGuard,async(req,res)=>serializedMutation('accounts',async()=>{const raw=String(req.body.token||''),password=String(req.body.password||'');if(!validPasswordSize(password))return res.status(400).json({ok:false,message:'Yeni şifre 8-256 karakter arasında olmalıdır.'});const hash=crypto.createHash('sha256').update(raw).digest('hex'),arr=readJson('password_resets.json',[]),x=arr.find(v=>v.tokenHash===hash&&!v.usedAt&&new Date(v.expiresAt).getTime()>Date.now());if(!x)return res.status(400).json({ok:false,message:'Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.'});const users=readJson('users.json',[]),i=users.findIndex(u=>u.id===x.userId);if(i<0)return res.status(400).json({ok:false,message:'Hesap bulunamadı.'});const ph=passwordHash(password);users[i].passwordSalt=ph.salt;users[i].passwordHash=ph.hash;users[i].authVersion=Number(users[i].authVersion||1)+1;users[i].authProviders=Array.from(new Set([...(users[i].authProviders||[]),'password']));users[i].updatedAt=new Date().toISOString();x.usedAt=users[i].updatedAt;writeJson('users.json',users);writeJson('password_resets.json',arr);await persistAccountStateToGithub().catch(e=>{console.error('Şifre değişikliği kalıcı kayıt:',e);throw e});return res.json({ok:true})}));
 
 app.get(['/giris','/kayit','/sifre-sifirla','/hesabim','/hesabim/siparisler','/hesabim/bilgiler','/hesabim/adresler','/hesabim/favoriler','/hesabim/kuponlar','/hesabim/sifre'],(req,res)=>{res.setHeader('X-Robots-Tag','noindex, nofollow');res.sendFile(path.join(root,'public','index.html'))});
 app.get('/hesabim/siparisler/:id',(req,res)=>{res.setHeader('X-Robots-Tag','noindex, nofollow');res.sendFile(path.join(root,'public','index.html'))});
-app.post('/api/auth/register',sameOriginGuard,(req,res)=>{
+app.post('/api/auth/register',sameOriginGuard,async(req,res)=>serializedMutation('accounts',async()=>{
+  if(rateLimitHit(req,'register',12,15*60*1000))return res.status(429).json({ok:false,message:'Çok fazla kayıt isteği. Lütfen biraz sonra tekrar deneyin.'});
   if(!USER_SESSION_SECRET)return res.status(503).json({ok:false,message:'Üyelik oturum anahtarı sunucuda yapılandırılmadı.'});
   const firstName=String(req.body.firstName||'').trim(),lastName=String(req.body.lastName||'').trim(),email=normalizeEmail(req.body.email),phone=normalizeAccountPhone(req.body.phone),password=String(req.body.password||''),birthDate=String(req.body.birthDate||'').trim();
-  if(!firstName||!lastName||!email||!phone||!birthDate||password.length<8)return res.status(400).json({ok:false,message:!birthDate?'Doğum tarihi zorunludur.':!phone?'Lütfen geçerli bir telefon numarası girin.':!email.includes('@')?'Lütfen geçerli bir e-posta adresi girin.':'Lütfen tüm zorunlu alanları doldurun ve en az 8 karakterli şifre kullanın.'});
+  if(!firstName||!lastName||!email||!phone||!birthDate||!validPasswordSize(password))return res.status(400).json({ok:false,message:!birthDate?'Doğum tarihi zorunludur.':!phone?'Lütfen geçerli bir telefon numarası girin.':!email.includes('@')?'Lütfen geçerli bir e-posta adresi girin.':'Lütfen tüm zorunlu alanları doldurun ve en az 8 karakterli şifre kullanın.'});
   if(!validBirthDateIso(birthDate))return res.status(400).json({ok:false,message:'Doğum tarihini gg.aa.yyyy biçiminde geçerli olarak girin.'});
   const users=readJson('users.json',[]);if(users.some(u=>!u.deleted&&u.email===email))return res.status(409).json({ok:false,message:'Bu e-posta adresiyle daha önce hesap oluşturulmuş.'});if(users.some(u=>!u.deleted&&normalizeAccountPhone(u.phone)===phone))return res.status(409).json({ok:false,message:'Bu telefon numarasıyla daha önce hesap oluşturulmuş.'});
   if(PHONE_VERIFICATION_REQUIRED)return res.status(503).json({ok:false,message:'Telefon doğrulama özelliği etkin ancak SMS sağlayıcısı henüz canlı kullanıma açılmadı.'});
   const now=new Date().toISOString(),id='USR-'+crypto.randomUUID(),customerId='CUS-'+crypto.randomUUID(),ph=passwordHash(password);
-  const user={id,customerId,firstName,lastName,email,phone,birthDate,phoneVerifiedAt:null,passwordSalt:ph.salt,passwordHash:ph.hash,authVersion:1,authProviders:['password'],socialIds:{},smsMarketingConsent:!!req.body.smsMarketingConsent,emailMarketingConsent:!!req.body.emailMarketingConsent,createdAt:now,updatedAt:now,disabled:false};users.push(user);writeJson('users.json',users);
+  const user={id,customerId,firstName,lastName,email,phone,birthDate,phoneVerifiedAt:null,passwordSalt:ph.salt,passwordHash:ph.hash,authVersion:1,authProviders:['password'],socialIds:{},smsMarketingConsent:!!req.body.smsMarketingConsent,emailMarketingConsent:!!req.body.emailMarketingConsent,pushMarketingConsent:true,createdAt:now,updatedAt:now,disabled:false};users.push(user);writeJson('users.json',users);
   const customers=readJson('customers.json',[]);customers.push({id:customerId,userId:id,firstName,lastName,email,phone,createdAt:now,updatedAt:now});writeJson('customers.json',customers);
   // Eski siparişleri yalnız telefon + e-posta birlikte aynıysa bağla; yalnız isim/telefon ile otomatik eşleştirme yapma.
   const oldOrders=readJson('orders.json',[]);let linked=false;for(const o of oldOrders){const oe=normalizeEmail(o?.customer?.email||'');const op=normalizeAccountPhone(o?.customer?.phone||'');if(oe&&oe===email&&op&&op===phone&&!o.userId){o.userId=id;o.customerId=customerId;linked=true}}if(linked)writeJson('orders.json',oldOrders);
   const cons=readJson('marketing_consents.json',[]);for(const [channel,value] of [['sms',!!req.body.smsMarketingConsent],['email',!!req.body.emailMarketingConsent]])cons.push({id:crypto.randomUUID(),userId:id,channel,granted:value,at:now,source:'registration',textVersion:'1',ip:consentIp(req),userAgent:String(req.headers['user-agent']||'')});writeJson('marketing_consents.json',cons);
   assignNewMemberCoupons(id,now);
-  persistAccountStateAsync();setUserSession(res,user,req);res.json({ok:true,user:publicUser(user)});
-});
-app.post('/api/auth/login',sameOriginGuard,(req,res)=>{const login=String(req.body.login??req.body.email??'').trim(),attemptKeys=accountLoginAttemptKeys(req,login),blockedKey=attemptKeys.find(k=>Number(accountAttemptState(k).blockedUntil||0)>Date.now());if(blockedKey)return res.status(429).json({ok:false,message:accountBlockedMessage(blockedKey),remainingAttempts:0});const email=normalizeEmail(login),phone=normalizeAccountPhone(login),users=readJson('users.json',[]),matches=users.filter(x=>x.email===email||(phone&&normalizeAccountPhone(x.phone)===phone)),u=matches.find(x=>!x.deleted)||matches[0];if(u?.deleted)return res.status(403).json({ok:false,message:'Bu kullanıcı silinmiştir. Aynı bilgilerle baştan yeni bir hesap oluşturabilirsiniz.'});if(!u||!passwordMatches(req.body.password,u)){const remainings=attemptKeys.map(accountFailKey),remaining=Math.min(...remainings);if(remaining<=0){const key=attemptKeys.find(k=>Number(accountAttemptState(k).blockedUntil||0)>Date.now())||attemptKeys[0];return res.status(429).json({ok:false,message:accountBlockedMessage(key),remainingAttempts:0})}return res.status(401).json({ok:false,message:`E-posta/telefon veya şifre hatalı. ${remaining} hakkınız kaldı.`,remainingAttempts:remaining})}if(u.disabled)return res.status(403).json({ok:false,message:'Bu üyelik yönetim tarafından iptal edilmiş.'});attemptKeys.forEach(clearAccountLoginAttempts);setUserSession(res,u,req);res.json({ok:true,user:publicUser(u)})});
+  await persistAccountStateToGithub().catch(e=>{console.error('Üyelik kalıcı kayıt:',e);throw e});setUserSession(res,user,req);res.json({ok:true,user:publicUser(user)});
+
+}));
+app.post('/api/auth/login',sameOriginGuard,(req,res)=>{if(rateLimitHit(req,'login',80,15*60*1000))return res.status(429).json({ok:false,message:'Çok fazla giriş isteği. Lütfen biraz sonra tekrar deneyin.'});const login=String(req.body.login??req.body.email??'').trim(),attemptKeys=accountLoginAttemptKeys(req,login),blockedKey=attemptKeys.find(k=>Number(accountAttemptState(k).blockedUntil||0)>Date.now());if(blockedKey)return res.status(429).json({ok:false,message:accountBlockedMessage(blockedKey),remainingAttempts:0});const email=normalizeEmail(login),phone=normalizeAccountPhone(login),users=readJson('users.json',[]),matches=users.filter(x=>x.email===email||(phone&&normalizeAccountPhone(x.phone)===phone)),u=matches.find(x=>!x.deleted)||matches[0];if(u?.deleted)return res.status(403).json({ok:false,message:'Bu kullanıcı silinmiştir. Aynı bilgilerle baştan yeni bir hesap oluşturabilirsiniz.'});if(!u||!passwordMatches(req.body.password,u)){const remainings=attemptKeys.map(accountFailKey),remaining=Math.min(...remainings);if(remaining<=0){const key=attemptKeys.find(k=>Number(accountAttemptState(k).blockedUntil||0)>Date.now())||attemptKeys[0];return res.status(429).json({ok:false,message:accountBlockedMessage(key),remainingAttempts:0})}return res.status(401).json({ok:false,message:`E-posta/telefon veya şifre hatalı. ${remaining} hakkınız kaldı.`,remainingAttempts:remaining})}if(u.disabled)return res.status(403).json({ok:false,message:'Bu üyelik yönetim tarafından iptal edilmiş.'});attemptKeys.forEach(clearAccountLoginAttempts);setUserSession(res,u,req);res.json({ok:true,user:publicUser(u)})});
 app.post('/api/auth/logout',sameOriginGuard,(req,res)=>{clearUserSession(res,req);res.json({ok:true})});
 app.get('/api/auth/me',(req,res)=>{const u=accountUserFromReq(req);res.json({ok:true,authenticated:!!u,user:publicUser(u)})});
-app.patch('/api/account/profile',sameOriginGuard,requireUser,async(req,res)=>{
+app.patch('/api/account/profile',sameOriginGuard,requireUser,async(req,res)=>serializedMutation('accounts',async()=>{
   const users=readJson('users.json',[]),i=users.findIndex(x=>x.id===req.accountUser.id),u=users[i],now=new Date().toISOString(),meta=profileChangeMeta(u);
   const email=normalizeEmail(req.body.email),phone=normalizeAccountPhone(req.body.phone),firstName=String(req.body.firstName||'').trim(),lastName=String(req.body.lastName||'').trim(),birthDate=String(req.body.birthDate||'').trim();
   if(!firstName||!lastName)return res.status(400).json({ok:false,message:'Ad ve soyad zorunludur.'});if(!email.includes('@'))return res.status(400).json({ok:false,message:'Lütfen geçerli bir e-posta adresi girin.'});if(!phone)return res.status(400).json({ok:false,message:'Lütfen geçerli bir telefon numarası girin.'});if(!validBirthDateIso(birthDate))return res.status(400).json({ok:false,message:'Doğum tarihi zorunludur ve geçerli olmalıdır.'});
@@ -1388,7 +1462,9 @@ app.patch('/api/account/profile',sameOriginGuard,requireUser,async(req,res)=>{
   if(emailChanged){
     if(!RESEND_API_KEY)return res.status(503).json({ok:false,message:'Yeni e-posta adresini doğrulamak için e-posta servisi henüz yapılandırılmadı. Mevcut e-posta adresiniz değiştirilmedi.'});
     const raw=crypto.randomBytes(32).toString('base64url'),tokenHash=crypto.createHash('sha256').update(raw).digest('hex'),pending={email,tokenHash,requestedAt:now,expiresAt:new Date(Date.now()+PROFILE_VERIFY_TTL_MS).toISOString()};
-    const sent=await sendAccountEmailVerificationMail(email,`${PUBLIC_BASE_URL}/api/account/verify-email-change?token=${encodeURIComponent(raw)}`);if(!sent)return res.status(502).json({ok:false,message:'Yeni e-posta adresine doğrulama bağlantısı gönderilemedi. Mevcut e-posta adresiniz değiştirilmedi.'});u.pendingEmailChange=pending;pendingMessage='Yeni e-posta adresinize doğrulama bağlantısı gönderildi. Doğrulanana kadar mevcut e-posta adresiniz aktif kalır.';
+    u.pendingEmailChange=pending;users[i]=u;writeJson('users.json',users);
+    await persistAccountStateToGithub().catch(e=>{console.error('E-posta değişiklik token kalıcı kayıt:',e);throw e});
+    const sent=await sendAccountEmailVerificationMail(email,`${PUBLIC_BASE_URL}/api/account/verify-email-change?token=${encodeURIComponent(raw)}`);if(!sent)return res.status(502).json({ok:false,message:'Yeni e-posta adresine doğrulama bağlantısı gönderilemedi. Mevcut e-posta adresiniz değiştirilmedi.'});pendingMessage='Yeni e-posta adresinize doğrulama bağlantısı gönderildi. Doğrulanana kadar mevcut e-posta adresiniz aktif kalır.';
   }
   if(phoneChanged){
     try{await SmsVerificationProvider.sendOtp(phone,u.id)}catch(e){return res.status(503).json({ok:false,message:'Yeni telefon numarası doğrulanmadan aktif edilemez. SMS doğrulama servisi şu anda yapılandırılmamış; mevcut telefon numaranız değiştirilmedi.'})}
@@ -1396,28 +1472,32 @@ app.patch('/api/account/profile',sameOriginGuard,requireUser,async(req,res)=>{
   }
   if(nameChanged){pushProfileHistory(u,'Ad / Soyad',[u.firstName,u.lastName].filter(Boolean).join(' '),[firstName,lastName].filter(Boolean).join(' '));u.firstName=firstName;u.lastName=lastName;meta.nameChangedAt=now}
   if(birthChanged){pushProfileHistory(u,'Doğum Tarihi',u.birthDate||'',birthDate);u.birthDate=birthDate;meta.birthDateUserChangeCount+=1}
-  const oldSms=!!u.smsMarketingConsent,oldMail=!!u.emailMarketingConsent,newSms=!!req.body.smsMarketingConsent,newMail=!!req.body.emailMarketingConsent;
+  const oldSms=!!u.smsMarketingConsent,oldMail=!!u.emailMarketingConsent,oldPush=u.pushMarketingConsent!==false,newSms=!!req.body.smsMarketingConsent,newMail=!!req.body.emailMarketingConsent,newPush=req.body.pushMarketingConsent!==false;
   if(oldSms!==newSms)pushProfileHistory(u,'SMS İzni',oldSms?'Açık':'Kapalı',newSms?'Açık':'Kapalı');if(oldMail!==newMail)pushProfileHistory(u,'E-posta İzni',oldMail?'Açık':'Kapalı',newMail?'Açık':'Kapalı');
-  u.smsMarketingConsent=newSms;u.emailMarketingConsent=newMail;u.profileChangeMeta=meta;u.updatedAt=now;users[i]=u;writeJson('users.json',users);
+  u.smsMarketingConsent=newSms;u.emailMarketingConsent=newMail;u.pushMarketingConsent=newPush;u.profileChangeMeta=meta;u.updatedAt=now;users[i]=u;writeJson('users.json',users);
   const customers=readJson('customers.json',[]),ci=customers.findIndex(c=>c.id===u.customerId);if(ci>=0){Object.assign(customers[ci],{firstName:u.firstName,lastName:u.lastName,email:u.email,phone:u.phone,updatedAt:now});writeJson('customers.json',customers)}
   if(oldSms!==newSms||oldMail!==newMail){const cons=readJson('marketing_consents.json',[]);if(oldSms!==newSms)cons.push({id:crypto.randomUUID(),userId:u.id,channel:'sms',granted:newSms,at:now,source:'account',textVersion:'1',ip:consentIp(req),userAgent:String(req.headers['user-agent']||'')});if(oldMail!==newMail)cons.push({id:crypto.randomUUID(),userId:u.id,channel:'email',granted:newMail,at:now,source:'account',textVersion:'1',ip:consentIp(req),userAgent:String(req.headers['user-agent']||'')});writeJson('marketing_consents.json',cons)}
-  persistAccountStateAsync();res.json({ok:true,user:publicUser(u),pendingEmailVerification:emailChanged,pendingPhoneVerification:phoneChanged,message:pendingMessage||'Hesap bilgileri güncellendi.'});
-});
-app.get('/api/account/verify-email-change',async(req,res)=>{
-  const token=String(req.query.token||''),hash=token?crypto.createHash('sha256').update(token).digest('hex'):'',users=readJson('users.json',[]),u=users.find(x=>x.pendingEmailChange?.tokenHash===hash);
-  if(!u||!u.pendingEmailChange||new Date(u.pendingEmailChange.expiresAt).getTime()<Date.now())return res.status(400).send('<!doctype html><meta charset="utf-8"><title>SHAZ</title><p>Doğrulama bağlantısı geçersiz veya süresi dolmuş.</p>');
-  const email=normalizeEmail(u.pendingEmailChange.email);if(users.some(x=>x.id!==u.id&&normalizeEmail(x.email)===email))return res.status(409).send('<!doctype html><meta charset="utf-8"><title>SHAZ</title><p>Bu e-posta adresi başka bir hesapta kullanılıyor.</p>');
+  await persistAccountStateToGithub().catch(e=>{console.error('Hesap kalıcı kayıt:',e);throw e});res.json({ok:true,user:publicUser(u),pendingEmailVerification:emailChanged,pendingPhoneVerification:phoneChanged,message:pendingMessage||'Hesap bilgileri güncellendi.'});
+
+}));
+
+app.get('/api/account/verify-email-change',(req,res)=>{const token=String(req.query?.token||'');const safe=token.replace(/[^A-Za-z0-9_-]/g,'');if(!safe)return res.status(400).send('Geçersiz bağlantı.');res.setHeader('Cache-Control','no-store');res.send(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SHAZ</title><body style="font-family:Arial;text-align:center;padding:50px"><h2>E-posta değişikliğini onayla</h2><p>Bu işlem hesabınızdaki e-posta adresini değiştirecek.</p><button id="ok" style="padding:12px 18px">E-posta değişikliğini onayla</button><p id="m"></p><script>document.getElementById('ok').onclick=async()=>{const r=await fetch('/api/account/verify-email-change',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:${JSON.stringify(safe)}})});const j=await r.json().catch(()=>({}));document.getElementById('m').textContent=j.ok?'E-posta adresiniz güncellendi.':(j.message||'İşlem tamamlanamadı.');if(j.ok)document.getElementById('ok').disabled=true}</script></body>`)});
+app.post('/api/account/verify-email-change',sameOriginGuard,async(req,res)=>serializedMutation('accounts',async()=>{
+  const token=String(req.body?.token||''),hash=token?crypto.createHash('sha256').update(token).digest('hex'):'',users=readJson('users.json',[]),u=users.find(x=>x.pendingEmailChange?.tokenHash===hash);
+  if(!u||!u.pendingEmailChange||new Date(u.pendingEmailChange.expiresAt).getTime()<Date.now())return res.status(400).json({ok:false,message:'Doğrulama bağlantısı geçersiz veya süresi dolmuş.'});
+  const email=normalizeEmail(u.pendingEmailChange.email);if(users.some(x=>x.id!==u.id&&normalizeEmail(x.email)===email))return res.status(409).json({ok:false,message:'Bu e-posta adresi başka bir hesapta kullanılıyor.'});
   const old=u.email;pushProfileHistory(u,'E-posta',old,email);u.email=email;u.pendingEmailChange=null;u.profileChangeMeta={...profileChangeMeta(u),emailChangedAt:new Date().toISOString()};u.updatedAt=new Date().toISOString();writeJson('users.json',users);
   const customers=readJson('customers.json',[]),ci=customers.findIndex(c=>c.id===u.customerId);if(ci>=0){customers[ci].email=email;customers[ci].updatedAt=u.updatedAt;writeJson('customers.json',customers)}persistAccountStateAsync();
-  res.send('<!doctype html><meta charset="utf-8"><title>SHAZ</title><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font-family:Arial;text-align:center;padding:50px"><h2>E-posta adresiniz doğrulandı.</h2><p>Yeni e-posta adresiniz artık hesabınızda aktif.</p><a href="/">Web sitesine dön</a></body>');
-});
-app.post('/api/account/verify-phone-change',sameOriginGuard,requireUser,async(req,res)=>{
+  await persistAccountStateToGithub().catch(e=>{console.error('E-posta değişikliği kalıcı kayıt:',e);throw e});
+  return res.json({ok:true});
+}));
+app.post('/api/account/verify-phone-change',sameOriginGuard,requireUser,async(req,res)=>serializedMutation('accounts',async()=>{
   const users=readJson('users.json',[]),i=users.findIndex(x=>x.id===req.accountUser.id),u=users[i],pending=u.pendingPhoneChange,code=String(req.body.code||'').trim();if(!pending)return res.status(400).json({ok:false,message:'Bekleyen telefon numarası değişikliği yok.'});if(new Date(pending.expiresAt).getTime()<Date.now())return res.status(400).json({ok:false,message:'Telefon doğrulama süresi dolmuş. Değişikliği yeniden başlatın.'});
   const ok=await SmsVerificationProvider.verifyOtp(pending.phone,code,u.id);if(!ok)return res.status(400).json({ok:false,message:'Doğrulama kodu hatalı veya süresi dolmuş.'});if(users.some(x=>x.id!==u.id&&normalizeAccountPhone(x.phone)===pending.phone))return res.status(409).json({ok:false,message:'Bu telefon numarası başka bir hesapta kullanılıyor.'});
   const old=normalizeAccountPhone(u.phone)||u.phone;pushProfileHistory(u,'Telefon',old,pending.phone);u.phone=pending.phone;u.phoneVerifiedAt=new Date().toISOString();u.pendingPhoneChange=null;u.profileChangeMeta={...profileChangeMeta(u),phoneChangedAt:u.phoneVerifiedAt};u.updatedAt=u.phoneVerifiedAt;writeJson('users.json',users);
-  const customers=readJson('customers.json',[]),ci=customers.findIndex(c=>c.id===u.customerId);if(ci>=0){customers[ci].phone=u.phone;customers[ci].updatedAt=u.updatedAt;writeJson('customers.json',customers)}persistAccountStateAsync();res.json({ok:true,user:publicUser(u)});
-});
-app.post('/api/account/password',sameOriginGuard,requireUser,(req,res)=>{if(!passwordMatches(req.body.currentPassword,req.accountUser))return res.status(400).json({ok:false,message:'Mevcut şifre hatalı.'});const np=String(req.body.newPassword||'');if(np.length<8)return res.status(400).json({ok:false,message:'Yeni şifre en az 8 karakter olmalıdır.'});const users=readJson('users.json',[]),i=users.findIndex(u=>u.id===req.accountUser.id),ph=passwordHash(np);users[i].passwordSalt=ph.salt;users[i].passwordHash=ph.hash;users[i].authVersion=Number(users[i].authVersion||1)+1;users[i].updatedAt=new Date().toISOString();writeJson('users.json',users);persistAccountStateAsync();setUserSession(res,users[i],req);res.json({ok:true})});
+  const customers=readJson('customers.json',[]),ci=customers.findIndex(c=>c.id===u.customerId);if(ci>=0){customers[ci].phone=u.phone;customers[ci].updatedAt=u.updatedAt;writeJson('customers.json',customers)}await persistAccountStateToGithub().catch(e=>{console.error('Telefon değişikliği kalıcı kayıt:',e);throw e});return res.json({ok:true,user:publicUser(u)});
+}));
+app.post('/api/account/password',sameOriginGuard,requireUser,async(req,res)=>serializedMutation('accounts',async()=>{if(!passwordMatches(req.body.currentPassword,req.accountUser))return res.status(400).json({ok:false,message:'Mevcut şifre hatalı.'});const np=String(req.body.newPassword||'');if(!validPasswordSize(np))return res.status(400).json({ok:false,message:'Yeni şifre 8-256 karakter arasında olmalıdır.'});const users=readJson('users.json',[]),i=users.findIndex(u=>u.id===req.accountUser.id),ph=passwordHash(np);users[i].passwordSalt=ph.salt;users[i].passwordHash=ph.hash;users[i].authVersion=Number(users[i].authVersion||1)+1;users[i].updatedAt=new Date().toISOString();writeJson('users.json',users);await persistAccountStateToGithub().catch(e=>{console.error('Şifre kalıcı kayıt:',e);throw e});setUserSession(res,users[i],req);return res.json({ok:true})}));
 app.get('/api/account/addresses',requireUser,(req,res)=>res.json({ok:true,addresses:readJson('addresses.json',[]).filter(a=>a.userId===req.accountUser.id)}));
 app.post('/api/account/addresses',sameOriginGuard,requireUser,(req,res)=>{const arr=readJson('addresses.json',[]),now=new Date().toISOString(),extraPhone=String(req.body.extraPhone||'').trim()?normalizeAccountPhone(req.body.extraPhone):'',a={id:'ADR-'+crypto.randomUUID(),userId:req.accountUser.id,title:String(req.body.title||'Adres').trim(),fullName:String(req.body.fullName||'').trim(),phone:normalizeAccountPhone(req.body.phone)||normalizeAccountPhone(req.accountUser.phone)||req.accountUser.phone,extraPhone,province:String(req.body.province||'').trim(),district:String(req.body.district||'').trim(),neighborhood:normalizeAccountAddressPart(req.body.neighborhood,'neighborhood'),avenue:normalizeAccountAddressPart(req.body.avenue,'avenue'),street:normalizeAccountAddressPart(req.body.street,'street'),fullAddress:String(req.body.fullAddress||'').trim(),buildingNo:String(req.body.buildingNo||'').trim(),floor:String(req.body.floor||'').trim(),doorNo:String(req.body.doorNo||'').trim(),isDefault:!!req.body.isDefault||!arr.some(x=>x.userId===req.accountUser.id),createdAt:now,updatedAt:now};if(String(req.body.extraPhone||'').trim()&&!extraPhone)return res.status(400).json({ok:false,message:'2. telefon numarası geçerli değil.'});if(extraPhone&&extraPhone===a.phone)return res.status(400).json({ok:false,message:'2. telefon numarası ana telefonla aynı olamaz.'});if(a.isDefault)arr.forEach(x=>{if(x.userId===a.userId)x.isDefault=false});arr.push(a);writeJson('addresses.json',arr);persistAccountStateAsync();res.json({ok:true,address:a})});
 app.patch('/api/account/addresses/:id',sameOriginGuard,requireUser,(req,res)=>{const arr=readJson('addresses.json',[]),i=arr.findIndex(a=>a.id===req.params.id&&a.userId===req.accountUser.id);if(i<0)return res.status(404).json({ok:false,message:'Adres bulunamadı.'});const a=arr[i];for(const k of ['title','fullName','province','district','fullAddress','buildingNo','floor','doorNo'])if(k in req.body)a[k]=String(req.body[k]||'').trim();if('neighborhood'in req.body)a.neighborhood=normalizeAccountAddressPart(req.body.neighborhood,'neighborhood');if('avenue'in req.body)a.avenue=normalizeAccountAddressPart(req.body.avenue,'avenue');if('street'in req.body)a.street=normalizeAccountAddressPart(req.body.street,'street');if('phone'in req.body)a.phone=normalizeAccountPhone(req.body.phone)||a.phone;if('extraPhone'in req.body){const raw=String(req.body.extraPhone||'').trim(),extra=raw?normalizeAccountPhone(raw):'';if(raw&&!extra)return res.status(400).json({ok:false,message:'2. telefon numarası geçerli değil.'});if(extra&&extra===normalizeAccountPhone(a.phone))return res.status(400).json({ok:false,message:'2. telefon numarası ana telefonla aynı olamaz.'});a.extraPhone=extra}if('isDefault'in req.body)a.isDefault=!!req.body.isDefault;if(a.isDefault)arr.forEach((x,j)=>{if(j!==i&&x.userId===a.userId)x.isDefault=false});a.updatedAt=new Date().toISOString();writeJson('addresses.json',arr);persistAccountStateAsync();res.json({ok:true,address:a})});
@@ -1487,7 +1567,7 @@ app.get('/admin.html',(req,res)=>res.redirect('/admin'));
 
 app.use((err,req,res,next)=>{
  console.error(err);
- res.status(400).json({ok:false,message:err.message||'İstek işlenemedi.'});
+ res.status(400).json({ok:false,message:process.env.NODE_ENV==='production'?'İşlem sırasında bir hata oluştu. Lütfen tekrar deneyin.':(err.message||'İstek işlenemedi.')});
 });
 
 async function startServer(){
@@ -1495,6 +1575,8 @@ async function startServer(){
   // Bu yüzden [skip render] ile GitHub'a yazılan en güncel şifreli üyelik anlık görüntüsünü
   // dinlemeye başlamadan önce geri yükle; GitHub kullanılamazsa yerel seed/snapshot ile devam et.
   const remoteAccountSnapshotRestored=await restoreAccountStateFromGithub();
+  const ordersSnapshotRestored=await restoreOrdersStateFromGithub();
+  if(ordersSnapshotRestored)console.log('SHAZ sipariş verileri şifreli kalıcı kayıttan geri yüklendi.');
   if(remoteAccountSnapshotRestored)console.log('SHAZ üyelik verileri GitHub şifreli kalıcı kaydından geri yüklendi.');
   else if(localAccountSnapshotRestored)console.log('SHAZ üyelik verileri yerel şifreli kalıcı kayıttan kullanılıyor.');
   setInterval(()=>syncPendingOrdersToSheets().catch(()=>{}),60000);

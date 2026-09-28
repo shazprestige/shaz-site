@@ -5354,7 +5354,7 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 .accountMenuHero h2{font-size:30px;font-weight:400;letter-spacing:-.5px;margin:7px 0 0}
 .accountMenuList{display:flex;flex-direction:column;padding:8px 0}
 .accountMenuRow{appearance:none;width:100%;border:0;background:transparent;display:grid;grid-template-columns:34px 1fr 24px;align-items:center;gap:12px;padding:15px 8px;text-align:left;cursor:pointer;color:#53565a;border-radius:8px}
-.accountMenuRow:hover{background:#f7f7f7}
+@media (hover:hover) and (pointer:fine){.accountMenuRow:hover{background:#f7f7f7}}
 .accountMenuRow b{font-size:16px;font-weight:700}
 .accountMenuIcon{width:24px;height:24px;display:grid;place-items:center;color:#76797d}
 .accountMenuIcon svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
@@ -5428,7 +5428,7 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 .authChecks{text-align:left!important;margin:3px 0!important;gap:9px!important}.authCheck{font-size:11px!important;line-height:1.35!important;color:#333}.authCheck input{width:18px;height:18px;flex:0 0 auto;margin:0}
 .authLegalLinks{justify-content:center!important;margin:1px 0 4px}.authLegalLinks button{font-size:10px!important;color:#555}
 .accountStandardPage{display:block!important;min-height:100dvh!important;background:#fff!important}.accountPagePanelSingle{min-height:100dvh;padding:112px 24px 54px!important;justify-content:flex-start!important}.accountCenteredContent{width:min(100%,720px);margin:0 auto}
-.accountShell{max-width:720px!important;width:100%;margin:0 auto!important;padding:0 4px 26px!important}.accountShell .wizardHead{width:100%;align-items:center!important}.accountShell .wizardHead h2{margin:0 auto;text-align:center}.accountShellMenu{max-width:660px!important}.accountMenuHero{padding:24px 4px 28px!important;border-bottom:0!important}.accountMenuHero h2{font-size:34px!important;font-weight:400!important;text-align:left!important;margin:0!important;color:#222}.accountMenuList{padding:8px 0!important}.accountMenuRow{grid-template-columns:38px 1fr 28px!important;padding:17px 8px!important;border-radius:0!important;color:#696969!important}.accountMenuRow:hover{background:#f7f7f7!important}.accountMenuRow b{font-size:18px!important;color:#666!important}.accountMenuIcon{width:27px!important;height:27px!important}.accountMenuIcon svg{width:25px!important;height:25px!important}.accountMenuArrow{font-size:32px!important;color:#999!important}.accountMenuList .accountMenuDivider{margin:9px 0!important}
+.accountShell{max-width:720px!important;width:100%;margin:0 auto!important;padding:0 4px 26px!important}.accountShell .wizardHead{width:100%;align-items:center!important}.accountShell .wizardHead h2{margin:0 auto;text-align:center}.accountShellMenu{max-width:660px!important}.accountMenuHero{padding:24px 4px 28px!important;border-bottom:0!important}.accountMenuHero h2{font-size:34px!important;font-weight:400!important;text-align:left!important;margin:0!important;color:#222}.accountMenuList{padding:8px 0!important}.accountMenuRow{grid-template-columns:38px 1fr 28px!important;padding:17px 8px!important;border-radius:0!important;color:#696969!important}@media (hover:hover) and (pointer:fine){.accountMenuRow:hover{background:#f7f7f7!important}}.accountMenuRow b{font-size:18px!important;color:#666!important}.accountMenuIcon{width:27px!important;height:27px!important}.accountMenuIcon svg{width:25px!important;height:25px!important}.accountMenuArrow{font-size:32px!important;color:#999!important}.accountMenuList .accountMenuDivider{margin:9px 0!important}
 .accountEntryPopover{position:fixed;z-index:2147483200;right:16px;top:96px;width:250px;background:#fff;border:1px solid #eee;box-shadow:0 12px 28px #0002;padding:12px;display:grid;gap:5px}.accountEntryPrimary{height:44px;border:0;background:#242424;color:#fff;font-weight:700;cursor:pointer}.accountEntryRow{display:grid;grid-template-columns:28px 1fr;align-items:center;gap:8px;min-height:42px;border:0;background:#fff;color:#222;text-decoration:none;text-align:left;padding:6px 8px;cursor:pointer}.accountEntryRow:hover{background:#f5f5f5}.accountEntryRow span{width:22px;height:22px}.accountEntryRow svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5}.accountEntryRow b{font-size:14px;font-weight:500}
 .accountSubPage{width:min(100%,820px);margin:92px auto 40px;padding:0 20px}
 
@@ -5996,7 +5996,7 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 
 /* Hesap menüsünde mobil dokunma/focus izi geri dönünce kalmaz. */
 .accountMenuRow{-webkit-tap-highlight-color:transparent!important;touch-action:manipulation!important}
-.accountMenuRow:focus,.accountMenuRow:focus-visible{outline:none!important;background:inherit!important;box-shadow:none!important}
+.accountMenuRow:focus{outline:none!important;background:transparent!important;box-shadow:none!important}.accountMenuRow:focus-visible{outline:2px solid currentColor!important;outline-offset:2px;background:transparent!important;box-shadow:none!important}
 .accountMenuRow:active{background:#f3f3f3!important}
 .accountLoadingState{padding:28px 12px!important;text-align:center!important;color:#777!important}
 

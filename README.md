@@ -18,7 +18,7 @@ Sadece 4 ana menü:
 
 - Ürün ekleme ayrı yerde değildir; kategori kartının hemen içindedir.
 - Ürünler panelde yan yana kartlar halinde görünür.
-- Fotoğraf PC'den yüklenir, uploads klasörüne kaydolur ve ürüne otomatik bağlanır.
+- Ürün fotoğrafı PC'den yüklenir, uploads klasörüne kaydolur ve ürüne otomatik bağlanır. Müşterinin kişiselleştirme fotoğrafı public ürün görseli gibi tutulmaz; private-uploads alanında saklanır.
 - Canlı mobil önizleme, düzenlediğin alana otomatik kayar.
 
 
@@ -166,11 +166,15 @@ SHAZ V39 — KALICI GITHUB VERİSİ + ÇOKLU FOTOĞRAF
   * Site Ayarları + Katalog data/settings.json ve data/catalog.json olarak GitHub'a kalıcı yazılır.
 - Yeni kod sürümü deploy edildiğinde GitHub'daki geçmiş data ve uploads korunur.
 
+V173 RELEASE GÜVENLİĞİ
+- Dağıtım ZIP'i data/, uploads/ ve private-uploads/ klasörlerini içermez. Kod güncellemesi canlı müşteri/sipariş verisinin üzerine boş başlangıç dosyası yazmamalıdır.
+- README.md güncel deploy talimatının ana kaynağıdır.
+
 3) Önemli Render ayarı
 - İçerik kaydında gereksiz deploy olmaması için Render Auto-Deploy OFF önerilir.
 - Yeni site sürümü geldiğinde GitHub'a dosyaları yükledikten sonra Manual Deploy -> Deploy latest commit yapılır.
 - Böylece ürün/fotoğraf yüklemek siteyi her seferinde yeniden başlatmaz.
 
 4) Kart / ücretli depolama yok
-- Fotoğraf deposu GitHub reposudur.
-- Render Free yalnızca siteyi çalıştırır.
+- Public ürün fotoğrafları GitHub /uploads yapısında kalabilir. Müşteri kişiselleştirme fotoğrafları public repo dosyası olarak tutulmaz.
+- Render uygulamayı çalıştırır; kalıcı müşteri verisi release ZIP ile üzerine yazılmaz.

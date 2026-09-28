@@ -3,5 +3,5 @@ V45 GITHUB YÜKLEME
 1) Bu klasörün içine gir.
 2) İçindeki TÜM dosya ve klasörleri shaz-site GitHub deposunun ANA DİZİNİNE yükle.
 3) Klasörün kendisini public klasörünün içine atma.
-4) Bu pakette data ve uploads yoktur; GitHub’daki mevcut data/ ve uploads/ klasörlerini SİLME.
-5) Değişiklikleri kaydet; Render otomatik deploy etsin.
+4) Bu release paketinde data, uploads ve private-uploads yoktur; GitHub/Render üzerindeki mevcut canlı veri ve ürün görsellerini SİLME.
+5) Değişiklikleri kaydet. Render Auto-Deploy OFF ise Manual Deploy -> Deploy latest commit ile bu sürümü yayınla. README.md ana güncel talimattır.
