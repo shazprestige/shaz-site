@@ -6334,3 +6334,9 @@ body.drawerOpen #announceWrap,html.drawerOpen body #announceWrap{display:block!i
 
 /* Üyeler listesinde PWA son kullanım bilgisi mevcut son giriş alanının altında görünür. */
 .memberPwaLastSeen{display:block!important;margin-top:2px!important;font-size:8.5px!important;line-height:1.2!important;color:#747b82!important;font-weight:600!important}
+
+/* ===== v174 — yalnız e-posta OTP ve iOS hesap menüsü geçici durum düzeltmeleri ===== */
+@media (hover:none),(pointer:coarse){.accountMenuRow:active{background:transparent!important}}
+.registrationVerifyForm{gap:12px!important}
+.registrationVerifyLead{margin:0 0 4px!important;text-align:center!important;font-size:12px!important;line-height:1.45!important;color:#555!important}
+.registrationOtpInput{text-align:center!important;font-size:24px!important;font-weight:800!important;letter-spacing:8px!important;font-variant-numeric:tabular-nums!important}
