@@ -105,7 +105,7 @@ app.get('/pwa-startup.png',async(req,res)=>{
     res.type('png').set('Cache-Control','public, max-age=31536000, immutable').send(image);
   }catch(e){console.error('PWA startup image:',e?.message||e);res.status(500).end()}
 });
-setImmediate(()=>getPwaSplashBrandBuffer().catch(e=>console.warn('PWA splash önbelleği hazırlanamadı:',e?.message||e)));
+setImmediate(()=>Promise.all([getPwaSplashBrandBuffer(),getPwaIconBuffer(180,.70)]).catch(e=>console.warn('PWA görsel önbelleği hazırlanamadı:',e?.message||e)));
 function isPrivateHostName(host){host=String(host||'').toLowerCase();if(host==='localhost'||host.endsWith('.localhost'))return true;if(/^127\./.test(host)||/^10\./.test(host)||/^192\.168\./.test(host)||/^169\.254\./.test(host))return true;const m=host.match(/^172\.(\d{1,3})\./);if(m&&Number(m[1])>=16&&Number(m[1])<=31)return true;if(host==='::1'||host.startsWith('fc')||host.startsWith('fd')||host.startsWith('fe80:'))return true;return false}
 function assertSafeRemoteHttpUrl(raw){const u=new URL(raw);if(!['http:','https:'].includes(u.protocol)||isPrivateHostName(u.hostname))throw new Error('Güvensiz uzak URL engellendi.');return u}
 async function safeFetchImageUrl(raw,opts={}){let url=assertSafeRemoteHttpUrl(raw).toString();for(let i=0;i<4;i++){const r=await fetch(url,{...opts,redirect:'manual'});if([301,302,303,307,308].includes(r.status)){const loc=r.headers.get('location');if(!loc)throw new Error('Geçersiz yönlendirme.');url=assertSafeRemoteHttpUrl(new URL(loc,url).toString()).toString();continue}return r}throw new Error('Çok fazla yönlendirme.');}
@@ -151,17 +151,18 @@ app.get('/favicon-32.png',(req,res)=>sendBrandPng(req,res,32));
 app.get('/favicon-64.png',(req,res)=>sendBrandPng(req,res,64));
 app.get('/favicon-192.png',(req,res)=>sendBrandPng(req,res,192));
 app.get('/apple-touch-icon.png',(req,res)=>sendPwaIcon(req,res,180,.70));
+const pwaIconCache=new Map();
+async function getPwaIconBuffer(size,ratio=.70){
+  const brand=await getPwaSplashBrandBuffer(),brandHash=crypto.createHash('sha1').update(brand).digest('hex').slice(0,12),key=`${size}:${ratio}:${brandHash}`;
+  if(pwaIconCache.has(key))return pwaIconCache.get(key);
+  const safe=Math.max(1,Math.round(size*ratio));
+  const logo=await sharp(brand,{failOn:'none'}).resize(safe,safe,{fit:'inside',withoutEnlargement:false}).png().toBuffer();
+  const canvas=await sharp({create:{width:size,height:size,channels:4,background:{r:255,g:255,b:255,alpha:1}}}).composite([{input:logo,gravity:'center'}]).png().toBuffer();
+  pwaIconCache.set(key,canvas);return canvas;
+}
 async function sendPwaIcon(req,res,size,ratio=.70){
-  try{
-    const a=brandAsset();let input=null;
-    if(a.remote){const r=await safeFetchImageUrl(a.remote,{cache:'no-store'});if(!r.ok)throw new Error('PWA logo kaynağı alınamadı.');input=Buffer.from(await r.arrayBuffer())}
-    else if(a.file)input=a.file;else return res.status(404).end();
-    const safe=Math.max(1,Math.round(size*ratio));
-    const trimmed=await sharp(input,{failOn:'none'}).trim({threshold:10}).png().toBuffer();
-    const logo=await sharp(trimmed).resize(safe,safe,{fit:'inside',withoutEnlargement:false}).png().toBuffer();
-    const canvas=await sharp({create:{width:size,height:size,channels:4,background:{r:255,g:255,b:255,alpha:1}}}).composite([{input:logo,gravity:'center'}]).png().toBuffer();
-    res.type('png').set('Cache-Control','public, max-age=86400, must-revalidate').send(canvas)
-  }catch(e){console.error('PWA ikon üretimi:',e);res.status(500).end()}
+  try{const canvas=await getPwaIconBuffer(size,ratio);res.type('png').set('Cache-Control','public, max-age=86400, must-revalidate').send(canvas)}
+  catch(e){console.error('PWA ikon üretimi:',e);res.status(500).end()}
 }
 app.get('/icon-192.png',(req,res)=>sendPwaIcon(req,res,192,.70));
 app.get('/icon-512.png',(req,res)=>sendPwaIcon(req,res,512,.70));
