@@ -10,6 +10,10 @@ let webpush=null;
 try{webpush=require('web-push')}catch(e){console.warn('web-push paketi yüklenmemiş; Web Push gönderimi devre dışı kalacak.')}
 const app = express();
 const PORT = process.env.PORT || 3000;
+const configuredProxyHops=Number(process.env.TRUST_PROXY_HOPS||((process.env.RENDER||process.env.RENDER_EXTERNAL_URL)?1:0));
+if(Number.isInteger(configuredProxyHops)&&configuredProxyHops>0)app.set('trust proxy',configuredProxyHops);
+function trustedClientIp(req){return String(req.ip||req.socket?.remoteAddress||'').trim()}
+function normalizeDeviceId(value){const id=String(value||'').trim();return /^[A-Za-z0-9._:-]{8,120}$/.test(id)?id:''}
 const root = __dirname;
 // V39: Varsayılan veri yolu doğrudan repo klasörüdür.
 // Yalnızca gerçekten bir Render Persistent Disk kullanıyorsan SHAZ_PERSIST_DIR ver.
@@ -269,7 +273,7 @@ const requireAdmin=(req,res,next)=>{
 // Basit brute-force sınırlaması: IP başına 15 dakikada en fazla 8 başarısız giriş.
 const loginAttempts=new Map();
 const LOGIN_WINDOW=15*60*1000, LOGIN_MAX=8;
-const loginKey=req=>String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0].trim();
+const loginKey=req=>trustedClientIp(req);
 const isLoginBlocked=key=>{
   const now=Date.now(), x=loginAttempts.get(key);
   if(!x)return false;
@@ -474,7 +478,9 @@ async function handleVerimorSmsWebhook(req,res){
 }
 async function handleVerimorIysPush(req,res){
   if(!VERIMOR_IYS_PUSH_ENABLED)return res.status(204).end();
-  const body=safeJsonParseBuffer(Buffer.isBuffer(req.body)?req.body:Buffer.from(''));const campaignId=String(body?.iys_campaign_id||body?.campaign_id||'').trim();
+  const raw=Buffer.isBuffer(req.body)?req.body:Buffer.from('');
+  if(!verifyVerimorWebhookRaw(raw,req.headers['x-verimor-signature']))return res.status(401).send('invalid signature');
+  const body=safeJsonParseBuffer(raw);const campaignId=String(body?.iys_campaign_id||body?.campaign_id||'').trim();
   if(!campaignId)return res.status(400).end();
   const fakeUser={id:'SYSTEM',customerId:null};makeIntegrationJob({provider:'verimor_iys',action:'pull_iys_campaign',channel:'system',user:fakeUser,destination:campaignId,consentVersion:String(body.report_date||integrationNow()),payload:{campaignId}});
   res.status(202).end();
@@ -590,9 +596,9 @@ function setUserSession(res,user,req){const secure=process.env.NODE_ENV==='produ
 function clearUserSession(res,req){const secure=process.env.NODE_ENV==='production'||String(req.headers['x-forwarded-proto']||'').includes('https');res.setHeader('Set-Cookie',`${USER_SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure?'; Secure':''}`)}
 function requireUser(req,res,next){const u=accountUserFromReq(req);if(!u)return res.status(401).json({ok:false,message:'Giriş yapmanız gerekiyor.'});req.accountUser=u;next()}
 function sameOriginGuard(req,res,next){if(['GET','HEAD','OPTIONS'].includes(req.method))return next();const origin=String(req.headers.origin||'');const host=String(req.headers.host||'');if(origin){try{if(new URL(origin).host!==host)return res.status(403).json({ok:false,message:'Geçersiz istek kaynağı.'})}catch{return res.status(403).json({ok:false,message:'Geçersiz istek kaynağı.'})}}next()}
-const accountRateKey=req=>String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0].trim();
+const accountRateKey=req=>trustedClientIp(req);
 const ACCOUNT_LOGIN_MAX_ATTEMPTS=5;
-function accountLoginDeviceId(req){const raw=String(req.body?.deviceId||req.headers['x-shaz-device-id']||'').trim();return /^[A-Za-z0-9._:-]{8,120}$/.test(raw)?raw:accountRateKey(req)}
+function accountLoginDeviceId(req){return normalizeDeviceId(req.body?.deviceId||req.headers['x-shaz-device-id'])||accountRateKey(req)}
 function accountLoginAttemptKeys(req,login=''){
   const device='device:'+accountLoginDeviceId(req),identity=normalizeEmail(login)||normalizeAccountPhone(login)||String(login||'').trim().toLocaleLowerCase('tr-TR');
   // Hesabı yalnız identifier üzerinden global kilitleme: saldırgan başka ağdan hesabı kilitleyemesin.
@@ -606,7 +612,7 @@ function accountAttemptState(key){const now=Date.now(),all=readAccountLoginAttem
 function accountFailKey(key){const now=Date.now(),all=readAccountLoginAttempts(),x=all[key]||{count:0,blockedUntil:0,lastFailureAt:0,lockCount:0};if(x.blockedUntil&&now>=x.blockedUntil){x.count=0;x.blockedUntil=0}x.count=Math.min(ACCOUNT_LOGIN_MAX_ATTEMPTS,Number(x.count||0)+1);x.lastFailureAt=now;if(x.count>=ACCOUNT_LOGIN_MAX_ATTEMPTS){x.lockCount=Number(x.lockCount||0)+1;x.blockedUntil=now+(x.lockCount>=2?5:3)*60*1000;x.count=ACCOUNT_LOGIN_MAX_ATTEMPTS}all[key]=x;writeAccountLoginAttempts(all);return Math.max(0,ACCOUNT_LOGIN_MAX_ATTEMPTS-x.count)}
 function clearAccountLoginAttempts(key){const all=readAccountLoginAttempts();delete all[key];writeAccountLoginAttempts(all)}
 function accountBlockedMessage(key){const x=accountAttemptState(key),remainingMs=Math.max(0,Number(x.blockedUntil||0)-Date.now()),secs=Math.max(1,Math.ceil(remainingMs/1000)),mins=Math.ceil(secs/60);return `5 hatalı giriş hakkınız doldu. ${mins} dakika sonra tekrar deneyin.`}
-function consentIp(req){return String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0].trim()}
+function consentIp(req){return trustedClientIp(req)}
 function readLegalDocuments(){
   let docs=readJson('legal_documents.json',[]);const backup=readJson('legal_documents_backup.json',[]);
   const hasText=arr=>Array.isArray(arr)&&arr.some(d=>String(d?.content||'').trim());
@@ -616,31 +622,47 @@ function readLegalDocuments(){
 function currentLegalDoc(type){return readLegalDocuments().find(d=>d.type===type&&d.active!==false)||null}
 function legalHash(doc){return crypto.createHash('sha256').update(String(doc?.content||'')).digest('hex')}
 function personalizationSnapshots(items){const out=[];(items||[]).forEach((item,itemIndex)=>{(item.writes||[]).forEach(w=>out.push({itemIndex,productId:item.product?.id||'',productName:item.product?.name||'',fieldType:'write',placement:w.position||'',customerValue:w.text||'',fee:Number(w.fee||0)}));(item.photoCustomizations||[]).forEach(p=>out.push({itemIndex,productId:item.product?.id||'',productName:item.product?.name||'',fieldType:'photo',placement:p.position||'',customerValue:p.note||'',uploadedImageReference:p.url||p.imageUrl||'',fee:Number(p.fee||0)}))});return out}
-function serverPrepareOrderItems(rawItems){
+function serverBuilderProduct(raw,byId,catalog){
+  const rawItems=Array.isArray(raw?.builderItems)?raw.builderItems:[],ids=[...new Set(rawItems.map(x=>String(x?.id||x?.productId||'').trim()).filter(Boolean))];
+  if(ids.length<2||ids.length>20)return null;
+  const selected=ids.map(id=>byId.get(id));if(selected.some(p=>!p||p.hidden===true||p.soldOutEnabled===true))return null;
+  const count=selected.length,pricing=catalog.builder?.productPricing||{};let total=0;
+  for(const p of selected){const map=pricing?.[p.id],key=String(count),rawPrice=map&&Object.prototype.hasOwnProperty.call(map,key)?map[key]:p.price,price=Number(rawPrice);if(!Number.isFinite(price)||price<0)return null;total+=price}
+  return {id:'custom-builder',name:`Kendi Setim (${count} ürün)`,price:Number(total.toFixed(2)),isSet:true,builderItems:selected.map(p=>({id:p.id,name:p.name,category:p.category,image:serverMainProductImage(p)}))};
+}
+function serverUpsellTriggerMatches(rule,rows,byId){
+  const triggerCategory=String(rule?.triggerCategoryId||''),mode=String(rule?.triggerMode||'all'),selected=new Set((rule?.triggerProductIds||[]).map(String));
+  if(!triggerCategory)return false;
+  return rows.some(x=>{const id=String(x?.product?.id||x?.productId||'').trim(),p=byId.get(id);if(!p||p.hidden===true||p.soldOutEnabled===true||String(p.category||'')!==triggerCategory)return false;return mode==='selected'?selected.has(String(p.id)):true});
+}
+function serverPrepareOrderItems(rawItems,{allowSoldOut=false}={}){
   const catalog=readJson('catalog.json',{products:[]}),products=Array.isArray(catalog.products)?catalog.products:[],byId=new Map(products.map(p=>[String(p.id),p]));
   const rows=Array.isArray(rawItems)?rawItems:[];if(!rows.length||rows.length>100)throw new Error('Sipariş ürünleri geçersiz.');
   const priceCfg=catalog.personalizationPricing||{},firstFee=Math.max(0,Number(priceCfg.first??75)),nextFee=Math.max(0,Number(priceCfg.second??50)),thirdFee=Math.max(0,Number(priceCfg.thirdPlus??nextFee)),photoExtra=Math.max(0,Number(catalog.walletPhotoFee??25));let slot=0;
-  const rawProductIds=new Set(rows.map(x=>String(x?.product?.id||x?.productId||'')));
-  const triggerCats=new Set([...rawProductIds].map(id=>byId.get(id)?.category).filter(Boolean));
   const clean=[];
   for(const src of rows){
-    const pid=String(src?.product?.id||src?.productId||'').trim(),p=byId.get(pid);if(!p||p.hidden===true)throw new Error('Sepette artık satışta olmayan bir ürün var. Sepeti yenileyin.');
+    const pid=String(src?.product?.id||src?.productId||'').trim();let p=byId.get(pid),builderProduct=null;
+    if(!p&&Array.isArray(src?.builderItems)){builderProduct=serverBuilderProduct(src,byId,catalog);p=builderProduct}
+    if(!p||p.hidden===true)throw new Error('Sepette artık satışta olmayan bir ürün var. Sepeti yenileyin.');
+    if(!allowSoldOut&&p.soldOutEnabled===true)throw new Error('Sepetinizde tükendi olarak işaretlenmiş bir ürün var. Sepeti yenileyin.');
     const qty=Math.floor(Number(src.qty||1));if(!Number.isFinite(qty)||qty<1||qty>20)throw new Error('Ürün adedi geçersiz.');
     let base=Math.max(0,Number(p.price||0));
     const up=src.upsell&&typeof src.upsell==='object'?src.upsell:null;
-    if(up?.ruleId){const rule=(catalog.checkoutUpsells||[]).find(r=>String(r.id)===String(up.ruleId)&&r.enabled!==false);if(rule&&triggerCats.has(rule.triggerCategoryId)&&p.category===rule.offerCategoryId&&((rule.offerMode||'all')==='all'||(rule.offerProductIds||[]).includes(p.id))){const v=rule?.productPrices?.[p.id];base=v!==undefined&&v!==null&&v!==''?Math.max(0,Number(v||0)):Math.max(0,Number(rule.specialPrice||0))}}
+    if(!builderProduct&&up?.ruleId){const rule=(catalog.checkoutUpsells||[]).find(r=>String(r.id)===String(up.ruleId)&&r.enabled!==false);if(rule&&serverUpsellTriggerMatches(rule,rows,byId)&&p.category===rule.offerCategoryId&&((rule.offerMode||'all')==='all'||(rule.offerProductIds||[]).map(String).includes(String(p.id)))){const v=rule?.productPrices?.[p.id];base=v!==undefined&&v!==null&&v!==''?Math.max(0,Number(v||0)):Math.max(0,Number(rule.specialPrice||0))}}
     let personalTotal=0;const set=src.setCustomization&&typeof src.setCustomization==='object'?src.setCustomization:null;
     const cleanWrites=[],cleanPhotos=[];
-    const capText=v=>String(v||'').trim().slice(0,160),capPos=v=>String(v||'').trim().slice(0,80);
+    const capText=v=>String(v||'').trim().slice(0,160),capPos=v=>String(v||'').trim().slice(0,80),safePhotoRef=v=>{const ref=String(v||'').trim();return /^\/api\/customer-image\/[a-f0-9]{48}\.(?:jpg|png|webp)$/.test(ref)?ref:''};
     if(set&&Array.isArray(p.setItems)){
-      const removedIds=[...new Set((set.removedIds||[]).map(String))],removed=p.setItems.filter(si=>removedIds.includes(String(si.id))).reduce((sum,si)=>sum+Math.max(0,Number(si.removeDiscount||0)),0);base=Math.max(0,base-removed);
+      const validSetIds=new Set(p.setItems.map(si=>String(si.id))),removedIds=[...new Set((set.removedIds||[]).map(String))].filter(id=>validSetIds.has(id)),remainingCount=p.setItems.filter(si=>!removedIds.includes(String(si.id))).length;
+      if(p.setItems.length>=2&&remainingCount<2)throw new Error('Hazır sette en az 2 ürün kalmalıdır.');
+      const removed=p.setItems.filter(si=>removedIds.includes(String(si.id))).reduce((sum,si)=>sum+Math.max(0,Number(si.removeDiscount||0)),0);base=Math.max(0,base-removed);
       const sw=Array.isArray(set.writes)?set.writes:[],sp=Array.isArray(set.photoCustomizations)?set.photoCustomizations:[],keys=[];[...sw,...sp].forEach(v=>{const k=String(v.itemId||v.item||'set-item').slice(0,120);if(!keys.includes(k))keys.push(k)});
-      for(const k of keys){const tier=slot===0?firstFee:(slot===1?nextFee:thirdFee);slot++;const ws=sw.filter(w=>String(w.itemId||w.item||'set-item')===k),ps=sp.filter(ph=>String(ph.itemId||ph.item||'set-item')===k);ws.forEach((w,i)=>{const fee=i===0?tier:0;personalTotal+=fee;cleanWrites.push({...w,text:capText(w.text),position:capPos(w.position),fee})});ps.forEach((ph,i)=>{const slotFee=!ws.length&&i===0?tier:0,fee=slotFee+photoExtra;personalTotal+=fee;cleanPhotos.push({...ph,note:capText(ph.note),position:capPos(ph.position),slotFee,photoExtraFee:photoExtra,fee})})}
+      for(const k of keys){const tier=slot===0?firstFee:(slot===1?nextFee:thirdFee);slot++;const ws=sw.filter(w=>String(w.itemId||w.item||'set-item')===k),ps=sp.filter(ph=>String(ph.itemId||ph.item||'set-item')===k);ws.forEach((w,i)=>{const fee=i===0?tier:0;personalTotal+=fee;cleanWrites.push({...w,text:capText(w.text),position:capPos(w.position),fee})});ps.forEach((ph,i)=>{const slotFee=!ws.length&&i===0?tier:0,fee=slotFee+photoExtra;personalTotal+=fee;cleanPhotos.push({...ph,imageUrl:safePhotoRef(ph.imageUrl||ph.url),url:safePhotoRef(ph.imageUrl||ph.url),note:capText(ph.note),position:capPos(ph.position),slotFee,photoExtraFee:photoExtra,fee})})}
     }else{
-      const ws=Array.isArray(src.writes)?src.writes:[],ps=Array.isArray(src.photoCustomizations)?src.photoCustomizations:[];if(ws.length||ps.length){const tier=slot===0?firstFee:(slot===1?nextFee:thirdFee);slot++;ws.forEach((w,i)=>{const fee=i===0?tier:0;personalTotal+=fee;cleanWrites.push({...w,text:capText(w.text),position:capPos(w.position),fee})});ps.forEach((ph,i)=>{const slotFee=!ws.length&&i===0?tier:0,fee=slotFee+photoExtra;personalTotal+=fee;cleanPhotos.push({...ph,note:capText(ph.note),position:capPos(ph.position),slotFee,photoExtraFee:photoExtra,fee})})}
+      const ws=Array.isArray(src.writes)?src.writes:[],ps=Array.isArray(src.photoCustomizations)?src.photoCustomizations:[];if(ws.length||ps.length){const tier=slot===0?firstFee:(slot===1?nextFee:thirdFee);slot++;ws.forEach((w,i)=>{const fee=i===0?tier:0;personalTotal+=fee;cleanWrites.push({...w,text:capText(w.text),position:capPos(w.position),fee})});ps.forEach((ph,i)=>{const slotFee=!ws.length&&i===0?tier:0,fee=slotFee+photoExtra;personalTotal+=fee;cleanPhotos.push({...ph,imageUrl:safePhotoRef(ph.imageUrl||ph.url),url:safePhotoRef(ph.imageUrl||ph.url),note:capText(ph.note),position:capPos(ph.position),slotFee,photoExtraFee:photoExtra,fee})})}
     }
     const finalPrice=Math.max(0,Math.round((base+personalTotal)*100)/100),product={...p,price:finalPrice};const row={...src,product,basePrice:base,qty,writes:cleanWrites,photoCustomizations:cleanPhotos,personalized:cleanWrites.length>0||cleanPhotos.length>0};
-    if(set)row.setCustomization={...set,writes:cleanWrites,photoCustomizations:cleanPhotos};
+    if(set)row.setCustomization={...set,removedIds:Array.isArray(p.setItems)?[...new Set((set.removedIds||[]).map(String))].filter(id=>p.setItems.some(si=>String(si.id)===id)):[],writes:cleanWrites,photoCustomizations:cleanPhotos};
     if('productNote' in row)row.productNote=String(row.productNote||'').trim().slice(0,500);clean.push(row);
   }
   return {items:clean,catalog};
@@ -951,29 +973,47 @@ const customerUpload=multer({
 const sharedCartDir=path.join(dataDir,'shared-carts');fs.mkdirSync(sharedCartDir,{recursive:true});
 const simpleRateBuckets=new Map();
 function rateLimitHit(req,key,limit,windowMs){const ip=accountRateKey(req),k=key+':'+ip,now=Date.now(),x=simpleRateBuckets.get(k);if(!x||now-x.start>windowMs){simpleRateBuckets.set(k,{start:now,count:1});return false}x.count++;simpleRateBuckets.set(k,x);return x.count>limit}
+function sharedCartCleanWrite(w={}){return {itemId:String(w.itemId||'').slice(0,120),item:String(w.item||'').slice(0,160),text:String(w.text||'').slice(0,160),position:String(w.position||'').slice(0,80)}}
+function sharedCartCleanPhoto(ph={}){return {itemId:String(ph.itemId||'').slice(0,120),item:String(ph.item||'').slice(0,160),note:String(ph.note||'').slice(0,160),position:String(ph.position||'').slice(0,80),caption:String(ph.caption||'').slice(0,160),captionPosition:String(ph.captionPosition||'').slice(0,20)}}
+function sharedCartSource(cart){
+  if(!cart||typeof cart!=='object'||Array.isArray(cart))throw new Error('Paylaşılan sepet verisi geçersiz.');
+  const rawItems=Array.isArray(cart.items)?cart.items:Array.isArray(cart.cart)?cart.cart:null;if(!rawItems||!rawItems.length||rawItems.length>100)throw new Error('Paylaşılan sepet verisi geçersiz.');
+  const catalog=readJson('catalog.json',{products:[]}),products=Array.isArray(catalog.products)?catalog.products:[],byId=new Map(products.map(p=>[String(p.id),p]));
+  const items=rawItems.map(x=>{
+    if(!x||typeof x!=='object'||Array.isArray(x))throw new Error('Paylaşılan sepet içeriği geçersiz.');
+    let productId=String(x.productId||x.product?.id||'').trim();
+    if(!productId&&x.name){const matches=products.filter(p=>String(p?.name||'').trim()===String(x.name||'').trim());if(matches.length===1)productId=String(matches[0].id)}
+    const builderItems=Array.isArray(x.builderItems)?x.builderItems.map(v=>({id:String(v?.id||v?.productId||'').trim()})).filter(v=>v.id).slice(0,20):[];
+    if(!byId.has(productId)&&builderItems.length<2)throw new Error('Paylaşılan sepette doğrulanamayan bir ürün var.');
+    const qty=Math.floor(Number(x.qty||1));if(!Number.isFinite(qty)||qty<1||qty>20)throw new Error('Paylaşılan sepet ürün adedi geçersiz.');
+    const writes=(Array.isArray(x.writes)?x.writes:[]).slice(0,20).map(sharedCartCleanWrite),photos=(Array.isArray(x.photoCustomizations)?x.photoCustomizations:Array.isArray(x.photos)?x.photos:[]).slice(0,20).map(sharedCartCleanPhoto);
+    const source={productId,qty,writes,photoCustomizations:photos};
+    if(builderItems.length)source.builderItems=builderItems;
+    if(x.upsell?.ruleId)source.upsell={ruleId:String(x.upsell.ruleId).slice(0,120)};
+    if(x.setCustomization&&typeof x.setCustomization==='object'){const sc=x.setCustomization;source.setCustomization={removedIds:Array.isArray(sc.removedIds)?sc.removedIds.map(String).slice(0,30):[],keptIds:Array.isArray(sc.keptIds)?sc.keptIds.map(String).slice(0,30):[],writes:(Array.isArray(sc.writes)?sc.writes:[]).slice(0,30).map(sharedCartCleanWrite),photoCustomizations:(Array.isArray(sc.photoCustomizations)?sc.photoCustomizations:[]).slice(0,30).map(sharedCartCleanPhoto)}}
+    return source;
+  });
+  return {v:2,items};
+}
+function sharedCartView(source){
+  const prepared=serverPrepareOrderItems(source.items,{allowSoldOut:true}),campaign=serverCampaignPricing(prepared.items,prepared.catalog);
+  return {v:2,items:prepared.items.map(x=>({productId:x.product?.id||'',name:x.product?.name||'Ürün',price:Number(x.product?.price||0),image:serverMainProductImage(x.product)||'',qty:Number(x.qty||1),writes:(x.writes||[]).map(w=>({item:w.item||'',text:w.text||'',position:w.position||'',fee:Number(w.fee||0)})),photos:(x.photoCustomizations||[]).map(ph=>({item:ph.item||'',fee:Number(ph.fee||0)}))})),subtotal:campaign.subtotal,discount:campaign.discount,total:campaign.total,applied:(campaign.applied||[]).map(a=>({name:String(a.name||'Kampanya'),discount:Number(a.discount||0)}))};
+}
 app.post('/api/shared-cart',(req,res)=>{
   try{
     if(rateLimitHit(req,'shared-cart',40,15*60*1000))return res.status(429).json({ok:false,message:'Çok fazla paylaşım isteği. Lütfen biraz sonra tekrar deneyin.'});
-    const cart=req.body||{};
-    if(!cart||typeof cart!=='object'||Array.isArray(cart))return res.status(400).json({ok:false,message:'Paylaşılan sepet verisi geçersiz.'});
-    const raw=JSON.stringify(cart);
-    if(Buffer.byteLength(raw)>180*1024)return res.status(413).json({ok:false,message:'Paylaşılan sepet çok büyük.'});
-    const items=Array.isArray(cart.items)?cart.items:Array.isArray(cart.cart)?cart.cart:null;
-    if(!items)return res.status(400).json({ok:false,message:'Paylaşılan sepet verisi geçersiz.'});
-    if(items.length>100)return res.status(400).json({ok:false,message:'Sepette çok fazla ürün var.'});
-    const textOk=(v,max)=>v===undefined||v===null||(typeof v==='string'&&v.length<=max);
-    const numOk=(v,max)=>v===undefined||v===null||(Number.isFinite(Number(v))&&Number(v)>=0&&Number(v)<=max);
-    const validItem=x=>x&&typeof x==='object'&&!Array.isArray(x)&&textOk(x.name,300)&&textOk(x.image,2000)&&numOk(x.price,10000000)&&numOk(x.basePrice,10000000)&&Number.isInteger(Number(x.qty||1))&&Number(x.qty||1)>=1&&Number(x.qty||1)<=50&&(!x.writes||Array.isArray(x.writes)&&x.writes.length<=20)&&(!x.photos||Array.isArray(x.photos)&&x.photos.length<=20);
-    if(!items.every(validItem))return res.status(400).json({ok:false,message:'Paylaşılan sepet içeriği geçersiz.'});
-    const id=crypto.randomBytes(12).toString('hex');
-    fs.writeFileSync(path.join(sharedCartDir,id+'.json'),raw);
-    res.json({ok:true,id});
-  }catch(e){console.error('Paylaşılan sepet kayıt:',e);res.status(500).json({ok:false})}
+    const raw=JSON.stringify(req.body||{});if(Buffer.byteLength(raw)>180*1024)return res.status(413).json({ok:false,message:'Paylaşılan sepet çok büyük.'});
+    const source=sharedCartSource(req.body||{});sharedCartView(source);
+    const id=crypto.randomBytes(12).toString('hex');fs.writeFileSync(path.join(sharedCartDir,id+'.json'),JSON.stringify(source));res.json({ok:true,id});
+  }catch(e){console.error('Paylaşılan sepet kayıt:',e?.message||e);res.status(400).json({ok:false,message:'Paylaşılan sepet içeriği doğrulanamadı.'})}
+});
+app.post('/api/shared-cart/resolve',(req,res)=>{
+  try{if(rateLimitHit(req,'shared-cart-resolve',120,15*60*1000))return res.status(429).json({ok:false});const raw=JSON.stringify(req.body||{});if(Buffer.byteLength(raw)>180*1024)return res.status(413).json({ok:false});const source=sharedCartSource(req.body||{});res.json({ok:true,cart:sharedCartView(source)})}catch(e){res.status(400).json({ok:false})}
 });
 app.get('/api/shared-cart/:id',(req,res)=>{
   const id=String(req.params.id||'');if(!/^[a-f0-9]{24}$/.test(id)&&!/^[a-f0-9]{8}$/.test(id))return res.status(404).json({ok:false});
   const f=path.join(sharedCartDir,id+'.json');if(!fs.existsSync(f))return res.status(404).json({ok:false});
-  try{res.json({ok:true,cart:JSON.parse(fs.readFileSync(f,'utf8'))})}catch(e){res.status(404).json({ok:false})}
+  try{const source=sharedCartSource(JSON.parse(fs.readFileSync(f,'utf8'))),cart=sharedCartView(source);try{const now=new Date();fs.utimesSync(f,now,now)}catch(_){}res.json({ok:true,cart})}catch(e){res.status(404).json({ok:false})}
 });
 
 app.get('/api/settings',(req,res)=>{res.setHeader('Cache-Control','no-store, no-cache, must-revalidate');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');res.json(readJson('settings.json',{}))});
@@ -1011,6 +1051,8 @@ function orderIstanbulDayKey(o){
   const m=tr.match(/^(\d{2})[.\/-](\d{2})[.\/-](\d{4})/);
   return m?`${m[3]}-${m[2]}-${m[1]}`:'';
 }
+const ORDER_STATUSES=new Set(['new','prepared','shipped','delivered']);
+function normalizeOrderStatus(value){return ORDER_STATUSES.has(String(value||''))?String(value):'new'}
 function ordersWithDailyDisplayIds(orders){
   const byDay=new Map();
   for(const o of [...(orders||[])].sort((a,b)=>new Date(a?.createdAt||0)-new Date(b?.createdAt||0))){
@@ -1022,13 +1064,13 @@ function ordersWithDailyDisplayIds(orders){
   return (orders||[]).map(o=>{
     const dailyDisplayId=o.__dailyDisplayId||o.id||'';
     delete o.__dailyDisplayId;
-    return {...o,dailyDisplayId};
+    return {...o,status:normalizeOrderStatus(o.status),dailyDisplayId};
   });
 }
 app.get('/api/orders',requireAdmin,(req,res)=>res.json(ordersWithDailyDisplayIds(readJson('orders.json',[]))));
 app.patch('/api/orders/status',requireAdmin,async(req,res)=>serializedMutation('orders',async()=>{
  const ids=Array.isArray(req.body.ids)?req.body.ids:[]; const status=req.body.status;
- if(!['new','prepared','shipped','delivered'].includes(status))return res.status(400).json({ok:false});
+ if(!ORDER_STATUSES.has(String(status||'')))return res.status(400).json({ok:false});
  try{
    await sheetsRequest({action:'status',ids,status});
  }catch(e){
@@ -1248,9 +1290,8 @@ app.post('/api/orders',async(req,res)=>serializedMutation('orders',async()=>{
    const now=new Date();
    const createdAt=now.toISOString();
    const createdAtTR=new Intl.DateTimeFormat('tr-TR',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now);
-   const body={...(req.body||{})};
-   delete body.requestId;
-   body.customer={...(body.customer||{})};
+   const incoming=req.body&&typeof req.body==='object'&&!Array.isArray(req.body)?req.body:{};
+   const body={items:incoming.items,customer:incoming.customer&&typeof incoming.customer==='object'&&!Array.isArray(incoming.customer)?{...incoming.customer}:{},payment:incoming.payment,orderNote:incoming.orderNote,personalApproval:incoming.personalApproval,shippingNoticeAccepted:incoming.shippingNoticeAccepted,legalAcceptances:incoming.legalAcceptances,legalDocumentRefs:incoming.legalDocumentRefs,appliedCouponIds:incoming.appliedCouponIds};
    const normalizedPhone=normalizeTRMobile(body.customer.phone);
    const normalizedExtra=body.customer.extraPhone?normalizeTRMobile(body.customer.extraPhone):'';
 
@@ -1268,11 +1309,14 @@ app.post('/api/orders',async(req,res)=>serializedMutation('orders',async()=>{
    }
    body.customer.phone=normalizedPhone;
    body.customer.extraPhone=normalizedExtra;
+   const requestedPayment=String(body.payment||'cod').trim().toLowerCase();
+   if(requestedPayment!=='cod')return res.status(400).json({ok:false,message:'Geçersiz ödeme yöntemi.'});
+   body.payment='cod';
 
    // v153: Üye/misafir aynı sipariş oluşturma mantığını kullanır; yalnız ilişki ve hukuki kayıt eklenir.
    const signedUser=accountUserFromReq(req);
    body.userId=signedUser?.id||null;body.customerId=signedUser?.customerId||null;
-   const prepared=serverPrepareOrderItems(body.items);body.items=prepared.items;const campaignResult=serverCampaignPricing(body.items,prepared.catalog),preCouponTotal=campaignResult.total;
+   let prepared;try{prepared=serverPrepareOrderItems(body.items)}catch(validationError){return res.status(400).json({ok:false,message:String(validationError?.message||'Sipariş ürünleri geçersiz.')})}body.items=prepared.items;const campaignResult=serverCampaignPricing(body.items,prepared.catalog),preCouponTotal=campaignResult.total;
    body.subtotal=campaignResult.subtotal;body.discountTotal=campaignResult.discount;body.appliedCampaigns=campaignResult.applied;
    const couponResult=evaluateOrderCoupons(signedUser?.id||null,body.appliedCouponIds,preCouponTotal);
    if(!couponResult.ok)return res.status(400).json({ok:false,message:couponResult.message});
@@ -1288,7 +1332,7 @@ app.post('/api/orders',async(req,res)=>serializedMutation('orders',async()=>{
 
    // Siparişin ana kaydı önce sunucu/panele yapılır. Google E-Tablo geçici olarak cevap vermese bile
    // müşteri siparişi kaybolmaz ve tekrar adres girmek zorunda kalmaz.
-   const order={id:nextLocalOrderId(orders),createdAt,createdAtTR,status:'new',statusUpdatedAt:createdAt,requestId,sheetSyncStatus:'pending',sheetSyncError:'',deviceId:String(req.body?.deviceId||'').trim()||null,...body};
+   const order={...body,id:nextLocalOrderId(orders),createdAt,createdAtTR,status:'new',statusUpdatedAt:createdAt,requestId,sheetSyncStatus:'pending',sheetSyncError:'',deviceId:normalizeDeviceId(incoming.deviceId)||null,userId:body.userId||null,customerId:body.customerId||null,subtotal:body.subtotal,discountTotal:body.discountTotal,preCouponTotal:body.preCouponTotal,couponDiscountTotal:body.couponDiscountTotal,total:body.total};
    orders.unshift(order);
    writeJson('orders.json',orders);
    await sendOrderStatusPush(order,'new');writeJson('orders.json',orders);
@@ -1358,6 +1402,22 @@ app.post('/api/orders/sheets-test',requireAdmin,async(req,res)=>{
     res.status(500).json({ok:false,message});
   }
 });
+
+const CUSTOMER_UPLOAD_ORPHAN_AGE_MS=7*24*60*60*1000,SHARED_CART_MAX_AGE_MS=90*24*60*60*1000;
+function referencedCustomerUploadFiles(){
+  const refs=new Set(),raw=JSON.stringify(readJson('orders.json',[])),re=/\/api\/customer-image\/([a-f0-9]{48}\.(?:jpg|png|webp))/g;let m;while((m=re.exec(raw)))refs.add(m[1]);return refs;
+}
+function cleanupOrphanCustomerUploads(){
+  const refs=referencedCustomerUploadFiles(),cutoff=Date.now()-CUSTOMER_UPLOAD_ORPHAN_AGE_MS;let removed=0;
+  for(const name of fs.readdirSync(privateUploadDir)){if(!/^[a-f0-9]{48}\.(?:jpg|png|webp|upload)$/.test(name)||refs.has(name))continue;const f=path.join(privateUploadDir,name);let st;try{st=fs.statSync(f)}catch{continue}if(!st.isFile()||st.mtimeMs>cutoff)continue;try{fs.unlinkSync(f);removed++}catch(_){}}
+  if(removed)console.log('Terk edilmiş müşteri fotoğrafı temizlendi:',removed);
+}
+function cleanupStaleSharedCarts(){
+  const cutoff=Date.now()-SHARED_CART_MAX_AGE_MS;let removed=0;
+  for(const name of fs.readdirSync(sharedCartDir)){if(!/^(?:[a-f0-9]{8}|[a-f0-9]{24})\.json$/.test(name))continue;const f=path.join(sharedCartDir,name);let st;try{st=fs.statSync(f)}catch{continue}if(!st.isFile()||st.mtimeMs>cutoff)continue;try{fs.unlinkSync(f);removed++}catch(_){}}
+  if(removed)console.log('Eski paylaşılan sepet temizlendi:',removed);
+}
+function runSafeStorageCleanup(){try{cleanupOrphanCustomerUploads()}catch(e){console.warn('Müşteri fotoğrafı temizliği:',e?.message||e)}try{cleanupStaleSharedCarts()}catch(e){console.warn('Paylaşılan sepet temizliği:',e?.message||e)}}
 
 app.get('/api/customer-image/:token',(req,res)=>{const token=String(req.params.token||'');if(!/^[a-f0-9]{48}\.(?:jpg|png|webp)$/.test(token))return res.status(404).end();const f=path.join(privateUploadDir,token);if(!fs.existsSync(f))return res.status(404).end();res.setHeader('Cache-Control','private, no-store');res.sendFile(f)});
 app.post('/api/customer-upload',sameOriginGuard,customerUpload.array('files',1),async(req,res)=>{
@@ -1564,7 +1624,7 @@ function notificationSettings(){const d={statuses:{new:{enabled:true,title:'SHAZ
 function activityRows(){return readJson('customer_activity.json',[])}
 const adminActivityStreams=new Set();
 function publishAdminActivityVisit(row){const data=`data: ${JSON.stringify({type:'visit',userId:row?.userId||null,customerId:row?.customerId||null,pwa:!!row?.pwa,at:row?.lastSeenAt||new Date().toISOString()})}\n\n`;for(const stream of [...adminActivityStreams]){try{stream.write(data)}catch(_){adminActivityStreams.delete(stream)}}}
-function recordCustomerVisit(req,body={}){const now=new Date().toISOString(),user=accountUserFromReq(req),deviceId=String(body.deviceId||'').trim();if(!deviceId)return;const rows=activityRows();let r=rows.find(x=>x.deviceId===deviceId);if(!r){r={id:'ACT-'+crypto.randomUUID(),deviceId,userId:user?.id||null,customerId:user?.customerId||null,visits:[],createdAt:now};rows.push(r)}if(user){r.userId=user.id;r.customerId=user.customerId}r.lastSeenAt=now;r.permission=String(body.permission||r.permission||'');if(body.pwa){r.pwa=true;r.lastPwaAt=now;r.firstPwaAt=r.firstPwaAt||now}r.visits=Array.isArray(r.visits)?r.visits:[];r.visits.push(now);if(r.visits.length>500)r.visits=r.visits.slice(-500);writeJson('customer_activity.json',rows);persistAccountStateAsync();publishAdminActivityVisit(r)}
+function recordCustomerVisit(req,body={}){const now=new Date().toISOString(),user=accountUserFromReq(req),deviceId=normalizeDeviceId(body.deviceId);if(!deviceId)return;const rows=activityRows();let r=rows.find(x=>x.deviceId===deviceId);if(!r){r={id:'ACT-'+crypto.randomUUID(),deviceId,userId:user?.id||null,customerId:user?.customerId||null,visits:[],createdAt:now};rows.push(r)}if(user){r.userId=user.id;r.customerId=user.customerId}r.lastSeenAt=now;r.permission=String(body.permission||r.permission||'');if(body.pwa){r.pwa=true;r.lastPwaAt=now;r.firstPwaAt=r.firstPwaAt||now}r.visits=Array.isArray(r.visits)?r.visits:[];r.visits.push(now);if(r.visits.length>500)r.visits=r.visits.slice(-500);writeJson('customer_activity.json',rows);persistAccountStateAsync();publishAdminActivityVisit(r)}
 // ---------- PWA / Web Push ----------
 const VAPID_PUBLIC_KEY=String(process.env.VAPID_PUBLIC_KEY||'').trim();
 const VAPID_PRIVATE_KEY=String(process.env.VAPID_PRIVATE_KEY||'').trim();
@@ -1687,7 +1747,7 @@ app.post('/api/admin/push/send',sameOriginGuard,requireAdmin,async(req,res)=>{
   if(clientRequestId){pushSendIdempotency.set(clientRequestId,{at:Date.now(),response});for(const [k,v] of pushSendIdempotency)if(Date.now()-v.at>60000)pushSendIdempotency.delete(k)}
   res.json(response);
 });
-app.post('/api/activity/visit',sameOriginGuard,(req,res)=>{recordCustomerVisit(req,req.body||{});res.json({ok:true})});
+app.post('/api/activity/visit',sameOriginGuard,(req,res)=>{const deviceId=normalizeDeviceId(req.body?.deviceId);if(!deviceId)return res.status(400).json({ok:false,message:'Geçersiz cihaz kimliği.'});const exists=activityRows().some(x=>String(x.deviceId||'')===deviceId);if(!exists&&rateLimitHit(req,'activity-new-device',30,60*60*1000))return res.status(429).json({ok:false,message:'Çok fazla yeni cihaz kaydı. Lütfen daha sonra tekrar deneyin.'});recordCustomerVisit(req,{...(req.body||{}),deviceId});res.json({ok:true})});
 app.get('/api/admin/integrations/marketing/dry-run',requireAdmin,(req,res)=>res.json({ok:true,dryRun:true,mutation:false,report:marketingDryRun(),flags:{resendMarketing:RESEND_MARKETING_SYNC_ENABLED,verimorSms:VERIMOR_SMS_ENABLED,verimorWebhook:VERIMOR_WEBHOOK_ENABLED,verimorIys:VERIMOR_IYS_SYNC_ENABLED,verimorIysPush:VERIMOR_IYS_PUSH_ENABLED}}));
 app.post('/api/admin/integrations/marketing/reconcile',requireAdmin,sameOriginGuard,(req,res)=>{if(req.body?.confirm!==true)return res.status(400).json({ok:false,message:'Gerçek reconcile için confirm=true gereklidir.',dryRun:marketingDryRun()});if(!RESEND_MARKETING_SYNC_ENABLED&&!VERIMOR_IYS_SYNC_ENABLED)return res.status(409).json({ok:false,message:'Provider sync feature flagleri kapalı. Önce dry-run ve panel ayarlarını tamamlayın.'});const queued=enqueueCurrentConsentReconcile();persistAccountStateAsync();res.json({ok:true,queued,report:marketingDryRun()})});
 app.post('/api/admin/integrations/outbox/process',requireAdmin,sameOriginGuard,async(req,res)=>{const count=await processIntegrationOutbox(Math.max(1,Math.min(100,Number(req.body?.limit||20))));persistAccountStateAsync();res.json({ok:true,processed:count,report:marketingDryRun()})});
@@ -1928,6 +1988,8 @@ async function startServer(){
   else if(localAccountSnapshotRestored)console.log('SHAZ üyelik verileri yerel şifreli kalıcı kayıttan kullanılıyor.');
   setInterval(()=>syncPendingOrdersToSheets().catch(()=>{}),60000);
   setTimeout(()=>syncPendingOrdersToSheets().catch(()=>{}),5000);
+  setTimeout(runSafeStorageCleanup,30000);
+  setInterval(runSafeStorageCleanup,24*60*60*1000);
   app.listen(PORT,()=>console.log(`SHAZ çalışıyor: http://localhost:${PORT}`));
 }
 startServer().catch(e=>{console.error('SHAZ başlangıç hatası:',e);process.exitCode=1});

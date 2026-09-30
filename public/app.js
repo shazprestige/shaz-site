@@ -1651,8 +1651,10 @@ function calculateCartCampaigns(){
 }
 function shareCartFromCheckout(){
   normalizeCartPersonalizationFees();
-  const campaign=calculateCartCampaigns();
-  const payload={v:1,items:cart.map(x=>({name:x.product?.name||'Ürün',price:Number(x.product?.price||0),image:mainProductImage(x.product)||'',qty:Number(x.qty||1),basePrice:Number(x.basePrice??x.product?.price??0),writes:(x.writes||x.setCustomization?.writes||[]).map(w=>({item:w.item,text:w.text,position:w.position,fee:Number(w.fee||0)})),photos:(x.photoCustomizations||x.setCustomization?.photoCustomizations||[]).map(ph=>({item:ph.item,fee:Number(ph.fee||0)}))})),subtotal:campaign.subtotal,discount:campaign.discount,total:campaign.total,applied:(campaign.applied||[]).map(a=>({name:a.name,discount:a.discount}))};
+  calculateCartCampaigns();
+  const compactWrite=w=>({itemId:w.itemId||w.productId||'',item:w.item||'',text:w.text||'',position:w.position||''});
+  const compactPhoto=ph=>({itemId:ph.itemId||ph.productId||'',item:ph.item||'',note:ph.note||'',position:ph.position||'',caption:ph.caption||'',captionPosition:ph.captionPosition||''});
+  const payload={v:2,items:cart.map(x=>{const item={productId:String(x.product?.id||''),qty:Number(x.qty||1),writes:(x.writes||[]).map(compactWrite),photoCustomizations:(x.photoCustomizations||[]).map(compactPhoto)};if(Array.isArray(x.builderItems)&&x.builderItems.length)item.builderItems=x.builderItems.map(p=>({id:String(p.id||'')}));if(x.upsell?.ruleId)item.upsell={ruleId:String(x.upsell.ruleId)};if(x.setCustomization)item.setCustomization={removedIds:[...(x.setCustomization.removedIds||[])],keptIds:[...(x.setCustomization.keptIds||[])],writes:(x.setCustomization.writes||[]).map(compactWrite),photoCustomizations:(x.setCustomization.photoCustomizations||[]).map(compactPhoto)};return item})};
   fetch('/api/shared-cart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>r.json()).then(r=>{
     if(!r.ok||!r.id)throw new Error('share');
     const url=new URL(location.origin+location.pathname);url.searchParams.set('s',r.id);
@@ -1670,7 +1672,7 @@ function openSharedCartFromUrl(){
   const params=new URLSearchParams(location.search),shortId=params.get('s'),raw=params.get('sharedCart');
   if(shortId){fetch('/api/shared-cart/'+encodeURIComponent(shortId)).then(r=>r.json()).then(r=>{if(r.ok&&r.cart)renderSharedCart(r.cart)}).catch(()=>{});return true}
   if(!raw)return false;
-  try{renderSharedCart(JSON.parse(decodeURIComponent(escape(atob(raw)))));return true}catch(e){console.warn('Paylaşılan sepet açılamadı',e);return false}
+  try{const legacy=JSON.parse(decodeURIComponent(escape(atob(raw))));fetch('/api/shared-cart/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(legacy)}).then(r=>r.json()).then(r=>{if(r.ok&&r.cart)renderSharedCart(r.cart)}).catch(()=>{});return true}catch(e){console.warn('Paylaşılan sepet açılamadı',e);return false}
 }
 
 function checkoutCouponSelectionState(baseTotal,ids=checkoutState.appliedCouponIds){
