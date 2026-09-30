@@ -83,12 +83,6 @@ async function getPwaSplashBrandBuffer(){
   else throw new Error('Splash marka görseli bulunamadı.');
   const buffer=await sharp(input,{failOn:'none'}).trim({threshold:10}).png().toBuffer();pwaSplashBrandCache={key,buffer};return buffer;
 }
-async function sendPwaSplashBrand(req,res,immutable=false){
-  try{const buf=await getPwaSplashBrandBuffer();res.type('png').set('Cache-Control',immutable?'public, max-age=31536000, immutable':'public, max-age=86400, must-revalidate').send(buf)}
-  catch(e){console.error('PWA splash marka görseli:',e?.message||e);const a=brandAsset();if(a.file)return res.sendFile(a.file);if(a.remote)return res.redirect(302,a.remote);res.status(404).end()}
-}
-app.get('/pwa-splash-brand.png',(req,res)=>sendPwaSplashBrand(req,res,true));
-app.get('/api/pwa-splash-brand',(req,res)=>sendPwaSplashBrand(req,res,false));
 const pwaStartupSizes=new Set(['440x956x3','420x912x3','402x874x3','430x932x3','393x852x3','428x926x3','390x844x3','360x780x3','414x896x3','375x812x3','414x896x2','375x667x2','414x736x3','320x568x2','1032x1376x2','1024x1366x2','834x1210x2','834x1194x2','820x1180x2','834x1112x2','810x1080x2','744x1133x2','768x1024x2']);
 const pwaStartupCache=new Map();
 app.get('/pwa-startup.png',async(req,res)=>{
@@ -97,7 +91,7 @@ app.get('/pwa-startup.png',async(req,res)=>{
     if(!pwaStartupSizes.has(sizeKey))return res.status(404).end();
     const brand=await getPwaSplashBrandBuffer(),brandHash=crypto.createHash('sha1').update(brand).digest('hex').slice(0,12),cacheKey=`${sizeKey}:${brandHash}`;
     if(pwaStartupCache.has(cacheKey))return res.type('png').set('Cache-Control','public, max-age=31536000, immutable').send(pwaStartupCache.get(cacheKey));
-    const width=Math.round(cw*dpr),height=Math.round(ch*dpr),logoBox=Math.max(1,Math.round(Math.min(cw*.42,170)*dpr)),optical=-Math.max(54,Math.min(76,ch*.0825))*dpr;
+    const width=Math.round(cw*dpr),height=Math.round(ch*dpr),logoBox=Math.max(1,Math.round(Math.min(cw*.42,170)*dpr)),optical=(-Math.max(54,Math.min(76,ch*.0825))+30)*dpr;
     const logo=await sharp(brand,{failOn:'none'}).resize(logoBox,logoBox,{fit:'inside',withoutEnlargement:false}).png().toBuffer(),meta=await sharp(logo).metadata();
     const left=Math.round((width-Number(meta.width||logoBox))/2),top=Math.round(height/2+optical-Number(meta.height||logoBox)/2);
     const image=await sharp({create:{width,height,channels:4,background:{r:255,g:255,b:255,alpha:1}}}).composite([{input:logo,left,top}]).png().toBuffer();

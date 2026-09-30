@@ -97,7 +97,7 @@ async function init(){
   else if(sharedProductId) clearProductRoute();
   if(new URLSearchParams(location.search).get('sharedCart')||new URLSearchParams(location.search).get('s'))setTimeout(()=>openSharedCartFromUrl(),40);
 }
-function finishSiteBoot(){clearTimeout(window.__shazSiteBootTimer);clearTimeout(window.__shazAccountBootTimer);const reveal=()=>requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.remove('siteBooting','siteBootError'))),wait=Math.max(0,Number(window.__shazPwaSplashUntil||0)-Date.now());if(wait>0)setTimeout(reveal,wait);else reveal()}
+function finishSiteBoot(){clearTimeout(window.__shazSiteBootTimer);clearTimeout(window.__shazAccountBootTimer);requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.remove('siteBooting','siteBootError')))}
 function bindCore(){
   if($('#overlay')) $('#overlay').onclick=()=>activeProductDetailId?closeProductDetail():closeDrawer();
   if(!window._shazProductPopBound){
