@@ -129,7 +129,9 @@ test('push audit sonucu ve tarih filtresi authoritative akışta tutuluyor',()=>
   assert.match(server,/lastPushErrorCode/);
   assert.match(admin,/function applyMemberDateRange\(\).*selectedMemberIds\.clear\(\).*renderMembers\(true\)/s);
   assert.match(admin,/function clearMemberDateRange\(\).*selectedMemberIds\.clear\(\).*renderMembers\(true\)/s);
-  assert.match(admin,/Kalıcı geçersiz işaretlenen abonelik/);
+  assert.match(admin,/Kalıcı geçersiz:/);
+  assert.match(admin,/Cihaz tarafından alındı:/);
+  assert.match(admin,/Teslim teyidi bekleniyor:/);
 });
 
 test('WhatsApp Türkiye numara normalizasyonu beklenen örnekleri verir',()=>{
@@ -143,9 +145,9 @@ test('WhatsApp Türkiye numara normalizasyonu beklenen örnekleri verir',()=>{
   assert.equal(fn('12345'),'');
 });
 
-test('cache bust v189 ve ilk ekran koruması korunuyor',()=>{
-  assert.match(index,/\?v=189/);
-  assert.match(adminHtml,/\?v=189/);
+test('cache bust v191 ve ilk ekran koruması korunuyor',()=>{
+  assert.match(index,/app\.js\?v=191/);
+  assert.match(adminHtml,/admin\.js\?v=191/);
   assert.match(app,/service-worker\.js\?v=187/);
   assert.match(index,/html\.siteBooting body\{[^}]*visibility:hidden!important;opacity:0!important/);
   assert.match(app,/waitForInitialVisualAssets/);
@@ -176,4 +178,73 @@ test('normal tarayıcı yükleme bildirimi native prompt desteğine veya 24 saat
   assert.doesNotMatch(app,/shazInstallNoticeDismissedAt/);
   assert.doesNotMatch(app,/manualEligible/);
   assert.match(app,/window\.addEventListener\('load',\(\)=>setTimeout\(showShazInstallNotice,1200\)/);
+});
+
+
+test('push provider kabulü ile cihaz ACK sonucu ayrı raporlanıyor ve hızlı polling yapılıyor',()=>{
+  assert.match(admin,/Push servisi kabul etti:/);
+  assert.match(admin,/Push servisi reddetti:/);
+  assert.match(admin,/Cihaz tarafından alındı:/);
+  assert.match(admin,/Teslim teyidi bekleniyor:/);
+  assert.match(admin,/renderManualPushResult\(\{sending:true\}\)/);
+  assert.match(admin,/Date\.now\(\)-started<10000/);
+  assert.match(admin,/setTimeout\(r,400\)/);
+  assert.match(server,/pendingAck:Math\.max\(0,accepted-acked\)/);
+  assert.match(server,/app\.post\('\/api\/push\/ack'/);
+  assert.match(server,/lastPushDeviceAckAt/);
+});
+
+test('tek üye push hedeflemesi yalnız seçilen üye/customer scope ile sınırlı ve aynı cihaz stale endpointleri invalid ediyor',()=>{
+  assert.match(server,/targetUserIds\.has\(String\(x\.userId\|\|''\)\)\|\|targetCustomerIds\.has\(String\(x\.customerId\|\|''\)\)/);
+  assert.match(server,/async function normalizeActivePushTargets/);
+  assert.match(server,/if\(!deviceId\)continue/);
+  assert.match(server,/lastPushFailureStatus='superseded_endpoint'/);
+  assert.match(server,/staleSubscriptionsInvalidated/);
+  const normalize=server.match(/async function normalizeActivePushTargets\(.*?(?=\nasync function sendPushRows)/s)?.[0]||'';
+  assert.doesNotMatch(normalize,/permanentInvalidAt/);
+});
+
+test('foreground bildirim doğrulaması 60 saniyelik cachei force ile aşarak gerçek permission ve subscriptionı yeniden okuyor',()=>{
+  assert.match(app,/async function verifyShazForegroundState/);
+  assert.match(app,/navigator\.serviceWorker\.getRegistration\('\/'\)/);
+  assert.match(app,/reg\.pushManager\.getSubscription\(\)/);
+  assert.match(app,/Notification\.permission==='denied'/);
+  assert.match(app,/Notification\.permission==='granted'&&!sub/);
+  assert.match(app,/reconcileShazPush\(reg,true\)/);
+  for(const token of ["foreground('focus')","foreground(e.persisted?'pageshow-bfcache':'pageshow')","foreground('visibility')","foreground('resume')"]) assert.match(app,new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  assert.match(server,/permission==='granted'&&pushState==='active'&&hasPush/);
+  assert.match(server,/summary:'Abonelik eksik'/);
+});
+
+test('SMS ve e-posta pazarlama tercihleri optimistic UI kullanıyor ve hata halinde rollback yapıyor',()=>{
+  assert.match(app,/const marketingConsentInFlight=new Set\(\)/);
+  assert.match(app,/currentAccountUser\[field\]=!!granted/);
+  assert.match(app,/input\.checked=!!granted/);
+  assert.match(app,/currentAccountUser\[field\]=old/);
+  assert.match(app,/input\.checked=old/);
+  assert.match(app,/PATCH|marketing-consent/);
+  assert.match(app,/\/api\/account\/marketing-consent/);
+});
+
+test('üye detay drawer kökü sekme ve canlı güncellemede yeniden oluşturulmuyor',()=>{
+  const open=admin.match(/function openMemberDetail\(.*?(?=\nfunction refreshOpenMemberDetail)/s)?.[0]||'';
+  const tab=admin.match(/function setMemberDetailTab\(.*?(?=\nfunction startMemberGeneralEdit)/s)?.[0]||'';
+  assert.match(open,/if\(overlay\)\{refreshOpenMemberDetail\(previousId===activeMemberPanelId\);return\}/);
+  assert.equal((open.match(/document\.body\.appendChild\(el\)/g)||[]).length,1);
+  assert.doesNotMatch(open,/\.remove\(\)/);
+  assert.match(tab,/refreshOpenMemberDetail\(true\)/);
+  assert.doesNotMatch(tab,/openMemberDetail\(/);
+  assert.match(admin,/applyRealtimeMemberUpdate\(payload\).*refreshOpenMemberDetail\(true\)/s);
+  assert.match(admin,/refreshMemberActivityNow\(\).*refreshOpenMemberDetail\(true\)/s);
+});
+
+test('splash ana UI hazır olunca iki frame içinde açılıyor; görsel/font bekleme arka planda kalıyor',()=>{
+  const finish=app.match(/function finishSiteBoot\(\).*?(?=\nfunction bindCore)/s)?.[0]||'';
+  assert.match(finish,/criticalUiReady=performance\.now\(\)/);
+  assert.match(finish,/requestAnimationFrame\(\(\)=>requestAnimationFrame/);
+  assert.match(finish,/classList\.remove\('siteBooting','siteBootError'\)/);
+  assert.match(finish,/siteVisible=performance\.now\(\)/);
+  assert.match(finish,/waitForInitialVisualAssets\(\)\.catch\(\(\)=>\{\}\)/);
+  assert.doesNotMatch(finish,/await waitForInitialVisualAssets/);
+  assert.match(app,/window\.__shazBootMetrics/);
 });
