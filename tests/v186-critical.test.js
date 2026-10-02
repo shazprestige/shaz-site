@@ -145,9 +145,9 @@ test('WhatsApp Türkiye numara normalizasyonu beklenen örnekleri verir',()=>{
   assert.equal(fn('12345'),'');
 });
 
-test('cache bust v191 ve ilk ekran koruması korunuyor',()=>{
-  assert.match(index,/app\.js\?v=191/);
-  assert.match(adminHtml,/admin\.js\?v=191/);
+test('cache bust v192 ve ilk ekran koruması korunuyor',()=>{
+  assert.match(index,/app\.js\?v=192/);
+  assert.match(adminHtml,/admin\.js\?v=192/);
   assert.match(app,/service-worker\.js\?v=187/);
   assert.match(index,/html\.siteBooting body\{[^}]*visibility:hidden!important;opacity:0!important/);
   assert.match(app,/waitForInitialVisualAssets/);
@@ -209,7 +209,7 @@ test('foreground bildirim doğrulaması 60 saniyelik cachei force ile aşarak ge
   assert.match(app,/navigator\.serviceWorker\.getRegistration\('\/'\)/);
   assert.match(app,/reg\.pushManager\.getSubscription\(\)/);
   assert.match(app,/Notification\.permission==='denied'/);
-  assert.match(app,/Notification\.permission==='granted'&&!sub/);
+  assert.match(app,/permission==='granted'&&!sub/);
   assert.match(app,/reconcileShazPush\(reg,true\)/);
   for(const token of ["foreground('focus')","foreground(e.persisted?'pageshow-bfcache':'pageshow')","foreground('visibility')","foreground('resume')"]) assert.match(app,new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
   assert.match(server,/permission==='granted'&&pushState==='active'&&hasPush/);
@@ -218,8 +218,8 @@ test('foreground bildirim doğrulaması 60 saniyelik cachei force ile aşarak ge
 
 test('SMS ve e-posta pazarlama tercihleri optimistic UI kullanıyor ve hata halinde rollback yapıyor',()=>{
   assert.match(app,/const marketingConsentInFlight=new Set\(\)/);
-  assert.match(app,/currentAccountUser\[field\]=!!granted/);
-  assert.match(app,/input\.checked=!!granted/);
+  assert.match(app,/currentAccountUser\[field\]=next/);
+  assert.match(app,/input\.checked=next/);
   assert.match(app,/currentAccountUser\[field\]=old/);
   assert.match(app,/input\.checked=old/);
   assert.match(app,/PATCH|marketing-consent/);
