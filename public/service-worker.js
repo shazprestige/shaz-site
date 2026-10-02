@@ -1,7 +1,8 @@
-const SHAZ_SW_VERSION='175';
+const SHAZ_SW_VERSION='193';
 const SHAZ_BADGE_DB='shaz-pwa-badge';
 const SHAZ_BADGE_STORE='state';
 const SHAZ_BADGE_KEY='unreadCount';
+const SHAZ_DEVICE_KEY='deviceId';
 self.addEventListener('install',()=>self.skipWaiting());
 self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
 function badgeDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open(SHAZ_BADGE_DB,1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(SHAZ_BADGE_STORE))req.result.createObjectStore(SHAZ_BADGE_STORE)};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
@@ -10,7 +11,9 @@ async function writeBadgeCount(count){try{const db=await badgeDb();await new Pro
 async function setBadge(count){try{if(typeof self.navigator?.setAppBadge==='function')await self.navigator.setAppBadge(count)}catch(_){} }
 async function clearBadge(){await writeBadgeCount(0);try{if(typeof self.navigator?.clearAppBadge==='function')await self.navigator.clearAppBadge()}catch(_){} }
 async function incrementBadge(){const count=(await readBadgeCount())+1;await writeBadgeCount(count);await setBadge(count);return count}
-self.addEventListener('message',event=>{if(event.data?.type==='SHAZ_CLEAR_BADGE')event.waitUntil(clearBadge())});
+async function readDeviceId(){try{const db=await badgeDb();return await new Promise((resolve,reject)=>{const tx=db.transaction(SHAZ_BADGE_STORE,'readonly'),req=tx.objectStore(SHAZ_BADGE_STORE).get(SHAZ_DEVICE_KEY);req.onsuccess=()=>resolve(String(req.result||''));req.onerror=()=>reject(req.error)})}catch(_){return ''}}
+async function writeDeviceId(deviceId){deviceId=String(deviceId||'').trim().slice(0,160);if(!deviceId)return;try{const db=await badgeDb();await new Promise((resolve,reject)=>{const tx=db.transaction(SHAZ_BADGE_STORE,'readwrite');tx.objectStore(SHAZ_BADGE_STORE).put(deviceId,SHAZ_DEVICE_KEY);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}catch(_){}}
+self.addEventListener('message',event=>{if(event.data?.type==='SHAZ_CLEAR_BADGE')event.waitUntil(clearBadge());if(event.data?.type==='SHAZ_SET_DEVICE_ID')event.waitUntil(writeDeviceId(event.data.deviceId))});
 function safeNotificationTarget(raw){try{const u=new URL(String(raw||'/'),self.location.origin);if(!['http:','https:'].includes(u.protocol)||u.username||u.password)return self.location.origin+'/';return u.href}catch(_){return self.location.origin+'/'}}
 async function acknowledgePush(data){const deliveryId=String(data?.deliveryId||'').trim();if(!deliveryId)return;try{await fetch('/api/push/ack',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deliveryId,subscriptionId:String(data?.subscriptionId||''),receivedAt:new Date().toISOString()})})}catch(_){} }
 self.addEventListener('push',event=>{
@@ -37,7 +40,7 @@ self.addEventListener('pushsubscriptionchange',event=>{
     const oldEndpoint=String(event.oldSubscription?.endpoint||'');let sub=event.newSubscription||null;
     if(!sub&&event.oldSubscription?.options?.applicationServerKey){try{sub=await self.registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:event.oldSubscription.options.applicationServerKey})}catch(_){} }
     if(!sub)return;
-    const body=sub.toJSON();if(oldEndpoint)body.oldEndpoint=oldEndpoint;body.pwa=true;
+    const body=sub.toJSON();if(oldEndpoint)body.oldEndpoint=oldEndpoint;body.pwa=true;body.deviceId=await readDeviceId();body.subscriptionVerifiedAt=new Date().toISOString();
     await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   })().catch(err=>console.error('SHAZ pushsubscriptionchange sync failed:',String(err?.message||err))));
 });

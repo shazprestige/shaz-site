@@ -145,10 +145,10 @@ test('WhatsApp Türkiye numara normalizasyonu beklenen örnekleri verir',()=>{
   assert.equal(fn('12345'),'');
 });
 
-test('cache bust v192 ve ilk ekran koruması korunuyor',()=>{
-  assert.match(index,/app\.js\?v=192/);
-  assert.match(adminHtml,/admin\.js\?v=192/);
-  assert.match(app,/service-worker\.js\?v=187/);
+test('cache bust v193 ve ilk ekran koruması korunuyor',()=>{
+  assert.match(index,/app\.js\?v=193/);
+  assert.match(adminHtml,/admin\.js\?v=193/);
+  assert.match(app,/service-worker\.js\?v=193/);
   assert.match(index,/html\.siteBooting body\{[^}]*visibility:hidden!important;opacity:0!important/);
   assert.match(app,/waitForInitialVisualAssets/);
 });

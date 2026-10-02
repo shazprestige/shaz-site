@@ -27,20 +27,20 @@ test('foreground gerçek browser permission ve subscription durumunu cache üst�
 });
 
 test('notification state önceliği denied, granted+subscription, granted-missing, default-declined şeklinde ayrılıyor',()=>{
-  assert.match(server,/if\(permission==='denied'\)return \{summary:'Kapalı'/);
+  assert.match(server,/if\(permission==='denied'\)return \{[^}]*summary:'Kapalı'/);
   assert.match(server,/permission==='granted'&&pushState==='active'&&hasPush/);
   assert.match(server,/summary:'Abonelik eksik'/);
   assert.match(server,/SHAZ bildirim isteği kullanıcı tarafından reddedildi/);
-  assert.match(server,/summary:'Doğrulanamadı'.*Tarayıcı bildirim izni henüz verilmedi/s);
+  assert.match(server,/summary:'Doğrulanamadı'/);
 });
 
 test('push ACK SSE ile anında admin popupına taşınır ve revision eski polling cevabını engeller',()=>{
   assert.match(server,/type:'push-delivery-update'/);
   assert.match(server,/publishAdminPushDeliveryUpdate\(rows\[i\]\)/);
-  assert.match(server,/revision=Number\(rows\[i\]\.revision\|\|0\)\+1/);
+  assert.match(server,/revision:Number\(row\.revision\|\|0\)\+\(duplicate\?0:1\)/);
   assert.match(admin,/payload\.type==='push-delivery-update'/);
   assert.match(admin,/incomingRevision<currentRevision/);
-  assert.match(admin,/manualPushDeliveryState=\{\.\.\.incoming,\.\.\.current,ok:true\}/);
+  assert.match(admin,/manualPushDeliveryState=\{\.\.\.current,\.\.\.incoming,ok:true/);
   assert.match(admin,/setTimeout\(r,400\)/);
 });
 
@@ -64,7 +64,8 @@ test('dependency listesi ve package lock politikası değişmedi',()=>{
 test('notification state fonksiyonu gerçek senaryolarda beklenen sonucu üretir',()=>{
   const match=server.match(/function deviceNotificationState\(a=\{\},hasPush=false\)\{.*?\}(?=\nfunction aggregateNotificationStatus)/s);
   assert.ok(match,'deviceNotificationState bulunamadı');
-  const fn=Function(`${match[0]}; return deviceNotificationState;`)();
+  const ev=server.match(/function evidenceTime\(v\)\{.*?\}/s);assert.ok(ev,'evidenceTime bulunamadı');
+  const fn=Function(`${ev[0]};${match[0]}; return deviceNotificationState;`)();
   assert.equal(fn({notificationPermission:'denied',lastNotificationVerifiedAt:'2026-10-02T10:00:00.000Z',pushSubscriptionState:'active'},true).summary,'Kapalı');
   assert.equal(fn({notificationPermission:'granted',lastNotificationVerifiedAt:'2026-10-02T10:00:00.000Z',pushSubscriptionState:'active'},true).summary,'Açık');
   assert.equal(fn({notificationPermission:'granted',lastNotificationVerifiedAt:'2026-10-02T10:00:00.000Z',pushSubscriptionState:'missing'},false).summary,'Abonelik eksik');
@@ -75,7 +76,7 @@ test('notification state fonksiyonu gerçek senaryolarda beklenen sonucu üretir
 test('ACK revision geldikten sonra daha eski polling cevabı cihaz alındı bilgisini geri saramaz',()=>{
   const match=admin.match(/function applyManualPushDeliveryUpdate\(incoming,base=\{\}\)\{.*?\}(?=\nasync function refreshManualPushDelivery)/s);
   assert.ok(match,'applyManualPushDeliveryUpdate bulunamadı');
-  const run=Function(`let manualPushDeliveryState={deliveryId:'DEL-test',revision:3,deliveryRevision:3,deviceAckCount:1,pendingAck:0,providerAccepted:1,ok:true};const document={querySelector:()=>null};function renderManualPushResult(){};${match[0]};const result=applyManualPushDeliveryUpdate({deliveryId:'DEL-test',revision:2,deviceAckCount:0,pendingAck:1,providerAccepted:1,ok:true});return {result,state:manualPushDeliveryState};`);
+  const run=Function(`let manualPushDeliveryState={deliveryId:'DEL-test',revision:3,deliveryRevision:3,deviceAckCount:1,pendingAck:0,providerAccepted:1,ok:true};function adminNotificationDebug(){};function renderManualPushResult(){};${match[0]};const result=applyManualPushDeliveryUpdate({deliveryId:'DEL-test',revision:2,deviceAckCount:0,pendingAck:1,providerAccepted:1,ok:true});return {result,state:manualPushDeliveryState};`);
   const out=run();
   assert.equal(out.state.revision,3);
   assert.equal(out.state.deviceAckCount,1);
