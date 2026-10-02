@@ -147,7 +147,7 @@ test('WhatsApp Türkiye numara normalizasyonu beklenen örnekleri verir',()=>{
 
 test('cache bust v194 ve ilk ekran koruması korunuyor',()=>{
   assert.match(index,/app\.js\?v=194/);
-  assert.match(adminHtml,/admin\.js\?v=194/);
+  assert.match(adminHtml,/admin\.js\?v=195/);
   assert.match(app,/service-worker\.js\?v=194/);
   assert.match(index,/html\.siteBooting body\{[^}]*visibility:hidden!important;opacity:0!important/);
   assert.match(app,/waitForInitialVisualAssets/);
