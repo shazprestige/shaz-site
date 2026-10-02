@@ -55,7 +55,7 @@ test('B: current generation Açık + 10 historical unknown => Bildirim Açık',(
 
 test('C: current generation denied + 10 historical granted/unknown => Bildirim Kapalı',()=>{
   const h=harness([],[]),currentActivity={deviceId:'DEVICE-DENIED-196',deviceStateGeneration:196,notificationPermission:'denied',pushSubscriptionState:'active',lastNotificationVerifiedAt:now()},currentPush=row('DENIED','DEVICE-DENIED-196',196),currentState=h.deviceNotificationState(currentActivity,true),devices=[{notificationStatus:currentState.summary,aggregateEligible:h.isCurrentRelevantDevice(currentActivity,[currentPush])},...Array.from({length:10},(_,i)=>({notificationStatus:i%2?'Açık':'Doğrulanamadı',aggregateEligible:h.isCurrentRelevantDevice({deviceId:'DEVICE-HISTORY-'+i,deviceStateGeneration:195},[])}))];
-  assert.equal(currentState.summary,'Kapalı');assert.equal(h.aggregateNotificationStatus(devices),'Kapalı');assert.match(server,/const currentDevices=devices\.filter\(x=>x\.aggregateEligible!==false\)/);
+  assert.equal(currentState.summary,'Kapalı');assert.equal(h.aggregateNotificationStatus(devices),'Kapalı');assert.match(server,/const authoritativeDevice=\[\.\.\.devices\]\.filter\(x=>x\.aggregateEligible!==false\).*?const currentDevices=authoritativeDevice\?\[authoritativeDevice\]:\[\]/s);
 });
 
 test('D: iki gerçek cihaz generation 196 doğrulanırsa iki hedef korunur',async()=>{
@@ -84,5 +84,5 @@ test('subscribe, foreground ve ACK current generation üretir; provider sonucu �
 });
 
 test('PWA aggregate yalnız current generation cihaz kümesinden hesaplanıyor',()=>{
-  assert.match(server,/const currentDevices=devices\.filter\(x=>x\.aggregateEligible!==false\),activePwa=currentDevices\.find/);assert.match(server,/currentActs=\(r\._activityRows\|\|\[\]\)\.filter\(a=>isCurrentRelevantDevice/);
+  assert.match(server,/const currentDevices=authoritativeDevice\?\[authoritativeDevice\]:\[\],activePwa=currentDevices\.find/);assert.match(server,/currentActs=\(r\._activityRows\|\|\[\]\)\.filter\(a=>isCurrentRelevantDevice/);
 });

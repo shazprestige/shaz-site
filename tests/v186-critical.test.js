@@ -21,11 +21,11 @@ test('login history yalnız gerçek auth/session creation akışında ve server 
   assert.match(server,/String\(x\.sessionId\|\|''\)===String\(sessionId\)/);
 });
 
-test('presence state machine 5 sn heartbeat, 15 sn TTL ve 1 sn self-heal kullanıyor',()=>{
-  assert.match(server,/PRESENCE_HEARTBEAT_MS=5000/);
-  assert.match(server,/PRESENCE_ONLINE_MS=15000/);
+test('presence state machine 10 sn heartbeat, 45 sn online grace ve 1 sn self-heal kullanıyor',()=>{
+  assert.match(server,/PRESENCE_HEARTBEAT_MS=10000/);
+  assert.match(server,/PRESENCE_ONLINE_MS=45000/);
   assert.match(server,/PRESENCE_TAB_RETENTION_MS=10\*60\*1000/);
-  assert.match(app,/SHAZ_PRESENCE_HEARTBEAT_MS=5000/);
+  assert.match(app,/SHAZ_PRESENCE_HEARTBEAT_MS=10000/);
   assert.match(app,/SHAZ_PRESENCE_LOCAL_CHECK_MS=1000/);
   assert.equal([...server.matchAll(/function recordCustomerPresence\(/g)].length,1);
   assert.match(app,/if\(visible&&\(shazPresenceIsMobile\(\)\|\|focused\)\)return 'ACTIVE'/);
