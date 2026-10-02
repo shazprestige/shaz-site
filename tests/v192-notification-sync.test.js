@@ -45,8 +45,8 @@ test('push ACK SSE ile anında admin popupına taşınır ve revision eski polli
 });
 
 test('tek üye scope başka userId taşıyan customerId çakışmasını hedeflemez',()=>{
-  assert.match(server,/targetUserIds\.has\(String\(x\.userId\|\|''\)\)\|\|targetCustomerIds\.has/);
-  assert.match(server,/&&\(!x\.userId\|\|targetUserIds\.has\(String\(x\.userId\|\|''\)\)\)/);
+  assert.match(server,/selectedScope\?\(x\.userId\?targetUserIds\.has\(String\(x\.userId\)\):targetCustomerIds\.has\(String\(x\.customerId\|\|''\)\)\)/);
+  assert.doesNotMatch(server,/selectedScope\?\([^)]*targetUserIds[^)]*\|\|[^)]*targetCustomerIds/);
 });
 
 test('SMS/e-posta tikleri network bitene kadar disabled yapılmadan optimistic ve kuyruklu çalışır',()=>{

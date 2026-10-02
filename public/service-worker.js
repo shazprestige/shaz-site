@@ -1,4 +1,4 @@
-const SHAZ_SW_VERSION='193';
+const SHAZ_SW_VERSION='194';
 const SHAZ_BADGE_DB='shaz-pwa-badge';
 const SHAZ_BADGE_STORE='state';
 const SHAZ_BADGE_KEY='unreadCount';
@@ -15,7 +15,7 @@ async function readDeviceId(){try{const db=await badgeDb();return await new Prom
 async function writeDeviceId(deviceId){deviceId=String(deviceId||'').trim().slice(0,160);if(!deviceId)return;try{const db=await badgeDb();await new Promise((resolve,reject)=>{const tx=db.transaction(SHAZ_BADGE_STORE,'readwrite');tx.objectStore(SHAZ_BADGE_STORE).put(deviceId,SHAZ_DEVICE_KEY);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}catch(_){}}
 self.addEventListener('message',event=>{if(event.data?.type==='SHAZ_CLEAR_BADGE')event.waitUntil(clearBadge());if(event.data?.type==='SHAZ_SET_DEVICE_ID')event.waitUntil(writeDeviceId(event.data.deviceId))});
 function safeNotificationTarget(raw){try{const u=new URL(String(raw||'/'),self.location.origin);if(!['http:','https:'].includes(u.protocol)||u.username||u.password)return self.location.origin+'/';return u.href}catch(_){return self.location.origin+'/'}}
-async function acknowledgePush(data){const deliveryId=String(data?.deliveryId||'').trim();if(!deliveryId)return;try{await fetch('/api/push/ack',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deliveryId,subscriptionId:String(data?.subscriptionId||''),receivedAt:new Date().toISOString()})})}catch(_){} }
+async function acknowledgePush(data){const deliveryId=String(data?.deliveryId||'').trim();if(!deliveryId)return;try{const deviceId=await readDeviceId();await fetch('/api/push/ack',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deliveryId,subscriptionId:String(data?.subscriptionId||''),deviceId,receivedAt:new Date().toISOString()})})}catch(_){} }
 self.addEventListener('push',event=>{
   event.waitUntil((async()=>{
     let data={};
@@ -40,7 +40,7 @@ self.addEventListener('pushsubscriptionchange',event=>{
     const oldEndpoint=String(event.oldSubscription?.endpoint||'');let sub=event.newSubscription||null;
     if(!sub&&event.oldSubscription?.options?.applicationServerKey){try{sub=await self.registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:event.oldSubscription.options.applicationServerKey})}catch(_){} }
     if(!sub)return;
-    const body=sub.toJSON();if(oldEndpoint)body.oldEndpoint=oldEndpoint;body.pwa=true;body.deviceId=await readDeviceId();body.subscriptionVerifiedAt=new Date().toISOString();
+    const body=sub.toJSON();if(oldEndpoint)body.oldEndpoint=oldEndpoint;body.deviceId=await readDeviceId();body.subscriptionVerifiedAt=new Date().toISOString();
     await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   })().catch(err=>console.error('SHAZ pushsubscriptionchange sync failed:',String(err?.message||err))));
 });

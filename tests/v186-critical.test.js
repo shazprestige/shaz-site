@@ -145,10 +145,10 @@ test('WhatsApp Türkiye numara normalizasyonu beklenen örnekleri verir',()=>{
   assert.equal(fn('12345'),'');
 });
 
-test('cache bust v193 ve ilk ekran koruması korunuyor',()=>{
-  assert.match(index,/app\.js\?v=193/);
-  assert.match(adminHtml,/admin\.js\?v=193/);
-  assert.match(app,/service-worker\.js\?v=193/);
+test('cache bust v194 ve ilk ekran koruması korunuyor',()=>{
+  assert.match(index,/app\.js\?v=194/);
+  assert.match(adminHtml,/admin\.js\?v=194/);
+  assert.match(app,/service-worker\.js\?v=194/);
   assert.match(index,/html\.siteBooting body\{[^}]*visibility:hidden!important;opacity:0!important/);
   assert.match(app,/waitForInitialVisualAssets/);
 });
@@ -195,10 +195,10 @@ test('push provider kabulü ile cihaz ACK sonucu ayrı raporlanıyor ve hızlı 
 });
 
 test('tek üye push hedeflemesi yalnız seçilen üye/customer scope ile sınırlı ve aynı cihaz stale endpointleri invalid ediyor',()=>{
-  assert.match(server,/targetUserIds\.has\(String\(x\.userId\|\|''\)\)\|\|targetCustomerIds\.has\(String\(x\.customerId\|\|''\)\)/);
+  assert.match(server,/selectedScope\?\(x\.userId\?targetUserIds\.has\(String\(x\.userId\)\):targetCustomerIds\.has\(String\(x\.customerId\|\|''\)\)\)/);
   assert.match(server,/async function normalizeActivePushTargets/);
   assert.match(server,/if\(!deviceId\)continue/);
-  assert.match(server,/lastPushFailureStatus='superseded_endpoint'/);
+  assert.match(server,/function markPushSuperseded\(row,at,reason='superseded_endpoint'\)/);
   assert.match(server,/staleSubscriptionsInvalidated/);
   const normalize=server.match(/async function normalizeActivePushTargets\(.*?(?=\nasync function sendPushRows)/s)?.[0]||'';
   assert.doesNotMatch(normalize,/permanentInvalidAt/);
@@ -209,7 +209,7 @@ test('foreground bildirim doğrulaması 60 saniyelik cachei force ile aşarak ge
   assert.match(app,/navigator\.serviceWorker\.getRegistration\('\/'\)/);
   assert.match(app,/reg\.pushManager\.getSubscription\(\)/);
   assert.match(app,/Notification\.permission==='denied'/);
-  assert.match(app,/permission==='granted'&&!sub/);
+  assert.match(app,/else if\(permission==='granted'\)\{if\(!sub\)/);
   assert.match(app,/reconcileShazPush\(reg,true\)/);
   for(const token of ["foreground('focus')","foreground(e.persisted?'pageshow-bfcache':'pageshow')","foreground('visibility')","foreground('resume')"]) assert.match(app,new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
   assert.match(server,/permission==='granted'&&pushState==='active'&&hasPush/);
