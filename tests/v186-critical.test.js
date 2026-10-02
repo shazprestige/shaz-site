@@ -213,7 +213,7 @@ test('foreground bildirim doğrulaması 60 saniyelik cachei force ile aşarak ge
   assert.match(app,/reconcileShazPush\(reg,true\)/);
   for(const token of ["foreground('focus')","foreground(e.persisted?'pageshow-bfcache':'pageshow')","foreground('visibility')","foreground('resume')"]) assert.match(app,new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
   assert.match(server,/permission==='granted'&&pushState==='active'&&hasPush/);
-  assert.match(server,/summary:'Abonelik eksik'/);
+  assert.match(server,/permission==='granted'&&pushState!=='active'\)return \{\.\.\.base,summary:'Kapalı'/);
 });
 
 test('SMS ve e-posta pazarlama tercihleri optimistic UI kullanıyor ve hata halinde rollback yapıyor',()=>{

@@ -141,8 +141,8 @@ test('push ACK hedef subscription için delivery stateini anında teslim edildi 
 });
 
 // TEST 14
-test('provider accepted ama ACK timeout => Teslimat doğrulanamadı',()=>{
-  assert.equal(outcomeFn()({targetCount:1,providerAccepted:1,deviceAckCount:0,ackWindowExpired:true}),'⚠ Teslimat doğrulanamadı.');
+test('provider accepted ama ACK timeout => Bildirim cihaza teslim edilmedi',()=>{
+  assert.equal(outcomeFn()({targetCount:1,providerAccepted:1,deviceAckCount:0,ackWindowExpired:true}),'✕ Bildirim cihaza teslim edilmedi.');
 });
 
 function renderHarness(){
@@ -156,11 +156,11 @@ function renderHarness(){
 // TEST 15
 test('manual push ana sonuç görünümünde 10 cihazlık teknik liste görünmez',()=>{
   const {el,fn}=renderHarness();fn({ok:true,scope:'selected',selectedMemberCount:1,selectedMemberNames:['Eren çakar'],targetCount:10,providerAccepted:8,providerRejected:2,deviceAckCount:1,ackWindowExpired:true,targetStates:Array.from({length:10},(_,i)=>({subscriptionId:'P'+i,status:i===0?'TESLİM EDİLDİ':'TESLİM TEYİDİ BEKLENİYOR'}))});
-  const main=el.innerHTML.split('<details>')[0];assert.match(main,/Eren çakar/);assert.match(main,/Hedef cihaz: <b>10<\/b>/);assert.match(main,/Teslim edildi: <b>1<\/b>/);assert.match(main,/Doğrulanamayan: <b>9<\/b>/);assert.doesNotMatch(main,/Cihaz 1:/);assert.doesNotMatch(main,/Provider|Push servisi kabul etti|Subscription/);
+  const main=el.innerHTML.split('<details>')[0];assert.match(main,/Eren çakar/);assert.match(main,/Hedef cihaz: <b>10<\/b>/);assert.match(main,/Teslim edildi: <b>1<\/b>/);assert.match(main,/Teslim edilemeyen: <b>9<\/b>/);assert.doesNotMatch(main,/Cihaz 1:/);assert.doesNotMatch(main,/Provider|Push servisi kabul etti|Subscription/);
 });
 
 // TEST 16
 test('Detayları Göster altında teknik provider/ACK/subscription bilgileri bulunur',()=>{
   const {el,fn}=renderHarness();fn({ok:true,targetCount:1,providerAccepted:1,deviceAckCount:0,ackWindowExpired:true,deliveryId:'DEL-X',targetStates:[{subscriptionId:'SUB-X',status:'TESLİM TEYİDİ BEKLENİYOR'}]});
-  assert.match(el.innerHTML,/<summary>Detayları Göster<\/summary>/);assert.match(el.innerHTML,/Push servisi kabul etti: 1/);assert.match(el.innerHTML,/Cihaz tarafından alındı: 0/);assert.match(el.innerHTML,/Teslim teyidi bekleniyor: 0/);assert.match(el.innerHTML,/Teslimat doğrulanamadı: 1/);assert.match(el.innerHTML,/Subscription: SUB-X/);assert.match(el.innerHTML,/Delivery id: DEL-X/);
+  assert.match(el.innerHTML,/<summary>Detayları Göster<\/summary>/);assert.match(el.innerHTML,/Push servisi kabul etti: 1/);assert.match(el.innerHTML,/Cihaz tarafından alındı: 0/);assert.match(el.innerHTML,/Teslim teyidi bekleniyor: 0/);assert.match(el.innerHTML,/Cihaza teslim edilmedi: 1/);assert.match(el.innerHTML,/Subscription: SUB-X/);assert.match(el.innerHTML,/Delivery id: DEL-X/);
 });

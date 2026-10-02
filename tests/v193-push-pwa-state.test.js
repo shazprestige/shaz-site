@@ -45,7 +45,7 @@ test('ACK bilinmeyen/stale durumda kanalı doğrular ama permission uydurmaz',()
   assert.equal(x.summary,'Açık');assert.equal(x.evidence,'device_ack');assert.equal(x.permission,'default');
 });
 
-test('granted fakat local subscription yoksa Abonelik eksik',()=>{const fn=serverNotificationFn();assert.equal(fn({notificationPermission:'granted',lastNotificationVerifiedAt:now(),pushSubscriptionState:'missing'},false).summary,'Abonelik eksik')});
+test('granted fakat local subscription yoksa operasyonel olarak Kapalı',()=>{const fn=serverNotificationFn();assert.equal(fn({notificationPermission:'granted',lastNotificationVerifiedAt:now(),pushSubscriptionState:'missing'},false).summary,'Kapalı')});
 
 test('çok eski granted+active doğrulaması kesin Açık sayılmaz',()=>{const fn=serverNotificationFn();assert.equal(fn({notificationPermission:'granted',lastNotificationVerifiedAt:ago(60),pushSubscriptionState:'active'},true).summary,'Doğrulanamadı')});
 
@@ -56,7 +56,7 @@ test('yeterli kanıt olmayan multi-device durumda Doğrulanamadı korunur',()=>{
 
 test('PWA güçlü standalone sinyali Yüklü üretir',()=>{const fn=pwaFn();assert.equal(fn({deviceId:'DEVICE-PWA-001',deviceStateGeneration:196,lastPwaStandaloneLaunchAt:now()},[]).summary,'Yüklü')});
 test('eski PWA güçlü sinyali sonsuza kadar Yüklü sayılmaz',()=>{const fn=pwaFn();assert.equal(fn({deviceId:'DEVICE-PWA-001',deviceStateGeneration:196,lastPwaStandaloneLaunchAt:ago(120)},[]).summary,'Muhtemelen')});
-test('kalıcı invalid push PWA kesin silindi demez, Geçersiz kanıtı verir',()=>{const fn=pwaFn();const x=fn({deviceId:'DEVICE-PWA-001',deviceStateGeneration:196,lastPushPermanentInvalidAt:now()},[]);assert.equal(x.summary,'Geçersiz');assert.match(x.detail,/kesin silindiği anlamına gelmez/) });
+test('kalıcı invalid push operasyonel olarak PWA Yüklü Değil üretir',()=>{const fn=pwaFn();const x=fn({deviceId:'DEVICE-PWA-001',deviceStateGeneration:196,lastPushPermanentInvalidAt:now()},[]);assert.equal(x.summary,'Yüklü Değil');assert.match(x.detail,/operasyonel kural/) });
 test('legacy/unbound deviceIdsiz pwa=true veya iOS ACK tek başına PWA Yüklü üretemez',()=>{const fn=pwaFn(),t=now();const x=fn({platform:'iPhone / iOS'},[{deviceId:null,lifecycle:'legacy-unbound',pwa:true,pwaObservedAt:t,lastPushDeviceAckAt:t,pushSubscriptionStatus:'ACTIVE'}]);assert.equal(x.summary,'Tespit Edilemedi')});
 test('?source=pwa tek başına PWA güçlü kanıtı değildir',()=>{const f=between(app,'function hasPwaLaunchSignal()','function isStandalonePwa()');assert.doesNotMatch(f,/source=pwa|searchParams|location\.search/) });
 
@@ -68,10 +68,10 @@ test('provider accepted akışında activity permission/active state zorla açı
 test('404/410 kalıcı invalid, 429/5xx geçici hata ayrımı kaynakta korunuyor',()=>{const block=between(server,'async function sendPushRows','async function sendOrderStatusPush');assert.match(block,/status===404\|\|status===410/);assert.match(block,/lastPushResult='permanent_invalid'/);assert.match(block,/lastPushResult='temporary_failure'/);assert.match(server,/function pushIsTransient\(status\)\{return status===429\|\|status>=500\|\|status===0\}/)});
 
 test('admin net sonuç: ACK geldiyse teslim edildi',()=>{const fn=outcomeFn();assert.match(fn({targetCount:1,providerAccepted:1,deviceAckCount:1,failed:0}),/teslim edildi/i)});
-test('admin net sonuç: accepted ama ACK yoksa önce bekler sonra doğrulanamadı der',()=>{const fn=outcomeFn();assert.match(fn({targetCount:1,providerAccepted:1,deviceAckCount:0,failed:0}),/bekleniyor/i);assert.match(fn({targetCount:1,providerAccepted:1,deviceAckCount:0,failed:0,ackWindowExpired:true}),/doğrulanamadı/i)});
+test('admin net sonuç: accepted ama ACK yoksa önce bekler sonra teslim edilmedi der',()=>{const fn=outcomeFn();assert.match(fn({targetCount:1,providerAccepted:1,deviceAckCount:0,failed:0}),/bekleniyor/i);assert.match(fn({targetCount:1,providerAccepted:1,deviceAckCount:0,failed:0,ackWindowExpired:true}),/cihaza teslim edilmedi/i)});
 test('admin net sonuç: 410 geçersiz, 503 geçici servis hatası',()=>{const fn=outcomeFn();assert.match(fn({targetCount:1,providerAccepted:0,deviceAckCount:0,failed:1,cleaned:1,failureStatuses:{410:1}}),/geçersiz/i);assert.match(fn({targetCount:1,providerAccepted:0,deviceAckCount:0,failed:1,cleaned:0,failureStatuses:{503:1}}),/Geçici gönderim hatası/i)});
 
-test('delivery sonucu her hedef cihazın ayrı durumunu admin ekranına taşır',()=>{assert.match(server,/targetStates=list\.map/);assert.match(server,/status:'TESLİM EDİLDİ'/);assert.match(admin,/Cihaz \$\{i\+1\}:/);assert.match(admin,/TESLİM DOĞRULANAMADI/)});
+test('delivery sonucu her hedef cihazın ayrı durumunu admin ekranına taşır',()=>{assert.match(server,/targetStates=list\.map/);assert.match(server,/status:'TESLİM EDİLDİ'/);assert.match(admin,/Cihaz \$\{i\+1\}:/);assert.match(admin,/BİLDİRİM CİHAZA TESLİM EDİLMEDİ/)});
 test('SSE açıkken polling yapılmaz, koparsa en fazla 10 saniyelik fallback var',()=>{const f=between(admin,'async function refreshManualPushDelivery','function closeMemberPushModal');assert.match(f,/Date\.now\(\)-started<10000/);assert.match(f,/if\(sseOpen\)continue/);assert.match(f,/setTimeout\(r,400\)/)});
 test('eski delivery revision yeni ACK stateini geri saramaz',()=>{const f=between(admin,'function applyManualPushDeliveryUpdate','async function refreshManualPushDelivery');assert.match(f,/incomingRevision<currentRevision/);assert.match(f,/incomingAt<currentAt/)});
 
@@ -97,7 +97,7 @@ test('ACK provider final update öncesi gelse bile hedef durumu TESLİM EDİLDİ
   const out=run();assert.equal(out.deviceAckCount,1);assert.equal(out.targetStates[0].status,'TESLİM EDİLDİ');assert.equal(out.targetStates[0].deviceAckAt,ackAt);
 });
 
-test('ACK timeout sonrası cihaz satırı bekleniyor yerine TESLİM DOĞRULANAMADI gösterir',()=>{assert.match(admin,/ackWindowExpired===true&&raw==='TESLİM TEYİDİ BEKLENİYOR'\?'TESLİM DOĞRULANAMADI'/)});
+test('ACK timeout sonrası cihaz satırı bekleniyor yerine BİLDİRİM CİHAZA TESLİM EDİLMEDİ gösterir',()=>{assert.match(admin,/ackWindowExpired===true&&raw==='TESLİM TEYİDİ BEKLENİYOR'\?'BİLDİRİM CİHAZA TESLİM EDİLMEDİ'/)});
 
 test('logout aynı cihazın eski kullanıcı ownershipini bırakır, browser permissionı sökmez',()=>{assert.match(server,/api\/auth\/logout[\s\S]*?unbindDeviceAccountOwnership\(deviceId,u\?\.id\|\|''\)/);const f=between(server,'function unbindDeviceAccountOwnership','function notificationDebug');assert.match(f,/row\.userId=null/);assert.match(f,/row\.customerId=null/);assert.doesNotMatch(f,/pushSubscriptionStatus='INVALID'|unsubscribe/)});
 

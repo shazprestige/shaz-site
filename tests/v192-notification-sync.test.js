@@ -29,7 +29,7 @@ test('foreground gerçek browser permission ve subscription durumunu cache üst�
 test('notification state önceliği denied, granted+subscription, granted-missing, default-declined şeklinde ayrılıyor',()=>{
   assert.match(server,/if\(permission==='denied'\)return \{[^}]*summary:'Kapalı'/);
   assert.match(server,/permission==='granted'&&pushState==='active'&&hasPush/);
-  assert.match(server,/summary:'Abonelik eksik'/);
+  assert.match(server,/permission==='granted'&&pushState!=='active'\)return \{\.\.\.base,summary:'Kapalı'/);
   assert.match(server,/SHAZ bildirim isteği kullanıcı tarafından reddedildi/);
   assert.match(server,/summary:'Doğrulanamadı'/);
 });
@@ -68,7 +68,7 @@ test('notification state fonksiyonu gerçek senaryolarda beklenen sonucu üretir
   const fn=Function(`${ev[0]};${match[0]}; return deviceNotificationState;`)();
   assert.equal(fn({notificationPermission:'denied',lastNotificationVerifiedAt:'2026-10-02T10:00:00.000Z',pushSubscriptionState:'active'},true).summary,'Kapalı');
   assert.equal(fn({notificationPermission:'granted',lastNotificationVerifiedAt:'2026-10-02T10:00:00.000Z',pushSubscriptionState:'active'},true).summary,'Açık');
-  assert.equal(fn({notificationPermission:'granted',lastNotificationVerifiedAt:'2026-10-02T10:00:00.000Z',pushSubscriptionState:'missing'},false).summary,'Abonelik eksik');
+  assert.equal(fn({notificationPermission:'granted',lastNotificationVerifiedAt:'2026-10-02T10:00:00.000Z',pushSubscriptionState:'missing'},false).summary,'Kapalı');
   assert.equal(fn({notificationPermission:'default',notificationUserPreference:'off',notificationPromptChoice:'declined',notificationPromptChoiceAt:'2026-10-02T10:00:00.000Z'},false).summary,'Kapalı');
   assert.equal(fn({notificationPermission:'default',notificationUserPreference:'unknown',lastNotificationVerifiedAt:'2026-10-02T10:00:00.000Z'},false).summary,'Doğrulanamadı');
 });
