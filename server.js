@@ -1566,7 +1566,9 @@ app.get('/api/admin/users',requireAdmin,(req,res)=>{res.setHeader('Cache-Control
 app.get('/api/admin/users/summary',requireAdmin,(req,res)=>{res.setHeader('Cache-Control','no-store');res.json({ok:true,summary:memberSummary(),locations:memberFilterLocations()})});
 app.get('/api/admin/users/ids',requireAdmin,(req,res)=>{res.setHeader('Cache-Control','no-store');res.json({ok:true,ids:filterAdminMembers(adminMemberRows(),req.query).map(x=>x.id),version:adminMemberStateSequence})});
 app.get('/api/admin/users/export.xlsx',requireAdmin,(req,res)=>{
-  const rows=filterAdminMembers(adminMemberRows(),req.query).map(u=>({
+  const selectedIds=[...new Set(String(req.query.selectedIds||'').split(',').map(x=>x.trim()).filter(Boolean))];
+  const sourceRows=selectedIds.length?adminMemberRows().filter(u=>selectedIds.includes(String(u.id))):filterAdminMembers(adminMemberRows(),req.query);
+  const rows=sourceRows.map(u=>({
     'Ad Soyad':[u.firstName,u.lastName].filter(Boolean).join(' '),'Telefon':u.phone,'E-posta':u.email,'Doğum Tarihi':u.birthDate,'İl':u.province,'İlçe':u.district,'Adres':u.address,'Tüm Adresler':(u.addresses||[]).map(a=>[a.title,a.fullName,a.phone,a.province,a.district,a.neighborhood,a.avenue,a.street,a.fullAddress,a.buildingNo?`Bina ${a.buildingNo}`:'',a.floor?`Kat ${a.floor}`:'',a.doorNo?`Daire ${a.doorNo}`:''].filter(Boolean).join(' · ')).join(' | '),'Toplam Sipariş':u.orderCount,'Üyelik Tarihi':u.createdAt,'SMS İzni':u.smsMarketingConsent?'Açık':'Kapalı','E-posta İzni':u.emailMarketingConsent?'Açık':'Kapalı','Giriş Yöntemi':(u.authProviders||[]).join(', '),'Üyelik Durumu':u.deleted||u.disabled?'Silinmiş':'Mevcut'
   }));
   const wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,'Üyeler');

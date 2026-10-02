@@ -143,9 +143,9 @@ test('WhatsApp Türkiye numara normalizasyonu beklenen örnekleri verir',()=>{
   assert.equal(fn('12345'),'');
 });
 
-test('cache bust v188 ve ilk ekran koruması korunuyor',()=>{
-  assert.match(index,/\?v=188/);
-  assert.match(adminHtml,/\?v=188/);
+test('cache bust v189 ve ilk ekran koruması korunuyor',()=>{
+  assert.match(index,/\?v=189/);
+  assert.match(adminHtml,/\?v=189/);
   assert.match(app,/service-worker\.js\?v=187/);
   assert.match(index,/html\.siteBooting body\{[^}]*visibility:hidden!important;opacity:0!important/);
   assert.match(app,/waitForInitialVisualAssets/);
@@ -154,4 +154,26 @@ test('cache bust v188 ve ilk ekran koruması korunuyor',()=>{
 test('dependency listesi değişmedi ve package-lock yapay olarak üretilmedi',()=>{
   assert.deepEqual(pkg.dependencies,{express:'^4.21.2',multer:'^2.0.2',xlsx:'^0.18.5',sharp:'^0.34.4','web-push':'^3.6.7'});
   assert.equal(fs.existsSync(path.join(root,'package-lock.json')),false);
+});
+
+
+test('üye satırı v186 çalışan doğrudan click ve klavye bağlantısını kullanıyor',()=>{
+  assert.match(admin,/onclick="memberRowClick\(event,'\$\{attr\(u\.id\)\}'\)"/);
+  assert.match(admin,/onkeydown="memberRowKey\(event,'\$\{attr\(u\.id\)\}'\)"/);
+  assert.doesNotMatch(admin,/data-member-detail-id/);
+  assert.doesNotMatch(admin,/closest\?\.\('\.memberAdminRow\[data-member-detail-id\]'/);
+});
+
+test('üye Excel aktarımı seçim varsa yalnız seçilenleri, seçim yoksa filtre sonucunu kullanıyor',()=>{
+  assert.match(admin,/if\(selectedMemberIds\.size\)q\.set\('selectedIds',\[\.\.\.selectedMemberIds\]\.join\(','\)\)/);
+  assert.match(server,/const selectedIds=\[\.\.\.new Set\(String\(req\.query\.selectedIds\|\|''\)/);
+  assert.match(server,/selectedIds\.length\?adminMemberRows\(\)\.filter\(u=>selectedIds\.includes\(String\(u\.id\)\)\):filterAdminMembers\(adminMemberRows\(\),req\.query\)/);
+});
+
+test('normal tarayıcı yükleme bildirimi native prompt desteğine veya 24 saat gizleme kaydına bağlı değil',()=>{
+  assert.match(app,/function showShazInstallNotice\(\)\{if\(adminPreviewMode\|\|isStandalonePwa\(\)\|\|document\.querySelector\('\.shazInstallNotice'\)\)return;/);
+  assert.doesNotMatch(app,/shazInstallNoticeDismissed/);
+  assert.doesNotMatch(app,/shazInstallNoticeDismissedAt/);
+  assert.doesNotMatch(app,/manualEligible/);
+  assert.match(app,/window\.addEventListener\('load',\(\)=>setTimeout\(showShazInstallNotice,1200\)/);
 });
