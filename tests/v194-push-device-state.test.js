@@ -65,18 +65,18 @@ test('ACK başka kullanıcıya ait activity/device ownershipini ele geçiremez',
   const r=h.applyPushAckDeviceBinding(h.getPush(),p,'DEVICE-B2',null,at);assert.equal(r.bound,false);assert.equal(r.ownershipConflict,true);assert.equal(p.deviceId,null);
 });
 
-test('same device eski endpoint superseded olur, yeni/current endpoint tek hedef kalır',async()=>{
-  const now=iso(),old={id:'OLD',userId:'U1',customerId:'C1',deviceId:'DEVICE-A1',endpoint:'https://push.example/old',pushSubscriptionStatus:'ACTIVE',updatedAt:iso(-5000)},cur={id:'CUR',userId:'U1',customerId:'C1',deviceId:'DEVICE-A1',endpoint:'https://push.example/new',pushSubscriptionStatus:'ACTIVE',lifecycle:'current',authoritativeAt:now,updatedAt:now};
-  const h=makeStateHarness([old,cur],[]);const out=await h.normalizeActivePushTargets(h.getPush());assert.equal(out.rows.length,1);assert.equal(out.rows[0].id,'CUR');const oldAfter=h.getPush().find(x=>x.id==='OLD');assert.equal(oldAfter.pushSubscriptionStatus,'INVALID');assert.ok(oldAfter.supersededAt);
+test('same device eski-generation endpoint historyde kalır, yalnız yeni generation current hedef olur',async()=>{
+  const now=iso(),old={id:'OLD',userId:'U1',customerId:'C1',deviceId:'DEVICE-A1',deviceStateGeneration:195,endpoint:'https://push.example/old',pushSubscriptionStatus:'ACTIVE',updatedAt:now},cur={id:'CUR',userId:'U1',customerId:'C1',deviceId:'DEVICE-A1',deviceStateGeneration:196,endpoint:'https://push.example/new',pushSubscriptionStatus:'ACTIVE',lifecycle:'current',authoritativeAt:now,updatedAt:now};
+  const h=makeStateHarness([old,cur],[]);const out=await h.normalizeActivePushTargets(h.getPush());assert.equal(out.rows.length,1);assert.equal(out.rows[0].id,'CUR');const oldAfter=h.getPush().find(x=>x.id==='OLD');assert.equal(oldAfter.pushSubscriptionStatus,'ACTIVE');assert.equal(oldAfter.deviceRelevance,'historical');assert.equal(out.historicalExcluded,1);
 });
 
 test('duplicate endpointte newer legacy row current device rowunu gölgeleyemez',async()=>{
-  const ep='https://push.example/same',current={id:'CUR',userId:'U1',deviceId:'DEVICE-A1',lifecycle:'current',endpoint:ep,pushSubscriptionStatus:'ACTIVE',updatedAt:iso(-5000)},legacy={id:'LEG',userId:'U1',deviceId:null,lifecycle:'legacy-unbound',endpoint:ep,pushSubscriptionStatus:'ACTIVE',updatedAt:iso()};
+  const ep='https://push.example/same',current={id:'CUR',userId:'U1',deviceId:'DEVICE-A1',deviceStateGeneration:196,lifecycle:'current',endpoint:ep,pushSubscriptionStatus:'ACTIVE',updatedAt:iso(-5000)},legacy={id:'LEG',userId:'U1',deviceId:null,lifecycle:'legacy-unbound',endpoint:ep,pushSubscriptionStatus:'ACTIVE',updatedAt:iso()};
   const h=makeStateHarness([current,legacy],[]);const out=await h.normalizeActivePushTargets(h.getPush());assert.equal(out.rows.length,1);assert.equal(out.rows[0].id,'CUR');
 });
 
 test('gerçek üç farklı current device korunur',async()=>{
-  const rows=['PHONE-001','TABLET-01','DESKTOP-1'].map((deviceId,i)=>({id:'P'+i,userId:'U1',deviceId,lifecycle:'current',authoritativeAt:iso(-i),endpoint:'https://push.example/'+i,pushSubscriptionStatus:'ACTIVE'}));
+  const rows=['PHONE-001','TABLET-01','DESKTOP-1'].map((deviceId,i)=>({id:'P'+i,userId:'U1',deviceId,deviceStateGeneration:196,lifecycle:'current',authoritativeAt:iso(-i),endpoint:'https://push.example/'+i,pushSubscriptionStatus:'ACTIVE'}));
   const h=makeStateHarness(rows,[]);const out=await h.normalizeActivePushTargets(h.getPush());assert.equal(out.rows.length,3);
 });
 

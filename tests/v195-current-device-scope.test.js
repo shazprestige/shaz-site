@@ -49,7 +49,7 @@ function aggregateFn(){const src=match(/function aggregateNotificationStatus\(de
 function pwaFn(){
   const platform=match(/function devicePlatformFromUa\(ua=''\)\{.*?\}/s,'devicePlatformFromUa');
   const src=match(/function devicePwaState\(a=\{\},pushRows=\[\]\)\{.*?\}(?=\nfunction normalizeVisitSessionId)/s,'devicePwaState');
-  return Function(`${normalizeDeviceSrc};${activeSrc};${platform};${evidenceSrc};${src};return devicePwaState;`)();
+  return Function(`${normalizeDeviceSrc};${activeSrc};${eligibleSrc};${ownerAndCurrentSrc};${platform};${evidenceSrc};${src};return devicePwaState;`)();
 }
 function ackFn(){const src=match(/function applyPushDeliveryAck\(row=\{\},subscriptionId='',at=new Date\(\)\.toISOString\(\)\)\{.*?\}(?=\napp\.post\('\/api\/push\/ack')/s,'applyPushDeliveryAck');return Function(`${src};return applyPushDeliveryAck;`)()}
 function outcomeFn(){const src=adminMatch(/function manualPushOutcomeText\(r=\{\}\)\{.*?\}(?=\nfunction renderManualPushResult)/s,'manualPushOutcomeText');return Function(`${src};return manualPushOutcomeText;`)()}
@@ -86,21 +86,21 @@ test('modal selected user snapshot immutable kalır; kaynak seçim sonradan değ
 });
 
 // TEST 4
-test('1 current cihaz + 9 historical cihaz => aktif push hedefi 1',async()=>{
-  const rows=[{id:'CUR',userId:'U1',customerId:'C1',deviceId:'DEVICE-CURRENT-001',endpoint:'https://push/current',lifecycle:'current',authoritativeAt:now(),pushSubscriptionStatus:'ACTIVE'},...Array.from({length:9},(_,i)=>({id:'OLD'+i,userId:'U1',customerId:'C1',deviceId:'DEVICE-OLD-'+i,endpoint:'https://push/old-'+i,lifecycle:'current',authoritativeAt:ago(120+i),createdAt:ago(120+i),pushSubscriptionStatus:'ACTIVE'}))];
+test('1 current generation cihaz + bugün oluşmuş 9 eski generation cihaz => aktif push hedefi 1',async()=>{
+  const rows=[{id:'CUR',userId:'U1',customerId:'C1',deviceId:'DEVICE-CURRENT-001',deviceStateGeneration:196,endpoint:'https://push/current',lifecycle:'current',authoritativeAt:now(),createdAt:now(),pushSubscriptionStatus:'ACTIVE'},...Array.from({length:9},(_,i)=>({id:'OLD'+i,userId:'U1',customerId:'C1',deviceId:'DEVICE-OLD-'+i,deviceStateGeneration:195,endpoint:'https://push/old-'+i,lifecycle:'current',authoritativeAt:now(),createdAt:now(),pushSubscriptionStatus:'ACTIVE'}))];
   const h=targetHarness(rows,[]),r=await h.normalizeActivePushTargets(h.getPush());
   assert.equal(r.rows.length,1);assert.equal(r.rows[0].id,'CUR');assert.equal(r.historicalExcluded,9);assert.equal(h.getPush().filter(x=>x.deviceRelevance==='historical').length,9);assert.equal(h.getPush().filter(x=>x.deviceRelevance==='historical').every(x=>x.pushSubscriptionStatus==='ACTIVE'),true);
 });
 
 // TEST 5
 test('3 farklı güncel gerçek cihaz => aktif push hedefi 3',async()=>{
-  const rows=['DEVICE-PHONE-001','DEVICE-PC-0001','DEVICE-TABLET-01'].map((d,i)=>({id:'P'+i,userId:'U1',deviceId:d,endpoint:'https://push/'+i,lifecycle:'current',authoritativeAt:now(),pushSubscriptionStatus:'ACTIVE'}));
+  const rows=['DEVICE-PHONE-001','DEVICE-PC-0001','DEVICE-TABLET-01'].map((d,i)=>({id:'P'+i,userId:'U1',deviceId:d,deviceStateGeneration:196,endpoint:'https://push/'+i,lifecycle:'current',authoritativeAt:now(),pushSubscriptionStatus:'ACTIVE'}));
   const r=await targetHarness(rows,[]).normalizeActivePushTargets(rows);assert.equal(r.rows.length,3);assert.equal(r.historicalExcluded,0);
 });
 
 // TEST 6
 test('aynı endpoint duplicate kayıtlarda yalnız bir push hedefi kalır',async()=>{
-  const ep='https://push/same',rows=[{id:'A',userId:'U1',deviceId:'DEVICE-A-001',endpoint:ep,lifecycle:'current',authoritativeAt:now(),pushSubscriptionStatus:'ACTIVE'},{id:'B',userId:'U1',deviceId:'DEVICE-B-001',endpoint:ep,lifecycle:'current',authoritativeAt:now(),pushSubscriptionStatus:'ACTIVE'}];
+  const ep='https://push/same',rows=[{id:'A',userId:'U1',deviceId:'DEVICE-A-001',deviceStateGeneration:196,endpoint:ep,lifecycle:'current',authoritativeAt:now(),pushSubscriptionStatus:'ACTIVE'},{id:'B',userId:'U1',deviceId:'DEVICE-B-001',deviceStateGeneration:196,endpoint:ep,lifecycle:'current',authoritativeAt:now(),pushSubscriptionStatus:'ACTIVE'}];
   const r=await targetHarness(rows,[]).normalizeActivePushTargets(rows);assert.equal(r.rows.length,1);assert.equal(r.rows[0].endpoint,ep);
 });
 
@@ -126,7 +126,7 @@ test('iki current cihazdan biri Açık biri Kapalı => Karışık',()=>{
 
 // TEST 11
 test('bugün standalone PWA açılışı => Yüklü',()=>{
-  assert.equal(pwaFn()({deviceId:'DEVICE-A-001',lastPwaStandaloneLaunchAt:now(),lastSeenAt:now()},[]).summary,'Yüklü');
+  assert.equal(pwaFn()({deviceId:'DEVICE-A-001',deviceStateGeneration:196,lastPwaStandaloneLaunchAt:now(),lastSeenAt:now()},[]).summary,'Yüklü');
 });
 
 // TEST 12
