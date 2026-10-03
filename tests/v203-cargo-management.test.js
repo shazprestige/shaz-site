@@ -64,9 +64,17 @@ test('YeşilKar service boş configte fail-closed; sahte endpoint veya barkod ü
 });
 
 test('YeşilKar payload gelecekteki gerçek alanlara siparişten hazırlanıyor',()=>{
-  const svc=createCargoService({env:{}}),p=svc.buildShipmentPayload({id:'SHZ-1',total:1250,customer:{fullName:'Ali Veli',province:'Kocaeli',district:'Darıca',fullAddress:'Adres',phone:'05380000000'},items:[{name:'Saat',qty:2}]});
+  const svc=createCargoService({env:{}}),p=svc.buildShipmentPayload({id:'SHZ-1',payment:'cod',total:1250,customer:{fullName:'Ali Veli',province:'Kocaeli',district:'Darıca',fullAddress:'Adres',phone:'05380000000'},items:[{name:'Saat',qty:2}]});
   for(const k of ['customer','province_name','county_name','address','telephone','branch_code','order_number','summary','quantity','amount_type_id','amount','barcode','record_id'])assert.ok(Object.hasOwn(p,k),k);
-  assert.equal(p.order_number,'SHZ-1');assert.equal(p.customer,'Ali Veli');assert.equal(p.amount,1250);assert.equal(p.quantity,2);
+  assert.equal(p.order_number,'SHZ-1');assert.equal(p.customer,'Ali Veli');assert.equal(p.amount,'1250.00');assert.equal(p.quantity,2);
+});
+
+
+test('online ödeme tahsilat tutarı göndermez, kapıda kredi kartı tür 6 kullanır',()=>{
+  const svc=createCargoService({env:{YESILKAR_AMOUNT_TYPE_ID:'3'}});
+  const base={id:'O',total:900,customer:{fullName:'A',province:'Kocaeli',district:'Darıca',fullAddress:'X'}};
+  const online=svc.buildShipmentPayload({...base,payment:'online'});assert.equal(online.amount_type_id,'3');assert.equal(Object.hasOwn(online,'amount'),false);
+  const doorCard=svc.buildShipmentPayload({...base,payment:'Kapıda kredi kartı'});assert.equal(doorCard.amount_type_id,'6');assert.equal(doorCard.amount,'900.00');
 });
 
 test('secret yapı yalnız server env tarafında ve frontendde key/from değeri yok',()=>{
@@ -130,7 +138,7 @@ test('kargo admin APIleri admin korumalı ve mutasyonlar same-origin kontrollü'
 
 test('etiket ayrı print template üzerinden gerçek shipment/order verisiyle hazırlanıyor',()=>{
   const cargo=block(admin,'const cargoFilterState','async function renderNotificationSettings');
-  assert.match(cargo,/function cargoLabelPrintHtml/);assert.match(cargo,/SHAZ Kargo Etiketi/);assert.match(cargo,/Tahsilat:/);assert.match(cargo,/Ürün:/);
+  assert.match(cargo,/function cargoCode128Svg/);assert.match(cargo,/function cargoLabelPrintHtml/);assert.match(cargo,/SHAZ Kargo Etiketi/);assert.match(cargo,/barcodeSvg/);assert.match(cargo,/GERÇEK BARKOD ALINMADAN ETİKET BASILAMAZ/);assert.match(cargo,/Tahsilat/);assert.match(cargo,/Ürün Bilgileri/);
   const labelBlock=block(server,"app.get('/api/admin/cargo/orders/:id/label'","app.get('/api/orders'");assert.match(labelBlock,/barcode:shipment\.barcode/);assert.doesNotMatch(labelBlock,/FAKE|DUMMY|rastgele takip/i);
 });
 

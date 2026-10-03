@@ -92,9 +92,18 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
     if(config.apiKeyHeaderName&&config.apiKey)headers[config.apiKeyHeaderName]=config.apiKey;
     return headers;
   }
+  function shipmentPayment(order={}){
+    const p=clean(order.payment,120).toLocaleLowerCase('tr-TR');
+    const isDoorCard=/kapıda.*(kart|kredi)|door.*card/.test(p);
+    const isCod=p==='cod'||/kapıda|cash.?on.?delivery/.test(p);
+    if(isDoorCard)return {amountTypeId:'6',amount:Number(order.total||0).toFixed(2)};
+    if(isCod)return {amountTypeId:config.amountTypeId||'3',amount:Number(order.total||0).toFixed(2)};
+    // PDF'ye göre amount_type_id=3 + boş amount tahsilatsız gönderidir.
+    return {amountTypeId:config.amountTypeId||'3',amount:null};
+  }
   function buildShipmentPayload(order={}){
-    const c=order.customer||{};
-    return {
+    const c=order.customer||{},payment=shipmentPayment(order);
+    const payload={
       customer:clean(c.fullName,200),
       province_name:clean(c.province,120),
       county_name:clean(c.district,120),
@@ -104,11 +113,12 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
       order_number:clean(order.id,120),
       summary:orderSummary(order),
       quantity:orderQuantity(order),
-      amount_type_id:config.amountTypeId,
-      amount:Number(order.total||0),
+      amount_type_id:payment.amountTypeId,
       barcode:'',
       record_id:''
     };
+    if(payment.amount!==null)payload.amount=payment.amount;
+    return payload;
   }
   async function requestJson(url,options){
     if(typeof fetchImpl!=='function'){const e=new Error('Sunucuda fetch desteği bulunamadı.');e.code='CARGO_FETCH_UNAVAILABLE';throw e}
@@ -117,13 +127,19 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
     return redactProviderResponse(data);
   }
   function resultFromProvider(data={}){
-    const row=data?.data&&typeof data.data==='object'?data.data:data;
+    let row=data?.data&&typeof data.data==='object'?data.data:data;
+    if(Array.isArray(row))row=row[0]||{};
+    if(row&&typeof row==='object'){
+      const nested=row.result||row.results||row.rows||row.records||row.consignments;
+      if(Array.isArray(nested))row=nested[0]||row;
+      else if(nested&&typeof nested==='object'&&!('barcode' in row))row=nested;
+    }
     return {
       barcode:clean(row?.barcode||row?.cargo_barcode||row?.barkod,160),
       trackingNumber:clean(row?.tracking_number||row?.trackingNumber||row?.tracking_no||row?.takip_no,160),
       recordId:clean(row?.record_id||row?.recordId||row?.id,160),
       labelUrl:clean(row?.label_url||row?.labelUrl||row?.pdf_url||row?.pdfUrl,1000),
-      providerStatus:clean(row?.status||row?.cargo_status||'',160),
+      providerStatus:clean(row?.status||row?.cargo_status||row?.status_name||row?.durum||'',160),
       providerResponse:redactProviderResponse(data)
     };
   }
