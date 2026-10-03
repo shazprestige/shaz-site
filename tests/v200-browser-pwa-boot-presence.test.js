@@ -112,14 +112,14 @@ test('admin Bildirim ve Push durumu push authorityden, presence ayrı aggregate 
 
 test('client payload browser ve PWA contextini açıkça gönderiyor',()=>{
   assert.match(app,/clientContext=isStandalonePwa\(\)\?'pwa':'browser'/);
-  assert.match(app,/presenceState=!navigator\.onLine\?'offline':visible/);
+  assert.match(app,/presenceState=!navigator\.onLine\?'offline':effectiveVisible/);
   assert.match(app,/clientContext,presenceState/);
 });
 
 test('hidden pagehide freeze anında background lifecycle gönderir',()=>{
-  assert.match(app,/pagehide'.*?shazLastLocalPresenceState='BACKGROUND';sendShazPresenceLifecycle\(false,false\)/s);
-  assert.match(app,/visibilitychange'.*?shazHandleLocalPresence\('visibility'\)/s);
-  assert.match(app,/freeze'.*?shazLastLocalPresenceState='BACKGROUND';sendShazPresenceLifecycle\(false,false\)/s);
+  assert.match(app,/pagehide'.*?shazForceBackgroundPresence\('pagehide'\)/s);
+  assert.match(app,/visibilitychange'.*?shazForceBackgroundPresence\('visibility'\)/s);
+  assert.match(app,/freeze'.*?shazForceBackgroundPresence\('freeze'\)/s);
 });
 
 test('pageshow focus visible resume foregrounda gelince heartbeat beklemeden foreground çalışır',()=>{
