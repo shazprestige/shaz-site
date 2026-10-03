@@ -67,7 +67,9 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
     statusUrlTemplate:clean(env.YESILKAR_STATUS_URL_TEMPLATE,1000),
     labelUrlTemplate:clean(env.YESILKAR_LABEL_URL_TEMPLATE,1000),
     authHeaderName:clean(env.YESILKAR_AUTH_HEADER_NAME,120),
-    authHeaderValue:clean(env.YESILKAR_AUTH_HEADER_VALUE,2000),
+    // PDF'de API Authorization değerinin API KEY olduğu belirtiliyor.
+    // Ayrı YESILKAR_AUTH_HEADER_VALUE verilmezse güvenli environment değişkeni olan YESILKAR_API_KEY kullanılır.
+    authHeaderValue:clean(env.YESILKAR_AUTH_HEADER_VALUE||env.YESILKAR_API_KEY,2000),
     apiKeyHeaderName:clean(env.YESILKAR_API_KEY_HEADER_NAME,120),
     apiKey:clean(env.YESILKAR_API_KEY,2000),
     fromHeaderName:clean(env.YESILKAR_FROM_HEADER_NAME,120),
