@@ -42,15 +42,21 @@ function redactProviderResponse(value,depth=0){
   return value;
 }
 function providerStatusToCargoStatus(raw,current='created'){
-  const s=clean(raw,120).toLocaleLowerCase('tr-TR');
+  const original=clean(raw,120),code=original.padStart(2,'0');
+  if(code==='00')return 'created';
+  if(code==='01'||code==='40'||code==='41'||code==='50'||code==='60')return 'handed_over';
+  if(code==='42')return 'out_for_delivery';
+  if(code==='10')return 'delivered';
+  if(['20','21','22','23','24'].includes(code))return 'returned';
+  const s=original.toLocaleLowerCase('tr-TR');
   if(!s)return current;
-  if(/teslim|delivered/.test(s))return 'delivered';
-  if(/dağıt|dagit|out.?for.?delivery/.test(s))return 'out_for_delivery';
-  if(/kargoya.*ver|teslim.*şube|handed|accepted.*branch/.test(s))return 'handed_over';
+  if(/teslim edilemedi|teslimat şubesinde|teslimat subesinde|transfer sürecinde|transfer surecinde|kabul edildi|kargoya.*ver|handed|accepted.*branch/.test(s))return 'handed_over';
+  if(/kurye dağıtımda|kurye dagitimda|dağıtımda|dagitimda|out.?for.?delivery/.test(s))return 'out_for_delivery';
+  if(/teslim edildi|^teslim$|delivered/.test(s))return 'delivered';
   if(/iade|return/.test(s))return 'returned';
   if(/iptal|cancel/.test(s))return 'cancelled';
   if(/hata|error|fail/.test(s))return 'error';
-  if(/oluştur|olustur|created|created shipment/.test(s))return 'created';
+  if(/oluştur|olustur|created|created shipment|kabul bekliyor/.test(s))return 'created';
   return current;
 }
 function fillTemplate(template,vars={}){
@@ -58,6 +64,15 @@ function fillTemplate(template,vars={}){
   for(const [k,v] of Object.entries(vars))out=out.replaceAll(`{${k}}`,encodeURIComponent(clean(v,300)));
   return out;
 }
+function formEncode(payload={}){
+  const params=new URLSearchParams();
+  for(const [key,value] of Object.entries(payload)){
+    if(value===undefined||value===null||value==='')continue;
+    params.set(key,String(value));
+  }
+  return params.toString();
+}
+function responseHasError(data){return data?.error===true||String(data?.error||'').toLowerCase()==='true'}
 
 function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
   const config={
@@ -83,10 +98,11 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
     if(config.apiKeyHeaderName&&!config.apiKey)missing.push('apiKey');
     return {provider:config.provider,cargoCompany:config.cargoCompany,configured:missing.length===0,missing};
   }
-  function providerHeaders(){
+  function providerHeaders({form=false}={}){
     const state=configuration();
     if(!state.configured){const e=new Error('YeşilKar / Aras API bağlantısı henüz yapılandırılmadı. Gerçek API bilgileri girilmeden kargo oluşturulamaz.');e.code='CARGO_INTEGRATION_NOT_CONFIGURED';throw e}
-    const headers={'Content-Type':'application/json'};
+    const headers={'User-Agent':'Mozilla/5.0 SHAZ-Kargo-Entegrasyonu'};
+    if(form)headers['Content-Type']='application/x-www-form-urlencoded';
     headers[config.authHeaderName]=config.authHeaderValue;
     headers[config.fromHeaderName]=config.apiFrom;
     if(config.apiKeyHeaderName&&config.apiKey)headers[config.apiKeyHeaderName]=config.apiKey;
@@ -113,9 +129,8 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
       order_number:clean(order.id,120),
       summary:orderSummary(order),
       quantity:orderQuantity(order),
-      amount_type_id:payment.amountTypeId,
-      barcode:'',
-      record_id:''
+      consignment_type_id:1,
+      amount_type_id:payment.amountTypeId
     };
     if(payment.amount!==null)payload.amount=payment.amount;
     return payload;
@@ -123,7 +138,7 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
   async function requestJson(url,options){
     if(typeof fetchImpl!=='function'){const e=new Error('Sunucuda fetch desteği bulunamadı.');e.code='CARGO_FETCH_UNAVAILABLE';throw e}
     const response=await fetchImpl(url,options),text=await response.text();let data={};try{data=text?JSON.parse(text):{}}catch{data={message:text}}
-    if(!response.ok){const e=new Error(clean(data?.message||data?.error||`Kargo servisi HTTP ${response.status}`,500));e.code='CARGO_PROVIDER_ERROR';e.httpStatus=response.status;e.providerResponse=redactProviderResponse(data);throw e}
+    if(!response.ok||responseHasError(data)){const e=new Error(clean(data?.message||data?.result||data?.error||`Kargo servisi HTTP ${response.status}`,500));e.code='CARGO_PROVIDER_ERROR';e.httpStatus=response.status;e.providerResponse=redactProviderResponse(data);throw e}
     return redactProviderResponse(data);
   }
   function resultFromProvider(data={}){
@@ -135,16 +150,16 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
       else if(nested&&typeof nested==='object'&&!('barcode' in row))row=nested;
     }
     return {
-      barcode:clean(row?.barcode||row?.cargo_barcode||row?.barkod,160),
-      trackingNumber:clean(row?.tracking_number||row?.trackingNumber||row?.tracking_no||row?.takip_no,160),
-      recordId:clean(row?.record_id||row?.recordId||row?.id,160),
+      barcode:clean(row?.barcode||row?.cargo_barcode||row?.barkod||row?.musteribarkod||row?.gonderino,160),
+      trackingNumber:clean(row?.tracking_number||row?.trackingNumber||row?.tracking_no||row?.takip_no||row?.gonderino||row?.kurcikno,160),
+      recordId:clean(row?.record_id||row?.recordId||row?.id||row?.kayitno,160),
       labelUrl:clean(row?.label_url||row?.labelUrl||row?.pdf_url||row?.pdfUrl,1000),
-      providerStatus:clean(row?.status||row?.cargo_status||row?.status_name||row?.durum||'',160),
+      providerStatus:clean(row?.statu_no||row?.status||row?.cargo_status||row?.status_name||row?.sonuc||row?.durum||'',160),
       providerResponse:redactProviderResponse(data)
     };
   }
   async function createShipment({order}={}){
-    const data=await requestJson(config.createUrl,{method:'POST',headers:providerHeaders(),body:JSON.stringify(buildShipmentPayload(order))});
+    const data=await requestJson(config.createUrl,{method:'POST',headers:providerHeaders({form:true}),body:formEncode(buildShipmentPayload(order))});
     return resultFromProvider(data);
   }
   async function refreshShipment({shipment}={}){
