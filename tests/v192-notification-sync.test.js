@@ -41,7 +41,7 @@ test('push ACK SSE ile anında admin popupına taşınır ve revision eski polli
   assert.match(admin,/payload\.type==='push-delivery-update'/);
   assert.match(admin,/incomingRevision<currentRevision/);
   assert.match(admin,/manualPushDeliveryState=\{\.\.\.current,\.\.\.incoming,ok:true/);
-  assert.match(admin,/setTimeout\(r,400\)/);
+  assert.match(admin,/setTimeout\(r,150\)/);
 });
 
 test('tek üye scope başka userId taşıyan customerId çakışmasını hedeflemez',()=>{

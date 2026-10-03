@@ -196,7 +196,7 @@ test('push provider kabulü ile cihaz ACK sonucu ayrı raporlanıyor ve hızlı 
   assert.match(admin,/Teslim teyidi bekleniyor:/);
   assert.match(admin,/renderManualPushResult\(\{sending:true\}\)/);
   assert.match(admin,/Date\.now\(\)-started<10000/);
-  assert.match(admin,/setTimeout\(r,400\)/);
+  assert.match(admin,/setTimeout\(r,150\)/);
   assert.match(server,/pendingAck:Math\.max\(0,accepted-acked\)/);
   assert.match(server,/app\.post\('\/api\/push\/ack'/);
   assert.match(server,/lastPushDeviceAckAt/);
