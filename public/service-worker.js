@@ -1,4 +1,4 @@
-const SHAZ_SW_VERSION='194';
+const SHAZ_SW_VERSION='200';
 const SHAZ_BADGE_DB='shaz-pwa-badge';
 const SHAZ_BADGE_STORE='state';
 const SHAZ_BADGE_KEY='unreadCount';

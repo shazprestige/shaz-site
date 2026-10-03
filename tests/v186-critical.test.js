@@ -30,8 +30,9 @@ test('presence state machine 10 sn heartbeat, 45 sn online grace ve 1 sn self-he
   assert.equal([...server.matchAll(/function recordCustomerPresence\(/g)].length,1);
   assert.match(app,/if\(visible&&\(shazPresenceIsMobile\(\)\|\|focused\)\)return 'ACTIVE'/);
   assert.doesNotMatch(app,/visibilityState==='visible'&&document\.hasFocus\?\.\(\)===true/);
-  assert.match(server,/active=live\.filter\(x=>now-Number\(x\.receivedAtMs\|\|0\)<=PRESENCE_ONLINE_MS/);
-  assert.match(server,/background=live\.filter/);
+  assert.match(server,/recent=tabs\.filter\(x=>x\.sessionActive===true&&now-Number\(x\.receivedAtMs\|\|0\)<=PRESENCE_ONLINE_MS/);
+  assert.match(server,/active=recent\.filter/);
+  assert.match(server,/background=recent\.filter/);
 });
 
 test('foreground lifecycle ve multi-tab koordinasyonu self-healing çalışacak sinyalleri içeriyor',()=>{
@@ -145,11 +146,15 @@ test('WhatsApp Türkiye numara normalizasyonu beklenen örnekleri verir',()=>{
   assert.equal(fn('12345'),'');
 });
 
-test('cache bust v194 ve ilk ekran koruması korunuyor',()=>{
-  assert.match(index,/app\.js\?v=194/);
+test('cache bust v200 ve ilk ekran loader koruması aktif',()=>{
+  assert.match(index,/app\.js\?v=200/);
+  assert.match(index,/styles\.css\?v=200/);
+  assert.match(adminHtml,/styles\.css\?v=200/);
   assert.match(adminHtml,/admin\.js\?v=195/);
-  assert.match(app,/service-worker\.js\?v=194/);
-  assert.match(index,/html\.siteBooting body\{[^}]*visibility:hidden!important;opacity:0!important/);
+  assert.match(app,/service-worker\.js\?v=200/);
+  assert.match(index,/id="siteBootLoader"/);
+  assert.match(index,/Yükleniyor/);
+  assert.doesNotMatch(index,/html\.siteBooting body\{[^}]*visibility:hidden!important;opacity:0!important/);
   assert.match(app,/waitForInitialVisualAssets/);
 });
 
@@ -173,11 +178,14 @@ test('üye Excel aktarımı seçim varsa yalnız seçilenleri, seçim yoksa filt
 });
 
 test('normal tarayıcı yükleme bildirimi native prompt desteğine veya 24 saat gizleme kaydına bağlı değil',()=>{
-  assert.match(app,/function showShazInstallNotice\(\)\{if\(adminPreviewMode\|\|isStandalonePwa\(\)\|\|document\.querySelector\('\.shazInstallNotice'\)\)return;/);
+  assert.match(app,/function showShazInstallNotice\(\)\{if\(adminPreviewMode\|\|shazAppInstalledThisSession\|\|isStandalonePwa\(\)\|\|document\.querySelector\('\.shazInstallNotice'\)\)return;/);
   assert.doesNotMatch(app,/shazInstallNoticeDismissed/);
   assert.doesNotMatch(app,/shazInstallNoticeDismissedAt/);
   assert.doesNotMatch(app,/manualEligible/);
-  assert.match(app,/window\.addEventListener\('load',\(\)=>setTimeout\(showShazInstallNotice,1200\)/);
+  assert.match(app,/function scheduleShazInstallNotice\(\).*?afterSiteBoot\(\(\)=>\{.*?setTimeout\(\(\)=>\{.*?showShazInstallNotice\(\).*?\},12000\)/s);
+  assert.match(app,/window\.addEventListener\('beforeinstallprompt',e=>\{e\.preventDefault\(\);shazDeferredInstallPrompt=e;scheduleShazInstallNotice\(\)\}/);
+  assert.match(app,/window\.addEventListener\('load',scheduleShazInstallNotice/);
+  assert.doesNotMatch(app,/setTimeout\(showShazInstallNotice,1200\)/);
 });
 
 

@@ -40,10 +40,10 @@ test('stale offline observation aktif watchı yanlışlıkla kapatamaz, pencere 
   assert.match(server,/withinOriginalWindow=!!startMs&&evidenceMs>=startMs/);
 });
 
-test('ana admin aggregate yalnız en son authoritative device üzerinden hesaplanır',()=>{
-  assert.match(server,/const authoritativeDevice=\[\.\.\.devices\]/);
-  assert.match(server,/const currentDevices=authoritativeDevice\?\[authoritativeDevice\]:\[\]/);
-  assert.match(server,/d\.deviceRelevance=current\?'current':'historical'/);
+test('ana admin state presence push ve PWA authority kaynaklarını ayrı kullanır',()=>{
+  assert.match(server,/const pushAuthorityRow=latestPushAuthorityRecord\(userPush\)/);
+  assert.match(server,/const pwaAuthorityDevice=\[\.\.\.devices\]/);
+  assert.match(server,/presenceStatus=devices\.some\(x=>x\.presenceStatus==='active'\)/);
 });
 
 test('gerçek push gönderim hedefleri owner başına latest authoritative cihaza indirilir',()=>{
@@ -78,10 +78,11 @@ test('SMS Mail metinleri ve tikleri iki sabit merkez kolonda hizalanır',()=>{
 
 
 
-test('latest gerçek cihazda aktif push yoksa eski cihaz fallback push hedefi olamaz',()=>{
-  assert.match(server,/ownerActs=\(acts\|\|\[\]\)\.filter/);
-  assert.match(server,/ids=\[\.\.\.new Set\(\[\.\.\.candidates\.map\(x=>normalizeDeviceId\(x\.deviceId\)\),\.\.\.ownerActs\.map/);
-  assert.match(server,/const bestDevice=latestAuthoritativeDeviceId\(group,acts\);const same=group\.filter\(x=>normalizeDeviceId\(x\.deviceId\)===bestDevice\)/);
+test('normal browser activity push authorityyi düşürmez; hedef latest valid push kaydından seçilir',()=>{
+  assert.match(server,/function latestPushAuthorityRecord\(rows=\[\]\)/);
+  assert.match(server,/const best=latestPushAuthorityRecord\(group\);if\(best\)out\.push\(best\)/);
+  const block=server.slice(server.indexOf('function keepLatestAuthoritativePushTargets'),server.indexOf('function latestIso'));
+  assert.doesNotMatch(block,/latestAuthoritativeDeviceId\(/);
 });
 test('package bağımlılıkları değiştirilmedi ve package-lock üretilmedi',()=>{
   const pkg=JSON.parse(read('package.json'));
