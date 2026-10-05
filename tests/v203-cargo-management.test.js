@@ -65,7 +65,8 @@ test('YeşilKar service boş configte fail-closed; sahte endpoint veya barkod ü
 
 test('YeşilKar payload gelecekteki gerçek alanlara siparişten hazırlanıyor',()=>{
   const svc=createCargoService({env:{}}),p=svc.buildShipmentPayload({id:'SHZ-1',payment:'cod',total:1250,customer:{fullName:'Ali Veli',province:'Kocaeli',district:'Darıca',fullAddress:'Adres',phone:'05380000000'},items:[{name:'Saat',qty:2}]});
-  for(const k of ['customer','province_name','county_name','address','telephone','branch_code','order_number','summary','quantity','amount_type_id','amount','barcode','record_id'])assert.ok(Object.hasOwn(p,k),k);
+  for(const k of ['customer','province_name','county_name','address','telephone','branch_code','order_number','summary','quantity','amount_type_id','amount'])assert.ok(Object.hasOwn(p,k),k);
+  assert.equal(Object.hasOwn(p,'barcode'),false);assert.equal(Object.hasOwn(p,'record_id'),false);
   assert.equal(p.order_number,'SHZ-1');assert.equal(p.customer,'Ali Veli');assert.equal(p.amount,'1250.00');assert.equal(p.quantity,2);
 });
 
@@ -88,7 +89,7 @@ test('secret yapı yalnız server env tarafında ve frontendde key/from değeri 
 test('panel tablo alanları, filtreler, pagination ve toplu seçim altyapısı mevcut',()=>{
   const cargo=block(admin,'const cargoFilterState','async function renderNotificationSettings');
   for(const text of ['Sipariş ID','Ad Soyad','Telefon','İl','İlçe','Adres','Ödeme','Toplam','Sipariş Tarihi','Kargo Firması','Kargo Durumu','Barkod / Takip','Kargo Oluşturma','Son Kargo Güncelleme','İşlemler'])assert.match(cargo,new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
-  for(const key of ['orderId','name','phone','city','payment','status','dateFrom','dateTo','created','page','pageSize'])assert.match(cargo,new RegExp(key+':'));
+  for(const key of ['orderId','name','phone','city','payment','status','stage','dateFrom','dateTo','created','page','pageSize'])assert.match(cargo,new RegExp(key+':'));
   assert.match(cargo,/selectedCargoOrderIds/);assert.match(cargo,/bulkCreateCargo/);assert.match(cargo,/cargoPagination/);
   assert.match(server,/pageSize=Math\.max\(10,Math\.min\(100/);
 });
@@ -122,7 +123,7 @@ test('kargo oluşturma server gerçek siparişi kullanıyor ve başarılı cevap
 test('başarılı kargo varken normal create çift kayıt oluşturmaz; resend bilinçli confirm ister',()=>{
   assert.match(server,/if\(existing&&!resend\).*CARGO_ALREADY_CREATED/s);
   assert.match(server,/\/resend'.*req\.body\?\.confirm!==true/s);
-  assert.match(admin,/confirm\('Bu sipariş için bilinçli olarak yeni bir kargo kaydı oluşturulsun mu\?/);
+  assert.match(admin,/confirm\('Bu işlem eski etiketi tekrar yazdırmaz\. Gerçekten yeni bir kargo gönderisi oluşturulsun mu\?/);
 });
 
 test('cargo kayıtları sipariş tablosunu şişirmeden ayrı state dosyalarında tutuluyor ve timeline timestamp içeriyor',()=>{
@@ -133,13 +134,65 @@ test('cargo kayıtları sipariş tablosunu şişirmeden ayrı state dosyalarınd
 
 test('kargo admin APIleri admin korumalı ve mutasyonlar same-origin kontrollü',()=>{
   for(const route of ["app.get('/api/admin/cargo/orders'","app.get('/api/admin/cargo/orders/:id'","app.get('/api/admin/cargo/orders/:id/label'"])assert.match(server,new RegExp(route.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'.*requireAdmin'));
-  for(const route of ["app.post('/api/admin/cargo/orders/:id/create'","app.post('/api/admin/cargo/orders/:id/resend'","app.post('/api/admin/cargo/orders/:id/refresh'","app.post('/api/admin/cargo/bulk-create'"])assert.match(server,new RegExp(route.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'.*requireAdmin,sameOriginGuard'));
+  for(const route of ["app.post('/api/admin/cargo/orders/:id/create'","app.post('/api/admin/cargo/orders/:id/resend'","app.post('/api/admin/cargo/orders/:id/refresh'","app.post('/api/admin/cargo/orders/:id/stage'","app.post('/api/admin/cargo/orders/:id/undo-stage'","app.post('/api/admin/cargo/orders/:id/delete'","app.post('/api/admin/cargo/bulk-create'","app.post('/api/admin/cargo/bulk-stage'","app.post('/api/admin/cargo/bulk-undo-stage'","app.post('/api/admin/cargo/labels'","app.post('/api/admin/cargo/bulk-delete'"])assert.match(server,new RegExp(route.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'.*requireAdmin,sameOriginGuard'));
 });
 
-test('etiket ayrı print template üzerinden gerçek shipment/order verisiyle hazırlanıyor',()=>{
+test('etiket ayrı print template üzerinden gerçek shipment/order verisiyle hazırlanıyor ve tekrar yazdırma engeli yok',()=>{
   const cargo=block(admin,'const cargoFilterState','async function renderNotificationSettings');
-  assert.match(cargo,/function cargoCode128Svg/);assert.match(cargo,/function cargoLabelPrintHtml/);assert.match(cargo,/SHAZ Kargo Etiketi/);assert.match(cargo,/barcodeSvg/);assert.match(cargo,/GERÇEK BARKOD ALINMADAN ETİKET BASILAMAZ/);assert.match(cargo,/Tahsilat/);assert.match(cargo,/Ürün Bilgileri/);
-  const labelBlock=block(server,"app.get('/api/admin/cargo/orders/:id/label'","app.get('/api/orders'");assert.match(labelBlock,/barcode:shipment\.barcode/);assert.doesNotMatch(labelBlock,/FAKE|DUMMY|rastgele takip/i);
+  assert.match(cargo,/function cargoCode128Svg/);assert.match(cargo,/function cargoLabelPrintHtml/);assert.match(cargo,/function cargoBulkLabelPrintHtml/);assert.match(cargo,/SHAZ Kargo Etiketi/);assert.match(cargo,/barcodeSvg/);assert.match(cargo,/GERÇEK BARKOD ALINMADAN ETİKET BASILAMAZ/);assert.match(cargo,/Tahsilat/);assert.match(cargo,/Ürün Bilgileri/);
+  assert.doesNotMatch(cargo,/printStatus|alreadyPrinted|daha önce yazdırıldı/i);
+  const labelPayload=block(server,'function cargoLabelPayload','function deleteCargoPanelOrder');assert.match(labelPayload,/barcode:shipment\.barcode/);assert.doesNotMatch(labelPayload,/FAKE|DUMMY|rastgele takip/i);
+  const labelsRoute=block(server,"app.post('/api/admin/cargo/labels'","app.post('/api/admin/cargo/orders/:id/delete'");assert.match(labelsRoute,/labels\.push\(cargoLabelPayload/);assert.doesNotMatch(labelsRoute,/printStatus|alreadyPrinted/i);
+});
+
+test('yönetim aşamaları yeni -> hazırlanıyor -> gönderildi ve provider yolda/teslim/iade ayrımını koruyor',()=>{
+  assert.match(server,/adminStage:'new'/);
+  assert.match(server,/if\(shipment\.barcode\)setCargoAdminStage\(order\.id,'preparing'/);
+  assert.match(server,/req\.body\?\.stage!=='sent'/);
+  const src=server.match(/function cargoStageFromProviderStatus\(status\)\{.*?\}/s)?.[0];assert.ok(src);
+  const fn=Function(`${src};return cargoStageFromProviderStatus;`)();
+  assert.equal(fn('handed_over'),'in_transit');assert.equal(fn('out_for_delivery'),'in_transit');assert.equal(fn('delivered'),'delivered');assert.equal(fn('returned'),'returned');assert.equal(fn('created'),'preparing');
+});
+
+test('geri al yalnız son manuel aşama değişikliğini geri alır; provider aşamasını ezmez',()=>{
+  const undo=block(server,'function cargoCanUndoStage','function appendCargoEvent');
+  assert.match(undo,/last\.source==='manual'/);assert.match(undo,/last\.to===indexRow\.adminStage/);
+  const undoRoute=block(server,"app.post('/api/admin/cargo/orders/:id/undo-stage'","app.post('/api/admin/cargo/bulk-stage'");assert.match(undoRoute,/undoCargoAdminStage/);
+  const refresh=block(server,"app.post('/api/admin/cargo/orders/:id/refresh'","app.post('/api/admin/cargo/orders/:id/stage'");assert.match(refresh,/source:'provider'/);
+});
+
+test('yeniden kargoya gönder yeni shipment açar, eski kayıtları silmez ve yeni başarıda hazırlanıyor yapar',()=>{
+  const create=block(server,'async function createCargoForIndexedOrder','function cargoQueryRows');
+  assert.match(create,/resendOf:resend&&existing\?existing\.id:null/);assert.match(create,/rows\.push\(shipment\)/);assert.doesNotMatch(create,/splice|filter\(.*shipment/);
+  assert.match(create,/resend\?'Yeni kargo kaydı oluşturuldu; sipariş yeniden hazırlanıyor\.'/);
+  assert.match(admin,/Bu işlem eski etiketi tekrar yazdırmaz\. Gerçekten yeni bir kargo gönderisi oluşturulsun mu/);
+});
+
+test('tamamen sil yalnız kargo paneli local kayıtlarını kaldırır; orders/users verisine dokunmaz',()=>{
+  const del=block(server,'function deleteCargoPanelOrder',"app.get('/api/admin/cargo/orders'");
+  assert.match(del,/cargo_order_index\.json/);assert.match(del,/cargo_records\.json/);assert.match(del,/cargo_events\.json/);
+  assert.doesNotMatch(del,/orders\.json|users\.json|DELETE.*webpostman|consignment\/delete/i);
+  assert.match(admin,/İkinci onay/);assert.match(admin,/WebPostman’daki gerçek kargo kaydı ayrı kalabilir/);
+});
+
+test('fetch/network hatası otomatik POST retry yapmaz, hata kaydedilir ve secret header loglanmaz',()=>{
+  const create=block(server,'async function createCargoForIndexedOrder','function cargoQueryRows');
+  assert.equal((create.match(/cargoService\.createShipment\(\{order\}\)/g)||[]).length,1);
+  assert.match(create,/shipment\.status='error'/);assert.match(create,/cargoLogFailure\('consignment\/add'/);
+  const log=block(server,'function cargoLogFailure','async function createCargoForIndexedOrder');assert.match(log,/endpoint:operation/);assert.match(log,/orderId:/);assert.match(log,/errorType:/);assert.match(log,/at:new Date\(\)\.toISOString/);assert.doesNotMatch(log,/Authorization|YESILKAR_API_KEY|apiKey|password/i);
+  assert.match(admin,/Otomatik tekrar yapılmaz/);
+});
+
+test('sekme sırası ve toplu işlemler istenen kargo iş akışını içeriyor',()=>{
+  const cargo=block(admin,'const cargoFilterState','async function renderNotificationSettings');
+  const order=['TÜM SİPARİŞLER','YENİ','HAZIRLANIYOR','GÖNDERİLDİ','TESLİM EDİLDİ','İADE','YOLDA'];let pos=-1;for(const label of order){const next=cargo.indexOf(label);assert.ok(next>pos,label);pos=next}
+  for(const fn of ['bulkCreateCargo','bulkPrintCargoLabels','bulkMarkCargoSent','bulkUndoCargoStage','bulkDeleteCargoOrders'])assert.match(cargo,new RegExp('function '+fn+'|async function '+fn));
+  assert.match(cargo,/Gönderildi Olarak İşaretle/);assert.match(cargo,/Tamamen Sil/);assert.match(cargo,/Geri Al/);
+});
+
+test('refresh hatası son doğru provider durumunu koruyup yalnız hata bilgisini yazar',()=>{
+  const refresh=block(server,"app.post('/api/admin/cargo/orders/:id/refresh'","app.post('/api/admin/cargo/orders/:id/stage'");
+  const catchPart=refresh.slice(refresh.indexOf('catch(e)'));assert.match(catchPart,/lastRefreshError=/);assert.match(catchPart,/lastRefreshErrorAt=/);assert.doesNotMatch(catchPart,/row\.status='error'|row\.status=\s*'error'/);
 });
 
 
