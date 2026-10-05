@@ -66,13 +66,13 @@ function providerEventDateToIso(value){
   const dt=new Date(raw);return Number.isNaN(dt.getTime())?'':dt.toISOString();
 }
 function providerMovementTextFromRow(row={}){
-  for(const key of ['last_movement','lastMovement','movement_text','movementText','hareket','hareket_aciklama','hareketAciklama','statu_aciklama','statuAciklama','status_description','statusDescription','durum_aciklama','durumAciklama','status_name','durum']){
+  for(const key of ['last_movement','lastMovement','movement_text','movementText','hareket','hareket_aciklama','hareketAciklama','statu_aciklama','statuAciklama','status_description','statusDescription','durum_aciklama','durumAciklama','status_name','sonuc','durum']){
     const value=clean(row?.[key],1000);if(value)return value;
   }
   return '';
 }
 function providerStatusAtFromRow(row={}){
-  for(const key of ['delivered_at','deliveredAt','delivery_date','deliveryDate','delivery_datetime','deliveryDateTime','teslim_tarihi','teslimTarihi','teslimat_tarihi','teslimatTarihi','status_at','statusAt','statu_tarihi','statuTarihi','durum_tarihi','durumTarihi','hareket_tarihi','hareketTarihi','movement_at','movementAt']){
+  for(const key of ['delivered_at','deliveredAt','delivery_date','deliveryDate','delivery_datetime','deliveryDateTime','teslim_tarihi','teslimTarihi','teslimat_tarihi','teslimatTarihi','status_at','statusAt','statu_tarihi','statuTarihi','durum_tarihi','durumTarihi','hareket_tarihi','hareketTarihi','movement_at','movementAt','degisimTarih','degisim_tarihi','sonuctarihi']){
     const iso=providerEventDateToIso(row?.[key]);if(iso)return iso;
   }
   return '';
@@ -112,23 +112,23 @@ function providerRows(data){
     if(depth>4||value===null||value===undefined)return;
     if(Array.isArray(value)){for(const item of value)visit(item,depth+1);return}
     if(typeof value!=='object')return;
-    const hasShipmentField=['barcode','cargo_barcode','barkod','record_id','recordId','id','order_number','orderNumber','siparis_no','siparisNo'].some(k=>Object.prototype.hasOwnProperty.call(value,k));
+    const hasShipmentField=['barcode','cargo_barcode','barkod','musteribarkod','gonderino','kurcikno','record_id','recordId','kayitno','id','order_number','orderNumber','order_no','orderNo','sipno','sip_no','siparis_no','siparisNo'].some(k=>Object.prototype.hasOwnProperty.call(value,k));
     if(hasShipmentField&&!seen.has(value)){seen.add(value);out.push(value)}
     for(const key of containerKeys)if(value[key]&&value[key]!==value)visit(value[key],depth+1);
   };
   visit(data);return out;
 }
 function providerOrderNumberFromRow(row={}){
-  for(const key of ['order_number','orderNumber','siparis_no','siparisNo','siparis_numarasi','siparisNumarasi']){const value=clean(row?.[key],160);if(value)return value}
+  for(const key of ['order_number','orderNumber','order_no','orderNo','sipno','sip_no','siparis_no','siparisNo','siparisno','siparis_numarasi','siparisNumarasi']){const value=clean(row?.[key],160);if(value)return value}
   return '';
 }
 function providerRowCreatedAt(row={}){
-  for(const key of ['created_at','createdAt','create_date','createDate','ekleme_tarihi','eklemeTarihi','kayit_tarihi','kayitTarihi','date_added','dateAdded']){const iso=providerEventDateToIso(row?.[key]);if(iso)return iso}
+  for(const key of ['created_at','createdAt','create_date','createDate','ekleme_tarihi','eklemeTarihi','kayit_tarihi','kayitTarihi','date_added','dateAdded','alimtarihi','alim_tarihi','degisimTarih','degisim_tarihi']){const iso=providerEventDateToIso(row?.[key]);if(iso)return iso}
   return '';
 }
 function providerRowMatchesOrder(row,{orderNumber='',order=null}={}){
   if(providerOrderNumberFromRow(row)!==clean(orderNumber,160))return false;
-  const c=order?.customer||{},digits=v=>String(v||'').replace(/\D/g,'').slice(-10),rowPhone=digits(row?.telephone||row?.phone||row?.gsm||row?.customer_phone||row?.customerPhone||row?.alici_telefon||row?.aliciTelefon),orderPhone=digits(c.phone);
+  const c=order?.customer||{},digits=v=>String(v||'').replace(/\D/g,'').slice(-10),rowPhone=digits(row?.telephone||row?.phone||row?.gsm||row?.telno||row?.customer_phone||row?.customerPhone||row?.alici_telefon||row?.aliciTelefon),orderPhone=digits(c.phone);
   if(rowPhone&&orderPhone&&rowPhone!==orderPhone)return false;
   const created=providerRowCreatedAt(row),orderCreated=providerEventDateToIso(order?.createdAt||'');
   if(created&&orderCreated&&new Date(created).getTime()<new Date(orderCreated).getTime()-6*60*60*1000)return false;
@@ -226,24 +226,52 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
     const data=await requestJson(config.createUrl,{method:'POST',headers:providerHeaders({form:true}),body:formEncode(buildShipmentPayload(order,{orderNumber}))});
     return resultFromProvider(data);
   }
+  function providerLookupBase(kind){
+    const sources=[config.statusUrlTemplate,config.createUrl].filter(Boolean);
+    for(const source of sources){
+      try{
+        const url=new URL(String(source).split('?')[0]);
+        if(!/\/restapi\/client\//i.test(url.pathname))continue;
+        url.pathname=kind==='cargo'?'/restapi/client/cargo':'/restapi/client/consignments';url.search='';url.hash='';return url;
+      }catch{}
+    }
+    return null;
+  }
+  function providerNotFoundOrLookupUnsupported(error){const code=clean(error?.providerResponse?.code||error?.providerResponse?.hata,40);return code==='101'||code==='102'||error?.httpStatus===404}
   async function lookupShipmentByOrderNumber({orderNumber,currentStatus='created',order=null}={}){
-    const wanted=clean(orderNumber,160);if(!wanted||!config.statusUrlTemplate)return null;
-    if(config.statusUrlTemplate.includes('{order_number}')){
+    const wanted=clean(orderNumber,160);if(!wanted)return null;
+    if(config.statusUrlTemplate&&config.statusUrlTemplate.includes('{order_number}')){
       const url=fillTemplate(config.statusUrlTemplate,{record_id:'',barcode:'',tracking_number:'',order_number:wanted});
       const data=await requestJson(url,{method:'GET',headers:providerHeaders()}),rows=providerRows(data),matched=rows.find(row=>providerRowMatchesOrder(row,{orderNumber:wanted,order}));
       const result=matched?resultFromProvider(matched):resultFromProvider(data);
       if(result.providerOrderNumber&&result.providerOrderNumber!==wanted)return null;
-      return {...result,status:providerStatusToCargoStatus(result.providerStatus,currentStatus)};
+      if(result.barcode||result.trackingNumber||result.recordId)return {...result,status:providerStatusToCargoStatus(result.providerStatus,currentStatus)};
     }
-    const base=config.statusUrlTemplate.split('?')[0];
-    if(!/\/consignments\/?$/i.test(base))return null;
-    for(let page=0;page<5;page++){
-      const url=new URL(base);url.searchParams.set('show_page','50');url.searchParams.set('p',String(page));url.searchParams.set('order_by_field','4');url.searchParams.set('order_by_direction','2');
-      const data=await requestJson(url.toString(),{method:'GET',headers:providerHeaders()}),rows=providerRows(data),matched=rows.find(row=>providerRowMatchesOrder(row,{orderNumber:wanted,order}));
-      if(matched){const result=resultFromProvider(matched);return {...result,status:providerStatusToCargoStatus(result.providerStatus,currentStatus)}}
-      if(rows.length<50)break;
+    const cargoBase=providerLookupBase('cargo');
+    if(cargoBase){
+      const url=new URL(cargoBase);url.searchParams.set('sipno',wanted);
+      try{
+        const data=await requestJson(url.toString(),{method:'GET',headers:providerHeaders()}),rows=providerRows(data),matched=rows.find(row=>providerRowMatchesOrder(row,{orderNumber:wanted,order}));
+        if(matched){const result=resultFromProvider(matched);return {...result,status:providerStatusToCargoStatus(result.providerStatus,currentStatus)}}
+      }catch(error){if(!providerNotFoundOrLookupUnsupported(error))throw error}
     }
     return null;
+  }
+  async function lookupShipmentByBarcode({barcode,currentStatus='created',orderNumber='',order=null}={}){
+    const wantedBarcode=clean(barcode,160),wantedOrder=clean(orderNumber,160);if(!wantedBarcode)return null;
+    const base=providerLookupBase('consignments');if(!base)return null;
+    const url=new URL(base);url.searchParams.set('barcode',wantedBarcode);
+    const data=await requestJson(url.toString(),{method:'GET',headers:providerHeaders()}),rows=providerRows(data),row=rows[0]||data,result=resultFromProvider(row);
+    const returnedBarcode=clean(result.barcode||result.trackingNumber,160);if(returnedBarcode&&returnedBarcode!==wantedBarcode&&clean(row?.musteribarkod,160)!==wantedBarcode)return null;
+    const providerOrder=providerOrderNumberFromRow(row)||result.providerOrderNumber;
+    if(wantedOrder&&providerOrder&&providerOrder!==wantedOrder)return null;
+    if(wantedOrder&&!providerOrder){
+      const cargoBase=providerLookupBase('cargo');if(!cargoBase)return null;
+      const cargoUrl=new URL(cargoBase);cargoUrl.searchParams.set('barkod',wantedBarcode);
+      let cargoData;try{cargoData=await requestJson(cargoUrl.toString(),{method:'GET',headers:providerHeaders()})}catch(error){if(providerNotFoundOrLookupUnsupported(error))return null;throw error}
+      const cargoRows=providerRows(cargoData),matched=cargoRows.find(x=>providerRowMatchesOrder(x,{orderNumber:wantedOrder,order}));if(!matched)return null;
+    }
+    return {...result,barcode:result.barcode||wantedBarcode,status:providerStatusToCargoStatus(result.providerStatus,currentStatus)};
   }
   async function refreshShipment({shipment}={}){
     if(!config.statusUrlTemplate){const e=new Error('YeşilKar durum sorgulama endpointi henüz tanımlanmadı.');e.code='CARGO_STATUS_NOT_CONFIGURED';throw e}
@@ -256,7 +284,7 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
     const url=fillTemplate(config.labelUrlTemplate,{record_id:shipment?.providerRecordId||'',barcode:shipment?.barcode||'',tracking_number:shipment?.trackingNumber||''});
     return requestJson(url,{method:'GET',headers:providerHeaders()});
   }
-  return {config:configuration,buildShipmentPayload,createShipment,lookupShipmentByOrderNumber,refreshShipment,fetchLabel,providerStatusToCargoStatus,providerMovementToWorkflowStage,resultFromProvider};
+  return {config:configuration,buildShipmentPayload,createShipment,lookupShipmentByOrderNumber,lookupShipmentByBarcode,refreshShipment,fetchLabel,providerStatusToCargoStatus,providerMovementToWorkflowStage,resultFromProvider};
 }
 
 module.exports={CARGO_STATUSES,CARGO_STATUS_OPTIONS,createCargoService,providerStatusToCargoStatus,providerMovementToWorkflowStage,redactProviderResponse};

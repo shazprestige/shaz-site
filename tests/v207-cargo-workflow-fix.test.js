@@ -70,23 +70,48 @@ test('başarılı shipment varken sonraki duplicate create aktif shipmentı Hata
   assert.match(create,/return otherSuccess/);
 });
 
+test('aynı sipariş için backend create kilidi eşzamanlı işleri sıraya alıyor',async()=>{
+  const src=block(server,'const cargoCreateLocks=new Map();','function ensureCargoFeatureState');
+  const {withCargoCreateLock}=Function(`${src};return {withCargoCreateLock};`)();
+  const order=[];
+  const a=withCargoCreateLock('SHZ104',async()=>{order.push('a-start');await new Promise(r=>setTimeout(r,15));order.push('a-end')});
+  const b=withCargoCreateLock('SHZ104',async()=>{order.push('b-start');order.push('b-end')});
+  await Promise.all([a,b]);assert.deepEqual(order,['a-start','a-end','b-start','b-end']);
+});
+
 test('eşzamanlı veya belirsiz create ikinci kör POST üretmiyor',()=>{
   const create=block(server,'async function createCargoForIndexedOrder','function syncCargoWorkflowFromProvider');
   assert.match(create,/latest\?\.status==='creating'.*CARGO_CREATE_IN_PROGRESS/s);
   assert.match(create,/latest\?\.status==='error'.*cargoCreateErrorLooksDuplicate.*recoverCargoCreateIfPossible/s);
   assert.match(create,/CARGO_CREATE_RECONCILE_REQUIRED/);
   assert.equal((create.match(/cargoService\.createShipment\(/g)||[]).length,1);
-  assert.match(cargoServiceSrc,/statusUrlTemplate\.includes\('\{order_number\}'\)/);assert.ok(cargoServiceSrc.includes("/\\/consignments\\/?$/i"));assert.ok(cargoServiceSrc.includes("searchParams.set('show_page','50')"));
+  assert.match(cargoServiceSrc,/statusUrlTemplate\.includes\('\{order_number\}'\)/);assert.ok(cargoServiceSrc.includes("searchParams.set('sipno',wanted)"));assert.ok(!cargoServiceSrc.includes("searchParams.set('show_page','50')"));
+  assert.match(server,/const cargoCreateLocks=new Map\(\)/);assert.match(server,/withCargoCreateLock\(orderId/);
 });
 
 
 
-test('duplicate create recovery dokümante edilmiş consignments listesinden order_number ile gerçek DY barkodu buluyor',async()=>{
+test('duplicate create recovery dokümante edilmiş cargo sipno sorgusundan gerçek DY barkodu buluyor',async()=>{
   const calls=[];
-  const svc=createCargoService({env:{YESILKAR_CREATE_URL:'http://webpostman.test/restapi/client/consignment/add',YESILKAR_STATUS_URL_TEMPLATE:'http://webpostman.test/restapi/client/consignments?barcode={barcode}',YESILKAR_AUTH_HEADER_NAME:'Authorization',YESILKAR_API_KEY:'secret',YESILKAR_FROM_HEADER_NAME:'From',YESILKAR_API_FROM:'user@example.com',YESILKAR_BRANCH_CODE:'DY',YESILKAR_AMOUNT_TYPE_ID:'3'},fetchImpl:async url=>{calls.push(String(url));return {ok:true,status:200,text:async()=>JSON.stringify({result:[{id:321,barcode:'DY0000000104',order_number:'SHZ104',telephone:'5321234567',created_at:'06.10.2026 01:10:00'}]})}}});
+  const svc=createCargoService({env:{YESILKAR_CREATE_URL:'http://webpostman.test/restapi/client/consignment/add',YESILKAR_STATUS_URL_TEMPLATE:'http://webpostman.test/restapi/client/consignments?barcode={barcode}',YESILKAR_AUTH_HEADER_NAME:'Authorization',YESILKAR_API_KEY:'secret',YESILKAR_FROM_HEADER_NAME:'From',YESILKAR_API_FROM:'user@example.com',YESILKAR_BRANCH_CODE:'DY',YESILKAR_AMOUNT_TYPE_ID:'3'},fetchImpl:async url=>{calls.push(String(url));return {ok:true,status:200,text:async()=>JSON.stringify({error:false,data:[{kayitno:'321',musteribarkod:'DY0000000104',gonderino:'4300000104',kurcikno:'343000000104',sipno:'SHZ104',telno:'5321234567',alimtarihi:'2026-10-06',statu_no:'00',sonuc:'Kabul Bekliyor'}]})}}});
   const r=await svc.lookupShipmentByOrderNumber({orderNumber:'SHZ104',order:{createdAt:'2026-10-05T21:00:00.000Z',customer:{phone:'05321234567'}}});
   assert.equal(r.barcode,'DY0000000104');assert.equal(r.recordId,'321');assert.equal(r.providerOrderNumber,'SHZ104');
-  assert.match(calls[0],/\/restapi\/client\/consignments\?/);assert.match(calls[0],/show_page=50/);assert.match(calls[0],/p=0/);
+  assert.match(calls[0],/\/restapi\/client\/cargo\?sipno=SHZ104/);
+});
+
+
+test('provider takip numarası önceliği korunuyor ve alım tarihi teslim/status tarihi sayılmıyor',()=>{
+  const svc=createCargoService({env:{}});
+  const r=svc.resultFromProvider({data:{musteribarkod:'DY0000000002',gonderino:'4300000104',kurcikno:'343000000104',alimtarihi:'2026-10-06'}});
+  assert.equal(r.trackingNumber,'4300000104');assert.equal(r.providerStatusAt,'');
+});
+
+test('mevcut DY barkodu consignments endpointinden doğrulanıp aynı SHZ siparişine güvenle bağlanabiliyor',async()=>{
+  const calls=[];
+  const svc=createCargoService({env:{YESILKAR_CREATE_URL:'http://webpostman.test/restapi/client/consignment/add',YESILKAR_STATUS_URL_TEMPLATE:'http://webpostman.test/restapi/client/consignments?barcode={barcode}',YESILKAR_AUTH_HEADER_NAME:'Authorization',YESILKAR_API_KEY:'secret',YESILKAR_FROM_HEADER_NAME:'From',YESILKAR_API_FROM:'user@example.com',YESILKAR_BRANCH_CODE:'DY',YESILKAR_AMOUNT_TYPE_ID:'3'},fetchImpl:async url=>{calls.push(String(url));return {ok:true,status:200,text:async()=>JSON.stringify({result:[{id:321,barcode:'DY0000000002',order_number:'SHZ104',telephone:'5321234567'}]})}}});
+  const r=await svc.lookupShipmentByBarcode({barcode:'DY0000000002',orderNumber:'SHZ104',order:{customer:{phone:'05321234567'}}});
+  assert.equal(r.barcode,'DY0000000002');assert.equal(r.providerOrderNumber,'SHZ104');assert.match(calls[0],/\/restapi\/client\/consignments\?barcode=DY0000000002/);
+  assert.match(server,/\/attach-existing'/);assert.match(cargoAdmin,/Mevcut Barkodu Doğrula ve Bağla/);
 });
 
 test('duplicate recovery aynı order_number olsa bile açıkça farklı müşterinin eski kaydını bağlamıyor',async()=>{
