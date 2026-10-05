@@ -100,6 +100,21 @@ test('duplicate create recovery dokümante edilmiş cargo sipno sorgusundan ger�
 });
 
 
+test('alfanümerik sipno doğrudan sonuç vermezse cargo telefon ve alım tarih aralığıyla güvenli fallback yapıyor',async()=>{
+  const calls=[];
+  const env={YESILKAR_CREATE_URL:'http://webpostman.test/restapi/client/consignment/add',YESILKAR_STATUS_URL_TEMPLATE:'http://webpostman.test/restapi/client/consignments?barcode={barcode}',YESILKAR_AUTH_HEADER_NAME:'Authorization',YESILKAR_API_KEY:'secret',YESILKAR_FROM_HEADER_NAME:'From',YESILKAR_API_FROM:'user@example.com',YESILKAR_BRANCH_CODE:'DY',YESILKAR_AMOUNT_TYPE_ID:'3'};
+  const svc=createCargoService({env,fetchImpl:async url=>{calls.push(String(url));const u=new URL(String(url));if(u.searchParams.has('sipno'))return {ok:true,status:200,text:async()=>JSON.stringify({error:false,data:[]})};return {ok:true,status:200,text:async()=>JSON.stringify({error:false,data:[{kayitno:'321',musteribarkod:'DY0000000002',gonderino:'4300000002',sipno:'SHZ104',telno:'5321234567',alimtarihi:'2026-10-06',statu_no:'01',sonuc:'Kabul Edildi'}]})}}});
+  const r=await svc.lookupShipmentByOrderNumber({orderNumber:'SHZ104',order:{createdAt:'2026-10-05T19:54:33+03:00',customer:{phone:'05321234567'}}});
+  assert.equal(r.barcode,'DY0000000002');assert.equal(r.providerOrderNumber,'SHZ104');
+  assert.match(calls[0],/\/restapi\/client\/cargo\?sipno=SHZ104/);assert.match(calls[1],/telno=5321234567/);assert.match(calls[1],/alim_start=04-10-2026/);assert.match(calls[1],/alim_end=07-10-2026/);
+});
+
+test('duplicate reconcile bulunamazsa create penceresi kapanmıyor ve DY barkod alanına yönlendiriyor',()=>{
+  const src=block(cargoAdmin,'async function createCargoForOrder','async function attachExistingCargo');
+  assert.match(src,/existingBarcode[\s\S]*attachExistingCargo\(orderId,btn\)/);assert.match(src,/CARGO_CREATE_RECONCILE_REQUIRED[\s\S]*cargoExistingBarcode[\s\S]*input\?\.focus\(\);return}/);
+  assert.match(cargoAdmin,/cargoCreateReconcileNotice/);
+});
+
 test('provider takip numarası önceliği korunuyor ve alım tarihi teslim/status tarihi sayılmıyor',()=>{
   const svc=createCargoService({env:{}});
   const r=svc.resultFromProvider({data:{musteribarkod:'DY0000000002',gonderino:'4300000104',kurcikno:'343000000104',alimtarihi:'2026-10-06'}});

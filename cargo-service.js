@@ -254,6 +254,16 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
         const data=await requestJson(url.toString(),{method:'GET',headers:providerHeaders()}),rows=providerRows(data),matched=rows.find(row=>providerRowMatchesOrder(row,{orderNumber:wanted,order}));
         if(matched){const result=resultFromProvider(matched);return {...result,status:providerStatusToCargoStatus(result.providerStatus,currentStatus)}}
       }catch(error){if(!providerNotFoundOrLookupUnsupported(error))throw error}
+      const digits=String(order?.customer?.phone||'').replace(/\D/g,'').slice(-10);
+      const orderDate=new Date(order?.createdAt||'');
+      if(digits&&Number.isFinite(orderDate.getTime())){
+        const trDate=delta=>{const dt=new Date(orderDate.getTime()+delta*86400000);return `${String(dt.getUTCDate()).padStart(2,'0')}-${String(dt.getUTCMonth()+1).padStart(2,'0')}-${dt.getUTCFullYear()}`};
+        const phoneUrl=new URL(cargoBase);phoneUrl.searchParams.set('telno',digits);phoneUrl.searchParams.set('alim_start',trDate(-1));phoneUrl.searchParams.set('alim_end',trDate(2));
+        try{
+          const data=await requestJson(phoneUrl.toString(),{method:'GET',headers:providerHeaders()}),rows=providerRows(data),matched=rows.find(row=>providerRowMatchesOrder(row,{orderNumber:wanted,order}));
+          if(matched){const result=resultFromProvider(matched);return {...result,status:providerStatusToCargoStatus(result.providerStatus,currentStatus)}}
+        }catch(error){if(!providerNotFoundOrLookupUnsupported(error))throw error}
+      }
     }
     return null;
   }
