@@ -106,6 +106,34 @@ function formEncode(payload={}){
   return params.toString();
 }
 function responseHasError(data){return data?.error===true||String(data?.error||'').toLowerCase()==='true'}
+function providerRows(data){
+  const out=[],seen=new Set(),containerKeys=['data','result','results','rows','records','consignments','list','items'];
+  const visit=(value,depth=0)=>{
+    if(depth>4||value===null||value===undefined)return;
+    if(Array.isArray(value)){for(const item of value)visit(item,depth+1);return}
+    if(typeof value!=='object')return;
+    const hasShipmentField=['barcode','cargo_barcode','barkod','record_id','recordId','id','order_number','orderNumber','siparis_no','siparisNo'].some(k=>Object.prototype.hasOwnProperty.call(value,k));
+    if(hasShipmentField&&!seen.has(value)){seen.add(value);out.push(value)}
+    for(const key of containerKeys)if(value[key]&&value[key]!==value)visit(value[key],depth+1);
+  };
+  visit(data);return out;
+}
+function providerOrderNumberFromRow(row={}){
+  for(const key of ['order_number','orderNumber','siparis_no','siparisNo','siparis_numarasi','siparisNumarasi']){const value=clean(row?.[key],160);if(value)return value}
+  return '';
+}
+function providerRowCreatedAt(row={}){
+  for(const key of ['created_at','createdAt','create_date','createDate','ekleme_tarihi','eklemeTarihi','kayit_tarihi','kayitTarihi','date_added','dateAdded']){const iso=providerEventDateToIso(row?.[key]);if(iso)return iso}
+  return '';
+}
+function providerRowMatchesOrder(row,{orderNumber='',order=null}={}){
+  if(providerOrderNumberFromRow(row)!==clean(orderNumber,160))return false;
+  const c=order?.customer||{},digits=v=>String(v||'').replace(/\D/g,'').slice(-10),rowPhone=digits(row?.telephone||row?.phone||row?.gsm||row?.customer_phone||row?.customerPhone||row?.alici_telefon||row?.aliciTelefon),orderPhone=digits(c.phone);
+  if(rowPhone&&orderPhone&&rowPhone!==orderPhone)return false;
+  const created=providerRowCreatedAt(row),orderCreated=providerEventDateToIso(order?.createdAt||'');
+  if(created&&orderCreated&&new Date(created).getTime()<new Date(orderCreated).getTime()-6*60*60*1000)return false;
+  return true;
+}
 
 function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
   const config={
@@ -186,6 +214,7 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
       barcode:clean(row?.barcode||row?.cargo_barcode||row?.barkod||row?.musteribarkod||row?.gonderino,160),
       trackingNumber:clean(row?.tracking_number||row?.trackingNumber||row?.tracking_no||row?.takip_no||row?.gonderino||row?.kurcikno,160),
       recordId:clean(row?.record_id||row?.recordId||row?.id||row?.kayitno,160),
+      providerOrderNumber:providerOrderNumberFromRow(row),
       labelUrl:clean(row?.label_url||row?.labelUrl||row?.pdf_url||row?.pdfUrl,1000),
       providerStatus:clean(row?.statu_no||row?.status||row?.cargo_status||row?.status_name||row?.sonuc||row?.durum||'',160),
       providerMovementText:providerMovementTextFromRow(row),
@@ -197,11 +226,24 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
     const data=await requestJson(config.createUrl,{method:'POST',headers:providerHeaders({form:true}),body:formEncode(buildShipmentPayload(order,{orderNumber}))});
     return resultFromProvider(data);
   }
-  async function lookupShipmentByOrderNumber({orderNumber,currentStatus='created'}={}){
-    if(!config.statusUrlTemplate||!config.statusUrlTemplate.includes('{order_number}'))return null;
-    const url=fillTemplate(config.statusUrlTemplate,{record_id:'',barcode:'',tracking_number:'',order_number:orderNumber||''});
-    const data=await requestJson(url,{method:'GET',headers:providerHeaders()}),result=resultFromProvider(data);
-    return {...result,status:providerStatusToCargoStatus(result.providerStatus,currentStatus)};
+  async function lookupShipmentByOrderNumber({orderNumber,currentStatus='created',order=null}={}){
+    const wanted=clean(orderNumber,160);if(!wanted||!config.statusUrlTemplate)return null;
+    if(config.statusUrlTemplate.includes('{order_number}')){
+      const url=fillTemplate(config.statusUrlTemplate,{record_id:'',barcode:'',tracking_number:'',order_number:wanted});
+      const data=await requestJson(url,{method:'GET',headers:providerHeaders()}),rows=providerRows(data),matched=rows.find(row=>providerRowMatchesOrder(row,{orderNumber:wanted,order}));
+      const result=matched?resultFromProvider(matched):resultFromProvider(data);
+      if(result.providerOrderNumber&&result.providerOrderNumber!==wanted)return null;
+      return {...result,status:providerStatusToCargoStatus(result.providerStatus,currentStatus)};
+    }
+    const base=config.statusUrlTemplate.split('?')[0];
+    if(!/\/consignments\/?$/i.test(base))return null;
+    for(let page=0;page<5;page++){
+      const url=new URL(base);url.searchParams.set('show_page','50');url.searchParams.set('p',String(page));url.searchParams.set('order_by_field','4');url.searchParams.set('order_by_direction','2');
+      const data=await requestJson(url.toString(),{method:'GET',headers:providerHeaders()}),rows=providerRows(data),matched=rows.find(row=>providerRowMatchesOrder(row,{orderNumber:wanted,order}));
+      if(matched){const result=resultFromProvider(matched);return {...result,status:providerStatusToCargoStatus(result.providerStatus,currentStatus)}}
+      if(rows.length<50)break;
+    }
+    return null;
   }
   async function refreshShipment({shipment}={}){
     if(!config.statusUrlTemplate){const e=new Error('YeşilKar durum sorgulama endpointi henüz tanımlanmadı.');e.code='CARGO_STATUS_NOT_CONFIGURED';throw e}
