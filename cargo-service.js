@@ -59,6 +59,39 @@ function providerStatusToCargoStatus(raw,current='created'){
   if(/oluştur|olustur|created|created shipment|kabul bekliyor/.test(s))return 'created';
   return current;
 }
+function providerEventDateToIso(value){
+  const raw=clean(value,120);if(!raw)return '';
+  const tr=raw.match(/^(\d{2})[.\/-](\d{2})[.\/-](\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+  if(tr){const [,d,m,y,h='00',min='00',sec='00']=tr,dt=new Date(`${y}-${m}-${d}T${String(h).padStart(2,'0')}:${min}:${sec}+03:00`);return Number.isNaN(dt.getTime())?'':dt.toISOString()}
+  const dt=new Date(raw);return Number.isNaN(dt.getTime())?'':dt.toISOString();
+}
+function providerMovementTextFromRow(row={}){
+  for(const key of ['last_movement','lastMovement','movement_text','movementText','hareket','hareket_aciklama','hareketAciklama','statu_aciklama','statuAciklama','status_description','statusDescription','durum_aciklama','durumAciklama','status_name','durum']){
+    const value=clean(row?.[key],1000);if(value)return value;
+  }
+  return '';
+}
+function providerStatusAtFromRow(row={}){
+  for(const key of ['delivered_at','deliveredAt','delivery_date','deliveryDate','delivery_datetime','deliveryDateTime','teslim_tarihi','teslimTarihi','teslimat_tarihi','teslimatTarihi','status_at','statusAt','statu_tarihi','statuTarihi','durum_tarihi','durumTarihi','hareket_tarihi','hareketTarihi','movement_at','movementAt']){
+    const iso=providerEventDateToIso(row?.[key]);if(iso)return iso;
+  }
+  return '';
+}
+function providerMovementToWorkflowStage({status='',movementText='',currentStage=''}={}){
+  if(status==='delivered')return 'delivered';
+  if(status==='returned')return 'returned';
+  const text=clean(movementText,1000),s=text.toLocaleLowerCase('tr-TR');
+  const branchWaiting=/şubede\s*bekliyor|subede\s*bekliyor|şubeden\s*(?:teslim|alın|alin|alacak)|subeden\s*(?:teslim|alın|alin|alacak)|(?:alıcı|alici|müşteri|musteri).{0,50}(?:şubeden|subeden|şubesinden|subesinden).{0,50}(?:teslim|alacak|alın|alin)|(?:alıcı|alici).{0,40}gelmesi.{0,40}bekleniyor|teslim\s*edilemedi.{0,60}(?:şubede|subede)|(?:şubede|subede).{0,60}(?:alıcı|alici|müşteri|musteri).{0,40}bekleniyor/.test(s);
+  const redistribution=status==='out_for_delivery'||/yeniden.{0,30}(?:dağıtıma|dagitima)\s*çıktı|(?:dağıtıma|dagitima)\s*çıktı|kurye\s*(?:dağıtımda|dagitimda)|out.?for.?delivery/.test(s);
+  if(currentStage==='branch_waiting'){
+    if(branchWaiting)return 'branch_waiting';
+    if(redistribution)return 'in_transit';
+    return null;
+  }
+  if(branchWaiting)return 'branch_waiting';
+  if(status==='handed_over'||status==='out_for_delivery')return 'in_transit';
+  return null;
+}
 function fillTemplate(template,vars={}){
   let out=clean(template,1000);
   for(const [k,v] of Object.entries(vars))out=out.replaceAll(`{${k}}`,encodeURIComponent(clean(v,300)));
@@ -117,7 +150,7 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
     // PDF'ye göre amount_type_id=3 + boş amount tahsilatsız gönderidir.
     return {amountTypeId:config.amountTypeId||'3',amount:null};
   }
-  function buildShipmentPayload(order={}){
+  function buildShipmentPayload(order={},options={}){
     const c=order.customer||{},payment=shipmentPayment(order);
     const payload={
       customer:clean(c.fullName,200),
@@ -126,7 +159,7 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
       address:orderAddress(c),
       telephone:clean(c.phone,40),
       branch_code:config.branchCode,
-      order_number:clean(order.id,120),
+      order_number:clean(options.orderNumber||order.id,120),
       summary:orderSummary(order),
       quantity:orderQuantity(order),
       consignment_type_id:1,
@@ -155,16 +188,24 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
       recordId:clean(row?.record_id||row?.recordId||row?.id||row?.kayitno,160),
       labelUrl:clean(row?.label_url||row?.labelUrl||row?.pdf_url||row?.pdfUrl,1000),
       providerStatus:clean(row?.statu_no||row?.status||row?.cargo_status||row?.status_name||row?.sonuc||row?.durum||'',160),
+      providerMovementText:providerMovementTextFromRow(row),
+      providerStatusAt:providerStatusAtFromRow(row),
       providerResponse:redactProviderResponse(data)
     };
   }
-  async function createShipment({order}={}){
-    const data=await requestJson(config.createUrl,{method:'POST',headers:providerHeaders({form:true}),body:formEncode(buildShipmentPayload(order))});
+  async function createShipment({order,orderNumber}={}){
+    const data=await requestJson(config.createUrl,{method:'POST',headers:providerHeaders({form:true}),body:formEncode(buildShipmentPayload(order,{orderNumber}))});
     return resultFromProvider(data);
+  }
+  async function lookupShipmentByOrderNumber({orderNumber,currentStatus='created'}={}){
+    if(!config.statusUrlTemplate||!config.statusUrlTemplate.includes('{order_number}'))return null;
+    const url=fillTemplate(config.statusUrlTemplate,{record_id:'',barcode:'',tracking_number:'',order_number:orderNumber||''});
+    const data=await requestJson(url,{method:'GET',headers:providerHeaders()}),result=resultFromProvider(data);
+    return {...result,status:providerStatusToCargoStatus(result.providerStatus,currentStatus)};
   }
   async function refreshShipment({shipment}={}){
     if(!config.statusUrlTemplate){const e=new Error('YeşilKar durum sorgulama endpointi henüz tanımlanmadı.');e.code='CARGO_STATUS_NOT_CONFIGURED';throw e}
-    const url=fillTemplate(config.statusUrlTemplate,{record_id:shipment?.providerRecordId||'',barcode:shipment?.barcode||'',tracking_number:shipment?.trackingNumber||''});
+    const url=fillTemplate(config.statusUrlTemplate,{record_id:shipment?.providerRecordId||'',barcode:shipment?.barcode||'',tracking_number:shipment?.trackingNumber||'',order_number:shipment?.providerOrderNumber||shipment?.orderId||''});
     const data=await requestJson(url,{method:'GET',headers:providerHeaders()});const result=resultFromProvider(data);
     return {...result,status:providerStatusToCargoStatus(result.providerStatus,shipment?.status||'created')};
   }
@@ -173,7 +214,7 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
     const url=fillTemplate(config.labelUrlTemplate,{record_id:shipment?.providerRecordId||'',barcode:shipment?.barcode||'',tracking_number:shipment?.trackingNumber||''});
     return requestJson(url,{method:'GET',headers:providerHeaders()});
   }
-  return {config:configuration,buildShipmentPayload,createShipment,refreshShipment,fetchLabel,providerStatusToCargoStatus};
+  return {config:configuration,buildShipmentPayload,createShipment,lookupShipmentByOrderNumber,refreshShipment,fetchLabel,providerStatusToCargoStatus,providerMovementToWorkflowStage,resultFromProvider};
 }
 
-module.exports={CARGO_STATUSES,CARGO_STATUS_OPTIONS,createCargoService,providerStatusToCargoStatus,redactProviderResponse};
+module.exports={CARGO_STATUSES,CARGO_STATUS_OPTIONS,createCargoService,providerStatusToCargoStatus,providerMovementToWorkflowStage,redactProviderResponse};
