@@ -1093,7 +1093,7 @@ function setItemWriteAvailable(item){const linked=item?.productId?catalog.produc
 function preferredForSetItem(item){const linked=item?.productId?catalog.products.find(p=>p.id===item.productId):null;return item?.preferredWritePosition||linked?.preferredWritePosition||'';}
 function positionOptionHtml(name,pos,index,preferred){
   const pref=String(preferred||'')===String(pos);
-  return `<label class=positionChoice><input type=radio name="${name}" value="${escapeAttr(pos)}" ${index===0?'checked':''}> <span>${escapeHtml(pos)}</span>${pref?'<small class=recommendedHint>Genelde tercih edilen</small>':''}</label>`;
+  return `<div class="positionOptionWrap"><label class=positionChoice><input type=radio name="${name}" value="${escapeAttr(pos)}" ${index===0?'checked':''}> <span>${escapeHtml(pos)}</span></label>${pref?'<small class=recommendedHint>Genelde tercih edilen</small>':''}</div>`;
 }
 function walletPhotoFee(){return Number(catalog.walletPhotoFee??25);}
 async function uploadCustomerPhoto(file){

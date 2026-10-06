@@ -100,7 +100,7 @@ test('detay ekranı sipariş ürünleri, adres/not ve kargo timeline bilgisini s
   const cargo=block(admin,'const cargoFilterState','async function renderNotificationSettings');
   assert.match(cargo,/Kargo İşlem Geçmişi/);assert.match(cargo,/Ürünler/);assert.match(cargo,/Açık Adres/);assert.match(cargo,/Sipariş Notu/);
   assert.match(server,/products:cargoProducts\(order\)/);assert.match(server,/events=cargoEventRows\(\)/);
-  assert.match(server,/customer:\{fullName:order\.customer\?\.fullName/);
+  assert.match(server,/customer:\{fullName:c\.fullName/);assert.match(server,/email:c\.email/);assert.match(server,/products:cargoProducts\(order\)/);
 });
 
 
@@ -143,7 +143,7 @@ test('kargo admin APIleri admin korumalı ve mutasyonlar same-origin kontrollü'
 
 test('etiket ayrı print template üzerinden gerçek shipment/order verisiyle hazırlanıyor ve tekrar yazdırma engeli yok',()=>{
   const cargo=block(admin,'const cargoFilterState','async function renderNotificationSettings');
-  assert.match(cargo,/function cargoCode128Svg/);assert.match(cargo,/function cargoLabelPrintHtml/);assert.match(cargo,/function cargoBulkLabelPrintHtml/);assert.match(cargo,/SHAZ Kargo Etiketi/);assert.match(cargo,/barcodeSvg/);assert.match(cargo,/GERÇEK BARKOD ALINMADAN ETİKET BASILAMAZ/);assert.match(cargo,/Tahsilat/);assert.match(cargo,/Ürün Bilgileri/);
+  assert.match(cargo,/function cargoProviderBarcodeSvg/);assert.match(cargo,/function cargoLabelPrintHtml/);assert.match(cargo,/function cargoBulkLabelPrintHtml/);assert.match(cargo,/SHAZ Kargo Etiketi/);assert.match(cargo,/barcodeSvg/);assert.match(cargo,/GERÇEK WEBPOSTMAN DY BARKODU ALINMADAN ETİKET BASILAMAZ/);assert.match(cargo,/Tahsilat/);assert.match(cargo,/Ürün Bilgileri/);
   assert.doesNotMatch(cargo,/printStatus|alreadyPrinted|daha önce yazdırıldı/i);
   const labelPayload=block(server,'function cargoLabelPayload','function deleteCargoPanelOrder');assert.match(labelPayload,/barcode:shipment\.barcode/);assert.doesNotMatch(labelPayload,/FAKE|DUMMY|rastgele takip/i);
   const labelsRoute=block(server,"app.post('/api/admin/cargo/labels'","app.post('/api/admin/cargo/orders/:id/delete'");assert.match(labelsRoute,/labels\.push\(cargoLabelPayload/);assert.doesNotMatch(labelsRoute,/printStatus|alreadyPrinted/i);
@@ -197,7 +197,10 @@ test('fetch/network veya belirsiz create otomatik kör POST retry yapmaz, hata k
 test('sekme sırası ve seçili sipariş işlemleri istenen kargo iş akışını içeriyor',()=>{
   const cargo=block(admin,'const cargoFilterState','async function renderNotificationSettings');
   const order=['TÜM SİPARİŞLER','YENİ','HAZIRLANIYOR','GÖNDERİLDİ','YOLDA','ŞUBEDE BEKLİYOR','TESLİM EDİLDİ','İADE'];let pos=-1;for(const label of order){const next=cargo.indexOf(label);assert.ok(next>pos,label);pos=next}
-  for(const text of ['Kargo Oluştur / Tekrar Dene','Kargo Detayı','Etiketi Görüntüle/Yazdır','Toplu Etiket Yazdır','Kargo Durumunu Güncelle','Gönderildi Olarak İşaretle','Geri Al','Yeniden Kargoya Gönder','Tamamen Sil'])assert.match(cargo,new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  const actions=block(cargo,'function cargoDetailActionsHtml','function cargoErrorNote');
+  for(const text of ['Etiketi Görüntüle/Yazdır','Gönderildi Olarak İşaretle','Yeni Barkod Oluştur','Tamamen Sil'])assert.match(actions,new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  for(const text of ['Kargo Detayı','Kargo Durumunu Güncelle','Geri Al','Yeniden Kargoya Gönder'])assert.doesNotMatch(actions,new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  assert.match(cargo,/Kargo Oluştur \/ Tekrar Dene/);assert.match(cargo,/Toplu Etiket Yazdır/);
 });
 
 

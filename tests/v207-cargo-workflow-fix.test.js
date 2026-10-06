@@ -188,7 +188,10 @@ test('adres substring ile kesilmiyor, wrap oluyor ve checkbox/üyelik tiki büy�
 });
 
 test('seçili sipariş üst işlem barında istenen tüm işlemler var',()=>{
-  for(const text of ['Kargo Oluştur / Tekrar Dene','Kargo Detayı','Etiketi Görüntüle/Yazdır','Toplu Etiket Yazdır','Kargo Durumunu Güncelle','Gönderildi Olarak İşaretle','Geri Al','Yeniden Kargoya Gönder','Tamamen Sil'])assert.match(cargoAdmin,new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  const actions=block(cargoAdmin,'function cargoDetailActionsHtml','function cargoErrorNote');
+  for(const text of ['Etiketi Görüntüle/Yazdır','Gönderildi Olarak İşaretle','Yeni Barkod Oluştur','Tamamen Sil'])assert.match(actions,new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  for(const text of ['Kargo Detayı','Kargo Durumunu Güncelle','Geri Al','Yeniden Kargoya Gönder'])assert.doesNotMatch(actions,new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  assert.match(cargoAdmin,/Kargo Oluştur \/ Tekrar Dene/);assert.match(cargoAdmin,/Toplu Etiket Yazdır/);
 });
 
 test('kargo ve üyeler satırları tek click gecikmeli açılır, double click ve text selection iptal eder',()=>{
@@ -241,7 +244,7 @@ test('provider final durumları manuel Gönderildi aşamasında takılmaz',()=>{
 test('etiket tekrar baskı ve toplu baskı print geçmişinden bağımsız, tek popup dokümanında sayfalı',()=>{
   assert.doesNotMatch(cargoAdmin,/alreadyPrinted|printStatus|daha önce yazdırıldı/i);
   assert.match(cargoAdmin,/function cargoBulkLabelPrintHtml\(labels=\[\]\)/);assert.match(cargoAdmin,/labels\.map\(label=>`<div class="labelPage">/);assert.match(cargoAdmin,/window\.open\('','_blank'\)/);
-  const labels=block(server,"app.post('/api/admin/cargo/labels'","app.post('/api/admin/cargo/orders/:id/delete'");assert.match(labels,/shipment\.barcode\|\|shipment\.trackingNumber/);assert.doesNotMatch(labels,/printed|printStatus/i);
+  const labels=block(server,"app.post('/api/admin/cargo/labels'","app.post('/api/admin/cargo/orders/:id/delete'");assert.match(labels,/!shipment\|\|!shipment\.barcode/);assert.doesNotMatch(labels,/shipment\.barcode\|\|shipment\.trackingNumber/);assert.doesNotMatch(labels,/printed|printStatus/i);
 });
 
 test('kargo local tamamen silme iki aşamalı, providerı ve üyeyi silmiş gibi davranmıyor',()=>{
