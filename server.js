@@ -1149,8 +1149,8 @@ function cargoProducts(order={}){
   return (Array.isArray(order.items)?order.items:[]).map((x,i)=>{
     const product=x?.product&&typeof x.product==='object'?x.product:{},productId=cargoText(product.id||x?.productId||'',160),live=productId?byId.get(productId):null;
     const image=cargoText(serverMainProductImage(product)||serverMainProductImage(live)||x?.image||'',1000),images=[...new Set([...(Array.isArray(product.images)?product.images:[]),product.image,image].map(v=>cargoText(v,1000)).filter(Boolean))];
-    const quantity=Math.max(1,Number(x?.qty||1)),price=Number(product.price||x?.price||0);
-    return {index:i+1,productId,name:cargoText(product.name||x?.name||'Ürün',180),quantity,price,lineTotal:Number((price*quantity).toFixed(2)),image,images,variant:x?.variant??x?.selectedVariant??product.variant??null,options:x?.options??x?.selectedOptions??x?.productOptions??null,productNote:cargoText(x?.productNote||'',500),personalized:!!x?.personalized,writes:Array.isArray(x?.writes)?x.writes:(Array.isArray(x?.setCustomization?.writes)?x.setCustomization.writes:[]),photoCustomizations:Array.isArray(x?.photoCustomizations)?x.photoCustomizations:(Array.isArray(x?.setCustomization?.photoCustomizations)?x.setCustomization.photoCustomizations:[]),setCustomization:x?.setCustomization||null};
+    const quantity=Math.max(1,Number(x?.qty||1)),price=Number(product.price||x?.price||0),setItems=Array.isArray(product.setItems)?product.setItems:(Array.isArray(live?.setItems)?live.setItems:[]),setCustomization=x?.setCustomization||null,keptIds=Array.isArray(setCustomization?.keptIds)?setCustomization.keptIds:[],removedIds=Array.isArray(setCustomization?.removedIds)?setCustomization.removedIds:[],removedItems=setItems.filter(it=>removedIds.includes(it.id)).map(it=>cargoText(it?.name||'',180)).filter(Boolean),sentItems=removedItems.length?(keptIds.length?setItems.filter(it=>keptIds.includes(it.id)):setItems.filter(it=>!removedIds.includes(it.id))).map(it=>cargoText(it?.name||'',180)).filter(Boolean):[];
+    return {index:i+1,productId,name:cargoText(product.name||x?.name||'Ürün',180),internalCode:cargoText(product.internalCode||live?.internalCode||'',120),quantity,price,lineTotal:Number((price*quantity).toFixed(2)),image,images,variant:x?.variant??x?.selectedVariant??product.variant??null,options:x?.options??x?.selectedOptions??x?.productOptions??null,productNote:cargoText(x?.productNote||'',500),personalized:!!x?.personalized,writes:Array.isArray(x?.writes)?x.writes:(Array.isArray(x?.setCustomization?.writes)?x.setCustomization.writes:[]),photoCustomizations:Array.isArray(x?.photoCustomizations)?x.photoCustomizations:(Array.isArray(x?.setCustomization?.photoCustomizations)?x.setCustomization.photoCustomizations:[]),setCustomization,sentItems,removedItems};
   });
 }
 function cargoShipmentRelevantData(order={}){
@@ -1207,7 +1207,7 @@ async function reconcileDuplicateCargoCreates(){const index=ensureCargoWorkflowI
 async function runCargoBackgroundProviderRefresh(){if(cargoBackgroundRefreshRunning)return;cargoBackgroundRefreshRunning=true;try{await reconcileDuplicateCargoCreates();const index=ensureCargoWorkflowIndexRows(),ids=[];for(const row of index){if(['delivered','returned'].includes(String(row.adminStage||'')))continue;const shipment=successfulCargoRecord(row.orderId);if(!shipment||CARGO_FINAL_PROVIDER_STATES.has(String(shipment.status||'')))continue;if(!(shipment.barcode||shipment.trackingNumber||shipment.providerRecordId||String(shipment.providerOrderNumber||'')))continue;ids.push(String(row.orderId))}let cursor=0;const worker=async()=>{while(cursor<ids.length){const id=ids[cursor++];try{await refreshCargoShipmentStatus(id,{background:true})}catch(_){}}};await Promise.all(Array.from({length:Math.min(CARGO_BACKGROUND_CONCURRENCY,ids.length)},()=>worker()))}finally{cargoBackgroundRefreshRunning=false}}
 function cargoQueryRows(q={}){const index=ensureCargoWorkflowIndexRows(),orders=readJson('orders.json',[]),byId=new Map(orders.map(o=>[String(o.id),o]));let rows=index.map(x=>{const o=byId.get(String(x.orderId));return o?cargoOrderView(o,x):null}).filter(Boolean);const orderId=cargoText(q.orderId,120).toLocaleLowerCase('tr-TR'),name=cargoText(q.name,200).toLocaleLowerCase('tr-TR'),phone=cargoText(q.phone,80).replace(/\D/g,''),city=cargoText(q.city,120).toLocaleLowerCase('tr-TR'),payment=cargoText(q.payment,80).toLocaleLowerCase('tr-TR'),status=cargoText(q.status,80),stage=cargoText(q.stage,40),created=cargoText(q.created,20),orderFrom=cargoText(q.orderDateFrom||q.dateFrom,20),orderTo=cargoText(q.orderDateTo||q.dateTo,20),deliveryFrom=cargoText(q.deliveryDateFrom,20),deliveryTo=cargoText(q.deliveryDateTo,20),orderFromMs=orderFrom?new Date(orderFrom+'T00:00:00').getTime():0,orderToMs=orderTo?new Date(orderTo+'T23:59:59.999').getTime():0,deliveryFromMs=deliveryFrom?new Date(deliveryFrom+'T00:00:00').getTime():0,deliveryToMs=deliveryTo?new Date(deliveryTo+'T23:59:59.999').getTime():0;rows=rows.filter(r=>{const orderDt=new Date(r.orderCreatedAt||0).getTime(),deliveryDt=r.deliveredAt?new Date(r.deliveredAt).getTime():0,hasCargo=!!r.hasProviderShipment;return (!orderId||r.orderId.toLocaleLowerCase('tr-TR').includes(orderId))&&(!name||r.fullName.toLocaleLowerCase('tr-TR').includes(name))&&(!phone||r.phone.replace(/\D/g,'').includes(phone))&&(!city||[r.province,r.district].join(' ').toLocaleLowerCase('tr-TR').includes(city))&&(!payment||String(r.payment||'').toLocaleLowerCase('tr-TR')===payment)&&(!status||r.cargoStatus===status)&&(!stage||stage==='all'||r.adminStage===stage)&&(!created||(created==='yes'?hasCargo:!hasCargo))&&(!orderFromMs||orderDt>=orderFromMs)&&(!orderToMs||orderDt<=orderToMs)&&(!deliveryFromMs||(deliveryDt&&deliveryDt>=deliveryFromMs))&&(!deliveryToMs||(deliveryDt&&deliveryDt<=deliveryToMs))});return rows.sort((a,b)=>new Date(b.panelCreatedAt||b.orderCreatedAt||0)-new Date(a.panelCreatedAt||a.orderCreatedAt||0))}
 function cargoStageCounts(rows=[]){const out={all:rows.length,new:0,preparing:0,sent:0,in_transit:0,branch_waiting:0,delivered:0,returned:0};for(const row of rows)if(Object.prototype.hasOwnProperty.call(out,row.adminStage))out[row.adminStage]++;return out}
-function cargoLabelPayload(order,shipment){const c=order.customer||{};return {barcode:shipment.barcode||'',trackingNumber:shipment.trackingNumber||'',orderId:String(order.id),sender:'SHAZ PRESTIGE',recipient:c.fullName||'',phone:c.phone||'',address:cargoAddress(c),payment:cargoPaymentLabel(order.payment),collectAmount:Number(order.total||0),products:cargoProducts(order).map(x=>`${x.name} x${x.quantity}`).join(', '),cargoCompany:shipment.cargoCompany||'Aras Kargo / YeşilKar',providerLabelUrl:shipment.labelUrl||''}}
+function cargoLabelPayload(order,shipment){const c=order.customer||{};return {barcode:shipment.barcode||'',trackingNumber:shipment.trackingNumber||'',orderId:String(order.id),sender:'SHAZ',recipient:c.fullName||'',phone:c.phone||'',address:cargoAddress(c),payment:cargoPaymentLabel(order.payment),collectAmount:Number(order.total||0),products:cargoProducts(order).map(x=>`${x.name} x${x.quantity}`).join(', '),cargoCompany:shipment.cargoCompany||'Aras Kargo / YeşilKar',providerLabelUrl:shipment.labelUrl||''}}
 function cargoManualOrderOptions(){
   const catalog=readJson('catalog.json',{products:[]}),users=readJson('users.json',[]);
   return {products:(Array.isArray(catalog.products)?catalog.products:[]).filter(p=>p&&p.hidden!==true).map(p=>({id:String(p.id||''),name:String(p.name||'Ürün'),price:Number(p.price||0),image:serverMainProductImage(p)||''})),members:(Array.isArray(users)?users:[]).filter(u=>u&&!u.deleted&&!u.disabled).map(u=>({id:String(u.id||''),customerId:String(u.customerId||''),name:[u.firstName,u.lastName].filter(Boolean).join(' ')||String(u.name||''),phone:String(u.phone||''),email:String(u.email||'')}))};
@@ -1290,7 +1290,12 @@ app.delete('/api/orders/:id',requireAdmin,async(req,res)=>serializedMutation('or
 }));
 
 app.get('/api/orders/export.xlsx',requireAdmin,async(req,res)=>serializedMutation('orders',async()=>{
- const orders=readJson('orders.json',[]);
+ const allOrders=readJson('orders.json',[]);
+ const selectedIds=[...new Set(String(req.query.selectedIds||'').split(',').map(x=>x.trim()).filter(Boolean))];
+ const cargoFilterKeys=['orderId','name','phone','city','payment','status','stage','created','orderDateFrom','orderDateTo','deliveryDateFrom','deliveryDateTo'];
+ const hasCargoFilter=cargoFilterKeys.some(k=>String(req.query[k]||'').trim());
+ let orders=allOrders;
+ if(selectedIds.length){const wanted=new Set(selectedIds);orders=allOrders.filter(o=>wanted.has(String(o.id)))}else if(hasCargoFilter){const wanted=new Set(cargoQueryRows(req.query).map(x=>String(x.orderId)));orders=allOrders.filter(o=>wanted.has(String(o.id)))}
  const exportNow=new Date();
  const exportAt=exportNow.toISOString();
  const exportAtTR=new Intl.DateTimeFormat('tr-TR',{
@@ -1432,7 +1437,7 @@ app.get('/api/orders/export.xlsx',requireAdmin,async(req,res)=>serializedMutatio
    o.excelExportedAt=exportAt;
    o.excelExportedAtTR=exportAtTR;
  });
- writeJson('orders.json',orders);
+ writeJson('orders.json',allOrders);
  await persistOrdersToGithub().catch(e=>{console.error('Excel export kalıcı kayıt:',e);throw e});
 
  const stamp=new Intl.DateTimeFormat('sv-SE',{
@@ -1459,7 +1464,7 @@ app.post('/api/orders',async(req,res)=>serializedMutation('orders',async()=>{
    // Aynı sipariş tekrar gelirse yeni kayıt açma.
    const existing=orders.find(o=>String(o.requestId||'')===requestId);
    if(existing){
-     try{registerCargoPanelOrder(existing)}catch(e){console.error('Kargo paneli duplicate kayıt kontrolü:',e.message)}
+     try{const indexed=registerCargoPanelOrder(existing),exists=indexed||cargoOrderIndexRows().some(x=>String(x.orderId)===String(existing.id));if(!exists)throw new Error('Sipariş kargo paneline kaydedilemedi.')}catch(e){console.error('Kargo paneli duplicate kayıt kontrolü:',e.message);return res.status(500).json({ok:false,message:'Sipariş kaydı bulundu ancak yönetim paneli kaydı tamamlanamadı. Lütfen tekrar deneyin.'})}
      if(existing.sheetSyncStatus!=='synced')setTimeout(()=>syncPendingOrdersToSheets(),0);
      return res.json({ok:true,order:existing,duplicate:true});
    }
@@ -1512,7 +1517,6 @@ app.post('/api/orders',async(req,res)=>serializedMutation('orders',async()=>{
    const order={...body,id:nextLocalOrderId(orders),createdAt,createdAtTR,status:'new',statusUpdatedAt:createdAt,requestId,sheetSyncStatus:'pending',sheetSyncError:'',deviceId:normalizeDeviceId(incoming.deviceId)||null,userId:body.userId||null,customerId:body.customerId||null,subtotal:body.subtotal,discountTotal:body.discountTotal,preCouponTotal:body.preCouponTotal,couponDiscountTotal:body.couponDiscountTotal,total:body.total};
    orders.unshift(order);
    writeJson('orders.json',orders);
-   await sendOrderStatusPush(order,'new');writeJson('orders.json',orders);
    if(signedUser){
      const coupons=readJson('coupons.json',[]),usedIds=new Set((couponResult.coupons||[]).map(c=>String(c.id)));
      if(usedIds.size){for(const c of coupons){if(c.userId===signedUser.id&&usedIds.has(String(c.id))){c.status='used';c.usedAt=createdAt;c.usedOrderId=order.id;c.updatedAt=createdAt}}writeJson('coupons.json',coupons)}
@@ -1522,13 +1526,13 @@ app.post('/api/orders',async(req,res)=>serializedMutation('orders',async()=>{
    if(hasPersonal){const doc=currentLegalDoc('DISTANCE_SALES');legalRows.push({id:crypto.randomUUID(),orderId:order.id,userId:body.userId||null,customerId:body.customerId||null,legalDocumentType:'PERSONALIZATION_CONFIRMATION',documentVersion:doc?.version||'',documentHash:legalHash(doc),acceptedAt,ipAddress:ip,userAgent:ua});}
    writeJson('legal_acceptances.json',legalRows);
 
-   // Üye sipariş verdiyse üyelik kaydı sipariş commitinden önce aynı GitHub kuyruğuna alınır.
-   // Böylece Render'da bir yeniden başlatma olsa bile oturumun bağlı olduğu kullanıcı kaydı kaybolmaz.
+   // Siparişin ana kaydı, hukuk kayıtları ve kargo paneli indeksi başarıyla yerelde oluşturulmadan müşteriye başarı dönme.
+   try{const indexed=registerCargoPanelOrder(order),exists=indexed||cargoOrderIndexRows().some(x=>String(x.orderId)===String(order.id));if(!exists)throw new Error('Sipariş kargo paneline kaydedilemedi.')}catch(e){console.error('Kargo paneli sipariş indeksleme:',e.message);throw e}
+   // Üye hesabı, push bildirimi, GitHub kalıcı kopyası ve Google E-Tablo senkronu siparişin oluşmasını bekletmez.
+   // Sipariş bu noktada gerçekten orders.json içine yazılmış ve kargo paneline indekslenmiştir.
    if(signedUser)persistAccountStateAsync();
-   // Render yeniden başlasa/deploy olsa da sipariş kaybolmasın diye GitHub'a da kalıcı kopyayı yaz.
-   // Bunlar müşteri cevabını bloke etmez; asıl sipariş zaten orders.json'a kaydedildi.
-   await persistOrdersToGithub().catch(e=>{console.error('Sipariş kalıcı kayıt:',e);throw e});
-   try{registerCargoPanelOrder(order)}catch(e){console.error('Kargo paneli sipariş indeksleme:',e.message)}
+   setTimeout(async()=>{try{await sendOrderStatusPush(order,'new');const latest=readJson('orders.json',[]);const saved=latest.find(x=>String(x.id)===String(order.id));if(saved){saved.notificationHistory=order.notificationHistory;writeJson('orders.json',latest)}}catch(e){console.error('Sipariş push bildirimi:',e)}},0);
+   setTimeout(async()=>{try{await persistOrdersToGithub()}catch(e){console.error('Sipariş kalıcı kayıt:',e)}},0);
    setTimeout(()=>syncPendingOrdersToSheets(),0);
 
    lastOrderIngress={at:ingressAt,requestId,ok:true,error:''};
