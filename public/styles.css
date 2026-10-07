@@ -6491,3 +6491,30 @@ body.cargoColumnDragging{cursor:col-resize!important;user-select:none!important}
 .writeSelectGrid .choiceStack .positionChoice,.wizardCard [data-builder-personalize-row] .choiceStack .positionChoice,.writeSelectGrid .setItemToggle>label.positionChoice,.wizardCard [data-builder-personalize-row]>label.positionChoice{border-radius:8px!important;display:grid!important;grid-template-columns:20px minmax(0,1fr)!important;align-items:center!important;column-gap:12px!important;padding:9px 10px!important}
 .writeSelectGrid .positionChoice>input,.wizardCard [data-builder-personalize-row] .positionChoice>input{width:18px!important;height:18px!important;margin:0!important;grid-column:1!important}
 .writeSelectGrid .positionChoice>span,.wizardCard [data-builder-personalize-row] .positionChoice>span{grid-column:2!important;margin:0!important;min-width:0!important}
+
+/* ===== V210 — yalnız istenen müşteri detayı, bekleme, sütun ve bilgi paneli düzenlemeleri ===== */
+.cargoDetailBody{padding-top:7px}
+.cargoDetailBody>.cargoDetailSection:first-of-type{margin-top:0}
+.cargoCustomerAddressBox strong{font-size:12px;font-weight:850;color:#222;line-height:1.35;overflow-wrap:anywhere}
+.cargoCustomerAddressBox span{font-size:11px;line-height:1.5;color:#333;overflow-wrap:anywhere;word-break:break-word}
+.cargoStage-waiting{color:#76520b}
+
+.footerInfoPage{width:100%;max-width:760px;margin:0 auto;padding:16px clamp(14px,3vw,28px) 28px;box-sizing:border-box;overflow-x:hidden}
+.footerInfoPage .footerInfoHead{display:grid!important;grid-template-columns:minmax(76px,1fr) minmax(0,2.4fr) minmax(76px,1fr)!important;align-items:center!important;gap:12px!important;margin:0 0 20px!important;padding:0 0 14px!important;border-bottom:1px solid #ededed}
+.footerInfoPage .footerInfoHead>.pill{grid-column:1;justify-self:start;white-space:nowrap}
+.footerInfoPage .footerInfoHead>h2{grid-column:2;justify-self:center;text-align:center;margin:0!important;min-width:0;max-width:100%;font-size:24px;line-height:1.2;overflow-wrap:anywhere;word-break:normal}
+.footerInfoPage .footerInfoHead:after{content:"";grid-column:3}
+.footerInfoPage .footerInfoBody{display:grid;gap:16px;min-width:0;padding:0 2px;font-size:14px;line-height:1.7;color:#333;overflow-wrap:anywhere;word-break:normal}
+.footerInfoPage .footerInfoBody p{margin:0;min-width:0}
+.footerInfoPage .footerInfoBody a{color:inherit;text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
+.footerInfoPage .footerInfoRows{width:100%;min-width:0;border:1px solid #e7e7e7;background:#fff}
+.footerInfoPage .footerInfoRow{grid-template-columns:minmax(145px,.8fr) minmax(0,1.4fr);gap:18px;padding:13px 14px;align-items:start}
+.footerInfoPage .footerInfoRow b,.footerInfoPage .footerInfoRow span{min-width:0;overflow-wrap:anywhere}
+@media(max-width:700px){
+  .footerInfoPage{padding:12px 14px 24px}
+  .footerInfoPage .footerInfoHead{grid-template-columns:70px minmax(0,1fr) 70px!important;gap:8px!important;margin-bottom:16px!important;padding-bottom:12px!important}
+  .footerInfoPage .footerInfoHead>h2{font-size:20px;line-height:1.22}
+  .footerInfoPage .footerInfoHead>.pill{font-size:11px;padding:7px 9px}
+  .footerInfoPage .footerInfoBody{gap:14px;font-size:13px;line-height:1.65;padding:0}
+  .footerInfoPage .footerInfoRow{grid-template-columns:1fr;gap:4px;padding:12px}
+}
