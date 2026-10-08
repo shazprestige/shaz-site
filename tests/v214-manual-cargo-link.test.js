@@ -42,3 +42,32 @@ test('Mevcut SHZ siparişine manuel link endpointi var; DY geçmişi korunur',()
   assert.match(admin,/Yeni kargo oluşturulmaz/);
   assert.match(admin,/!row\?\.externalManual/);
 });
+
+
+test('Manuel doğrulama otomatik 30 dakikalık GET duraklamasında bir defa sorgu yapabilir',async()=>{
+  let calls=0;
+  const service=createCargoService({env,fetchImpl:async(url,opts)=>{
+    calls++;
+    if(calls===1)return {ok:false,status:429,headers:{get:()=>null},text:async()=>'<h1>429 Too Many Requests</h1>'};
+    return response(example);
+  }});
+  await assert.rejects(service.refreshShipment({shipment:{barcode:'DY0000000008',status:'created'}}),e=>e.code==='CARGO_RATE_LIMITED');
+  const linked=await service.lookupManualShipment({shipmentNumber:'210490400001',order});
+  assert.equal(linked.externalManual,true);
+  assert.equal(calls,2,'Manuel işlem otomatik sorgu beklemesine takılmamalı');
+  await assert.rejects(service.lookupManualShipment({shipmentNumber:'210490400001',order}),e=>e.code==='CARGO_MANUAL_RATE_LIMITED');
+  assert.equal(calls,2,'Tekrar tekrar butona basılınca yeni GET gitmemeli');
+});
+
+test('Yeşilkar manuel sorguyu gerçekten 429 ile reddederse bağlantı yapılmaz ve anlaşılır hata döner',async()=>{
+  let calls=0;
+  const service=createCargoService({env,fetchImpl:async()=>{calls++;return {ok:false,status:429,headers:{get:()=>null},text:async()=>'<h1>429 Too Many Requests</h1>'}}});
+  await assert.rejects(service.lookupManualShipment({shipmentNumber:'210490400001',order}),e=>e.code==='CARGO_MANUAL_PROVIDER_RATE_LIMITED'&&!e.message.includes('<h1>'));
+  await assert.rejects(service.lookupManualShipment({shipmentNumber:'210490400001',order}),e=>e.code==='CARGO_MANUAL_RATE_LIMITED');
+  assert.equal(calls,1);
+});
+
+test('Manuel hız sınırı uyarısı otomatik sorgu uyarısıyla karıştırılmaz',()=>{
+  const server=fs.readFileSync(path.join(__dirname,'..','server.js'),'utf8');
+  assert.match(server,/if\(e\?\.code==='CARGO_MANUAL_RATE_LIMITED'\|\|e\?\.code==='CARGO_MANUAL_PROVIDER_RATE_LIMITED'\)return base/);
+});

@@ -200,7 +200,7 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
   // Yalnız durum/arama GET isteklerini yavaşlat. Yeni kargo oluşturma POST isteği
   // otomatik durum sorgularının 429 beklemesine takılmamalıdır.
   const PROVIDER_GET_GAP_MS=3000,PROVIDER_RATE_LIMIT_PAUSE_MS=30*60*1000;
-  let lastReadAt=0,readQueue=Promise.resolve(),rateLimitUntil=0;
+  let lastReadAt=0,readQueue=Promise.resolve(),rateLimitUntil=0,manualVerifyRetryAt=0;
   function rateLimitStatus(){return {active:Date.now()<rateLimitUntil,retryAfterMs:Math.max(0,rateLimitUntil-Date.now())}}
   function rateLimitedError(){const e=new Error('Yeşilkar hız sınırı nedeniyle kargo sorguları geçici olarak durduruldu. Lütfen daha sonra tekrar deneyin.');e.code='CARGO_RATE_LIMITED';e.httpStatus=429;e.retryAfterMs=rateLimitStatus().retryAfterMs;return e}
   function noteRateLimit(response){
@@ -208,16 +208,27 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
     if(raw){const seconds=Number(raw),target=Number.isFinite(seconds)?Date.now()+seconds*1000:Date.parse(raw);if(Number.isFinite(target))duration=Math.max(duration,target-Date.now())}
     rateLimitUntil=Math.max(rateLimitUntil,Date.now()+Math.min(2*60*60*1000,duration));
   }
-  async function requestJson(url,options={}){
+  function manualVerificationWaitError(){
+    const minutes=Math.max(1,Math.ceil((manualVerifyRetryAt-Date.now())/60000));
+    const e=new Error(`Yeşilkar'ın hız sınırı nedeniyle manuel kargo doğrulaması şu an tekrar denenemiyor. ${minutes} dakika sonra yeniden dene. Rabia'nın mevcut kargosu değişmedi.`);
+    e.code='CARGO_MANUAL_RATE_LIMITED';e.httpStatus=429;e.retryAfterMs=Math.max(0,manualVerifyRetryAt-Date.now());return e;
+  }
+  async function requestJson(url,options={},control={}){
     if(typeof fetchImpl!=='function'){const e=new Error('Sunucuda fetch desteği bulunamadı.');e.code='CARGO_FETCH_UNAVAILABLE';throw e}
-    const isRead=String(options.method||'GET').toUpperCase()==='GET';
-    if(isRead&&rateLimitStatus().active)throw rateLimitedError();
+    const isRead=String(options.method||'GET').toUpperCase()==='GET',isManualVerification=isRead&&control.manualVerification===true;
+    if(isRead&&!isManualVerification&&rateLimitStatus().active)throw rateLimitedError();
+    if(isManualVerification&&Date.now()<manualVerifyRetryAt)throw manualVerificationWaitError();
     const send=async()=>{
-      if(isRead&&rateLimitStatus().active)throw rateLimitedError();
+      if(isRead&&!isManualVerification&&rateLimitStatus().active)throw rateLimitedError();
       const response=await fetchImpl(url,options),body=await response.text();let data={};
       try{data=body?JSON.parse(body):{}}catch{data={message:body}}
       if(response.status===429||/429\s*Too Many Requests|IP has been blocked due to too many requests/i.test(body)){
         noteRateLimit(response);
+        if(isManualVerification){
+          manualVerifyRetryAt=Date.now()+5*60*1000;
+          const e=new Error('Yeşilkar manuel kargo sorgusunu da hız sınırı nedeniyle reddetti. Kargo bağlanmadı. En az 5 dakika sonra tekrar dene.');
+          e.code='CARGO_MANUAL_PROVIDER_RATE_LIMITED';e.httpStatus=429;e.retryAfterMs=5*60*1000;throw e;
+        }
         if(isRead)throw rateLimitedError();
         const e=new Error('Yeşilkar yeni kargo oluşturma isteğini hız sınırı nedeniyle reddetti. Gönderi oluşmadıysa daha sonra tekrar deneyin.');
         e.code='CARGO_CREATE_RATE_LIMITED';e.httpStatus=429;throw e;
@@ -231,10 +242,15 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
     };
     if(!isRead)return send();
     const task=readQueue.then(async()=>{
-      if(rateLimitStatus().active)throw rateLimitedError();
+      if(!isManualVerification&&rateLimitStatus().active)throw rateLimitedError();
+      if(isManualVerification&&Date.now()<manualVerifyRetryAt)throw manualVerificationWaitError();
       const wait=PROVIDER_GET_GAP_MS-(Date.now()-lastReadAt);
       if(wait>0)await new Promise(resolve=>setTimeout(resolve,wait));
-      if(rateLimitStatus().active)throw rateLimitedError();
+      if(!isManualVerification&&rateLimitStatus().active)throw rateLimitedError();
+      if(isManualVerification&&Date.now()<manualVerifyRetryAt)throw manualVerificationWaitError();
+      // Panelde bilinçli doğrulama sırasında otomatik sorgu beklemesini bir kez aş.
+      // Ardışık tıklamalar Yeşilkar'ı tekrar sıkıştırmasın.
+      if(isManualVerification&&rateLimitStatus().active)manualVerifyRetryAt=Date.now()+5*60*1000;
       lastReadAt=Date.now();return send();
     });
     readQueue=task.catch(()=>{});return task;
@@ -328,7 +344,7 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
     if(!/^\d{10,20}$/.test(wanted)){const e=new Error('Yeşilkar gönderi numarası yalnız rakam içermeli.');e.code='CARGO_MANUAL_NUMBER_INVALID';throw e}
     const base=providerLookupBase('cargo');if(!base){const e=new Error('Yeşilkar gönderi durum sorgusu yapılandırılmamış.');e.code='CARGO_STATUS_NOT_CONFIGURED';throw e}
     const url=new URL(base);url.searchParams.set('gonderino',wanted);
-    const data=await requestJson(url.toString(),{method:'GET',headers:providerHeaders()});
+    const data=await requestJson(url.toString(),{method:'GET',headers:providerHeaders()},{manualVerification:true});
     const sameNumber=row=>['gonderino','barkod','barkod_no','cikisno','musteribarkod','kurcikno'].some(k=>clean(row?.[k],50)===wanted);
     const row=providerRows(data).find(sameNumber);
     if(!row){const e=new Error('Bu numarayla eşleşen gerçek Yeşilkar kargo kaydı bulunamadı.');e.code='CARGO_MANUAL_NOT_FOUND';throw e}
