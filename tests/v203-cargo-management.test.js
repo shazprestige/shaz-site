@@ -67,7 +67,7 @@ test('YeşilKar payload gelecekteki gerçek alanlara siparişten hazırlanıyor'
   const svc=createCargoService({env:{}}),p=svc.buildShipmentPayload({id:'SHZ-1',payment:'cod',total:1250,customer:{fullName:'Ali Veli',province:'Kocaeli',district:'Darıca',fullAddress:'Adres',phone:'05380000000'},items:[{name:'Saat',qty:2}]});
   for(const k of ['customer','province_name','county_name','address','telephone','branch_code','order_number','summary','quantity','amount_type_id','amount'])assert.ok(Object.hasOwn(p,k),k);
   assert.equal(Object.hasOwn(p,'barcode'),false);assert.equal(Object.hasOwn(p,'record_id'),false);
-  assert.equal(p.order_number,'SHZ-1');assert.equal(p.customer,'Ali Veli');assert.equal(p.amount,'1250.00');assert.equal(p.quantity,2);
+  assert.equal(p.order_number,'SHZ-1');assert.equal(p.customer,'Ali Veli');assert.equal(p.amount,'1250.00');assert.equal(p.quantity,1);assert.equal(p.consignment_type_id,2);
 });
 
 

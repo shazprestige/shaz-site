@@ -38,12 +38,14 @@ test('provider gerçek hareket metni ve gerçek durum zamanı response içinden 
   assert.equal(r.barcode,'DY0001');assert.equal(r.providerMovementText,'Alıcıya teslim edildi');assert.equal(r.providerStatusAt,'2026-10-06T11:20:00.000Z');
 });
 
-test('background provider refresh backendde 12 dakikada, kontrollü concurrency ile ve final kayıtları atlayarak çalışıyor',()=>{
-  assert.match(server,/CARGO_BACKGROUND_REFRESH_MS=12\*60\*1000,CARGO_BACKGROUND_CONCURRENCY=3/);
+test('provider yenilemesi yalnız aktif admin isteğiyle, 12 dakika sınırı ve kontrollü concurrency ile çalışıyor',()=>{
+  assert.match(server,/CARGO_BACKGROUND_REFRESH_MS=12\*60\*1000,CARGO_BACKGROUND_CONCURRENCY=1/);
   assert.match(server,/async function runCargoBackgroundProviderRefresh/);
   assert.match(server,/CARGO_FINAL_PROVIDER_STATES\.has/);
   assert.match(server,/Promise\.all\(Array\.from\(\{length:Math\.min\(CARGO_BACKGROUND_CONCURRENCY,ids\.length\)\}/);
-  assert.match(server,/setInterval\(\(\)=>runCargoBackgroundProviderRefresh\(\).*CARGO_BACKGROUND_REFRESH_MS/s);
+  assert.match(server,/kickCargoRefreshForActiveAdmin/);
+  assert.match(server,/app\.post\('\/api\/admin\/cargo\/active-refresh',requireAdmin,sameOriginGuard/);
+  assert.doesNotMatch(server,/setInterval\(\(\)=>runCargoBackgroundProviderRefresh\(/);
 });
 
 test('refresh hatası son doğru shipment statusunu error yapmıyor, yalnız güvenli kontrol bilgisi yazıyor',()=>{

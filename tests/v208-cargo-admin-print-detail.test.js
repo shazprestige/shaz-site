@@ -225,8 +225,9 @@ test('branch_waiting, background provider refresh, duplicate create lock ve reco
   assert.match(server,/async function recoverCargoCreateIfPossible/);assert.match(server,/lookupShipmentByOrderNumber/);
 });
 
-test('WebPostman/YeşilKar API katmanı, PWA manifest/service worker ve package bağımlılıkları baseline hashinde kaldı',()=>{
-  assert.equal(sha('cargo-service.js'),'8fcd6edcdf9d38a6e7c66fd0cabdea2a88b4b5ad3f07847d12cbec037d288657');
+test('V211: WebPostman sorgu koruması güncellendi, PWA ve paket bağımlılıkları korunuyor',()=>{
+  assert.match(read('cargo-service.js'),/rateLimitStatus/);
+  assert.match(read('cargo-service.js'),/PROVIDER_GET_GAP_MS/);
   assert.equal(sha('public/service-worker.js'),'2f24ecba4e6a0c093e60c56db8c6210822a2c01372588ab66cc0cdfac63c7f49');
   assert.equal(sha('public/manifest.webmanifest'),'bf9255e1e91c42bb4557ff858c183d79e25a5adb3eddf0aaf4e46b944a9f2b00');
   assert.equal(sha('package.json'),'6bbf968f8e25f9df8807b723d75a8f4db667de519721d2c70d0dd9a71da9c274');

@@ -26,7 +26,8 @@ function orderSummary(order={}){
     return `${name} x${qty}`;
   }).join(', ').slice(0,1000);
 }
-function orderQuantity(order={}){return (Array.isArray(order.items)?order.items:[]).reduce((n,x)=>n+Math.max(1,Number(x?.qty||1)),0)||1}
+// Ürün adedi fiziksel kargo paketi adedi değildir. Ayrı bir paket adedi tanımlanmamışsa tek paket gönderilir.
+function orderQuantity(order={}){const parcels=Number(order.cargoPackageCount);return Number.isSafeInteger(parcels)&&parcels>=1&&parcels<=20?parcels:1}
 function redactProviderResponse(value,depth=0){
   if(depth>5)return '[omitted]';
   if(Array.isArray(value))return value.slice(0,50).map(x=>redactProviderResponse(x,depth+1));
@@ -190,17 +191,53 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
       order_number:clean(options.orderNumber||order.id,120),
       summary:orderSummary(order),
       quantity:orderQuantity(order),
-      consignment_type_id:1,
+      consignment_type_id:2,
       amount_type_id:payment.amountTypeId
     };
     if(payment.amount!==null)payload.amount=payment.amount;
     return payload;
   }
-  async function requestJson(url,options){
+  // Yalnız durum/arama GET isteklerini yavaşlat. Yeni kargo oluşturma POST isteği
+  // otomatik durum sorgularının 429 beklemesine takılmamalıdır.
+  const PROVIDER_GET_GAP_MS=3000,PROVIDER_RATE_LIMIT_PAUSE_MS=30*60*1000;
+  let lastReadAt=0,readQueue=Promise.resolve(),rateLimitUntil=0;
+  function rateLimitStatus(){return {active:Date.now()<rateLimitUntil,retryAfterMs:Math.max(0,rateLimitUntil-Date.now())}}
+  function rateLimitedError(){const e=new Error('Yeşilkar hız sınırı nedeniyle kargo sorguları geçici olarak durduruldu. Lütfen daha sonra tekrar deneyin.');e.code='CARGO_RATE_LIMITED';e.httpStatus=429;e.retryAfterMs=rateLimitStatus().retryAfterMs;return e}
+  function noteRateLimit(response){
+    const raw=response?.headers?.get?.('retry-after');let duration=PROVIDER_RATE_LIMIT_PAUSE_MS;
+    if(raw){const seconds=Number(raw),target=Number.isFinite(seconds)?Date.now()+seconds*1000:Date.parse(raw);if(Number.isFinite(target))duration=Math.max(duration,target-Date.now())}
+    rateLimitUntil=Math.max(rateLimitUntil,Date.now()+Math.min(2*60*60*1000,duration));
+  }
+  async function requestJson(url,options={}){
     if(typeof fetchImpl!=='function'){const e=new Error('Sunucuda fetch desteği bulunamadı.');e.code='CARGO_FETCH_UNAVAILABLE';throw e}
-    const response=await fetchImpl(url,options),text=await response.text();let data={};try{data=text?JSON.parse(text):{}}catch{data={message:text}}
-    if(!response.ok||responseHasError(data)){const e=new Error(clean(data?.message||data?.result||data?.error||`Kargo servisi HTTP ${response.status}`,500));e.code='CARGO_PROVIDER_ERROR';e.httpStatus=response.status;e.providerResponse=redactProviderResponse(data);throw e}
-    return redactProviderResponse(data);
+    const isRead=String(options.method||'GET').toUpperCase()==='GET';
+    if(isRead&&rateLimitStatus().active)throw rateLimitedError();
+    const send=async()=>{
+      if(isRead&&rateLimitStatus().active)throw rateLimitedError();
+      const response=await fetchImpl(url,options),body=await response.text();let data={};
+      try{data=body?JSON.parse(body):{}}catch{data={message:body}}
+      if(response.status===429||/429\s*Too Many Requests|IP has been blocked due to too many requests/i.test(body)){
+        noteRateLimit(response);
+        if(isRead)throw rateLimitedError();
+        const e=new Error('Yeşilkar yeni kargo oluşturma isteğini hız sınırı nedeniyle reddetti. Gönderi oluşmadıysa daha sonra tekrar deneyin.');
+        e.code='CARGO_CREATE_RATE_LIMITED';e.httpStatus=429;throw e;
+      }
+      if(!response.ok||responseHasError(data)){
+        const message=clean(data?.message||data?.result||data?.error||`Kargo servisi HTTP ${response.status}`,500);
+        const e=new Error(/<\/?[a-z][\s\S]*>/i.test(message)?`Yeşilkar servisi HTTP ${response.status} hatası döndürdü.`:message);
+        e.code='CARGO_PROVIDER_ERROR';e.httpStatus=response.status;e.providerResponse=redactProviderResponse(data);throw e;
+      }
+      return redactProviderResponse(data);
+    };
+    if(!isRead)return send();
+    const task=readQueue.then(async()=>{
+      if(rateLimitStatus().active)throw rateLimitedError();
+      const wait=PROVIDER_GET_GAP_MS-(Date.now()-lastReadAt);
+      if(wait>0)await new Promise(resolve=>setTimeout(resolve,wait));
+      if(rateLimitStatus().active)throw rateLimitedError();
+      lastReadAt=Date.now();return send();
+    });
+    readQueue=task.catch(()=>{});return task;
   }
   function resultFromProvider(data={}){
     let row=data?.data&&typeof data.data==='object'?data.data:data;
@@ -283,7 +320,34 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
     }
     return {...result,barcode:result.barcode||wantedBarcode,status:providerStatusToCargoStatus(result.providerStatus,currentStatus)};
   }
-  async function refreshShipment({shipment}={}){
+  // Kullanıcının site üzerinden değil, WebPostman panelinden oluşturduğu kabul edilmiş gönderi.
+  // Yalnız var olan kargo kaydı okunur; burada yeni bir gönderi oluşturulmaz.
+  function manualIdentity(value){return clean(value,240).replace(/ı/g,'i').replace(/İ/g,'I').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
+  async function lookupManualShipment({shipmentNumber,order}={}){
+    const wanted=clean(shipmentNumber,24);
+    if(!/^\d{10,20}$/.test(wanted)){const e=new Error('Yeşilkar gönderi numarası yalnız rakam içermeli.');e.code='CARGO_MANUAL_NUMBER_INVALID';throw e}
+    const base=providerLookupBase('cargo');if(!base){const e=new Error('Yeşilkar gönderi durum sorgusu yapılandırılmamış.');e.code='CARGO_STATUS_NOT_CONFIGURED';throw e}
+    const url=new URL(base);url.searchParams.set('gonderino',wanted);
+    const data=await requestJson(url.toString(),{method:'GET',headers:providerHeaders()});
+    const sameNumber=row=>['gonderino','barkod','barkod_no','cikisno','musteribarkod','kurcikno'].some(k=>clean(row?.[k],50)===wanted);
+    const row=providerRows(data).find(sameNumber);
+    if(!row){const e=new Error('Bu numarayla eşleşen gerçek Yeşilkar kargo kaydı bulunamadı.');e.code='CARGO_MANUAL_NOT_FOUND';throw e}
+    const c=order?.customer||{},expectedName=manualIdentity(c.fullName||[c.firstName,c.lastName].filter(Boolean).join(' ')),expectedCity=manualIdentity(c.province),expectedCounty=manualIdentity(c.district);
+    const returnedName=manualIdentity([row.aliciadi||row.alici_adi||row.customer||row.alici_ad,row.alicisoyad||row.alici_soyad].filter(Boolean).join(' ')||row.alici_adi_soyadi||row.customer_name||row.recipient_name);
+    const returnedCity=manualIdentity(row.sehiradi||row.alici_sehir||row.province_name||row.alici_il);
+    const returnedCounty=manualIdentity(row.ilce||row.alici_ilce||row.county_name);
+    // Bir manuel kaydın SHAZ sipariş numarası yoktur. Bu yüzden alıcı, il ve ilçe
+    // doğrulanmadan yalnız barkod numarasına güvenip başka müşteriye bağlamıyoruz.
+    if(!expectedName||!expectedCity||!expectedCounty||!returnedName||!returnedCity||!returnedCounty||returnedName!==expectedName||returnedCity!==expectedCity||returnedCounty!==expectedCounty){
+      const e=new Error('Yeşilkar kaydındaki alıcı adı, il ve ilçe SHAZ siparişiyle doğrulanamadı. Bu kargo otomatik bağlanmadı.');e.code='CARGO_MANUAL_RECIPIENT_MISMATCH';throw e;
+    }
+    const digits=x=>String(x||'').replace(/\D/g,'').slice(-10),providerPhone=digits(row.telno||row.telephone||row.alici_telefon||row.phone),orderPhone=digits(c.phone);
+    if(providerPhone&&orderPhone&&providerPhone!==orderPhone){const e=new Error('Yeşilkar kaydındaki telefon numarası SHAZ siparişiyle uyuşmuyor.');e.code='CARGO_MANUAL_RECIPIENT_MISMATCH';throw e}
+    const result=resultFromProvider(row),status=providerStatusToCargoStatus(result.providerStatus,'created');
+    return {...result,barcode:wanted,trackingNumber:wanted,recordId:'',providerOrderNumber:'',status,externalManual:true,providerResponse:redactProviderResponse(row)};
+  }
+  async function refreshShipment({shipment,order}={}){
+    if(shipment?.externalManual)return lookupManualShipment({shipmentNumber:shipment.trackingNumber||shipment.barcode,order});
     if(!config.statusUrlTemplate){const e=new Error('YeşilKar durum sorgulama endpointi henüz tanımlanmadı.');e.code='CARGO_STATUS_NOT_CONFIGURED';throw e}
     const url=fillTemplate(config.statusUrlTemplate,{record_id:shipment?.providerRecordId||'',barcode:shipment?.barcode||'',tracking_number:shipment?.trackingNumber||'',order_number:shipment?.providerOrderNumber||shipment?.orderId||''});
     const data=await requestJson(url,{method:'GET',headers:providerHeaders()});const result=resultFromProvider(data);
@@ -294,7 +358,7 @@ function createCargoService({env=process.env,fetchImpl=global.fetch}={}){
     const url=fillTemplate(config.labelUrlTemplate,{record_id:shipment?.providerRecordId||'',barcode:shipment?.barcode||'',tracking_number:shipment?.trackingNumber||''});
     return requestJson(url,{method:'GET',headers:providerHeaders()});
   }
-  return {config:configuration,buildShipmentPayload,createShipment,lookupShipmentByOrderNumber,lookupShipmentByBarcode,refreshShipment,fetchLabel,providerStatusToCargoStatus,providerMovementToWorkflowStage,resultFromProvider};
+  return {config:configuration,rateLimitStatus,buildShipmentPayload,createShipment,lookupShipmentByOrderNumber,lookupShipmentByBarcode,lookupManualShipment,refreshShipment,fetchLabel,providerStatusToCargoStatus,providerMovementToWorkflowStage,resultFromProvider};
 }
 
 module.exports={CARGO_STATUSES,CARGO_STATUS_OPTIONS,createCargoService,providerStatusToCargoStatus,providerMovementToWorkflowStage,redactProviderResponse};
