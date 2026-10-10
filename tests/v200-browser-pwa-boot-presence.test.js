@@ -172,8 +172,8 @@ test('Üyeler sıra numarası biraz büyük ve ilk iki kolon kompakt tutuluyor',
   assert.match(css,/@media\(max-width:900px\).*?grid-template-columns:32px 25px/s);
 });
 
-test('V200 asset versionları tutarlı, VAPID ve dependencyler değiştirilmedi',()=>{
-  assert.match(index,/styles\.css\?v=200/);assert.match(index,/app\.js\?v=200/);assert.match(adminHtml,/styles\.css\?v=200/);assert.match(app,/service-worker\.js\?v=200/);assert.match(sw,/SHAZ_SW_VERSION='200'/);
+test('V216 asset versionları tutarlı, VAPID ve dependencyler değiştirilmedi',()=>{
+  assert.match(index,/styles\.css\?v=200/);assert.match(index,/app\.js\?v=216/);assert.match(adminHtml,/styles\.css\?v=216/);assert.match(app,/service-worker\.js\?v=200/);assert.match(sw,/SHAZ_SW_VERSION='200'/);
   assert.doesNotMatch(index+adminHtml+app,/\?v=194/);
   const pkg=JSON.parse(read('package.json'));assert.deepEqual(pkg.dependencies,{express:'^4.21.2',multer:'^2.0.2',xlsx:'^0.18.5',sharp:'^0.34.4','web-push':'^3.6.7'});assert.equal(fs.existsSync(path.join(root,'package-lock.json')),false);
 });

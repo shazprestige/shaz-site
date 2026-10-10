@@ -201,7 +201,7 @@ test('Yazı=Var detayında metin/konum ve fotoğraf gerçek order datasından ka
 
 test('kargo etiketi çoklu ürün özetini gerçek order items üzerinden üretir',()=>{
   const payload=block(server,'function cargoLabelPayload','function cargoManualOrderOptions');
-  assert.match(payload,/cargoProducts\(order\)\.map\(x=>`\$\{x\.name\} x\$\{x\.quantity\}`\)\.join\(', '\)/);
+  assert.match(payload,/require\('\.\/order-product-details'\)\.orderProducts\(order\)/);
   assert.doesNotMatch(payload,/SHAZ - NOVA x1/);
 });
 

@@ -123,6 +123,7 @@ function bindCore(){
         openProductDetail(routeId,'route');
       }
       if(isAccountPath(location.pathname)){stabilizeAccountHistoryRestore();openAccountRouteIfNeeded();return}
+      if(shazFlowNativeBack(e))return;
       if($('#drawer')?.classList.contains('drawerAccountMode'))closeDrawer();
     });
   }
@@ -386,10 +387,20 @@ function positionActiveSubcategoryTab(behavior='smooth'){
   nav.scrollTo({left:Math.max(0,Math.min(max,desired)),behavior});
 }
 function selectSubcategory(id){
+  if(activeSubcategory===(id||''))return;
   activeSubcategory=id||'';
   persistCatalogView();
   renderProducts($('#search')?.value||'');
-  requestAnimationFrame(()=>{syncSubcategoryStickyOffset();positionActiveSubcategoryTab('smooth')});
+  // Alt kategori değişimi önceki kategorinin kaydırmasını devralmamalı.
+  // Başlangıç noktası: mevcut kategori sekmeleri ve ilk ürünler.
+  requestAnimationFrame(()=>{
+    syncSubcategoryStickyOffset();positionActiveSubcategoryTab('smooth');
+    const products=document.getElementById('productsList');
+    if(!products)return;
+    const sticky=(document.getElementById('announceWrap')?.getBoundingClientRect().height||0)+(document.getElementById('stickyHeader')?.getBoundingClientRect().height||0);
+    const top=Math.max(0,products.getBoundingClientRect().top+window.scrollY-sticky-6);
+    if(window.scrollY>top)window.scrollTo({top,left:0,behavior:'instant'});
+  });
 }
 
 function positionActiveCategoryTab(behavior='smooth'){
@@ -680,10 +691,46 @@ function setProductDetailScrollLock(on){
   document.body.classList.toggle('productDetailOpen',!!on);
   document.documentElement.classList.toggle('productDetailOpen',!!on);
 }
+let shazFlowCurrent='',shazFlowPop=false;
+function shazFlowScreen(markup){
+ if(markup.includes('accountPageShell')||markup.includes('accountSubPage')||markup.includes('productDetailShell'))return '';
+ if(markup.includes('checkoutShell--cart'))return 'checkout.cart';
+ if(markup.includes('checkoutShell--address'))return 'checkout.address';
+ if(markup.includes('orderApprovalChecks'))return 'checkout.approval';
+ if(markup.includes('checkoutSubmitStatus')||markup.includes('Kargo bilgilendirmesi'))return 'checkout.notice';
+ if(markup.includes('wizardHead')&&wiz?.product&&wiz.currentScreen)return 'set.'+wiz.currentScreen;
+ if(markup.includes('wizardHead')&&markup.includes('2 / 2'))return 'single.write';
+ if(markup.includes('wizardHead')&&markup.includes('1 / 2'))return 'single.start';
+ return '';
+}
+function shazFlowHistorySync(markup){
+ const next=shazFlowScreen(markup);if(!next||shazFlowPop||adminPreviewMode){shazFlowCurrent=next;return}
+ if(next===shazFlowCurrent)return;
+ try{if(!history.state?.shazFlowBase)history.replaceState({...history.state,shazFlowBase:true,shazFlowId:shazFlowCurrent||null},'',location.href);
+ history.pushState({...history.state,shazFlowId:next},'',location.href)}catch(e){console.warn('SHAZ geri gezinme history güncellenemedi:',e)}
+ shazFlowCurrent=next;
+}
+function shazFlowNativeBack(e){
+ const from=shazFlowCurrent,to=String(e.state?.shazFlowId||'');
+ if(!from||from===to)return false;
+ shazFlowPop=true;
+ try{
+   if(from.startsWith('set.')){if(wiz?.history?.length)setWizardBack();else closeDrawer()}
+   else if(from==='single.write'&&to==='single.start'){
+     const p=wiz?.product||window.shazLastSingleWizardProduct;
+     if(p)startSingleWizard(p);else closeDrawer();
+   }else if(to==='checkout.cart')checkout();
+   else if(to==='checkout.address')addressStep();
+   else if(to==='checkout.approval')showOrderApproval();
+   else closeDrawer();
+ }finally{shazFlowPop=false;shazFlowCurrent=to}
+ return true;
+}
 function openDrawer(html){
   closeSavedAddressSuggestions();
   document.querySelectorAll('.accountInlineError,.accountSaveError,.formErrorToast').forEach(el=>el.remove());
   const markup=String(html||'');
+  shazFlowHistorySync(markup);
   const isProductDetail=markup.includes('productDetailShell');
   const isWizard=!isProductDetail&&markup.includes('wizardHead');
   const resetFlowScroll=!isProductDetail&&(isWizard||markup.includes('checkoutShell'));
@@ -713,9 +760,11 @@ function openDrawer(html){
     bindDrawerInputFocus();
     bindDrawerScrollGuard();
     if(isAccount)protectAuthInputOverlays()
+    if(shazFlowCurrent.startsWith('checkout.'))drawer.querySelector('.checkoutBackBtn')?.addEventListener('click',e=>{if(shazFlowPop||!history.state?.shazFlowId)return;e.preventDefault();e.stopImmediatePropagation();history.back()},true);
   });
 }
 function closeDrawer(){
+  shazFlowCurrent='';
   closeSavedAddressSuggestions();
   if(activeProductDetailId){activeProductDetailId='';activeProductDetailSource='catalog';clearProductRoute()}
   setProductDetailScrollLock(false);
@@ -1107,6 +1156,7 @@ async function uploadCustomerPhoto(file){
 
 /* SINGLE PRODUCT FLOW */
 function startSingleWizard(p){
+  window.shazLastSingleWizardProduct=p;
   const wallet=walletPhotoAvailable(p), canWrite=writeAvailable(p);
   if(!wallet&&!canWrite)return addSingleNoText(p.id);
   openDrawer(`<div class=wizardHead><button class="pill backPill" onclick=closeDrawer()>← Geri</button><div><div class=wizardProgress>1 / 2</div><h2>${p.name}</h2></div><button class=pill onclick=closeDrawer()>Kapat</button></div>
@@ -1179,6 +1229,7 @@ function setWizardSnapshot(screen){
 }
 function setWizardNext(screen){setWizardSnapshot(screen);wiz.step=(wiz.step||1)+1}
 function setWizardBack(){
+  if(!shazFlowPop&&shazFlowCurrent.startsWith('set.')&&history.state?.shazFlowId){history.back();return}
   captureSetWizardDrafts();
   if(!wiz?.history?.length){closeDrawer();return;}
   const prev=wiz.history.pop();

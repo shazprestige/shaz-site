@@ -299,7 +299,7 @@ const registerLoginFailure=key=>{
   else{x.count++;loginAttempts.set(key,x)}
 };
 
-const CRITICAL_JSON_FILES=new Set(['orders.json','users.json','customers.json','coupons.json','addresses.json','legal_acceptances.json','pending_registrations.json','marketing_integration_state.json','integration_outbox.json','cargo_feature_state.json','cargo_order_index.json','cargo_records.json','cargo_events.json']);
+const CRITICAL_JSON_FILES=new Set(['orders.json','users.json','customers.json','coupons.json','addresses.json','legal_acceptances.json','pending_registrations.json','marketing_integration_state.json','integration_outbox.json','cargo_feature_state.json','cargo_order_index.json','cargo_records.json','cargo_events.json','finance_state.json']);
 const readJson=(name,fallback)=>{
   const file=path.join(dataDir,name);
   try{return JSON.parse(fs.readFileSync(file,'utf8'))}
@@ -836,6 +836,34 @@ async function restoreOrdersStateFromGithub(){
 }
 
 
+const FINANCE_SNAPSHOT_FILE='finance_state.enc';
+function buildEncryptedFinanceSnapshot(){
+ const key=cargoSnapshotKey();if(!key)throw Error('SHAZ finans kayıtları için USER_SESSION_SECRET gereklidir.');
+ const state=readJson('finance_state.json',require('./finance-service').DEFAULT());
+ const iv=crypto.randomBytes(12),cipher=crypto.createCipheriv('aes-256-gcm',key,iv),bytes=Buffer.concat([cipher.update(JSON.stringify(state),'utf8'),cipher.final()]);
+ return JSON.stringify({v:1,iv:iv.toString('base64'),tag:cipher.getAuthTag().toString('base64'),data:bytes.toString('base64')});
+}
+function restoreEncryptedFinanceSnapshot(){try{
+ const file=path.join(dataDir,FINANCE_SNAPSHOT_FILE);if(!fs.existsSync(file))return false;
+ const key=cargoSnapshotKey();if(!key)throw Error('Finans şifresi eksik.');
+ const v=JSON.parse(fs.readFileSync(file,'utf8')),decipher=crypto.createDecipheriv('aes-256-gcm',key,Buffer.from(v.iv,'base64'));decipher.setAuthTag(Buffer.from(v.tag,'base64'));
+ const value=JSON.parse(Buffer.concat([decipher.update(Buffer.from(v.data,'base64')),decipher.final()]).toString('utf8'));
+ if(!value||value.v!==1||!Array.isArray(value.purchases)||!Array.isArray(value.allocations))throw Error('Finans kayıt yapısı doğrulanamadı.');
+ writeJson('finance_state.json',value);return true;
+ }catch(e){console.error('Finans şifreli kayıt geri yükleme başarısız:',e.message);throw e}
+}
+async function persistFinanceToGithub(){
+ const content=buildEncryptedFinanceSnapshot(),file=path.join(dataDir,FINANCE_SNAPSHOT_FILE);fs.writeFileSync(file,content,'utf8');
+ if(!githubEnabled())return {ok:true,local:true};
+ return githubCommitFiles([{path:'data/'+FINANCE_SNAPSHOT_FILE,content,encoding:'utf-8'}],'SHAZ finans: şifreli kayıt güncellendi [skip render]');
+}
+async function restoreFinanceFromGithub(){
+ if(githubEnabled()&&USER_SESSION_SECRET){try{
+ const remote=await ghApi(`/contents/data/${encodeURIComponent(FINANCE_SNAPSHOT_FILE)}?ref=${encodeURIComponent(GITHUB_BRANCH)}`);
+ if(remote?.encoding==='base64'&&remote.content){fs.writeFileSync(path.join(dataDir,FINANCE_SNAPSHOT_FILE),Buffer.from(String(remote.content).replace(/\s+/g,''),'base64').toString('utf8'));return restoreEncryptedFinanceSnapshot()}
+ }catch(e){if(!String(e.message||'').toLowerCase().includes('not found'))console.warn('Finans GitHub kayıt geri yüklemesi başarısız:',e.message)}}
+ return restoreEncryptedFinanceSnapshot();
+}
 const CARGO_SNAPSHOT_FILE='cargo_state.enc';
 const CARGO_STATE_NAMES=['cargo_feature_state.json','cargo_order_index.json','cargo_records.json','cargo_events.json'];
 function cargoSnapshotKey(){return USER_SESSION_SECRET?crypto.createHash('sha256').update(USER_SESSION_SECRET).digest():null}
@@ -1183,7 +1211,7 @@ function cargoPanelOrder(orderId){const index=ensureCargoWorkflowIndexRows().fin
 function cargoOrderMembership(order={}){const userId=cargoText(order.userId||order.memberId||'',160);if(!userId)return {isMember:false,membershipSource:'guest'};const user=readJson('users.json',[]).find(x=>String(x.id)===userId&&!x.deleted);return {isMember:!!user,membershipSource:user?'user_id':'missing_or_deleted_user_id'}}
 function cargoOrderView(order,indexRow,shipment=null){
   const c=order.customer||{},latest=latestCargoRecord(order.id),active=shipment||successfulCargoRecord(order.id),s=active||latest,status=s?.status||'not_created',recentCreateError=!active&&latest?.status==='error'?latest.errorMessage||'Kargo oluşturma hatası.':'',membership=cargoOrderMembership(order),stage=indexRow?.adminStage||'new',dirty=order.cargoShipmentDirty===true,isFinal=['delivered','returned'].includes(stage);
-  return {orderId:String(order.id),userId:cargoText(order.userId||order.memberId||'',160),customerId:cargoText(order.customerId||'',160),fullName:c.fullName||[c.firstName,c.lastName].filter(Boolean).join(' ')||'',phone:c.phone||'',email:c.email||'',province:c.province||'',district:c.district||'',address:cargoAddress(c),payment:order.payment||'',paymentLabel:cargoPaymentLabel(order.payment),total:Number(order.total||0),orderCreatedAt:order.createdAt||'',panelCreatedAt:indexRow?.panelCreatedAt||'',cargoCompany:s?.cargoCompany||'Aras Kargo / YeşilKar',cargoStatus:status,cargoStatusLabel:cargoStatusLabel(status),adminStage:stage,adminStageLabel:cargoAdminStageLabel(stage),barcode:active?.barcode||'',trackingNumber:active?.trackingNumber||'',cargoCreatedAt:active?.createdAt||latest?.createdAt||'',lastCargoStatusAt:active?.lastStatusAt||active?.updatedAt||'',lastCargoCheckAt:active?.lastCheckedAt||'',deliveredAt:active?.deliveredAt||'',providerMovementText:active?.providerMovementText||'',providerStatusAt:active?.providerStatusAt||'',shipmentId:active?.id||'',createErrorMessage:recentCreateError,lastRefreshError:active?.lastRefreshError?cargoSafeError({message:active.lastRefreshError}):'',lastRefreshErrorAt:active?.lastRefreshErrorAt||'',lastRefreshErrorType:active?.lastRefreshErrorType||'',shipmentDirty:dirty,shipmentDirtyAt:order.cargoShipmentDirtyAt||'',shipmentDirtyFields:Array.isArray(order.cargoShipmentDirtyFields)?order.cargoShipmentDirtyFields:[],hasPersonalization:cargoOrderHasPersonalization(order),canCreate:stage==='new'&&!active&&latest?.status!=='creating',canRetryCreate:stage==='new'&&!active&&latest?.status==='error',canResend:!!active,canNewBarcode:!!active&&dirty&&!isFinal,canMarkSent:!!active&&stage==='preparing'&&!dirty,canUndoStage:cargoCanUndoStage(indexRow),canEditOrder:!isFinal,hasProviderShipment:!!active,externalManual:active?.externalManual===true,isMember:membership.isMember,membershipSource:membership.membershipSource};
+  return {orderId:String(order.id),userId:cargoText(order.userId||order.memberId||'',160),customerId:cargoText(order.customerId||'',160),fullName:c.fullName||[c.firstName,c.lastName].filter(Boolean).join(' ')||'',phone:c.phone||'',email:c.email||'',province:c.province||'',district:c.district||'',address:cargoAddress(c),payment:order.payment||'',paymentLabel:cargoPaymentLabel(order.payment),total:Number(order.total||0),orderCreatedAt:order.createdAt||'',panelCreatedAt:indexRow?.panelCreatedAt||'',cargoCompany:s?.cargoCompany||'Aras Kargo / YeşilKar',cargoStatus:status,cargoStatusLabel:cargoStatusLabel(status),adminStage:stage,adminStageLabel:cargoAdminStageLabel(stage),barcode:active?.barcode||'',trackingNumber:active?.trackingNumber||'',arasExitNumber:cargoOfficialExitNumber(active||{}),cargoCreatedAt:active?.createdAt||latest?.createdAt||'',lastCargoStatusAt:active?.lastStatusAt||active?.updatedAt||'',lastCargoCheckAt:active?.lastCheckedAt||'',deliveredAt:active?.deliveredAt||'',providerMovementText:active?.providerMovementText||'',providerStatusAt:active?.providerStatusAt||'',shipmentId:active?.id||'',createErrorMessage:recentCreateError,lastRefreshError:active?.lastRefreshError?cargoSafeError({message:active.lastRefreshError}):'',lastRefreshErrorAt:active?.lastRefreshErrorAt||'',lastRefreshErrorType:active?.lastRefreshErrorType||'',shipmentDirty:dirty,shipmentDirtyAt:order.cargoShipmentDirtyAt||'',shipmentDirtyFields:Array.isArray(order.cargoShipmentDirtyFields)?order.cargoShipmentDirtyFields:[],hasPersonalization:cargoOrderHasPersonalization(order),canCreate:stage==='new'&&!active&&latest?.status!=='creating',canRetryCreate:stage==='new'&&!active&&latest?.status==='error',canResend:!!active,canNewBarcode:!!active&&dirty&&!isFinal,canMarkSent:!!active&&stage==='preparing'&&!dirty,canUndoStage:cargoCanUndoStage(indexRow),canEditOrder:!isFinal,hasProviderShipment:!!active,externalManual:active?.externalManual===true,isMember:membership.isMember,membershipSource:membership.membershipSource};
 }
 function cargoOrderDetailPayload(order,index){
   const shipment=successfulCargoRecord(order.id),events=cargoEventRows().filter(x=>String(x.orderId)===String(order.id)).sort((a,b)=>new Date(a.at||0)-new Date(b.at||0)),shipments=cargoRecordsForOrder(order.id).map(x=>({...x,providerResponse:undefined})),c=order.customer||{};
@@ -1229,7 +1257,15 @@ async function runCargoBackgroundProviderRefresh(){if(cargoBackgroundRefreshRunn
 function kickCargoRefreshForActiveAdmin(){const now=Date.now();if(cargoBackgroundRefreshRunning||cargoService.rateLimitStatus().active||now-cargoLastAdminRefreshKickAt<CARGO_ADMIN_ENTRY_MIN_GAP_MS)return false;cargoLastAdminRefreshKickAt=now;setImmediate(()=>runCargoBackgroundProviderRefresh().catch(e=>console.error('Kargo yönetimi açıkken durum kontrolü başarısız:',cargoSafeError(e))));return true}
 function cargoQueryRows(q={}){const index=ensureCargoWorkflowIndexRows(),orders=readJson('orders.json',[]),byId=new Map(orders.map(o=>[String(o.id),o]));let rows=index.map(x=>{const o=byId.get(String(x.orderId));return o?cargoOrderView(o,x):null}).filter(Boolean);const orderId=cargoText(q.orderId,120).toLocaleLowerCase('tr-TR'),name=cargoText(q.name,200).toLocaleLowerCase('tr-TR'),phone=cargoText(q.phone,80).replace(/\D/g,''),city=cargoText(q.city,120).toLocaleLowerCase('tr-TR'),payment=cargoText(q.payment,80).toLocaleLowerCase('tr-TR'),status=cargoText(q.status,80),stage=cargoText(q.stage,40),created=cargoText(q.created,20),orderFrom=cargoText(q.orderDateFrom||q.dateFrom,20),orderTo=cargoText(q.orderDateTo||q.dateTo,20),deliveryFrom=cargoText(q.deliveryDateFrom,20),deliveryTo=cargoText(q.deliveryDateTo,20),orderFromMs=orderFrom?new Date(orderFrom+'T00:00:00').getTime():0,orderToMs=orderTo?new Date(orderTo+'T23:59:59.999').getTime():0,deliveryFromMs=deliveryFrom?new Date(deliveryFrom+'T00:00:00').getTime():0,deliveryToMs=deliveryTo?new Date(deliveryTo+'T23:59:59.999').getTime():0;rows=rows.filter(r=>{const orderDt=new Date(r.orderCreatedAt||0).getTime(),deliveryDt=r.deliveredAt?new Date(r.deliveredAt).getTime():0,hasCargo=!!r.hasProviderShipment;return (!orderId||r.orderId.toLocaleLowerCase('tr-TR').includes(orderId))&&(!name||r.fullName.toLocaleLowerCase('tr-TR').includes(name))&&(!phone||r.phone.replace(/\D/g,'').includes(phone))&&(!city||[r.province,r.district].join(' ').toLocaleLowerCase('tr-TR').includes(city))&&(!payment||String(r.payment||'').toLocaleLowerCase('tr-TR')===payment)&&(!status||r.cargoStatus===status)&&(!stage||stage==='all'||r.adminStage===stage)&&(!created||(created==='yes'?hasCargo:!hasCargo))&&(!orderFromMs||orderDt>=orderFromMs)&&(!orderToMs||orderDt<=orderToMs)&&(!deliveryFromMs||(deliveryDt&&deliveryDt>=deliveryFromMs))&&(!deliveryToMs||(deliveryDt&&deliveryDt<=deliveryToMs))});return rows.sort((a,b)=>new Date(b.panelCreatedAt||b.orderCreatedAt||0)-new Date(a.panelCreatedAt||a.orderCreatedAt||0))}
 function cargoStageCounts(rows=[]){const out={all:rows.length,new:0,preparing:0,sent:0,in_transit:0,branch_waiting:0,delivered:0,returned:0,waiting:0};for(const row of rows)if(Object.prototype.hasOwnProperty.call(out,row.adminStage))out[row.adminStage]++;return out}
-function cargoLabelPayload(order,shipment){const c=order.customer||{};return {barcode:shipment.barcode||'',trackingNumber:shipment.trackingNumber||'',orderId:String(order.id),sender:'SHAZ',recipient:c.fullName||'',phone:c.phone||'',address:cargoAddress(c),payment:cargoPaymentLabel(order.payment),collectAmount:Number(order.total||0),products:cargoProducts(order).map(x=>`${x.name} x${x.quantity}`).join(', '),cargoCompany:shipment.cargoCompany||'Aras Kargo / YeşilKar',providerLabelUrl:shipment.labelUrl||''}}
+function cargoOfficialExitNumber(shipment={}){
+ const provider=shipment.providerResponse&&typeof shipment.providerResponse==='object'?shipment.providerResponse:{};
+ const nested=Array.isArray(provider.data)?provider.data[0]:provider.data;
+ const row=typeof nested==='object'&&nested?nested:provider;
+ const raw=shipment.arasExitNumber||shipment.exitNo||row.cikisno||row.cikis_no||row.cikisNo||row.kurcikno||row.kurcikNo||row.kurcikno_aras||row.teslimat_no||row.teslimatNo||'';
+ const n=String(raw||(/^[0-9]{10,20}$/.test(String(shipment.trackingNumber||''))?shipment.trackingNumber:'')).trim();
+ return /^[0-9]{10,20}$/.test(n)?n:'';
+}
+function cargoLabelPayload(order,shipment){const c=order.customer||{};return {barcode:shipment.barcode||'',trackingNumber:shipment.trackingNumber||'',orderId:String(order.id),sender:'SHAZ',recipient:c.fullName||'',phone:c.phone||'',address:cargoAddress(c),payment:cargoPaymentLabel(order.payment),collectAmount:Number(order.total||0),products:require('./order-product-details').orderProducts(order),province:c.province||'',district:c.district||'',arasExitNumber:cargoOfficialExitNumber(shipment),cargoCompany:shipment.cargoCompany||'Aras Kargo / YeşilKar',providerLabelUrl:shipment.labelUrl||''}}
 function cargoManualOrderOptions(){
   const catalog=readJson('catalog.json',{products:[]}),users=readJson('users.json',[]);
   return {products:(Array.isArray(catalog.products)?catalog.products:[]).filter(p=>p&&p.hidden!==true).map(p=>({id:String(p.id||''),name:String(p.name||'Ürün'),internalCode:String(p.internalCode||''),price:Number(p.price||0),image:serverMainProductImage(p)||''})),members:(Array.isArray(users)?users:[]).filter(u=>u&&!u.deleted&&!u.disabled).map(u=>({id:String(u.id||''),customerId:String(u.customerId||''),name:[u.firstName,u.lastName].filter(Boolean).join(' ')||String(u.name||''),phone:String(u.phone||''),email:String(u.email||'')}))};
@@ -1335,39 +1371,7 @@ app.get('/api/orders/export.xlsx',requireAdmin,async(req,res)=>serializedMutatio
   if(p.includes('iban')||p.includes('havale')||p.includes('transfer')||p==='online'||p==='bank')return 'havale';
   return p||'';
  };
- const orderProducts=o=>{
-  const blocks=[];
-  (o.items||[]).forEach(x=>{
-    const name=x.product?.name||'Ürün';
-    const internalCode=String(x.product?.internalCode||'').trim();
-    const title=internalCode?`${name} | ${internalCode}`:name;
-    const lines=[title];
-    if(x.setCustomization){
-      const setItems=Array.isArray(x.product?.setItems)?x.product.setItems:[];
-      const keptIds=Array.isArray(x.setCustomization.keptIds)?x.setCustomization.keptIds:[];
-      const removedIds=Array.isArray(x.setCustomization.removedIds)?x.setCustomization.removedIds:[];
-      const removed=setItems.filter(it=>removedIds.includes(it.id)).map(it=>it.name).filter(Boolean);
-      if(removed.length){
-        const sent=(keptIds.length?setItems.filter(it=>keptIds.includes(it.id)):setItems.filter(it=>!removedIds.includes(it.id))).map(it=>it.name).filter(Boolean);
-        if(sent.length)lines.push(`• Gönderilecek ürünler: ${sent.join(', ')} (Çıkarılan ürünler: ${removed.join(', ')})`);
-      }
-    }
-    const writes=x.writes||x.setCustomization?.writes||[];
-    writes.forEach(w=>{
-      const item=w.item||name;
-      const pos=w.position?` (${w.position})`:'';
-      lines.push(`• Yazı — ${item}: “${w.text||''}”${pos}`);
-    });
-    const photos=x.photoCustomizations||x.setCustomization?.photoCustomizations||[];
-    photos.forEach(ph=>{
-      const item=ph.item||name;
-      const caption=ph.caption?` · Fotoğraf yazısı (${ph.captionPosition==='above'?'üstte':'altta'}): ${ph.caption}`:'';
-      lines.push(`• Fotoğraf — ${item}: ${ph.imageUrl||''}${caption}`);
-    });
-    blocks.push(lines.join('\n'));
-  });
-  return blocks.join('\n\n')||'Ürün';
- };
+ const {orderProducts}=require('./order-product-details');
  const orderNoteText=o=>{
   const direct=String(o.orderNote||'').trim();
   if(direct)return direct;
@@ -2396,6 +2400,8 @@ app.get('/admin',requireAdmin,(req,res)=>res.sendFile(path.join(root,'admin.html
 // Hassas admin HTML dosyasına doğrudan erişim yok.
 app.get('/admin.html',(req,res)=>res.redirect('/admin'));
 
+require('./finance-service').registerFinance(app,{readJson,writeJson,requireAdmin,sameOriginGuard,persist:persistFinanceToGithub});
+
 app.use((err,req,res,next)=>{
  console.error(err);
  res.status(400).json({ok:false,message:process.env.NODE_ENV==='production'?'İşlem sırasında bir hata oluştu. Lütfen tekrar deneyin.':(err.message||'İstek işlenemedi.')});
@@ -2408,6 +2414,8 @@ async function startServer(){
   const remoteAccountSnapshotRestored=await restoreAccountStateFromGithub();
   const ordersSnapshotRestored=await restoreOrdersStateFromGithub();
   const cargoSnapshotRestored=await restoreCargoStateFromGithub();
+  const financeSnapshotRestored=await restoreFinanceFromGithub();
+  if(financeSnapshotRestored)console.log('SHAZ finans verileri şifreli kalıcı kayıttan geri yüklendi.');
   ensureCargoFeatureState();
   if(ordersSnapshotRestored)console.log('SHAZ sipariş verileri şifreli kalıcı kayıttan geri yüklendi.');
   if(cargoSnapshotRestored)console.log('SHAZ kargo verileri şifreli kalıcı kayıttan geri yüklendi.');
