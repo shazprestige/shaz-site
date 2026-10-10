@@ -60,7 +60,7 @@ test('provider otomatik kontrolü yalnız oturumlu ve görünür admin isteğine
   assert.match(server,/app\.post\('\/api\/admin\/cargo\/active-refresh',requireAdmin,sameOriginGuard/);
   assert.match(server,/kickCargoRefreshForActiveAdmin\(\)/);
   assert.match(server,/CARGO_ACTIVE_BATCH_LIMIT=12/);
-  assert.doesNotMatch(server,/setInterval\(\(\)=>runCargoBackgroundProviderRefresh\(/);
+  assert.match(server,/setInterval\(\(\)=>runCargoBackgroundProviderRefresh\(/);
   assert.doesNotMatch(server,/setTimeout\(\(\)=>runCargoBackgroundProviderRefresh\(/);
   assert.match(admin,/document\.visibilityState==='hidden'/);
   assert.match(admin,/setInterval\(refreshCargoWhileAdminVisible,CARGO_VISIBLE_ADMIN_REFRESH_MS\)/);
@@ -70,10 +70,10 @@ test('provider otomatik kontrolü yalnız oturumlu ve görünür admin isteğine
 test('yeni admin ziyaretinde 12 dakika bekletmeden kargo kontrolü başlatılır; sık yeniden giriş engellenir',()=>{
   const server=fs.readFileSync(path.join(__dirname,'..','server.js'),'utf8');
   const admin=fs.readFileSync(path.join(__dirname,'..','public','admin.js'),'utf8');
-  assert.match(server,/CARGO_ADMIN_ENTRY_MIN_GAP_MS=60\*1000/);
+  assert.match(server,/CARGO_ADMIN_ENTRY_MIN_GAP_MS=60\*60\*1000/);
   const kick=server.slice(server.indexOf('function kickCargoRefreshForActiveAdmin()'),server.indexOf('function cargoQueryRows(',server.indexOf('function kickCargoRefreshForActiveAdmin()')));
   assert.match(kick,/now-cargoLastAdminRefreshKickAt<CARGO_ADMIN_ENTRY_MIN_GAP_MS/);
-  assert.doesNotMatch(kick,/now-cargoLastAdminRefreshKickAt<CARGO_BACKGROUND_REFRESH_MS/);
+  assert.match(kick,/now-cargoLastProviderPollAt<CARGO_BACKGROUND_REFRESH_MS/);
   assert.match(kick,/cargoService\.rateLimitStatus\(\)\.active/);
   assert.match(admin,/const CARGO_VISIBLE_ADMIN_REFRESH_MS=12\*60\*1000\+5000/);
   assert.match(admin,/fetch\('\/api\/admin\/cargo\/active-refresh'/);

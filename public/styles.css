@@ -6536,3 +6536,15 @@ body.cargoColumnDragging{cursor:col-resize!important;user-select:none!important}
 .finPagination{display:flex;justify-content:center;gap:12px;align-items:center;flex-wrap:wrap;margin:16px 0;font-size:13px}.finPagination button:disabled{opacity:.4;cursor:not-allowed}
 
 .finExpenseBarRow{display:grid;grid-template-columns:150px minmax(80px,1fr) 125px;align-items:center;gap:12px;margin:12px 0;font-size:13px}.finExpenseBarRow b{text-align:right;font-variant-numeric:tabular-nums}.finExpenseBarTrack{height:10px;border-radius:8px;background:#f5e9da;overflow:hidden}.finExpenseBarTrack i{display:block;height:100%;border-radius:8px;background:#e4a44b}@media(max-width:600px){.finExpenseBarRow{grid-template-columns:105px minmax(50px,1fr) 94px;gap:8px;font-size:11px}}
+
+/* V217: Şifre sıfırlama CTA yazısı alan içinde iki eksende ortalı. */
+.forgotResetSubmit{display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;width:100%;min-height:52px!important;height:auto!important;line-height:1.45!important;padding:11px 16px!important;white-space:normal!important;overflow-wrap:anywhere!important;letter-spacing:.35px!important;font-size:clamp(10px,2.7vw,12px)!important;}
+.forgotResetSubmit.is-sent{background:#116c49!important;opacity:1!important;}
+
+/* V217: kargo siparişleri sayfa genelinde artan sıra numarası. */
+.cargoPick{position:relative!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:5px!important}.cargoRowNumber,.cargoRowNumberHeader{font-size:11px;font-weight:700;color:#596274;white-space:nowrap;min-width:14px;text-align:center;}
+/* Finans sekmeleri görünür tut: panelde kaydırınca sekmeler kaybolmaz. */
+.finPage .finTabs{position:sticky;top:0;z-index:30;background:#fff;box-shadow:0 3px 9px rgba(0,0,0,.06);}
+
+/* V217: başarılı şifre bağlantısı bildirimi hata rengiyle gösterilmez. */
+.authFormMessage[role="status"]{background:#ecfdf4!important;border-color:#90ceb0!important;color:#155c39!important;}

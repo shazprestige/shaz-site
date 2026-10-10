@@ -39,13 +39,13 @@ test('provider gerçek hareket metni ve gerçek durum zamanı response içinden 
 });
 
 test('provider yenilemesi yalnız aktif admin isteğiyle, 12 dakika sınırı ve kontrollü concurrency ile çalışıyor',()=>{
-  assert.match(server,/CARGO_BACKGROUND_REFRESH_MS=12\*60\*1000,CARGO_BACKGROUND_CONCURRENCY=1/);
+  assert.match(server,/CARGO_BACKGROUND_REFRESH_MS=60\*60\*1000,CARGO_BACKGROUND_CONCURRENCY=1/);
   assert.match(server,/async function runCargoBackgroundProviderRefresh/);
   assert.match(server,/CARGO_FINAL_PROVIDER_STATES\.has/);
   assert.match(server,/Promise\.all\(Array\.from\(\{length:Math\.min\(CARGO_BACKGROUND_CONCURRENCY,ids\.length\)\}/);
   assert.match(server,/kickCargoRefreshForActiveAdmin/);
   assert.match(server,/app\.post\('\/api\/admin\/cargo\/active-refresh',requireAdmin,sameOriginGuard/);
-  assert.doesNotMatch(server,/setInterval\(\(\)=>runCargoBackgroundProviderRefresh\(/);
+  assert.match(server,/setInterval\(\(\)=>runCargoBackgroundProviderRefresh\(/);
 });
 
 test('refresh hatası son doğru shipment statusunu error yapmıyor, yalnız güvenli kontrol bilgisi yazıyor',()=>{

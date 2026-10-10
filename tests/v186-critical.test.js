@@ -146,11 +146,11 @@ test('WhatsApp Türkiye numara normalizasyonu beklenen örnekleri verir',()=>{
   assert.equal(fn('12345'),'');
 });
 
-test('cache bust v216 ve ilk ekran loader koruması aktif',()=>{
-  assert.match(index,/app\.js\?v=216/);
-  assert.match(index,/styles\.css\?v=200/);
-  assert.match(adminHtml,/styles\.css\?v=216/);
-  assert.match(adminHtml,/admin\.js\?v=216/);
+test('cache bust v217 ve ilk ekran loader koruması aktif',()=>{
+  assert.match(index,/app\.js\?v=217/);
+  assert.match(index,/styles\.css\?v=217/);
+  assert.match(adminHtml,/styles\.css\?v=217/);
+  assert.match(adminHtml,/admin\.js\?v=217/);
   assert.match(app,/service-worker\.js\?v=200/);
   assert.match(index,/id="siteBootLoader"/);
   assert.match(index,/Yükleniyor/);
