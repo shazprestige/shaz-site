@@ -178,3 +178,15 @@ V173 RELEASE GÜVENLİĞİ
 4) Kart / ücretli depolama yok
 - Public ürün fotoğrafları GitHub /uploads yapısında kalabilir. Müşteri kişiselleştirme fotoğrafları public repo dosyası olarak tutulmaz.
 - Render uygulamayı çalıştırır; kalıcı müşteri verisi release ZIP ile üzerine yazılmaz.
+
+## V218 · Finans maliyet eşleştirmeleri ve giriş düzeni
+
+- Yönetim → Finans / Kazanç → **Normal Alış**: Katalogdaki gerçek ürünü seç, adet ve birim alış maliyetini kaydet. Aynı üründen sonraki alışlar ayrı partiler olarak kalır; sipariş maliyeti tarih ve eldeki uygun parti miktarına göre eskiden yeniye sabitlenir.
+- **Faturalı Alış**: Ayrı sekmedir. Resmî faturalı stoktan kullanım otomatik yapılmaz; müşteri için faturalı satış seçildiğinde ayrıca açıkça tahsis edilir. Normal alışlar ve faturalı alışlar birlikte ürün maliyet geçmişini oluşturur.
+- **Set İçeriği → Normal Alış Maliyeti**: Normal Alış altından hazır setleri işaretle, set parçası adlarını katalogdaki gerçek ürünlerle eşleştir, tek düğmeyle seçili setlere uygula. Çıkarılmış parçalar maliyete/ürün adedi analizine girmez. Eşleşmeyen parçada kâr kesinleşmez. Siparişte daha önce maliyet sabitlendiyse sonradan yapılan eşleştirme eski kaydı değiştirmez.
+- Alış listesindeki **Düzenle** butonu: Sipariş maliyetinde/fatura tahsisinde kullanılmamış alışları güncelleyebilir. Kullanılmış partinin fiyatı/adedi sessizce değiştirilemez.
+- **Kargo Tarifeleri**: Kapıda ödeme / Ödendi / İade için farklı aralıklar ve gerçek kargo maliyeti tanımla. Müşteriden alınan kargo ayrıca izlenir. Siparişte finans düzenleme ekranı, tahsil edilen bedelin sipariş toplamına önceden dahil olup olmadığını sorar ve tekrar ciroya saymayı önler. Bu ayar site ödeme akışında kendiliğinden ek bir kargo tahsilatı oluşturmaz.
+- **Sipariş / Kargo Yönetimi**: En yeni kayıt sayısı yüksek, listenin altına indikçe kayıt sıra numarası 1'e iner.
+- **Üye genel bilgileri**: Admin profil düzenlemesi mevcut users.json hesabını günceller; giriş sorgusu kayıtlı e-postayı normalize ederek ve telefonu normalize ederek okur. Eski siparişin geçmiş adres ve teslimat verisi değiştirilmez.
+- Finans ekranının verisi `finance_state.json` içinde mevcut siparişlerden ayrı bir muhasebe katmanında tutulur; `orders.json` kopyalanmaz.
+- Gerçek Aras/Webpostman tahsilatları, müşteri ödeme sağlayıcısı ve production veritabanı bu kod testleriyle doğrulanmış değildir; canlıya çıkmadan önce deneme kayıtları ve örnek gerçek siparişle kontrol edilmelidir.
